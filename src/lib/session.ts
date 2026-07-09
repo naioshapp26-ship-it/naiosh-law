@@ -10,20 +10,43 @@ export type SessionUser = {
   email: string;
 };
 
+function isSessionUser(value: unknown): value is SessionUser {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<SessionUser>;
+  return (
+    (candidate.role === "admin" || candidate.role === "client") &&
+    typeof candidate.name === "string" &&
+    typeof candidate.email === "string"
+  );
+}
+
+function readSessionUser(): SessionUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(sessionKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (isSessionUser(parsed)) return parsed;
+  } catch {
+    // Corrupted browser storage should not break route rendering.
+  }
+
+  window.localStorage.removeItem(sessionKey);
+  return null;
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user] = useState<SessionUser | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    const raw = window.localStorage.getItem(sessionKey);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
-  });
+  const [user] = useState<SessionUser | null>(() => readSessionUser());
   const ready = true;
 
   useEffect(() => {
     if (!user && redirectIfMissing) {
-      router.replace("/login");
+      const next = `${window.location.pathname}${window.location.search}`;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
   }, [user, redirectIfMissing, router]);
 

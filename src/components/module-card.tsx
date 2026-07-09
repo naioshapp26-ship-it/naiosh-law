@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { LegalModule } from "@/data/modules";
+import { getModuleHref, type LegalModule } from "@/data/modules";
 
 const iconMap: Record<string, string> = {
   "dashboard": "⊞",
@@ -30,7 +30,7 @@ export function ModuleCard({ item }: Props) {
 
   return (
     <Link
-      href={`/app/modules/${item.slug}`}
+      href={getModuleHref(item.slug)}
       className="card-white"
       style={{
         display: "block",

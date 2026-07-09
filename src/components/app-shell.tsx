@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { modules } from "@/data/modules";
+import { getModuleHref, modules } from "@/data/modules";
 import { sessionKey } from "@/data/auth";
 
 type Props = {
@@ -32,27 +32,27 @@ const iconMap: Record<string, string> = {
   "general-tools":         "🛠️",
 };
 
-export function AppShell({ role, name, children }: Props) {
-  const pathname = usePathname();
-  const router   = useRouter();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
-  const sidebarBorder = "rgba(255,255,255,0.14)";
-  const sidebarText = "#ffffff";
-  const sidebarMutedText = "rgba(255,255,255,0.82)";
-  const sidebarSoftText = "rgba(255,255,255,0.64)";
-  const sidebarActiveBg = "rgba(255,255,255,0.2)";
+const operationalModules = modules.filter((item) => item.slug !== "dashboard");
 
-  const logout = () => {
-    window.localStorage.removeItem(sessionKey);
-    router.replace("/login");
-  };
+const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
+const sidebarBorder = "rgba(255,255,255,0.14)";
+const sidebarText = "#ffffff";
+const sidebarMutedText = "rgba(255,255,255,0.82)";
+const sidebarSoftText = "rgba(255,255,255,0.64)";
+const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
+type SidebarContentProps = {
+  pathname: string;
+  role: Props["role"];
+  onNavigate?: () => void;
+  showCloseButton?: boolean;
+};
+
+function SidebarContent({ pathname, role, onNavigate, showCloseButton = false }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
 
-  const SidebarContent = () => (
+  return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Logo inside drawer (mobile) */}
       <div
         style={{
           display: "flex",
@@ -78,25 +78,30 @@ export function AppShell({ role, name, children }: Props) {
               fontWeight: 900,
               fontSize: "0.9rem",
             }}
-          >N</div>
+          >
+            N
+          </div>
           <span style={{ fontWeight: 800, fontSize: "0.95rem", color: sidebarText }}>Naiosh Law</span>
         </div>
-        <button
-          onClick={() => setDrawerOpen(false)}
-          className="drawer-close-btn"
-          style={{
-            width: 32, height: 32, border: `1px solid ${sidebarBorder}`,
-            borderRadius: "8px", background: "rgba(255,255,255,0.12)", cursor: "pointer",
-            fontSize: "0.9rem", color: sidebarText,
-          }}
-        >✕</button>
+        {showCloseButton && (
+          <button
+            onClick={onNavigate}
+            className="drawer-close-btn"
+            style={{
+              width: 32, height: 32, border: `1px solid ${sidebarBorder}`,
+              borderRadius: "8px", background: "rgba(255,255,255,0.12)", cursor: "pointer",
+              fontSize: "0.9rem", color: sidebarText,
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      {/* Dashboard link */}
       <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
         <Link
           href="/app/dashboard"
-          onClick={() => setDrawerOpen(false)}
+          onClick={onNavigate}
           style={{
             display: "flex", alignItems: "center", gap: "0.6rem",
             padding: "0.6rem 0.75rem", borderRadius: "10px",
@@ -111,7 +116,6 @@ export function AppShell({ role, name, children }: Props) {
         </Link>
       </div>
 
-      {/* Section label */}
       <p style={{
         fontSize: "0.62rem", fontWeight: 700, color: sidebarSoftText,
         letterSpacing: "0.06em", textTransform: "uppercase",
@@ -120,21 +124,20 @@ export function AppShell({ role, name, children }: Props) {
         الوحدات التشغيلية
       </p>
 
-      {/* Module links */}
       <nav
         style={{
           flex: 1, overflowY: "auto", padding: "0 0.75rem",
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {modules.map((item) => {
-          const href   = `/app/modules/${item.slug}`;
+        {operationalModules.map((item) => {
+          const href = getModuleHref(item.slug);
           const active = pathname === href;
           return (
             <Link
               key={item.slug}
               href={href}
-              onClick={() => setDrawerOpen(false)}
+              onClick={onNavigate}
               style={{
                 display: "flex", alignItems: "center", gap: "0.6rem",
                 padding: "0.6rem 0.75rem", borderRadius: "10px",
@@ -152,7 +155,6 @@ export function AppShell({ role, name, children }: Props) {
         })}
       </nav>
 
-      {/* Role badge */}
       <div style={{ padding: "0.75rem" }}>
         <div style={{
           background: "rgba(0,0,0,0.14)", border: `1px solid ${sidebarBorder}`,
@@ -168,6 +170,17 @@ export function AppShell({ role, name, children }: Props) {
       </div>
     </div>
   );
+}
+
+export function AppShell({ role, name, children }: Props) {
+  const pathname = usePathname();
+  const router   = useRouter();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const logout = () => {
+    window.localStorage.removeItem(sessionKey);
+    router.replace("/login");
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
@@ -284,68 +297,8 @@ export function AppShell({ role, name, children }: Props) {
           borderInlineEnd: `1px solid ${sidebarBorder}`,
           overflowY: "auto", flexShrink: 0,
         }}>
-          <div style={{ padding: "1rem 0" }}>
-            {/* Dashboard */}
-            <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: "flex", alignItems: "center", gap: "0.6rem",
-                  padding: "0.6rem 0.75rem", borderRadius: "10px",
-                  fontSize: "0.85rem", fontWeight: isActive("/app/dashboard") ? 700 : 500,
-                  color: sidebarText,
-                  background: isActive("/app/dashboard") ? sidebarActiveBg : "transparent",
-                  textDecoration: "none",
-                }}
-              >
-                <span style={{ fontSize: "1rem" }}>⊞</span>
-                <span>لوحة التحكم</span>
-              </Link>
-            </div>
-
-            <p style={{
-              fontSize: "0.62rem", fontWeight: 700, color: sidebarSoftText,
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              padding: "0.75rem 1.5rem 0.35rem",
-            }}>الوحدات التشغيلية</p>
-
-            <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {modules.map((item) => {
-                const href   = `/app/modules/${item.slug}`;
-                const active = pathname === href;
-                return (
-                  <Link
-                    key={item.slug}
-                    href={href}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "0.6rem",
-                      padding: "0.6rem 0.75rem", borderRadius: "10px",
-                      fontSize: "0.84rem", fontWeight: active ? 700 : 500,
-                      color: sidebarText,
-                      background: active ? sidebarActiveBg : "transparent",
-                      textDecoration: "none", transition: "all 0.15s",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div style={{ padding: "1rem 0.75rem 0" }}>
-              <div style={{
-                background: "rgba(0,0,0,0.14)", border: `1px solid ${sidebarBorder}`,
-                borderRadius: "12px", padding: "0.9rem",
-              }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
-                  {role === "admin" ? "Admin" : "Client"}
-                </p>
-                <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
-                  {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
-                </p>
-              </div>
-            </div>
+          <div style={{ padding: "1rem 0", height: "100%" }}>
+            <SidebarContent pathname={pathname} role={role} />
           </div>
         </aside>
 
@@ -370,7 +323,12 @@ export function AppShell({ role, name, children }: Props) {
               boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent />
+              <SidebarContent
+                pathname={pathname}
+                role={role}
+                onNavigate={() => setDrawerOpen(false)}
+                showCloseButton
+              />
             </div>
           </div>
         )}

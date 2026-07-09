@@ -22,6 +22,12 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+function getSafeNextPath() {
+  if (typeof window === "undefined") return "/app/dashboard";
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next?.startsWith("/") && !next.startsWith("//") ? next : "/app/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
@@ -35,8 +41,9 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     await new Promise((r) => setTimeout(r, 550));
+    const normalizedEmail = email.trim().toLowerCase();
     const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
+      (item) => item.email.toLowerCase() === normalizedEmail && item.password === password
     );
     if (!user) {
       setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
@@ -47,7 +54,7 @@ export default function LoginPage() {
       sessionKey,
       JSON.stringify({ role: user.role, name: user.name, email: user.email })
     );
-    router.push("/app/dashboard");
+    router.push(getSafeNextPath());
   };
 
   const fillDemo = (role: "admin" | "client") => {
