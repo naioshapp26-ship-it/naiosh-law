@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useId, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
@@ -30,13 +30,6 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     buildInitialForm(fields, initial)
   );
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setForm(buildInitialForm(fields, initial));
-      setSaving(false);
-    }
-  }, [fields, initial, open]);
 
   if (!open) return null;
 
