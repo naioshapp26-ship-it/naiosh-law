@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { fetchArray } from "@/lib/fetch-array";
 import { useSession } from "@/lib/session";
 
 type Entity = {
@@ -27,16 +28,45 @@ export default function OfficialEntitiesPage() {
   const { user, ready } = useSession(true);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [officials, setOfficials] = useState<Official[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/official-entities", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/court-officials", { credentials: "include" }).then((r) => r.json()),
-    ]).then(([ents, offs]) => {
-      setEntities(ents);
-      setOfficials(offs);
-    });
-  }, []);
+    if (!ready || !user) return;
+    let cancelled = false;
+
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) {
+          setLoading(true);
+          setError("");
+        }
+      })
+      .then(() =>
+        Promise.all([
+          fetchArray<Entity>("/api/official-entities"),
+          fetchArray<Official>("/api/court-officials"),
+        ])
+      )
+      .then(([ents, offs]) => {
+        if (cancelled) return;
+        setEntities(ents);
+        setOfficials(offs);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setEntities([]);
+        setOfficials([]);
+        setError("تعذر تحميل بيانات الجهات الرسمية");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, user]);
 
   if (!ready || !user) return null;
 
@@ -50,41 +80,53 @@ export default function OfficialEntitiesPage() {
           جهات حكومية ومحاكم ودوائر — قضاة وأمناء سر وخبراء
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-          {entities.map((e) => (
-            <div key={e.id} className="card-white" style={{ padding: "1.25rem" }}>
-              <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{e.name}</h3>
-              <p style={{ fontSize: "0.8rem", color: "#64748b" }}>{e.type} • {e.city}</p>
-              <p style={{ fontSize: "0.78rem", color: "#475569", marginTop: "0.5rem" }}>📞 {e.phone}</p>
-              <p style={{ fontSize: "0.78rem", color: "#c3152a", marginTop: "0.35rem", fontWeight: 600 }}>
-                {e.officials} مسؤول مسجل
-              </p>
+        {loading ? (
+          <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+        ) : error ? (
+          <div className="card-white" style={{ padding: "1.25rem", color: "#c3152a", fontWeight: 700 }}>
+            {error}
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+              {entities.map((e) => (
+                <div key={e.id} className="card-white" style={{ padding: "1.25rem" }}>
+                  <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{e.name}</h3>
+                  <p style={{ fontSize: "0.8rem", color: "#64748b" }}>{e.type} • {e.city}</p>
+                  <p style={{ fontSize: "0.78rem", color: "#475569", marginTop: "0.5rem" }}>📞 {e.phone}</p>
+                  <p style={{ fontSize: "0.78rem", color: "#c3152a", marginTop: "0.35rem", fontWeight: 600 }}>
+                    {e.officials} مسؤول مسجل
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem" }}>المسؤولون القضائيون</h2>
-        <div className="card-white" style={{ padding: "1rem" }}>
-          {officials.map((o) => (
-            <div
-              key={o.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "0.75rem 0",
-                borderBottom: "1px solid #f1f5f9",
-                fontSize: "0.85rem",
-              }}
-            >
-              <span>
-                <strong>{o.name}</strong> — {o.role}
-              </span>
-              <span style={{ color: "#64748b" }}>
-                {o.entity?.name ?? o.court} {o.chamber ? `• ${o.chamber}` : ""}
-              </span>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem" }}>المسؤولون القضائيون</h2>
+            <div className="card-white" style={{ padding: "1rem" }}>
+              {officials.map((o) => (
+                <div
+                  key={o.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "0.5rem",
+                    padding: "0.75rem 0",
+                    borderBottom: "1px solid #f1f5f9",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <span>
+                    <strong>{o.name}</strong> — {o.role}
+                  </span>
+                  <span style={{ color: "#64748b" }}>
+                    {o.entity?.name ?? o.court} {o.chamber ? `• ${o.chamber}` : ""}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
     </AppShell>
   );

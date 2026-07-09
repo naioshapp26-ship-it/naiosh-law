@@ -1,8 +1,16 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { UserRole } from "@/generated/prisma/client";
+import { AUTH_COOKIE, DEV_JWT_SECRET } from "@/lib/auth-constants";
 
-export const AUTH_COOKIE = "naiosh-auth-token";
+export { AUTH_COOKIE };
+
+export class AuthConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthConfigurationError";
+  }
+}
 
 export type AuthPayload = {
   sub: string;
@@ -11,9 +19,14 @@ export type AuthPayload = {
   role: UserRole;
 };
 
+const userRoles: UserRole[] = ["admin", "lawyer", "consultant", "judge", "client", "industrial_agent", "employee"];
+
 function getSecret() {
-  const secret = process.env.JWT_SECRET ?? "naiosh-law-dev-secret-change-in-production";
-  return new TextEncoder().encode(secret);
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new AuthConfigurationError("JWT_SECRET is required in production");
+  }
+  return new TextEncoder().encode(secret ?? DEV_JWT_SECRET);
 }
 
 export async function signToken(payload: AuthPayload) {
@@ -29,6 +42,9 @@ export async function verifyToken(token: string): Promise<AuthPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
     if (!payload.sub || typeof payload.email !== "string" || typeof payload.name !== "string") {
+      return null;
+    }
+    if (!userRoles.includes(payload.role as UserRole)) {
       return null;
     }
     return {
@@ -51,8 +67,4 @@ export async function getSessionFromCookies(): Promise<AuthPayload | null> {
 
 export function canWrite(role: UserRole) {
   return ["admin", "lawyer", "consultant", "industrial_agent", "employee"].includes(role);
-}
-
-export function canManageUsers(role: UserRole) {
-  return role === "admin" || role === "industrial_agent";
 }

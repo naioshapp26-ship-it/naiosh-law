@@ -156,9 +156,9 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"type",    label:"نوع الموكل",          type:"select", options:["فرد","شركة","مؤسسة","جهة حكومية"] },
       { key:"phone",   label:"رقم الهاتف",          type:"tel",    placeholder:"01X-XXX-XXXX" },
       { key:"email",   label:"البريد الإلكتروني",   type:"email",  placeholder:"example@email.com" },
-      { key:"national",label:"رقم الهوية الوطنية", type:"text",   placeholder:"XXXXXXXXXXXXXX" },
+      { key:"nationalId",label:"رقم الهوية الوطنية", type:"text",   placeholder:"XXXXXXXXXXXXXX" },
       { key:"status",  label:"الحالة",              type:"select", options:["نشط","معلق","محظور","موقف"] },
-      { key:"address", label:"العنوان",              type:"textarea" },
+      { key:"notes",   label:"ملاحظات",              type:"textarea" },
     ],
   },
 

@@ -16,6 +16,7 @@ const extraNav = [
   { href: "/app/legal-knowledge", label: "التصنيف القانوني", icon: "📚" },
   { href: "/app/professional-network", label: "الشبكة المهنية", icon: "🤝" },
   { href: "/app/official-entities", label: "الجهات الرسمية", icon: "🏢" },
+  { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
 ];
 
 const iconMap: Record<string, string> = {
@@ -38,10 +39,21 @@ const iconMap: Record<string, string> = {
   "general-tools":         "🛠️",
 };
 
+const roleMeta: Record<UserRole, { label: string; description: string; icon: string }> = {
+  admin: { label: "Admin", description: "صلاحية كاملة على النظام", icon: "⚙️" },
+  lawyer: { label: "Lawyer", description: "إدارة القضايا والعملاء والجلسات", icon: "⚖️" },
+  consultant: { label: "Consultant", description: "إدارة الاستشارات والمراجعات", icon: "💬" },
+  judge: { label: "Judge", description: "عرض الملفات والمواعيد القضائية", icon: "🏛️" },
+  client: { label: "Client", description: "عرض الحالة والمستندات", icon: "👤" },
+  industrial_agent: { label: "Industrial Agent", description: "إدارة العمليات والصلاحيات", icon: "🏭" },
+  employee: { label: "Employee", description: "إدارة المهام التشغيلية", icon: "👥" },
+};
+
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const currentRole = roleMeta[role] ?? roleMeta.client;
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
   const sidebarText = "#ffffff";
@@ -56,7 +68,7 @@ export function AppShell({ role, name, children }: Props) {
 
   const isActive = (href: string) => pathname === href;
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Logo inside drawer (mobile) */}
       <div
@@ -158,7 +170,7 @@ export function AppShell({ role, name, children }: Props) {
         }}
       >
         {modules.map((item) => {
-          const href   = `/app/modules/${item.slug}`;
+          const href   = item.slug === "dashboard" ? "/app/dashboard" : `/app/modules/${item.slug}`;
           const active = pathname === href;
           return (
             <Link
@@ -189,10 +201,10 @@ export function AppShell({ role, name, children }: Props) {
           borderRadius: "12px", padding: "0.85rem",
         }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
-            {role === "admin" ? "Admin" : "Client"}
+            {currentRole.label}
           </p>
           <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
-            {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
+            {currentRole.description}
           </p>
         </div>
       </div>
@@ -278,11 +290,11 @@ export function AppShell({ role, name, children }: Props) {
                 background: "rgba(195,21,42,0.1)", display: "flex",
                 alignItems: "center", justifyContent: "center", fontSize: "0.8rem",
               }}>
-                {role === "admin" ? "⚙️" : "👤"}
+                {currentRole.icon}
               </div>
               <div className="user-name-block">
                 <div style={{ color: "#0a0a12", fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.2 }}>{name}</div>
-                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{role === "admin" ? "Admin" : "Client"}</div>
+                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{currentRole.label}</div>
               </div>
             </div>
 
@@ -364,7 +376,7 @@ export function AppShell({ role, name, children }: Props) {
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
               {modules.map((item) => {
-                const href   = `/app/modules/${item.slug}`;
+                const href   = item.slug === "dashboard" ? "/app/dashboard" : `/app/modules/${item.slug}`;
                 const active = pathname === href;
                 return (
                   <Link
@@ -392,10 +404,10 @@ export function AppShell({ role, name, children }: Props) {
                 borderRadius: "12px", padding: "0.9rem",
               }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
-                  {role === "admin" ? "Admin" : "Client"}
+                  {currentRole.label}
                 </p>
                 <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
-                  {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
+                  {currentRole.description}
                 </p>
               </div>
             </div>
@@ -417,13 +429,13 @@ export function AppShell({ role, name, children }: Props) {
             />
             {/* Drawer panel */}
             <div style={{
-              position: "relative", zIndex: 1,
+              position: "absolute", insetInlineEnd: 0, zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent />
+              {renderSidebarContent()}
             </div>
           </div>
         )}

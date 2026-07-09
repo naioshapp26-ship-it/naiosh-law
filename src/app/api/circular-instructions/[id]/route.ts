@@ -12,20 +12,19 @@ export async function PATCH(request: Request, { params }: Params) {
   if (bodyError) return bodyError;
 
   return withApiError(async () => {
-    const updated = await prisma.client.update({
+    const updated = await prisma.circularInstruction.update({
       where: { id },
       data: {
-        name: body.name !== undefined ? String(body.name).trim() : undefined,
-        type: body.type !== undefined ? String(body.type).trim() : undefined,
-        phone: body.phone !== undefined ? nullableString(body.phone) : undefined,
-        email: body.email !== undefined ? nullableString(body.email) : undefined,
-        nationalId: body.nationalId !== undefined ? nullableString(body.nationalId) : undefined,
-        notes: body.notes !== undefined ? nullableString(body.notes) : undefined,
+        title: body.title !== undefined ? String(body.title).trim() : undefined,
+        issuer: body.issuer !== undefined ? String(body.issuer).trim() : undefined,
+        summary: body.summary !== undefined ? nullableString(body.summary) : undefined,
+        content: body.content !== undefined ? nullableString(body.content) : undefined,
         status: body.status !== undefined ? String(body.status).trim() : undefined,
+        effectiveDate: body.effectiveDate !== undefined ? nullableString(body.effectiveDate) : undefined,
       },
     });
     return NextResponse.json(updated);
-  }, "Update client");
+  }, "Update circular instruction");
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
@@ -33,7 +32,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) return error;
   const { id } = await params;
   return withApiError(async () => {
-    await prisma.client.delete({ where: { id } });
+    await prisma.circularInstruction.delete({ where: { id } });
     return NextResponse.json({ ok: true });
-  }, "Delete client");
+  }, "Delete circular instruction");
 }

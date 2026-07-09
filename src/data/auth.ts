@@ -19,5 +19,3 @@ export const demoUsers: DemoUser[] = [
     password: "Client@123",
   },
 ];
-
-export const sessionKey = "naiosh-law-session";
