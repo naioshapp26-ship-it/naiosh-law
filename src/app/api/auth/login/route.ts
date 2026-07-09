@@ -43,6 +43,34 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     console.error("Login error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message.includes("DATABASE_URL")) {
+      return NextResponse.json(
+        { error: "قاعدة البيانات غير مضبوطة — أضف DATABASE_URL على Railway" },
+        { status: 503 }
+      );
+    }
+
+    if (
+      message.includes("connect") ||
+      message.includes("ECONNREFUSED") ||
+      message.includes("SSL") ||
+      message.includes("password authentication")
+    ) {
+      return NextResponse.json(
+        { error: "تعذر الاتصال بقاعدة البيانات — تحقق من إعدادات Railway" },
+        { status: 503 }
+      );
+    }
+
+    if (message.includes("does not exist") || message.includes("P2021")) {
+      return NextResponse.json(
+        { error: "جداول قاعدة البيانات غير موجودة — شغّل npm run db:migrate" },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
