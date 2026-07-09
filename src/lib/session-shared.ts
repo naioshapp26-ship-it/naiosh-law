@@ -117,11 +117,12 @@ export async function readSessionToken(token: string | undefined | null) {
 
   try {
     const parsed = JSON.parse(textDecoder.decode(decodeBase64Url(body))) as Partial<SessionPayload>;
-    if (!isSessionUser(parsed) || typeof parsed.exp !== "number") {
+    const expiresAt = parsed.exp;
+    if (!isSessionUser(parsed) || typeof expiresAt !== "number") {
       return null;
     }
 
-    if (parsed.exp <= Math.floor(Date.now() / 1000)) {
+    if (expiresAt <= Math.floor(Date.now() / 1000)) {
       return null;
     }
 
