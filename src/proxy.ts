@@ -19,7 +19,7 @@ async function getVerifiedPayload(token: string) {
   return payload;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(AUTH_COOKIE)?.value;
 
@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       return redirectToLogin(request);
     }
+
     try {
       const payload = await getVerifiedPayload(token);
       const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)/);
@@ -44,9 +45,9 @@ export async function middleware(request: NextRequest) {
       }
       return NextResponse.next();
     } catch {
-      const res = redirectToLogin(request);
-      res.cookies.delete(AUTH_COOKIE);
-      return res;
+      const response = redirectToLogin(request);
+      response.cookies.delete(AUTH_COOKIE);
+      return response;
     }
   }
 
@@ -55,7 +56,7 @@ export async function middleware(request: NextRequest) {
       await getVerifiedPayload(token);
       return NextResponse.redirect(new URL(safeAppPath(request.nextUrl.searchParams.get("next")), request.url));
     } catch {
-      // invalid token — allow login page
+      // Invalid token: allow the login page to render.
     }
   }
 
