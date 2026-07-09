@@ -353,7 +353,7 @@ export function AppShell({ role, name, children }: Props) {
             style={{
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex",
-              justifyContent: "flex-start",
+              justifyContent: "flex-end",
             }}
             role="presentation"
           >
@@ -367,7 +367,7 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
               <SidebarContent pathname={pathname} role={role} onClose={() => setDrawerOpen(false)} />

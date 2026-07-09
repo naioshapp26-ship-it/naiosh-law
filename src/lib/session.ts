@@ -57,7 +57,7 @@ export function saveSession(user: SessionUser) {
   notifySessionChange();
 }
 
-export function clearStoredSession() {
+function clearStoredSession() {
   try {
     window.localStorage.removeItem(sessionKey);
   } catch {
