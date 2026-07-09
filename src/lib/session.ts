@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
+import { readStorageValue, removeStorageValue, writeStorageValue } from "@/lib/browser-storage";
 import type { SessionUser } from "@/lib/auth-session";
 
 const sessionChangeEvent = "naiosh-law-session-change";
@@ -14,11 +15,7 @@ function getClientSessionSnapshot(): SessionSnapshot {
     return undefined;
   }
 
-  try {
-    return window.localStorage.getItem(sessionKey);
-  } catch {
-    return null;
-  }
+  return readStorageValue(sessionKey);
 }
 
 function getServerSessionSnapshot(): SessionSnapshot {
@@ -48,20 +45,12 @@ function notifySessionChange() {
 }
 
 export function saveSession(user: SessionUser) {
-  try {
-    window.localStorage.setItem(sessionKey, JSON.stringify(user));
-  } catch {
-    // The signed cookie remains the source of truth when browser storage is unavailable.
-  }
+  writeStorageValue(sessionKey, JSON.stringify(user));
   notifySessionChange();
 }
 
 export function clearStoredSession() {
-  try {
-    window.localStorage.removeItem(sessionKey);
-  } catch {
-    // Ignore storage errors so logout/session validation can still complete.
-  }
+  removeStorageValue(sessionKey);
   notifySessionChange();
 }
 

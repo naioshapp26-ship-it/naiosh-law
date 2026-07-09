@@ -11,7 +11,7 @@ type LoginRequest = {
 };
 
 function acceptsJson(request: Request) {
-  return request.headers.get("content-type")?.toLocaleLowerCase().includes("application/json") ?? false;
+  return request.headers.get("content-type")?.toLowerCase().includes("application/json") ?? false;
 }
 
 function isSessionRole(role: unknown): role is SessionRole {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     body.demo === true && isSessionRole(body.role)
       ? findDemoUserByRole(body.role)
       : typeof body.email === "string" && typeof body.password === "string"
-        ? findDemoUserByCredentials(body.email.trim().toLocaleLowerCase(), body.password)
+        ? findDemoUserByCredentials(body.email.trim().toLowerCase(), body.password)
         : undefined;
 
   if (!demoUser) {

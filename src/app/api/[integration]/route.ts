@@ -61,7 +61,7 @@ async function parseOptionalJson(request: Request) {
     return null;
   }
 
-  if (!contentType.toLocaleLowerCase().includes("application/json")) {
+  if (!contentType.toLowerCase().includes("application/json")) {
     return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
   }
 

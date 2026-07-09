@@ -8,9 +8,9 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
+import type { ModuleConfig } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
-import { moduleMap } from "@/data/modules";
+import { readStorageValue, removeStorageValue, writeStorageValue } from "@/lib/browser-storage";
 import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
 
@@ -67,13 +67,7 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
   }
 
   const storageKey = getRowsStorageKey(slug);
-  let rawRows: string | null;
-
-  try {
-    rawRows = window.localStorage.getItem(storageKey);
-  } catch {
-    return seededFallback;
-  }
+  const rawRows = readStorageValue(storageKey);
 
   if (!rawRows) {
     return seededFallback;
@@ -85,11 +79,7 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
       return seedRows(slug, parsed);
     }
   } catch {
-    try {
-      window.localStorage.removeItem(storageKey);
-    } catch {
-      // Ignore storage cleanup failures; fallback rows keep the UI usable.
-    }
+    removeStorageValue(storageKey);
   }
 
   return seededFallback;
@@ -100,21 +90,22 @@ function persistRows(slug: string, rows: Record<string, unknown>[]) {
     return;
   }
 
-  try {
-    window.localStorage.setItem(getRowsStorageKey(slug), JSON.stringify(rows));
-  } catch {
-    // CRUD state remains in memory if browser storage is unavailable or full.
-  }
+  writeStorageValue(getRowsStorageKey(slug), JSON.stringify(rows));
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
+type Props = {
+  slug: string;
+  config: ModuleConfig;
+  title?: string;
+};
+
+export function ModuleShell({ slug, config, title }: Props) {
   const { user, ready } = useSession(true);
   const router = useRouter();
-  const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config?.data ?? []));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config.data));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -129,12 +120,8 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, []);
 
   useEffect(() => {
-    if (!config) {
-      return;
-    }
-
     persistRows(slug, rows);
-  }, [config, rows, slug]);
+  }, [rows, slug]);
 
   useEffect(() => {
     if (ready && user && !hasModuleAccess) {
@@ -161,18 +148,6 @@ export function ModuleShell({ slug }: { slug: string }) {
 
   if (!hasModuleAccess) {
     return <LoadingScreen label="جاري تحويلك إلى لوحة التحكم..." />;
-  }
-
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
-    );
   }
 
   /* ── Handlers ── */
@@ -291,7 +266,7 @@ export function ModuleShell({ slug }: { slug: string }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {moduleIconMap[slug] ?? "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                {moduleIconMap[slug] ?? "📌"} {title ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rows.length} {entityPlural} — جميع البيانات محدثة

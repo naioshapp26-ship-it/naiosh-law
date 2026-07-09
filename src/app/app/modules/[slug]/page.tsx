@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ModuleShell } from "@/components/module-shell";
 import { moduleConfigMap } from "@/data/module-configs";
-import { operationalModules } from "@/data/modules";
+import { moduleMap, operationalModules } from "@/data/modules";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -9,12 +9,13 @@ type Props = {
 
 export default async function ModulePage({ params }: Props) {
   const { slug } = await params;
+  const config = moduleConfigMap[slug];
 
-  if (!moduleConfigMap[slug]) {
+  if (!config) {
     notFound();
   }
 
-  return <ModuleShell key={slug} slug={slug} />;
+  return <ModuleShell key={slug} slug={slug} config={config} title={moduleMap[slug]?.title} />;
 }
 
 export function generateStaticParams() {
