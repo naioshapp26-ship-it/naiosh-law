@@ -17,6 +17,7 @@ import { useSession } from "@/lib/session";
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
 
 const rowIdKey = "_rowId";
+const storagePersistenceFailureEvent = "naiosh-law-module-storage-failed";
 
 const entityPluralMap: Record<string, string> = {
   قضية: "قضايا",
@@ -90,7 +91,10 @@ function persistRows(slug: string, rows: Record<string, unknown>[]) {
     return;
   }
 
-  writeStorageValue(getRowsStorageKey(slug), JSON.stringify(rows));
+  const persisted = writeStorageValue(getRowsStorageKey(slug), JSON.stringify(rows));
+  if (!persisted) {
+    window.dispatchEvent(new CustomEvent(storagePersistenceFailureEvent, { detail: { slug } }));
+  }
 }
 
 type Props = {
@@ -124,6 +128,18 @@ export function ModuleShell({ slug, config, title }: Props) {
     }, 3500);
     toastTimersRef.current.push(timeoutId);
   }, []);
+
+  useEffect(() => {
+    const onStorageFailure = (event: Event) => {
+      const failedSlug = (event as CustomEvent<{ slug?: string }>).detail?.slug;
+      if (failedSlug === slug) {
+        pushToast("error", "تعذر حفظ التغييرات محليًا. تحقق من مساحة التخزين أو إعدادات المتصفح.");
+      }
+    };
+
+    window.addEventListener(storagePersistenceFailureEvent, onStorageFailure);
+    return () => window.removeEventListener(storagePersistenceFailureEvent, onStorageFailure);
+  }, [pushToast, slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -416,6 +432,9 @@ export function ModuleShell({ slug, config, title }: Props) {
           .toast-stack {
             inset-inline: 1rem !important;
             bottom: 5.5rem !important;
+          }
+          .toast-stack > div {
+            max-width: calc(100vw - 2rem) !important;
           }
         }
       `}</style>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -18,36 +18,40 @@ const kpis = [
 ];
 
 const upcomingSessions = [
-  { case: "قضية استئناف تجارية", court: "محكمة الاستئناف القاهرة", date: "الأربعاء 15 يوليو", room: "الغرفة 7", status: "قريبة" },
-  { case: "قضية نزاع عقاري", court: "المحكمة الابتدائية الجيزة", date: "الخميس 16 يوليو", room: "القاعة 3", status: "مجدولة" },
-  { case: "دعوى تعويض تجاري", court: "محكمة التحكيم", date: "الأحد 19 يوليو", room: "قاعة A", status: "مجدولة" },
+  { id: "appeal-trade", case: "قضية استئناف تجارية", court: "محكمة الاستئناف القاهرة", date: "الأربعاء 15 يوليو", room: "الغرفة 7", status: "قريبة" },
+  { id: "real-estate-dispute", case: "قضية نزاع عقاري", court: "المحكمة الابتدائية الجيزة", date: "الخميس 16 يوليو", room: "القاعة 3", status: "مجدولة" },
+  { id: "commercial-compensation", case: "دعوى تعويض تجاري", court: "محكمة التحكيم", date: "الأحد 19 يوليو", room: "قاعة A", status: "مجدولة" },
 ];
 
 const recentTasks = [
-  { task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
-  { task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
-  { task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
-  { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
+  { id: "defense-memo-2024-0547", task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
+  { id: "agency-contract-review", task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
+  { id: "appeal-documents", task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
+  { id: "invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
-  const [completedTasks, setCompletedTasks] = useState<Set<number>>(() => new Set());
-  const todayLabel = new Intl.DateTimeFormat("ar-EG", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(() => new Set());
+  const todayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("ar-EG", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date()),
+    []
+  );
 
-  const toggleTask = (index: number) => {
+  const toggleTask = (taskId: string) => {
     setCompletedTasks((current) => {
       const next = new Set(current);
 
-      if (next.has(index)) {
-        next.delete(index);
+      if (next.has(taskId)) {
+        next.delete(taskId);
       } else {
-        next.add(index);
+        next.add(taskId);
       }
 
       return next;
@@ -153,9 +157,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {upcomingSessions.map((s, i) => (
+              {upcomingSessions.map((s) => (
                 <div
-                  key={i}
+                  key={s.id}
                   style={{
                     padding: "0.9rem",
                     background: "#f8f9fb",
@@ -228,12 +232,12 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => {
-                const completed = completedTasks.has(i);
+              {recentTasks.map((t) => {
+                const completed = completedTasks.has(t.id);
 
                 return (
                 <label
-                  key={i}
+                  key={t.id}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
@@ -248,7 +252,7 @@ export default function DashboardPage() {
                   <input
                     type="checkbox"
                     checked={completed}
-                    onChange={() => toggleTask(i)}
+                    onChange={() => toggleTask(t.id)}
                     style={{
                       width: 16,
                       height: 16,

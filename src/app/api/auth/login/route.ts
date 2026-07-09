@@ -26,6 +26,10 @@ function isSessionRole(role: unknown): role is SessionRole {
   return role === "admin" || role === "client";
 }
 
+function isDemoLoginEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
+}
+
 export async function POST(request: Request) {
   const parsedBody = await readJsonBody<LoginRequest>(request, { limitBytes: 16 * 1024 });
   if (!parsedBody.ok) {
@@ -33,6 +37,14 @@ export async function POST(request: Request) {
   }
 
   const body = parsedBody.data;
+
+  if (!isDemoLoginEnabled()) {
+    return NextResponse.json(
+      { message: "Demo login is not enabled." },
+      { status: 503, headers: authResponseHeaders }
+    );
+  }
+
   const demoUser =
     body.demo === true && isSessionRole(body.role)
       ? findDemoUserByRole(body.role)

@@ -30,6 +30,9 @@ The login page includes demo admin and client profiles. Manual demo credentials 
 - `admin@naioshlaw.com` / `Admin@123`
 - `client@naioshlaw.com` / `Client@123`
 
+Production demo authentication is disabled unless `NAIOSH_ENABLE_DEMO_LOGIN=true` is set for a controlled demo
+deployment.
+
 Session state is signed in an httpOnly cookie. Client storage is only used as a UI cache for the demo experience.
 
 ## Verification
