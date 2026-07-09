@@ -39,10 +39,10 @@ const entityPluralMap: Record<string, string> = {
   مهمة: "مهام",
 };
 
-function seedRows(slug: string, rows: Record<string, unknown>[]) {
-  return rows.map((row, index) => ({
+function seedRows(slug: string, rows: Record<string, unknown>[]): Record<string, unknown>[] {
+  return rows.map((row, index): Record<string, unknown> => ({
     ...row,
-    [rowIdKey]: row[rowIdKey] ?? `${slug}-${index}`,
+    [rowIdKey]: String(row[rowIdKey] ?? `${slug}-${index}`),
   }));
 }
 
