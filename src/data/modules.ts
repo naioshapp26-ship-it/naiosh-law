@@ -71,6 +71,10 @@ export function canAccessModule(role: Role, slug: string) {
   return role === "admin" || !adminOnlyModuleSlugs.includes(slug);
 }
 
+export function isKnownModuleSlug(slug: string) {
+  return Object.prototype.hasOwnProperty.call(moduleMap, slug);
+}
+
 export function getVisibleOperationalModules(role?: Role) {
   return operationalModules.filter((item) => !role || canAccessModule(role, item.slug));
 }
