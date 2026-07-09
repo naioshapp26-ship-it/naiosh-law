@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoUsers } from "@/data/auth";
+import { saveSessionUser } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -43,10 +44,7 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
+    saveSessionUser({ role: user.role, name: user.name, email: user.email });
     router.push("/app/dashboard");
   };
 
@@ -279,7 +277,7 @@ export default function LoginPage() {
             <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
               دخول سريع تجريبي:
             </p>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
+            <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
               <button
                 onClick={() => fillDemo("admin")}
                 style={{
@@ -501,6 +499,10 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+        }
+        @media (max-width: 480px) {
+          .demo-login-buttons { flex-direction: column; }
+          .login-wrap > div:last-child { padding: 2rem 1rem !important; }
         }
       `}</style>
     </div>

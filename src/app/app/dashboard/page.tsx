@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
-import { modules } from "@/data/modules";
+import { operationalModules } from "@/lib/module-routing";
 import { useSession } from "@/lib/session";
 
 const kpis = [
@@ -304,14 +304,14 @@ export default function DashboardPage() {
               الوحدات التشغيلية
             </h2>
             <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-              {modules.length} وحدة متاحة
+              {operationalModules.length} وحدة متاحة
             </span>
           </div>
           <div
             style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}
             className="mod-grid"
           >
-            {modules.map((item) => (
+            {operationalModules.map((item) => (
               <ModuleCard key={item.slug} item={item} />
             ))}
           </div>

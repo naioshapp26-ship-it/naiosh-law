@@ -10,7 +10,9 @@ export type SessionUser = {
   email: string;
 };
 
-function readStoredUser(): SessionUser | null {
+const sessionChangedEvent = "naiosh-law:session-changed";
+
+export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -41,23 +43,50 @@ function readStoredUser(): SessionUser | null {
   return null;
 }
 
+export function saveSessionUser(user: SessionUser) {
+  window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  window.dispatchEvent(new Event(sessionChangedEvent));
+}
+
+export function clearSessionUser() {
+  window.localStorage.removeItem(sessionKey);
+  window.dispatchEvent(new Event(sessionChangedEvent));
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user] = useState<SessionUser | null>(readStoredUser);
-  const ready = true;
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!user && redirectIfMissing) {
+    const syncSession = () => {
+      setUser(readStoredUser());
+      setReady(true);
+    };
+
+    syncSession();
+    window.addEventListener("storage", syncSession);
+    window.addEventListener(sessionChangedEvent, syncSession);
+
+    return () => {
+      window.removeEventListener("storage", syncSession);
+      window.removeEventListener(sessionChangedEvent, syncSession);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (ready && !user && redirectIfMissing) {
       router.replace("/login");
     }
-  }, [user, redirectIfMissing, router]);
+  }, [ready, user, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({
       user,
       ready,
       logout: () => {
-        window.localStorage.removeItem(sessionKey);
+        clearSessionUser();
+        setUser(null);
         router.replace("/login");
       },
     }),
