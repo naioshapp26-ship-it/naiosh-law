@@ -105,6 +105,6 @@ export async function POST(request: Request, context: RouteContext) {
     ...healthPayload(slug, config),
     accepted: true,
     requestId: `${slug}-${Date.now()}`,
-    echo: parsedBody.data,
+    receivedFields: Object.keys(parsedBody.data).slice(0, 20),
   });
 }

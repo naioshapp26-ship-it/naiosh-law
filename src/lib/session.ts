@@ -6,6 +6,7 @@ import { sessionKey } from "@/data/auth";
 import type { SessionUser } from "@/lib/auth-session";
 
 const sessionChangeEvent = "naiosh-law-session-change";
+const sessionVerificationRetries = [250, 750];
 
 type SessionSnapshot = string | null | undefined;
 
@@ -95,6 +96,52 @@ function loginPathWithNext() {
   return next.startsWith("/app") ? `/login?next=${encodeURIComponent(next)}` : "/login";
 }
 
+function waitForRetry(delayMs: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+
+    const timeoutId = window.setTimeout(resolve, delayMs);
+    signal.addEventListener(
+      "abort",
+      () => {
+        window.clearTimeout(timeoutId);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true }
+    );
+  });
+}
+
+async function fetchSessionWithRetry(signal: AbortSignal) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= sessionVerificationRetries.length; attempt += 1) {
+    try {
+      return await fetch("/api/auth/session", {
+        cache: "no-store",
+        signal,
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
+
+      lastError = error;
+      const delay = sessionVerificationRetries[attempt];
+      if (delay === undefined) {
+        break;
+      }
+
+      await waitForRetry(delay, signal);
+    }
+  }
+
+  throw lastError;
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(null);
@@ -125,10 +172,7 @@ export function useSession(redirectIfMissing = false) {
 
     const controller = new AbortController();
 
-    fetch("/api/auth/session", {
-      cache: "no-store",
-      signal: controller.signal,
-    })
+    fetchSessionWithRetry(controller.signal)
       .then(async (response) => {
         if (!response.ok) {
           setVerifiedRawSession(rawSession);

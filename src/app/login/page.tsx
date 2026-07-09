@@ -24,6 +24,35 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+async function loginErrorMessage(response: Response) {
+  if (response.status === 403) {
+    return "الدخول التجريبي غير متاح في هذه البيئة.";
+  }
+
+  if (response.status === 413) {
+    return "بيانات تسجيل الدخول كبيرة جدًا.";
+  }
+
+  if (response.status === 415 || response.status === 400) {
+    return "تعذر قراءة بيانات تسجيل الدخول. أعد المحاولة.";
+  }
+
+  if (response.status === 503) {
+    return "إعدادات الجلسة غير مكتملة على الخادم.";
+  }
+
+  try {
+    const payload = (await response.json()) as { message?: string };
+    if (payload.message) {
+      return payload.message;
+    }
+  } catch {
+    // Fall back to the generic authentication message below.
+  }
+
+  return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+}
+
 function getSafeNextPath() {
   if (typeof window === "undefined") {
     return "/app/dashboard";
@@ -60,7 +89,7 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+        setError(await loginErrorMessage(response));
         return;
       }
 
@@ -85,7 +114,7 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("تعذر بدء الحساب التجريبي.");
+        setError(await loginErrorMessage(response));
         return;
       }
 
@@ -298,6 +327,35 @@ export default function LoginPage() {
           animate="show"
           style={{ width: "100%", maxWidth: "420px" }}
         >
+          <div className="compact-login-brand" style={{ display: "none", alignItems: "center", gap: "0.75rem", marginBottom: "2rem" }}>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                background: "linear-gradient(135deg,#c3152a,#7f0d1a)",
+                borderRadius: "13px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                fontWeight: 900,
+                fontSize: "1.1rem",
+                boxShadow: "0 8px 24px rgba(195,21,42,0.25)",
+                flexShrink: 0,
+              }}
+            >
+              N
+            </div>
+            <div>
+              <div style={{ color: "#0a0a12", fontWeight: 900, fontSize: "1rem", lineHeight: 1.2 }}>
+                Naiosh Law
+              </div>
+              <div style={{ color: "#64748b", fontSize: "0.72rem" }}>
+                النظام القانوني المتكامل
+              </div>
+            </div>
+          </div>
+
           {/* Heading */}
           <motion.div variants={fadeUp} style={{ marginBottom: "2.5rem" }}>
             <h1
@@ -524,6 +582,7 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+          .compact-login-brand { display: flex !important; }
         }
         @media (max-width: 480px) {
           .login-form-panel { padding: 2rem 1rem !important; }

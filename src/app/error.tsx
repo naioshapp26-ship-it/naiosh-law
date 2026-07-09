@@ -5,7 +5,7 @@ type Props = {
   reset: () => void;
 };
 
-export default function GlobalError({ error, reset }: Props) {
+export default function Error({ error, reset }: Props) {
   return (
     <main
       style={{

@@ -353,7 +353,7 @@ export function AppShell({ role, name, children }: Props) {
             style={{
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "flex-start",
             }}
             role="presentation"
           >
@@ -404,7 +404,7 @@ export function AppShell({ role, name, children }: Props) {
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
-              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8", width: "100%", maxWidth: "4.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8", width: "100%", maxWidth: "5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal", lineHeight: 1.25, textAlign: "center" }}>
                 {item.label}
               </span>
             </Link>
@@ -427,7 +427,7 @@ export function AppShell({ role, name, children }: Props) {
 
       <style>{`
         /* Mobile breakpoint */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .desktop-sidebar   { display: none !important; }
           .hamburger-btn     { display: flex !important; }
           .mobile-bottom-nav { display: flex !important; }
@@ -439,7 +439,7 @@ export function AppShell({ role, name, children }: Props) {
         @media (max-width: 420px) {
           header button:not(.hamburger-btn) { padding-inline: 0.6rem !important; }
         }
-        @media (min-width: 769px) {
+        @media (min-width: 901px) {
           .drawer-close-btn  { display: none; }
           .drawer-header     { display: none; }
         }

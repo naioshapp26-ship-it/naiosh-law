@@ -115,7 +115,7 @@ export function HeroSection() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 460px)",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(320px, 460px)",
             gap: "clamp(2rem, 4vw, 4rem)",
             alignItems: "center",
             justifyContent: "center",
@@ -201,6 +201,7 @@ export function HeroSection() {
                 fontSize: "1.08rem",
                 lineHeight: 1.9,
                 maxWidth: "560px",
+                marginInline: "auto",
                 marginBottom: "2.75rem",
               }}
             >
@@ -540,7 +541,7 @@ export function HeroSection() {
       <style>{`
         @media (max-width: 1200px) {
           .hero-grid {
-            grid-template-columns: minmax(0, 1fr) 360px !important;
+            grid-template-columns: minmax(0, 1fr) 340px !important;
           }
         }
         @media (max-width: 900px) {

@@ -1,5 +1,3 @@
-"use client";
-
 export type BadgeColor = "green" | "red" | "yellow" | "blue" | "gray" | "purple" | "orange";
 
 const colorMap: Record<BadgeColor, { bg: string; color: string; border: string }> = {
@@ -33,6 +31,9 @@ export function StatusBadge({ label, color, dot = true }: Props) {
         padding: "0.22rem 0.7rem",
         fontSize: "0.72rem",
         fontWeight: 700,
+        maxWidth: "100%",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
         whiteSpace: "nowrap",
         letterSpacing: "0.01em",
       }}

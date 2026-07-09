@@ -24,10 +24,10 @@ const upcomingSessions = [
 ];
 
 const recentTasks = [
-  { task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
-  { task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
-  { task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
-  { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
+  { id: "defense-memo-2024-0547", task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
+  { id: "agency-contract-review-ahmed", task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
+  { id: "commercial-appeal-documents", task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
+  { id: "fees-invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
 const completedTasksStorageKey = "naiosh-law-dashboard-completed-tasks";
@@ -65,30 +65,68 @@ function subscribeToCompletedTasks(onStoreChange: () => void) {
   };
 }
 
-function parseCompletedTasks(rawTasks: TaskSnapshot) {
+function getTaskStorageScope(email?: string) {
+  return email?.trim().toLocaleLowerCase("en-US") || "anonymous";
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function parseCompletedTaskStore(rawTasks: string | null) {
   if (!rawTasks) {
-    return new Set<number>();
+    return {};
+  }
+
+  const parsed = JSON.parse(rawTasks) as unknown;
+
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    ? (parsed as Record<string, unknown>)
+    : {};
+}
+
+function parseCompletedTasks(rawTasks: TaskSnapshot, scope: string) {
+  if (!rawTasks) {
+    return new Set<string>();
   }
 
   try {
     const parsed = JSON.parse(rawTasks) as unknown;
     if (Array.isArray(parsed)) {
-      return new Set(parsed.filter((item): item is number => Number.isInteger(item)));
+      const migratedIds = parsed
+        .filter((item): item is number => Number.isInteger(item))
+        .map((index) => recentTasks[index]?.id)
+        .filter((id): id is string => !!id);
+
+      return new Set(migratedIds);
+    }
+
+    if (parsed && typeof parsed === "object") {
+      const scopedTasks = (parsed as Record<string, unknown>)[scope];
+      if (isStringArray(scopedTasks)) {
+        return new Set(scopedTasks);
+      }
     }
   } catch {
-    return new Set<number>();
+    return new Set<string>();
   }
 
-  return new Set<number>();
+  return new Set<string>();
 }
 
-function persistCompletedTasks(tasks: Set<number>) {
+function persistCompletedTasks(tasks: Set<string>, scope: string) {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    window.localStorage.setItem(completedTasksStorageKey, JSON.stringify([...tasks]));
+    const rawTasks = window.localStorage.getItem(completedTasksStorageKey);
+    const current = parseCompletedTaskStore(rawTasks);
+
+    window.localStorage.setItem(
+      completedTasksStorageKey,
+      JSON.stringify({ ...current, [scope]: [...tasks] })
+    );
   } catch {
     // Keep the checkbox interaction usable even when browser storage is unavailable.
   }
@@ -97,14 +135,15 @@ function persistCompletedTasks(tasks: Set<number>) {
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const taskStorageScope = getTaskStorageScope(user?.email);
   const completedTasksSnapshot = useSyncExternalStore(
     subscribeToCompletedTasks,
     getCompletedTasksSnapshot,
     getServerCompletedTasksSnapshot
   );
   const completedTasks = useMemo(
-    () => parseCompletedTasks(completedTasksSnapshot),
-    [completedTasksSnapshot]
+    () => parseCompletedTasks(completedTasksSnapshot, taskStorageScope),
+    [completedTasksSnapshot, taskStorageScope]
   );
   const todayLabel = new Intl.DateTimeFormat("ar-EG", {
     weekday: "long",
@@ -113,16 +152,16 @@ export default function DashboardPage() {
     year: "numeric",
   }).format(new Date());
 
-  const toggleTask = (index: number) => {
+  const toggleTask = (taskId: string) => {
     const next = new Set(completedTasks);
 
-    if (next.has(index)) {
-      next.delete(index);
+    if (next.has(taskId)) {
+      next.delete(taskId);
     } else {
-      next.add(index);
+      next.add(taskId);
     }
 
-    persistCompletedTasks(next);
+    persistCompletedTasks(next, taskStorageScope);
   };
 
   if (!ready || !user) {
@@ -299,8 +338,8 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => {
-                const completed = completedTasks.has(i);
+              {recentTasks.map((t) => {
+                const completed = completedTasks.has(t.id);
 
                 return (
                 <label
@@ -319,7 +358,7 @@ export default function DashboardPage() {
                   <input
                     type="checkbox"
                     checked={completed}
-                    onChange={() => toggleTask(i)}
+                    onChange={() => toggleTask(t.id)}
                     style={{
                       width: 16,
                       height: 16,

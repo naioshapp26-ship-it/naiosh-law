@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -15,6 +15,30 @@ type Props = {
 
 const PAGE_SIZE = 10;
 const rowIdKey = "_rowId";
+const mobileCardsQuery = "(max-width: 1024px)";
+
+function subscribeToMobileCardsChange(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const mediaQuery = window.matchMedia(mobileCardsQuery);
+  mediaQuery.addEventListener("change", onStoreChange);
+
+  return () => mediaQuery.removeEventListener("change", onStoreChange);
+}
+
+function getMobileCardsSnapshot() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia(mobileCardsQuery).matches;
+}
+
+function getServerMobileCardsSnapshot() {
+  return false;
+}
 
 function numericValue(value: unknown) {
   const normalized = String(value ?? "")
@@ -81,6 +105,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const hasActions = !!(onEdit || onDelete || onView);
+  const showMobileCards = useSyncExternalStore(
+    subscribeToMobileCardsChange,
+    getMobileCardsSnapshot,
+    getServerMobileCardsSnapshot
+  );
   const firstColumnKey = columns[0]?.key;
   const primaryColumn = columns[0];
   const badgeColumn = columns.find((column) => column.type === "badge");
@@ -156,236 +185,231 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       </div>
 
-      {/* Table */}
-      <div
-        className="data-table-frame"
-        style={{
-          borderRadius: "16px",
-          border: "1px solid #e2e8f0",
-          overflow: "hidden",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        }}
-      >
-        <div className="data-table-desktop-scroll" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
-            <thead>
-              <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
-                {columns.map((col) => (
-                  <th
-                    key={col.key}
-                    onClick={() => col.sortable !== false && handleSort(col.key)}
-                    style={{
-                      padding: "0.9rem 1rem",
-                      textAlign: "start",
-                      fontWeight: 700,
-                      color: "#475569",
-                      fontSize: "0.75rem",
-                      whiteSpace: "nowrap",
-                      cursor: col.sortable !== false ? "pointer" : "default",
-                      userSelect: "none",
-                    }}
-                  >
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
-                        {sortAsc ? " ↑" : " ↓"}
-                      </span>
-                    )}
-                  </th>
-                ))}
-                {hasActions && (
-                  <th
-                    style={{
-                      padding: "0.9rem 1rem",
-                      textAlign: "start",
-                      fontWeight: 700,
-                      color: "#475569",
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    الإجراءات
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {paged.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length + (hasActions ? 1 : 0)}
-                    style={{ padding: "3.5rem", textAlign: "center", color: "#94a3b8" }}
-                  >
-                    <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
-                    <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
-                  </td>
-                </tr>
-              ) : (
-                paged.map((row, i) => (
-                  <tr
-                    key={getRowKey(row, i)}
-                    style={{
-                      borderBottom: "1px solid #f1f5f9",
-                      transition: "background 0.15s",
-                      background: "transparent",
-                    }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "#fafbfc")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "transparent")
-                    }
-                  >
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
-                      >
-                        {renderCell(col, row)}
-                      </td>
-                    ))}
-                    {hasActions && (
-                      <td style={{ padding: "0.85rem 1rem" }}>
-                        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                          {onView && (
-                            <button
-                              onClick={() => onView(row)}
-                              style={{
-                                background: "#f1f5f9",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#475569",
-                                fontFamily: "var(--font)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
-                            >
-                              👁 عرض
-                            </button>
-                          )}
-                          {onEdit && (
-                            <button
-                              onClick={() => onEdit(row)}
-                              style={{
-                                background: "rgba(195,21,42,0.07)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#c3152a",
-                                fontFamily: "var(--font)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
-                            >
-                              ✏️ تعديل
-                            </button>
-                          )}
-                          {onDelete && (
-                            <button
-                              onClick={() => onDelete(row)}
-                              style={{
-                                background: "rgba(239,68,68,0.08)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#dc2626",
-                                fontFamily: "var(--font)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
-                            >
-                              🗑 حذف
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="data-table-mobile-list" style={{ display: "none", flexDirection: "column", gap: "0.85rem" }}>
-        {paged.length === 0 ? (
-          <div className="card-white" style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
-            <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
-            <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
-          </div>
-        ) : (
-          paged.map((row, i) => (
-            <div key={getRowKey(row, i)} className="card-white" style={{ padding: "1rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "0.85rem", alignItems: "flex-start", marginBottom: "0.85rem" }}>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 700, marginBottom: "0.25rem" }}>
-                    {columns[0]?.label ?? "السجل"}
-                  </p>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflow: "hidden", textOverflow: "ellipsis", overflowWrap: "anywhere" }}>
-                    {primaryColumn ? renderCell(primaryColumn, row) : "—"}
-                  </div>
-                </div>
-                {badgeColumn ? (
-                  <div style={{ flexShrink: 0 }}>
-                    {renderCell(badgeColumn, row)}
-                  </div>
-                ) : null}
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
-                {mobileDetailColumns.map((col) => (
-                  <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
-                    <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700, flexShrink: 0 }}>{col.label}</span>
-                    <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0, overflowWrap: "anywhere" }}>{renderCell(col, row)}</span>
-                  </div>
-                ))}
-              </div>
-
-              {hasActions && (
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f1f5f9" }}>
-                  {onView && (
-                    <button
-                      onClick={() => onView(row)}
-                      style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font)", flex: 1 }}
-                    >
-                      👁 عرض
-                    </button>
-                  )}
-                  {onEdit && (
-                    <button
-                      onClick={() => onEdit(row)}
-                      style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font)", flex: 1 }}
-                    >
-                      ✏️ تعديل
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(row)}
-                      style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font)", flex: 1 }}
-                    >
-                      🗑 حذف
-                    </button>
-                  )}
-                </div>
-              )}
+      {showMobileCards ? (
+        <div className="data-table-mobile-list" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+          {paged.length === 0 ? (
+            <div className="card-white" style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+              <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
             </div>
-          ))
-        )}
-      </div>
+          ) : (
+            paged.map((row, i) => (
+              <div key={getRowKey(row, i)} className="card-white" style={{ padding: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "0.85rem", alignItems: "flex-start", marginBottom: "0.85rem" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 700, marginBottom: "0.25rem" }}>
+                      {columns[0]?.label ?? "السجل"}
+                    </p>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflow: "hidden", textOverflow: "ellipsis", overflowWrap: "anywhere" }}>
+                      {primaryColumn ? renderCell(primaryColumn, row) : "—"}
+                    </div>
+                  </div>
+                  {badgeColumn ? (
+                    <div style={{ flexShrink: 0 }}>
+                      {renderCell(badgeColumn, row)}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
+                  {mobileDetailColumns.map((col) => (
+                    <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
+                      <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700, flexShrink: 0 }}>{col.label}</span>
+                      <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0, overflowWrap: "anywhere" }}>{renderCell(col, row)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {hasActions && (
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f1f5f9" }}>
+                    {onView && (
+                      <button
+                        onClick={() => onView(row)}
+                        style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font)", flex: 1 }}
+                      >
+                        👁 عرض
+                      </button>
+                    )}
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(row)}
+                        style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font)", flex: 1 }}
+                      >
+                        ✏️ تعديل
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(row)}
+                        style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font)", flex: 1 }}
+                      >
+                        🗑 حذف
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div
+          className="data-table-frame"
+          style={{
+            borderRadius: "16px",
+            border: "1px solid #e2e8f0",
+            overflow: "hidden",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div className="data-table-desktop-scroll" style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+              <thead>
+                <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
+                  {columns.map((col) => (
+                    <th
+                      key={col.key}
+                      onClick={() => col.sortable !== false && handleSort(col.key)}
+                      style={{
+                        padding: "0.9rem 1rem",
+                        textAlign: "start",
+                        fontWeight: 700,
+                        color: "#475569",
+                        fontSize: "0.75rem",
+                        whiteSpace: "nowrap",
+                        cursor: col.sortable !== false ? "pointer" : "default",
+                        userSelect: "none",
+                      }}
+                    >
+                      {col.label}
+                      {sortKey === col.key && (
+                        <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
+                          {sortAsc ? " ↑" : " ↓"}
+                        </span>
+                      )}
+                    </th>
+                  ))}
+                  {hasActions && (
+                    <th
+                      style={{
+                        padding: "0.9rem 1rem",
+                        textAlign: "start",
+                        fontWeight: 700,
+                        color: "#475569",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      الإجراءات
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {paged.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={columns.length + (hasActions ? 1 : 0)}
+                      style={{ padding: "3.5rem", textAlign: "center", color: "#94a3b8" }}
+                    >
+                      <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+                      <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
+                    </td>
+                  </tr>
+                ) : (
+                  paged.map((row, i) => (
+                    <tr
+                      key={getRowKey(row, i)}
+                      className="data-table-row"
+                      style={{
+                        borderBottom: "1px solid #f1f5f9",
+                        transition: "background 0.15s",
+                      }}
+                    >
+                      {columns.map((col) => (
+                        <td
+                          key={col.key}
+                          style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
+                        >
+                          {renderCell(col, row)}
+                        </td>
+                      ))}
+                      {hasActions && (
+                        <td style={{ padding: "0.85rem 1rem" }}>
+                          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                            {onView && (
+                              <button
+                                onClick={() => onView(row)}
+                                style={{
+                                  background: "#f1f5f9",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  padding: "0.35rem 0.7rem",
+                                  cursor: "pointer",
+                                  fontSize: "0.73rem",
+                                  fontWeight: 600,
+                                  color: "#475569",
+                                  fontFamily: "var(--font)",
+                                  transition: "all 0.15s",
+                                }}
+                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
+                                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
+                              >
+                                👁 عرض
+                              </button>
+                            )}
+                            {onEdit && (
+                              <button
+                                onClick={() => onEdit(row)}
+                                style={{
+                                  background: "rgba(195,21,42,0.07)",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  padding: "0.35rem 0.7rem",
+                                  cursor: "pointer",
+                                  fontSize: "0.73rem",
+                                  fontWeight: 600,
+                                  color: "#c3152a",
+                                  fontFamily: "var(--font)",
+                                  transition: "all 0.15s",
+                                }}
+                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
+                                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
+                              >
+                                ✏️ تعديل
+                              </button>
+                            )}
+                            {onDelete && (
+                              <button
+                                onClick={() => onDelete(row)}
+                                style={{
+                                  background: "rgba(239,68,68,0.08)",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  padding: "0.35rem 0.7rem",
+                                  cursor: "pointer",
+                                  fontSize: "0.73rem",
+                                  fontWeight: 600,
+                                  color: "#dc2626",
+                                  fontFamily: "var(--font)",
+                                  transition: "all 0.15s",
+                                }}
+                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
+                                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
+                              >
+                                🗑 حذف
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -461,19 +485,15 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       )}
       <style>{`
-        @media (max-width: 900px) {
+        @media (hover: hover) and (pointer: fine) {
+          .data-table-row:hover {
+            background: #fafbfc;
+          }
+        }
+        @media (max-width: 1024px) {
           .data-table-toolbar {
             flex-direction: column;
             align-items: stretch !important;
-          }
-          .data-table-frame {
-            display: none;
-          }
-          .data-table-desktop-scroll {
-            display: none;
-          }
-          .data-table-mobile-list {
-            display: flex !important;
           }
           .data-table-pagination {
             align-items: stretch !important;

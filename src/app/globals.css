@@ -156,6 +156,21 @@ a {
   }
 }
 
+@media (max-width: 900px) {
+  .float-anim,
+  .glow-pulse,
+  .spin-slow {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 768px), (hover: none) {
+  .glass-dark {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 /* ── Form Inputs ───────────────────────────── */
 .input-field {
   width: 100%;

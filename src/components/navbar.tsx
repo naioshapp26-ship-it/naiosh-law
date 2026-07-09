@@ -13,6 +13,19 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
   const navStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,

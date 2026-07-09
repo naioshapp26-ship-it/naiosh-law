@@ -50,17 +50,26 @@ function getEntityPlural(entityName: string) {
   return entityPluralMap[entityName] ?? entityName;
 }
 
-function getRowsStorageKey(slug: string) {
+function getRowsStorageScope(email?: string) {
+  return email?.trim().toLocaleLowerCase("en-US") || "anonymous";
+}
+
+function getRowsStorageKey(slug: string, scope: string) {
+  return `naiosh-law-module-rows:${scope}:${slug}`;
+}
+
+function getLegacyRowsStorageKey(slug: string) {
   return `naiosh-law-module-rows:${slug}`;
 }
 
-function getRowsSnapshot(slug: string): RowsSnapshot {
+function getRowsSnapshot(slug: string, scope: string): RowsSnapshot {
   if (typeof window === "undefined") {
     return undefined;
   }
 
   try {
-    return window.localStorage.getItem(getRowsStorageKey(slug));
+    const scopedRows = window.localStorage.getItem(getRowsStorageKey(slug, scope));
+    return scopedRows ?? window.localStorage.getItem(getLegacyRowsStorageKey(slug));
   } catch {
     return null;
   }
@@ -118,13 +127,13 @@ function rowsFromSnapshot(slug: string, fallbackRows: Record<string, unknown>[],
   return seededFallback;
 }
 
-function persistRows(slug: string, rows: Record<string, unknown>[]) {
+function persistRows(slug: string, scope: string, rows: Record<string, unknown>[]) {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    window.localStorage.setItem(getRowsStorageKey(slug), JSON.stringify(rows));
+    window.localStorage.setItem(getRowsStorageKey(slug, scope), JSON.stringify(rows));
   } catch {
     // CRUD state remains in memory if browser storage is unavailable or full.
   }
@@ -136,9 +145,10 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   const router = useRouter();
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
+  const rowsStorageScope = getRowsStorageScope(user?.email);
   const storedRowsSnapshot = useSyncExternalStore(
     subscribeToRowsChange,
-    () => getRowsSnapshot(slug),
+    () => getRowsSnapshot(slug, rowsStorageScope),
     getServerRowsSnapshot
   );
   const storedRows = useMemo(
@@ -171,9 +181,9 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
     (updater: (currentRows: Record<string, unknown>[]) => Record<string, unknown>[]) => {
       const nextRows = updater(rows);
       setMemoryRows(nextRows);
-      persistRows(slug, nextRows);
+      persistRows(slug, rowsStorageScope, nextRows);
     },
-    [rows, slug]
+    [rows, rowsStorageScope, slug]
   );
 
   useEffect(() => {

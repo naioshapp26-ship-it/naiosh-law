@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decodeSession, sessionCookieName } from "@/lib/auth-session";
+import { decodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
 import { canAccessModule } from "@/lib/module-access";
 
 function getModuleSlug(pathname: string) {
@@ -8,8 +8,19 @@ function getModuleSlug(pathname: string) {
   return match?.[1] ?? null;
 }
 
+function clearSessionCookie(response: NextResponse, request: NextRequest) {
+  response.cookies.set(sessionCookieName, "", {
+    ...getSessionCookieOptions(request),
+    expires: new Date(0),
+    maxAge: 0,
+  });
+
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
-  const user = await decodeSession(request.cookies.get(sessionCookieName)?.value);
+  const sessionToken = request.cookies.get(sessionCookieName)?.value;
+  const user = await decodeSession(sessionToken);
   const isLoginPage = request.nextUrl.pathname === "/login";
   const isDashboardModule = request.nextUrl.pathname === "/app/modules/dashboard";
   const moduleSlug = getModuleSlug(request.nextUrl.pathname);
@@ -34,13 +45,15 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isLoginPage) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return sessionToken ? clearSessionCookie(response, request) : response;
   }
 
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
 
-  return NextResponse.redirect(loginUrl);
+  const response = NextResponse.redirect(loginUrl);
+  return sessionToken ? clearSessionCookie(response, request) : response;
 }
 
 export const config = {
