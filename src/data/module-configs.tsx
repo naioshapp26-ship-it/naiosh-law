@@ -13,7 +13,7 @@ export type FormField = {
 export type Column = {
   key: string;
   label: string;
-  type?: "text" | "badge" | "currency" | "number";
+  type?: "text" | "badge" | "currency" | "number" | "date";
   sortable?: boolean;
   badgeMap?: Record<string, { label: string; color: BadgeColor }>;
 };

@@ -16,6 +16,57 @@ type Props = {
 const PAGE_SIZE = 10;
 const rowIdKey = "_rowId";
 
+function normalizeDigits(value: string) {
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 0x06f0));
+}
+
+function toNumericValue(value: unknown) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  const normalized = normalizeDigits(String(value ?? ""))
+    .replace(/[,\s]/g, "")
+    .replace(/[^\d.-]/g, "");
+  const number = Number(normalized);
+
+  return Number.isFinite(number) ? number : null;
+}
+
+function toDateValue(value: unknown) {
+  const normalized = normalizeDigits(String(value ?? "").trim());
+  const timestamp = Date.parse(normalized);
+
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function compareValues(left: unknown, right: unknown, column: Column) {
+  if (column.type === "number" || column.type === "currency") {
+    const leftNumber = toNumericValue(left);
+    const rightNumber = toNumericValue(right);
+
+    if (leftNumber !== null && rightNumber !== null) {
+      return leftNumber - rightNumber;
+    }
+  }
+
+  if (column.type === "date") {
+    const leftDate = toDateValue(left);
+    const rightDate = toDateValue(right);
+
+    if (leftDate !== null && rightDate !== null) {
+      return leftDate - rightDate;
+    }
+  }
+
+  return String(left ?? "").localeCompare(String(right ?? ""), "ar", {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -42,12 +93,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const sorted = useMemo(() => (
     sortKey
       ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+        const column = columns.find((item) => item.key === sortKey);
+        const result = column ? compareValues(a[sortKey], b[sortKey], column) : 0;
+        return sortAsc ? result : -result;
       })
       : filtered
-  ), [filtered, sortAsc, sortKey]);
+  ), [columns, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -74,11 +125,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       return <StatusBadge label={String(val)} color="gray" />;
     }
     if (col.type === "currency") {
-      const numericValue = Number(String(val ?? "").replace(/,/g, ""));
+      const numericValue = toNumericValue(val);
 
       return (
         <span style={{ fontWeight: 700, color: "#0a0a12" }}>
-          {Number.isFinite(numericValue) ? `${numericValue.toLocaleString("ar-EG")} ج.م` : "—"}
+          {numericValue !== null ? `${numericValue.toLocaleString("ar-EG")} ج.م` : "—"}
         </span>
       );
     }

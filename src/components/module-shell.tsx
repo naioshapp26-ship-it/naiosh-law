@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleConfig } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
 import { readStorageValue, removeStorageValue, writeStorageValue } from "@/lib/browser-storage";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
 
@@ -104,8 +105,10 @@ export function ModuleShell({ slug, config, title }: Props) {
   const router = useRouter();
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
+  const initialRows = useMemo(() => seedRows(slug, config.data), [config.data, slug]);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config.data));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(initialRows);
+  const [rowsLoaded, setRowsLoaded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -119,28 +122,27 @@ export function ModuleShell({ slug, config, title }: Props) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
 
+  const closeView = useCallback(() => setViewTarget(null), []);
+  const closeReport = useCallback(() => setReportOpen(false), []);
+  const viewDialogRef = useDialogAccessibility<HTMLDivElement>({ active: !!viewTarget, onClose: closeView });
+  const reportDialogRef = useDialogAccessibility<HTMLDivElement>({ active: reportOpen, onClose: closeReport });
+
   useEffect(() => {
-    persistRows(slug, rows);
-  }, [rows, slug]);
+    setRows(loadRows(slug, config.data));
+    setRowsLoaded(true);
+  }, [config.data, slug]);
+
+  useEffect(() => {
+    if (rowsLoaded) {
+      persistRows(slug, rows);
+    }
+  }, [rows, rowsLoaded, slug]);
 
   useEffect(() => {
     if (ready && user && !hasModuleAccess) {
       router.replace("/app/dashboard");
     }
   }, [hasModuleAccess, ready, router, user]);
-
-  useEffect(() => {
-    if (!viewTarget && !reportOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [reportOpen, viewTarget]);
 
   if (!ready || !user) {
     return <LoadingScreen />;
@@ -206,20 +208,22 @@ export function ModuleShell({ slug, config, title }: Props) {
     return (
       <div
         style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
-        onClick={() => setViewTarget(null)}
+        onClick={closeView}
         role="presentation"
       >
         <div
+          ref={viewDialogRef}
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-label={`تفاصيل ${config.entityName}`}
+          tabIndex={-1}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
-              onClick={() => setViewTarget(null)}
+              onClick={closeView}
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
@@ -240,7 +244,7 @@ export function ModuleShell({ slug, config, title }: Props) {
               >✏️ تعديل</button>
             )}
             <button
-              onClick={() => setViewTarget(null)}
+              onClick={closeView}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
           </div>
@@ -336,19 +340,21 @@ export function ModuleShell({ slug, config, title }: Props) {
       {reportOpen && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
-          onClick={() => setReportOpen(false)}
+          onClick={closeReport}
           role="presentation"
         >
           <div
+            ref={reportDialogRef}
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, maxHeight: "min(90vh, calc(100vh - 2rem))", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label="تصدير التقارير"
+            tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <button onClick={closeReport} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {entityPlural}

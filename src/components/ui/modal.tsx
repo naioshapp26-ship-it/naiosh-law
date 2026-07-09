@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   open: boolean;
@@ -31,28 +32,9 @@ function inputType(type: FormField["type"]) {
 function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Omit<Props, "open">) {
   const [form, setForm] = useState<Record<string, unknown>>(() => buildInitialForm(fields, initial));
   const [saving, setSaving] = useState(false);
+  const dialogRef = useDialogAccessibility<HTMLDivElement>({ active: true, onClose });
 
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -81,6 +63,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
       role="presentation"
     >
       <div
+        ref={dialogRef}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -96,6 +79,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
       >
         {/* Header */}
         <div

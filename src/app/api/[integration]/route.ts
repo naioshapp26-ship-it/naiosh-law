@@ -19,7 +19,8 @@ type RouteContext = {
 
 async function getIntegration(context: RouteContext) {
   const { integration } = await context.params;
-  return { slug: integration, config: integrationCatalog[integration] };
+  const slug = integration.toLowerCase();
+  return { slug, config: integrationCatalog[slug] };
 }
 
 async function requireSession(request: Request) {
@@ -66,7 +67,8 @@ async function parseOptionalJson(request: Request) {
   }
 
   try {
-    return await request.json();
+    const text = await request.text();
+    return text.trim() ? JSON.parse(text) : null;
   } catch {
     return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
   }
@@ -115,10 +117,13 @@ export async function POST(request: Request, context: RouteContext) {
     return body;
   }
 
-  return NextResponse.json({
-    ...healthPayload(slug, config),
-    accepted: true,
-    requestId: `${slug}-${Date.now()}`,
-    echo: body,
-  });
+  return NextResponse.json(
+    {
+      ...healthPayload(slug, config),
+      accepted: true,
+      requestId: `${slug}-${Date.now()}`,
+      payloadReceived: body !== null,
+    },
+    { status: 202 }
+  );
 }

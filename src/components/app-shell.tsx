@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { useSession } from "@/lib/session";
 
 type Props = {
@@ -152,28 +153,22 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const drawerRef = useDialogAccessibility<HTMLDivElement>({ active: drawerOpen, onClose: closeDrawer });
 
-  useEffect(() => {
-    if (!drawerOpen) {
-      return;
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setLogoutError("");
+
+    try {
+      await logout();
+    } catch {
+      setLogoutError("تعذر تسجيل الخروج. تحقق من الاتصال وحاول مرة أخرى.");
+      setLoggingOut(false);
     }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setDrawerOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [drawerOpen]);
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
@@ -264,21 +259,36 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={handleLogout}
+              disabled={loggingOut}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font)",
+                cursor: loggingOut ? "wait" : "pointer", fontFamily: "var(--font)",
                 transition: "all 0.2s", whiteSpace: "nowrap",
+                opacity: loggingOut ? 0.7 : 1,
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
-              خروج
+              {loggingOut ? "جاري الخروج..." : "خروج"}
             </button>
           </div>
         </div>
+        {logoutError && (
+          <p
+            role="alert"
+            style={{
+              padding: "0 1rem 0.75rem",
+              color: "#c3152a",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+            }}
+          >
+            {logoutError}
+          </p>
+        )}
       </header>
 
       {/* ── Body ── */}
@@ -305,18 +315,25 @@ export function AppShell({ role, name, children }: Props) {
           >
             {/* Backdrop */}
             <div
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeDrawer}
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
             {/* Drawer panel */}
-            <div style={{
-              position: "relative", zIndex: 1,
-              width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
-              height: "100%", overflowY: "auto",
-              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
-              animation: "slide-drawer 0.25s ease",
-            }}>
-              <SidebarContent pathname={pathname} role={role} onClose={() => setDrawerOpen(false)} />
+            <div
+              ref={drawerRef}
+              style={{
+                position: "relative", zIndex: 1,
+                width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
+                height: "100%", overflowY: "auto",
+                boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
+                animation: "slide-drawer 0.25s ease",
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة الوحدات"
+              tabIndex={-1}
+            >
+              <SidebarContent pathname={pathname} role={role} onClose={closeDrawer} />
             </div>
           </div>
         )}
