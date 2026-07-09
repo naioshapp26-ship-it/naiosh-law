@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -26,6 +26,26 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     buildInitialForm(fields, initial)
   );
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -157,7 +177,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div className="modal-actions" style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={onClose}
@@ -188,7 +208,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       </div>
 
       <style>{`
-        @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) {
+          .modal-form-grid { grid-template-columns: 1fr !important; }
+          .modal-actions { flex-direction: column-reverse; }
+          .modal-actions > button { width: 100%; }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }

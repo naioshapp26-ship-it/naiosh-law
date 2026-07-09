@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonRequest } from "@/lib/api-request";
 
 export const dynamic = "force-dynamic";
 
@@ -57,11 +58,9 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    payload = null;
+  const body = await readJsonRequest(request, { allowEmpty: true });
+  if (!body.ok) {
+    return body.response;
   }
 
   return NextResponse.json(
@@ -70,7 +69,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       endpoint: `/api/${integration}`,
       acceptedAt: new Date().toISOString(),
       integration: config.name,
-      payload,
+      payload: body.data,
     },
     { status: 202 }
   );

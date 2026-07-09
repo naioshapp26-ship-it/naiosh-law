@@ -22,6 +22,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         justifyContent: "center",
         background: "rgba(10,10,18,0.55)",
         backdropFilter: "blur(4px)",
+        padding: "1rem",
       }}
       onClick={onCancel}
     >

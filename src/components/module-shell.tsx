@@ -57,7 +57,9 @@ function normalizeRows(rows: Record<string, unknown>[], slug: string) {
 }
 
 function toCsvValue(value: unknown) {
-  const text = String(value ?? "").replace(/\r?\n/g, " ");
+  const normalizedText = String(value ?? "").replace(/\r?\n/g, " ");
+  const trimmedStart = normalizedText.trimStart();
+  const text = /^[=+\-@]/.test(trimmedStart) ? `'${normalizedText}` : normalizedText;
   return `"${text.replace(/"/g, '""')}"`;
 }
 
@@ -403,7 +405,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="toast-stack" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}
@@ -546,6 +548,8 @@ export function ModuleShell({ slug }: { slug: string }) {
           .module-page-actions > button { flex: 1 1 140px; justify-content: center; }
           .module-table-card { padding: 1rem !important; }
           .details-grid { grid-template-columns: 1fr !important; }
+          .toast-stack { bottom: 5.75rem !important; inset-inline: 0.75rem !important; }
+          .toast-stack > div { max-width: none !important; }
         }
       `}</style>
     </AppShell>

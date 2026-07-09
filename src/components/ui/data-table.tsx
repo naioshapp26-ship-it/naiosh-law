@@ -87,6 +87,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const paged = useMemo(() => sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [safePage, sorted]);
 
   const hasActions = !!(onEdit || onDelete || onView);
+  const tableMinWidth = Math.max(720, columns.length * 132 + (hasActions ? 170 : 0));
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
@@ -166,7 +167,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         }}
       >
         <div className="data-table-scroll" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table style={{ width: "100%", minWidth: tableMinWidth, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (

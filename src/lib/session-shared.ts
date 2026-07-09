@@ -24,11 +24,7 @@ export function isSessionUser(value: unknown): value is SessionUser {
   );
 }
 
-export function encodeSessionUser(user: SessionUser) {
-  return encodeURIComponent(JSON.stringify(user));
-}
-
-export function decodeSessionUser(raw: string | undefined | null): SessionUser | null {
+export function decodeLegacySessionUser(raw: string | undefined | null): SessionUser | null {
   if (!raw) {
     return null;
   }

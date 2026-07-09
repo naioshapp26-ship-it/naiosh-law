@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import type { SessionUser } from "@/lib/session-shared";
-import { decodeSessionUser, encodeSessionUser, sessionCookieName } from "@/lib/session-shared";
+import { sessionCookieName } from "@/lib/session-shared";
+import { decodeSessionToken, encodeSessionToken } from "@/lib/session-token";
 
 const sessionMaxAge = 60 * 60 * 8;
 
@@ -13,12 +14,12 @@ const cookieOptions = {
 
 export async function readSessionCookie(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
-  return decodeSessionUser(cookieStore.get(sessionCookieName)?.value);
+  return decodeSessionToken(cookieStore.get(sessionCookieName)?.value);
 }
 
 export async function writeSessionCookie(user: SessionUser) {
   const cookieStore = await cookies();
-  cookieStore.set(sessionCookieName, encodeSessionUser(user), {
+  cookieStore.set(sessionCookieName, await encodeSessionToken(user), {
     ...cookieOptions,
     maxAge: sessionMaxAge,
   });

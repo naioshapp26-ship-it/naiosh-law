@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decodeSessionUser, sessionCookieName } from "@/lib/session-shared";
+import { sessionCookieName } from "@/lib/session-shared";
+import { decodeSessionToken } from "@/lib/session-token";
 
 function getSafeAppPath(value: string | null) {
   if (!value || !value.startsWith("/app")) {
@@ -9,9 +10,9 @@ function getSafeAppPath(value: string | null) {
   return value;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const user = decodeSessionUser(request.cookies.get(sessionCookieName)?.value);
+  const user = await decodeSessionToken(request.cookies.get(sessionCookieName)?.value);
 
   if (pathname === "/login" && user) {
     const redirectUrl = request.nextUrl.clone();
