@@ -198,7 +198,7 @@ export function ModuleShell({ slug, config, moduleTitle, moduleIcon }: ModuleShe
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
-  const entityPlural = config ? getEntityPlural(config.entityName) : "";
+  const entityPlural = getEntityPlural(config.entityName);
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -256,7 +256,7 @@ export function ModuleShell({ slug, config, moduleTitle, moduleIcon }: ModuleShe
         ))}
       </div>
 
-        <div style={{ maxWidth: 1300, minWidth: 0 }}>
+      <div style={{ maxWidth: 1300, minWidth: 0 }}>
         {/* Page Header */}
         <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
