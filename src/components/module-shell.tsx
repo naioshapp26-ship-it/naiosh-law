@@ -106,13 +106,13 @@ export function ModuleShell({ slug, config, title }: Props) {
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config.data));
-  const [rowsHydrated, setRowsHydrated] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const rowsReadyForPersistenceRef = useRef(false);
   const toastTimersRef = useRef<number[]>([]);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
@@ -126,18 +126,30 @@ export function ModuleShell({ slug, config, title }: Props) {
   }, []);
 
   useEffect(() => {
-    setRowsHydrated(false);
-    setRows(loadRows(slug, config.data));
-    setRowsHydrated(true);
+    let cancelled = false;
+    rowsReadyForPersistenceRef.current = false;
+
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      rowsReadyForPersistenceRef.current = true;
+      setRows(loadRows(slug, config.data));
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [config.data, slug]);
 
   useEffect(() => {
-    if (!rowsHydrated) {
+    if (!rowsReadyForPersistenceRef.current) {
       return;
     }
 
     persistRows(slug, rows);
-  }, [rows, rowsHydrated, slug]);
+  }, [rows, slug]);
 
   useEffect(() => () => {
     toastTimersRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
@@ -375,24 +387,19 @@ export function ModuleShell({ slug, config, title }: Props) {
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {entityPlural}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {[
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى", action: downloadCsvReport },
-              ].map((opt) => (
-                <button
-                  key={opt.label}
-                  onClick={opt.action}
-                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font)", width: "100%", transition: "all 0.18s" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}
-                >
-                  <span style={{ fontSize: "1.5rem" }}>{opt.icon}</span>
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0a0a12" }}>{opt.label}</p>
-                    <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.1rem" }}>{opt.desc}</p>
-                  </div>
-                  <span style={{ marginInlineStart: "auto", color: "#c3152a", fontSize: "1.1rem" }}>←</span>
-                </button>
-              ))}
+              <button
+                onClick={downloadCsvReport}
+                style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font)", width: "100%", transition: "all 0.18s" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}
+              >
+                <span style={{ fontSize: "1.5rem" }}>📘</span>
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0a0a12" }}>تصدير CSV</p>
+                  <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.1rem" }}>ملف CSV للاستيراد في أنظمة أخرى</p>
+                </div>
+                <span style={{ marginInlineStart: "auto", color: "#c3152a", fontSize: "1.1rem" }}>←</span>
+              </button>
             </div>
           </div>
         </div>
