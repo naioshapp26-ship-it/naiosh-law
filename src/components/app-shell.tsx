@@ -36,6 +36,12 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
+  const sidebarBorder = "rgba(255,255,255,0.14)";
+  const sidebarText = "#ffffff";
+  const sidebarMutedText = "rgba(255,255,255,0.82)";
+  const sidebarSoftText = "rgba(255,255,255,0.64)";
+  const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = () => {
     window.localStorage.removeItem(sessionKey);
@@ -53,7 +59,7 @@ export function AppShell({ role, name, children }: Props) {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "1rem 0.75rem",
-          borderBottom: "1px solid #e2e8f0",
+          borderBottom: `1px solid ${sidebarBorder}`,
           marginBottom: "0.5rem",
         }}
         className="drawer-header"
@@ -73,15 +79,15 @@ export function AppShell({ role, name, children }: Props) {
               fontSize: "0.9rem",
             }}
           >N</div>
-          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#0a0a12" }}>Naiosh Law</span>
+          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: sidebarText }}>Naiosh Law</span>
         </div>
         <button
           onClick={() => setDrawerOpen(false)}
           className="drawer-close-btn"
           style={{
-            width: 32, height: 32, border: "1px solid #e2e8f0",
-            borderRadius: "8px", background: "#f8f9fb", cursor: "pointer",
-            fontSize: "0.9rem", color: "#64748b",
+            width: 32, height: 32, border: `1px solid ${sidebarBorder}`,
+            borderRadius: "8px", background: "rgba(255,255,255,0.12)", cursor: "pointer",
+            fontSize: "0.9rem", color: sidebarText,
           }}
         >✕</button>
       </div>
@@ -95,8 +101,8 @@ export function AppShell({ role, name, children }: Props) {
             display: "flex", alignItems: "center", gap: "0.6rem",
             padding: "0.6rem 0.75rem", borderRadius: "10px",
             fontSize: "0.85rem", fontWeight: isActive("/app/dashboard") ? 700 : 500,
-            color: isActive("/app/dashboard") ? "#c3152a" : "#64748b",
-            background: isActive("/app/dashboard") ? "rgba(195,21,42,0.08)" : "transparent",
+            color: sidebarText,
+            background: isActive("/app/dashboard") ? sidebarActiveBg : "transparent",
             textDecoration: "none",
           }}
         >
@@ -107,7 +113,7 @@ export function AppShell({ role, name, children }: Props) {
 
       {/* Section label */}
       <p style={{
-        fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8",
+        fontSize: "0.62rem", fontWeight: 700, color: sidebarSoftText,
         letterSpacing: "0.06em", textTransform: "uppercase",
         padding: "0.75rem 1.5rem 0.35rem",
       }}>
@@ -133,8 +139,8 @@ export function AppShell({ role, name, children }: Props) {
                 display: "flex", alignItems: "center", gap: "0.6rem",
                 padding: "0.6rem 0.75rem", borderRadius: "10px",
                 fontSize: "0.84rem", fontWeight: active ? 700 : 500,
-                color: active ? "#c3152a" : "#64748b",
-                background: active ? "rgba(195,21,42,0.08)" : "transparent",
+                color: sidebarText,
+                background: active ? sidebarActiveBg : "transparent",
                 textDecoration: "none", transition: "all 0.15s",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}
@@ -149,13 +155,13 @@ export function AppShell({ role, name, children }: Props) {
       {/* Role badge */}
       <div style={{ padding: "0.75rem" }}>
         <div style={{
-          background: "rgba(195,21,42,0.05)", border: "1px solid rgba(195,21,42,0.1)",
+          background: "rgba(0,0,0,0.14)", border: `1px solid ${sidebarBorder}`,
           borderRadius: "12px", padding: "0.85rem",
         }}>
-          <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
+          <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
             {role === "admin" ? "Admin" : "Client"}
           </p>
-          <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
+          <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
             {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
           </p>
         </div>
@@ -274,8 +280,8 @@ export function AppShell({ role, name, children }: Props) {
 
         {/* ── Desktop Sidebar ── */}
         <aside className="desktop-sidebar" style={{
-          width: 255, background: "#ffffff",
-          borderInlineEnd: "1px solid #e2e8f0",
+          width: 255, background: sidebarBg,
+          borderInlineEnd: `1px solid ${sidebarBorder}`,
           overflowY: "auto", flexShrink: 0,
         }}>
           <div style={{ padding: "1rem 0" }}>
@@ -287,8 +293,8 @@ export function AppShell({ role, name, children }: Props) {
                   display: "flex", alignItems: "center", gap: "0.6rem",
                   padding: "0.6rem 0.75rem", borderRadius: "10px",
                   fontSize: "0.85rem", fontWeight: isActive("/app/dashboard") ? 700 : 500,
-                  color: isActive("/app/dashboard") ? "#c3152a" : "#64748b",
-                  background: isActive("/app/dashboard") ? "rgba(195,21,42,0.08)" : "transparent",
+                  color: sidebarText,
+                  background: isActive("/app/dashboard") ? sidebarActiveBg : "transparent",
                   textDecoration: "none",
                 }}
               >
@@ -298,7 +304,7 @@ export function AppShell({ role, name, children }: Props) {
             </div>
 
             <p style={{
-              fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8",
+              fontSize: "0.62rem", fontWeight: 700, color: sidebarSoftText,
               letterSpacing: "0.06em", textTransform: "uppercase",
               padding: "0.75rem 1.5rem 0.35rem",
             }}>الوحدات التشغيلية</p>
@@ -315,8 +321,8 @@ export function AppShell({ role, name, children }: Props) {
                       display: "flex", alignItems: "center", gap: "0.6rem",
                       padding: "0.6rem 0.75rem", borderRadius: "10px",
                       fontSize: "0.84rem", fontWeight: active ? 700 : 500,
-                      color: active ? "#c3152a" : "#64748b",
-                      background: active ? "rgba(195,21,42,0.08)" : "transparent",
+                      color: sidebarText,
+                      background: active ? sidebarActiveBg : "transparent",
                       textDecoration: "none", transition: "all 0.15s",
                     }}
                   >
@@ -329,13 +335,13 @@ export function AppShell({ role, name, children }: Props) {
 
             <div style={{ padding: "1rem 0.75rem 0" }}>
               <div style={{
-                background: "rgba(195,21,42,0.05)", border: "1px solid rgba(195,21,42,0.1)",
+                background: "rgba(0,0,0,0.14)", border: `1px solid ${sidebarBorder}`,
                 borderRadius: "12px", padding: "0.9rem",
               }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
                   {role === "admin" ? "Admin" : "Client"}
                 </p>
-                <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
+                <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
                   {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
                 </p>
               </div>
@@ -359,7 +365,7 @@ export function AppShell({ role, name, children }: Props) {
             {/* Drawer panel */}
             <div style={{
               position: "relative", zIndex: 1,
-              width: 280, background: "#ffffff",
+              width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
               boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
