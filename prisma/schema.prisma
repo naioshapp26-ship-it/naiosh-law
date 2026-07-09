@@ -144,6 +144,7 @@ model LegalSpecialization {
   cases         Case[]
   consultations Consultation[]
   subjects      SpecializationSubject[]
+  feeRules      FeeRule[]
 }
 
 model LegalSubject {
@@ -280,4 +281,111 @@ model AuditLog {
   entityId  String?
   details   String?
   createdAt DateTime @default(now())
+}
+
+// ─── Advanced Legal Finance (Phase 3) ─────────────────────
+
+enum PaymentMethod {
+  cash
+  transfer
+  check
+  payment_gateway
+}
+
+model FeeRule {
+  id               String   @id @default(cuid())
+  name             String
+  caseType         String?
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  stage            String?
+  hourlyRate       Float?
+  fixedAmount      Float?
+  percentRate      Float?
+  minAmount        Float?
+  maxAmount        Float?
+  active           Boolean  @default(true)
+  description      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model FinancialRecord {
+  id            String         @id @default(cuid())
+  invoiceNo     String         @unique
+  clientName    String
+  type          String
+  amount        Float
+  paid          Float          @default(0)
+  issueDate     String
+  dueDate       String?
+  status        String         @default("غير مسدد")
+  paymentMethod PaymentMethod?
+  caseRef       String?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  payments Payment[]
+}
+
+model Payment {
+  id         String         @id @default(cuid())
+  recordId   String?
+  record     FinancialRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  amount     Float
+  method     PaymentMethod  @default(cash)
+  reference  String?
+  paidAt     String
+  notes      String?
+  createdAt  DateTime       @default(now())
+}
+
+model BailGuarantee {
+  id          String   @id @default(cuid())
+  caseRef     String
+  clientName  String
+  amount      Float
+  court       String
+  status      String   @default("نشط")
+  depositDate String
+  refundDate  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PersonalGuarantee {
+  id           String   @id @default(cuid())
+  caseRef      String
+  clientName   String
+  guarantorName String
+  relationship String?
+  status       String   @default("ساري")
+  documents    String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum NotificationType {
+  court_summons
+  bail_deadline
+  document_submission
+  judgment_delivery
+  other
+}
+
+model OfficialNotification {
+  id              String           @id @default(cuid())
+  type            NotificationType @default(other)
+  title           String
+  entityName      String
+  caseRef         String?
+  dueDate         String?
+  status          String           @default("قيد المتابعة")
+  deliveryMethod  String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }

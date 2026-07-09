@@ -3,6 +3,7 @@ export const moduleApiMap: Record<string, string> = {
   "case-management": "/api/cases",
   "clients-management": "/api/clients",
   "court-sessions": "/api/court-sessions",
+  "legal-accounting": "/api/financial-records",
 };
 
 export function getModuleApiEndpoint(slug: string) {

@@ -72,6 +72,12 @@ async function main() {
   console.log("🌱 Seeding Naiosh Law database...");
 
   await prisma.auditLog.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.financialRecord.deleteMany();
+  await prisma.bailGuarantee.deleteMany();
+  await prisma.personalGuarantee.deleteMany();
+  await prisma.officialNotification.deleteMany();
+  await prisma.feeRule.deleteMany();
   await prisma.professionalNetwork.deleteMany();
   await prisma.caseSubject.deleteMany();
   await prisma.specializationSubject.deleteMany();
@@ -252,6 +258,164 @@ async function main() {
       { caseNo: "#2024-0547", client: "أحمد محمد الصاوي", court: "محكمة الاستئناف القاهرة", room: "7", date: "15 يوليو 2026", time: "10:00", status: "مجدولة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0548", client: "شركة النيل للتجارة", court: "المحكمة الابتدائية الجيزة", room: "3", date: "16 يوليو 2026", time: "11:30", status: "قريبة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0280", client: "خالد عبد الرحمن عمر", court: "محكمة الجنايات القاهرة", room: "12", date: "18 يوليو 2026", time: "09:00", status: "مجدولة", lawyer: "أحمد المحامي" },
+    ],
+  });
+
+  // Phase 3 — Advanced Legal Finance
+  await prisma.feeRule.createMany({
+    data: [
+      {
+        name: "أتعاب تجارية — ابتدائي",
+        caseType: "تجاري",
+        specializationId: specRecords[0].id,
+        stage: "ابتدائي",
+        hourlyRate: 1500,
+        minAmount: 15000,
+        maxAmount: 80000,
+        description: "أتعاب القضايا التجارية في المرحلة الابتدائية",
+      },
+      {
+        name: "أتعاب جنائية — ثابت",
+        caseType: "جنائي",
+        specializationId: specRecords[16].id,
+        stage: "جنايات",
+        fixedAmount: 55000,
+        description: "مبلغ ثابت للقضايا الجنائية",
+      },
+      {
+        name: "أتعاب أحوال شخصية — نسبة",
+        caseType: "أحوال شخصية",
+        percentRate: 12,
+        minAmount: 8000,
+        maxAmount: 40000,
+        description: "نسبة من قيمة المطالبة",
+      },
+    ],
+  });
+
+  const inv1 = await prisma.financialRecord.create({
+    data: {
+      invoiceNo: "INV-2026-001",
+      clientName: "أحمد محمد الصاوي",
+      type: "رسوم قضية",
+      amount: 25000,
+      paid: 15000,
+      issueDate: "2026-01-10",
+      dueDate: "2026-03-10",
+      status: "مسدد جزئياً",
+      paymentMethod: "transfer",
+      caseRef: "#2024-0547",
+    },
+  });
+
+  const inv2 = await prisma.financialRecord.create({
+    data: {
+      invoiceNo: "INV-2026-002",
+      clientName: "شركة النيل للتجارة",
+      type: "استشارة قانونية",
+      amount: 18000,
+      paid: 18000,
+      issueDate: "2026-02-05",
+      dueDate: "2026-02-28",
+      status: "مسدد بالكامل",
+      paymentMethod: "cash",
+      caseRef: "#2024-0548",
+    },
+  });
+
+  await prisma.financialRecord.create({
+    data: {
+      invoiceNo: "INV-2026-003",
+      clientName: "خالد عبد الرحمن عمر",
+      type: "رسوم قضية",
+      amount: 55000,
+      paid: 0,
+      issueDate: "2026-03-01",
+      dueDate: "2026-05-01",
+      status: "غير مسدد",
+      caseRef: "#2024-0280",
+    },
+  });
+
+  await prisma.payment.createMany({
+    data: [
+      { recordId: inv1.id, amount: 10000, method: "transfer", reference: "TRX-88421", paidAt: "2026-01-15" },
+      { recordId: inv1.id, amount: 5000, method: "cash", paidAt: "2026-02-01" },
+      { recordId: inv2.id, amount: 18000, method: "cash", paidAt: "2026-02-20" },
+    ],
+  });
+
+  await prisma.bailGuarantee.createMany({
+    data: [
+      {
+        caseRef: "#2024-0280",
+        clientName: "خالد عبد الرحمن عمر",
+        amount: 100000,
+        court: "محكمة الجنايات القاهرة",
+        status: "نشط",
+        depositDate: "2026-01-20",
+      },
+      {
+        caseRef: "#2024-0548",
+        clientName: "شركة النيل للتجارة",
+        amount: 50000,
+        court: "المحكمة الابتدائية الجيزة",
+        status: "مسترد",
+        depositDate: "2025-11-10",
+        refundDate: "2026-02-15",
+      },
+    ],
+  });
+
+  await prisma.personalGuarantee.createMany({
+    data: [
+      {
+        caseRef: "#2024-0280",
+        clientName: "خالد عبد الرحمن عمر",
+        guarantorName: "محمود عبد الرحمن",
+        relationship: "أخ",
+        status: "ساري",
+        documents: "صورة بطاقة + إقرار ضامن",
+      },
+      {
+        caseRef: "#2024-0312",
+        clientName: "سارة إبراهيم المصري",
+        guarantorName: "فاطمة إبراهيم",
+        relationship: "والدة",
+        status: "ساري",
+      },
+    ],
+  });
+
+  await prisma.officialNotification.createMany({
+    data: [
+      {
+        type: "court_summons",
+        title: "استدعاء جلسة 15 يوليو",
+        entityName: "محكمة الاستئناف بالقاهرة",
+        caseRef: "#2024-0547",
+        dueDate: "2026-07-15",
+        status: "قيد المتابعة",
+        deliveryMethod: "بريد رسمي",
+      },
+      {
+        type: "bail_deadline",
+        title: "موعد تجديد الكفالة",
+        entityName: "محكمة الجنايات القاهرة",
+        caseRef: "#2024-0280",
+        dueDate: "2026-08-01",
+        status: "عاجل",
+        deliveryMethod: "إعلان",
+      },
+      {
+        type: "judgment_delivery",
+        title: "إعلان حكم نهائي",
+        entityName: "المحكمة الابتدائية الجيزة",
+        caseRef: "#2024-0548",
+        dueDate: "2026-06-30",
+        status: "مكتمل",
+        deliveryMethod: "محضر قضائي",
+      },
     ],
   });
 
