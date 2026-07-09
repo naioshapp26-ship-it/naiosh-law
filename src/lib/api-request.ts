@@ -10,6 +10,7 @@ type JsonParseResult<T> =
   | { ok: false; response: NextResponse<{ error: string }> };
 
 const defaultMaxBytes = 64 * 1024;
+const encoder = new TextEncoder();
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -44,7 +45,7 @@ export async function parseJsonRequest<T = unknown>(
     return { ok: false, response: jsonError("Unable to read request body.", 400) };
   }
 
-  if (rawBody.length > maxBytes) {
+  if (encoder.encode(rawBody).byteLength > maxBytes) {
     return { ok: false, response: jsonError("Request body is too large.", 413) };
   }
 

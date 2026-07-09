@@ -22,6 +22,23 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+function getSafeNextPath() {
+  const fallback = "/app/dashboard";
+  const nextParam = new URLSearchParams(window.location.search).get("next");
+  if (!nextParam || nextParam.startsWith("//")) {
+    return fallback;
+  }
+
+  try {
+    const url = new URL(nextParam, window.location.origin);
+    const isSameOrigin = url.origin === window.location.origin;
+    const isAppPath = url.pathname === "/app" || url.pathname.startsWith("/app/");
+    return isSameOrigin && isAppPath ? `${url.pathname}${url.search}${url.hash}` : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
@@ -37,8 +54,7 @@ export default function LoginPage() {
       // The httpOnly cookie remains authoritative if storage is blocked.
     }
 
-    const nextParam = new URLSearchParams(window.location.search).get("next");
-    router.push(nextParam?.startsWith("/app") ? nextParam : "/app/dashboard");
+    router.push(getSafeNextPath());
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -318,7 +334,7 @@ export default function LoginPage() {
             <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
               دخول سريع تجريبي:
             </p>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
+            <div className="demo-login-grid" style={{ display: "flex", gap: "0.75rem" }}>
               <button
                 onClick={() => void loginDemo("admin")}
                 disabled={loading}
@@ -542,6 +558,9 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+        }
+        @media (max-width: 420px) {
+          .demo-login-grid { flex-direction: column; }
         }
       `}</style>
     </div>

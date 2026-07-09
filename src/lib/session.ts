@@ -4,6 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { sessionStorageKey, type SessionUser } from "@/data/auth";
 
+function isSessionUser(value: unknown): value is SessionUser {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const user = value as Record<string, unknown>;
+  return (
+    (user.role === "admin" || user.role === "client") &&
+    typeof user.name === "string" &&
+    typeof user.email === "string"
+  );
+}
+
 export function clearSessionMirror() {
   if (typeof window === "undefined") {
     return;
@@ -23,7 +36,8 @@ function readSessionMirror() {
 
   try {
     const raw = window.localStorage.getItem(sessionStorageKey);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
+    const parsed = raw ? JSON.parse(raw) : null;
+    return isSessionUser(parsed) ? parsed : null;
   } catch {
     clearSessionMirror();
     return null;
@@ -49,18 +63,16 @@ function writeSessionMirror(user: SessionUser | null) {
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<SessionUser | null>(() => readSessionMirror());
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const mirroredUser = readSessionMirror();
+    readSessionMirror();
 
     async function validateSession() {
-      let receivedResponse = false;
       try {
-        const response = await fetch("/api/auth/session", { cache: "no-store" });
-        receivedResponse = true;
+        const response = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
         if (!response.ok) {
           throw new Error("Session is missing or expired.");
         }
@@ -77,13 +89,10 @@ export function useSession(redirectIfMissing = false) {
         }
       } catch {
         if (!cancelled) {
-          const canPreserveMirror = !!mirroredUser && !receivedResponse;
-          if (!canPreserveMirror) {
-            setUser(null);
-            writeSessionMirror(null);
-          }
+          setUser(null);
+          writeSessionMirror(null);
           setReady(true);
-          if (redirectIfMissing && !canPreserveMirror) {
+          if (redirectIfMissing) {
             const nextPath =
               typeof window === "undefined" || !window.location.search
                 ? pathname

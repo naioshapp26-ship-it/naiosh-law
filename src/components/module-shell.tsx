@@ -15,6 +15,10 @@ let toastCounter = 0;
 const moduleStoragePrefix = "naiosh-law-module-rows:";
 const identityKeys = ["_id", "id", "caseNo", "ref", "jobId", "email", "endpoint", "name", "title"];
 
+function isRecordArray(value: unknown): value is Record<string, unknown>[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && !Array.isArray(item));
+}
+
 function loadStoredRows(slug: string, fallback: Record<string, unknown>[]) {
   if (typeof window === "undefined") {
     return fallback;
@@ -23,7 +27,7 @@ function loadStoredRows(slug: string, fallback: Record<string, unknown>[]) {
   try {
     const raw = window.localStorage.getItem(`${moduleStoragePrefix}${slug}`);
     const parsed = raw ? JSON.parse(raw) : null;
-    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : fallback;
+    return isRecordArray(parsed) ? parsed : fallback;
   } catch {
     try {
       window.localStorage.removeItem(`${moduleStoragePrefix}${slug}`);
@@ -49,6 +53,14 @@ function getRowIdentity(row: Record<string, unknown> | null) {
   return JSON.stringify(row);
 }
 
+function createRowId(slug: string) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${slug}:${crypto.randomUUID()}`;
+  }
+
+  return `${slug}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+}
+
 type ModuleShellProps = {
   slug: string;
   title: string;
@@ -58,7 +70,8 @@ type ModuleShellProps = {
 export function ModuleShell({ slug, title, config }: ModuleShellProps) {
   const { user, ready } = useSession(true);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadStoredRows(slug, config.data));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(config.data);
+  const [storageReady, setStorageReady] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -85,7 +98,12 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    setRows(loadStoredRows(slug, config.data));
+    setStorageReady(true);
+  }, [config.data, slug]);
+
+  useEffect(() => {
+    if (!storageReady || typeof window === "undefined") {
       return;
     }
 
@@ -94,7 +112,7 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
     } catch {
       // Keep the in-memory table usable if browser storage quota is unavailable.
     }
-  }, [config, rows, slug]);
+  }, [rows, slug, storageReady]);
 
   if (!ready || !user) {
     return (
@@ -117,7 +135,7 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
       setRows((prev) => prev.map((r) => (getRowIdentity(r) === targetIdentity ? { ...r, ...data } : r)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
-      const newRow = { ...data, _id: Date.now() };
+      const newRow = { ...data, _id: createRowId(slug) };
       setRows((prev) => [newRow, ...prev]);
       pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
     }

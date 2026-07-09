@@ -202,9 +202,9 @@ export function AppShell({ role, name, children }: Props) {
           </div>
 
           {/* Right: Notifications + User + Logout */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* Notification bell */}
-            <button style={{
+            <button className="notification-button" style={{
               width: 36, height: 36, borderRadius: "10px",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               cursor: "pointer", display: "flex", alignItems: "center",
@@ -347,9 +347,9 @@ export function AppShell({ role, name, children }: Props) {
             {/* Drawer panel */}
             <div style={{
               position: "relative", zIndex: 1,
-              width: 280, background: sidebarBg,
+              width: "min(84vw, 300px)", background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.18)",
               animation: "slide-drawer 0.25s ease",
             }}>
               {renderSidebarContent()}
@@ -422,6 +422,11 @@ export function AppShell({ role, name, children }: Props) {
           .user-name-block   { display: none; }
           .drawer-header     { display: flex !important; }
           main               { padding-bottom: 5rem !important; }
+        }
+        @media (max-width: 420px) {
+          .notification-button { display: none !important; }
+          .app-header-actions  { gap: 0.35rem !important; }
+          main                 { padding-inline: 0.85rem !important; }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

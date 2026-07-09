@@ -584,27 +584,14 @@ export function HeroSection() {
         }
         @media (max-width: 1200px) {
           .hero-card-col {
-            width: 320px !important;
-            opacity: 0.8;
+            width: min(300px, 30vw) !important;
+            opacity: 0.65;
           }
           .hero-content-col {
-            max-width: min(720px, 70vw) !important;
+            max-width: min(680px, 66vw) !important;
           }
         }
-        @media (max-width: 980px) {
-          .hero-heading {
-            line-height: 1.12 !important;
-            font-size: clamp(1.65rem, 4.8vw, 2.7rem) !important;
-          }
-          .hero-heading-main {
-            width: 100%;
-          }
-          .hero-badge-pill {
-            font-size: 0.92rem !important;
-            padding: 0.58rem 1.4rem !important;
-          }
-        }
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
           .hero-grid {
             display: block !important;
           }
@@ -629,6 +616,28 @@ export function HeroSection() {
           }
           .hero-card-col {
             display: none;
+          }
+        }
+        @media (max-width: 980px) {
+          .hero-heading {
+            line-height: 1.12 !important;
+            font-size: clamp(1.65rem, 4.8vw, 2.7rem) !important;
+          }
+          .hero-heading-main {
+            width: 100%;
+          }
+          .hero-badge-pill {
+            font-size: 0.92rem !important;
+            padding: 0.58rem 1.4rem !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .hero-cta > a {
+            width: 100%;
+            text-align: center;
+          }
+          .hero-stats {
+            gap: 1.25rem !important;
           }
         }
       `}</style>
