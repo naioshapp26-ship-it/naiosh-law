@@ -97,6 +97,7 @@ textarea {
   border: none;
   font-family: var(--font);
   letter-spacing: 0.01em;
+  text-align: center;
 }
 
 .btn-primary:hover {
@@ -117,6 +118,7 @@ textarea {
   transition: all 0.22s;
   cursor: pointer;
   font-family: var(--font);
+  text-align: center;
 }
 
 .btn-ghost-dark:hover {
@@ -247,6 +249,14 @@ textarea {
 @media (max-width: 480px) {
   .container-max {
     width: calc(100% - 1rem);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .card-white:hover,
+  .btn-primary:hover,
+  .btn-ghost-dark:hover {
+    transform: none;
   }
 }
 

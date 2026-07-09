@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { sessionKey } from "@/data/auth";
-import { isSessionUser, type SessionUser } from "@/lib/session-shared";
+import { isSessionUser, sessionStorageKey, type SessionUser } from "@/lib/session-shared";
 
 const sessionChangedEvent = "naiosh-law:session-changed";
 
@@ -21,7 +20,7 @@ export function readStoredUser(): SessionUser | null {
   }
 
   try {
-    const raw = window.localStorage.getItem(sessionKey);
+    const raw = window.localStorage.getItem(sessionStorageKey);
     if (!raw) {
       return null;
     }
@@ -31,10 +30,10 @@ export function readStoredUser(): SessionUser | null {
       return parsed;
     }
 
-    window.localStorage.removeItem(sessionKey);
+    window.localStorage.removeItem(sessionStorageKey);
   } catch {
     try {
-      window.localStorage.removeItem(sessionKey);
+      window.localStorage.removeItem(sessionStorageKey);
     } catch {
       // Storage can be unavailable in private browsing or hardened environments.
     }
@@ -45,7 +44,7 @@ export function readStoredUser(): SessionUser | null {
 
 export function saveSessionUser(user: SessionUser) {
   try {
-    window.localStorage.setItem(sessionKey, JSON.stringify(user));
+    window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
   } catch {
     // The cookie remains the source of truth if localStorage is not writable.
   }
@@ -54,7 +53,7 @@ export function saveSessionUser(user: SessionUser) {
 
 export function clearSessionUser() {
   try {
-    window.localStorage.removeItem(sessionKey);
+    window.localStorage.removeItem(sessionStorageKey);
   } catch {
     // Ignore storage failures during logout; the server cookie is cleared separately.
   }

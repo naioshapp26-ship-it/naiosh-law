@@ -166,7 +166,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         }}
       >
         <div className="data-table-scroll" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (
@@ -398,6 +398,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .data-table-toolbar {
             align-items: stretch !important;
             flex-direction: column;
+          }
+          .data-table-scroll table {
+            min-width: 680px !important;
+          }
+          .data-table-scroll th,
+          .data-table-scroll td {
+            padding: 0.75rem 0.8rem !important;
           }
           .data-table-pagination {
             align-items: stretch !important;
