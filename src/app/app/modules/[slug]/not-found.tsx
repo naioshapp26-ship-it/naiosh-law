@@ -1,18 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { LoadingScreen } from "@/components/loading-screen";
+import { useSession } from "@/lib/session";
 
 export default function ModuleNotFound() {
+  const { user, ready } = useSession(true);
+
+  if (!ready || !user) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f4f6f9",
-        padding: "1.5rem",
-      }}
-    >
-      <section className="card-white" style={{ maxWidth: 520, padding: "2rem", textAlign: "center" }}>
+    <AppShell role={user.role} name={user.name}>
+      <section className="card-white" style={{ maxWidth: 520, padding: "2rem", textAlign: "center", margin: "4rem auto" }}>
         <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
         <h1 style={{ fontSize: "1.35rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.5rem" }}>
           الوحدة غير موجودة
@@ -24,6 +26,6 @@ export default function ModuleNotFound() {
           العودة إلى لوحة التحكم
         </Link>
       </section>
-    </main>
+    </AppShell>
   );
 }

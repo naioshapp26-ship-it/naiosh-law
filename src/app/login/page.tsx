@@ -2,10 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { demoLoginProfiles } from "@/data/auth";
 import { saveSession } from "@/lib/session";
 import type { SessionUser } from "@/lib/auth-session";
+import { staticMotion as motion } from "@/components/ui/static-motion";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },

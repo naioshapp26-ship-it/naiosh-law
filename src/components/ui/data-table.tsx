@@ -16,6 +16,18 @@ type Props = {
 const PAGE_SIZE = 10;
 const rowIdKey = "_rowId";
 
+function numericValue(value: unknown) {
+  const normalized = String(value ?? "")
+    .replace(/,/g, "")
+    .replace(/%/g, "")
+    .trim()
+    .toLocaleLowerCase("en-US");
+  const multiplier = normalized.endsWith("k") ? 1_000 : normalized.endsWith("m") ? 1_000_000 : 1;
+  const parsed = Number(normalized.replace(/[km]$/u, ""));
+
+  return Number.isFinite(parsed) ? parsed * multiplier : null;
+}
+
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -42,12 +54,27 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const sorted = useMemo(() => (
     sortKey
       ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+        const sortColumn = columns.find((column) => column.key === sortKey);
+        const va = a[sortKey];
+        const vb = b[sortKey];
+
+        if (sortColumn?.type === "number" || sortColumn?.type === "currency") {
+          const left = numericValue(va);
+          const right = numericValue(vb);
+
+          if (left !== null && right !== null) {
+            return sortAsc ? left - right : right - left;
+          }
+        }
+
+        const left = String(va ?? "");
+        const right = String(vb ?? "");
+        const result = left.localeCompare(right, "ar", { numeric: true, sensitivity: "base" });
+
+        return sortAsc ? result : -result;
       })
       : filtered
-  ), [filtered, sortAsc, sortKey]);
+  ), [columns, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -434,7 +461,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       )}
       <style>{`
-        @media (max-width: 700px) {
+        @media (max-width: 900px) {
           .data-table-toolbar {
             flex-direction: column;
             align-items: stretch !important;

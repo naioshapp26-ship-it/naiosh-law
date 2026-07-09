@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -30,9 +30,82 @@ const recentTasks = [
   { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
+const completedTasksStorageKey = "naiosh-law-dashboard-completed-tasks";
+const completedTasksChangeEvent = "naiosh-law-dashboard-tasks-change";
+
+type TaskSnapshot = string | null | undefined;
+
+function getCompletedTasksSnapshot(): TaskSnapshot {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  try {
+    return window.localStorage.getItem(completedTasksStorageKey);
+  } catch {
+    return null;
+  }
+}
+
+function getServerCompletedTasksSnapshot(): TaskSnapshot {
+  return undefined;
+}
+
+function subscribeToCompletedTasks(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(completedTasksChangeEvent, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(completedTasksChangeEvent, onStoreChange);
+  };
+}
+
+function parseCompletedTasks(rawTasks: TaskSnapshot) {
+  if (!rawTasks) {
+    return new Set<number>();
+  }
+
+  try {
+    const parsed = JSON.parse(rawTasks) as unknown;
+    if (Array.isArray(parsed)) {
+      return new Set(parsed.filter((item): item is number => Number.isInteger(item)));
+    }
+  } catch {
+    return new Set<number>();
+  }
+
+  return new Set<number>();
+}
+
+function persistCompletedTasks(tasks: Set<number>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(completedTasksStorageKey, JSON.stringify([...tasks]));
+  } catch {
+    // Keep the checkbox interaction usable even when browser storage is unavailable.
+  }
+  window.dispatchEvent(new Event(completedTasksChangeEvent));
+}
+
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
-  const [completedTasks, setCompletedTasks] = useState<Set<number>>(() => new Set());
+  const completedTasksSnapshot = useSyncExternalStore(
+    subscribeToCompletedTasks,
+    getCompletedTasksSnapshot,
+    getServerCompletedTasksSnapshot
+  );
+  const completedTasks = useMemo(
+    () => parseCompletedTasks(completedTasksSnapshot),
+    [completedTasksSnapshot]
+  );
   const todayLabel = new Intl.DateTimeFormat("ar-EG", {
     weekday: "long",
     day: "numeric",
@@ -41,17 +114,15 @@ export default function DashboardPage() {
   }).format(new Date());
 
   const toggleTask = (index: number) => {
-    setCompletedTasks((current) => {
-      const next = new Set(current);
+    const next = new Set(completedTasks);
 
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
+    if (next.has(index)) {
+      next.delete(index);
+    } else {
+      next.add(index);
+    }
 
-      return next;
-    });
+    persistCompletedTasks(next);
   };
 
   if (!ready || !user) {

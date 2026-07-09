@@ -24,6 +24,8 @@ const roleLabels: Record<Props["role"], string> = {
   client: "عميل",
 };
 
+const preferredBottomModuleSlugs = ["case-management", "court-sessions", "legal-accounting"];
+
 function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
   const visibleModules = getVisibleOperationalModules(role);
@@ -152,6 +154,17 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const bottomModuleItems = getVisibleOperationalModules(role)
+    .filter((item) => preferredBottomModuleSlugs.includes(item.slug))
+    .slice(0, 3);
+  const bottomNavItems = [
+    { href: "/app/dashboard", icon: moduleIconMap.dashboard, label: "الرئيسية" },
+    ...bottomModuleItems.map((item) => ({
+      href: `/app/modules/${item.slug}`,
+      icon: moduleIconMap[item.slug] ?? "📌",
+      label: item.title,
+    })),
+  ];
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -336,12 +349,7 @@ export function AppShell({ role, name, children }: Props) {
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
       }}>
-        {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
-        ].map((item) => {
+        {bottomNavItems.map((item) => {
           const active = pathname === item.href;
           return (
             <Link
@@ -355,7 +363,7 @@ export function AppShell({ role, name, children }: Props) {
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
-              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8", maxWidth: "4.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {item.label}
               </span>
             </Link>

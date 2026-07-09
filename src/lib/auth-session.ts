@@ -23,12 +23,20 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 function getSessionSecret() {
-  return (
-    process.env.NAIOSH_SESSION_SECRET ??
-    process.env.AUTH_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    "naiosh-law-demo-session-secret"
-  );
+  const configuredSecret =
+    process.env.NAIOSH_SESSION_SECRET ?? process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
+    throw new Error(
+      "NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be configured in production."
+    );
+  }
+
+  return "naiosh-law-demo-session-secret";
 }
 
 function shouldUseSecureCookie(request?: Request) {

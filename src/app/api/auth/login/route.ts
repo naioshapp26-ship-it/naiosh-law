@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { encodeSession, getSessionCookieOptions, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
+import { readJsonBody } from "@/lib/api-request";
 
 type LoginRequest = {
   email?: unknown;
@@ -10,27 +11,28 @@ type LoginRequest = {
   demo?: unknown;
 };
 
-function acceptsJson(request: Request) {
-  return request.headers.get("content-type")?.toLocaleLowerCase().includes("application/json") ?? false;
-}
-
 function isSessionRole(role: unknown): role is SessionRole {
   return role === "admin" || role === "client";
 }
 
+function isDemoLoginEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
+}
+
 export async function POST(request: Request) {
-  let body: LoginRequest;
-
-  if (!acceptsJson(request)) {
-    return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
+  const parsedBody = await readJsonBody<LoginRequest>(request);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
 
-  try {
-    body = (await request.json()) as LoginRequest;
-  } catch {
-    return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
+  if (!isDemoLoginEnabled()) {
+    return NextResponse.json(
+      { message: "Demo login is disabled in this environment." },
+      { status: 403 }
+    );
   }
 
+  const body = parsedBody.data;
   const demoUser =
     body.demo === true && isSessionRole(body.role)
       ? findDemoUserByRole(body.role)

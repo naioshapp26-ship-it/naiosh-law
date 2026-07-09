@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -8,15 +8,17 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
+import type { ModuleConfig } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
-import { moduleMap } from "@/data/modules";
 import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
 
 const rowIdKey = "_rowId";
+const moduleRowsChangeEvent = "naiosh-law-module-rows-change";
+
+type RowsSnapshot = string | null | undefined;
 
 const entityPluralMap: Record<string, string> = {
   قضية: "قضايا",
@@ -52,6 +54,44 @@ function getRowsStorageKey(slug: string) {
   return `naiosh-law-module-rows:${slug}`;
 }
 
+function getRowsSnapshot(slug: string): RowsSnapshot {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  try {
+    return window.localStorage.getItem(getRowsStorageKey(slug));
+  } catch {
+    return null;
+  }
+}
+
+function getServerRowsSnapshot(): RowsSnapshot {
+  return undefined;
+}
+
+function subscribeToRowsChange(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(moduleRowsChangeEvent, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(moduleRowsChangeEvent, onStoreChange);
+  };
+}
+
+function notifyRowsChange() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(moduleRowsChangeEvent));
+}
+
 function isRecordArray(value: unknown): value is Record<string, unknown>[] {
   return (
     Array.isArray(value) &&
@@ -59,23 +99,10 @@ function isRecordArray(value: unknown): value is Record<string, unknown>[] {
   );
 }
 
-function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
+function rowsFromSnapshot(slug: string, fallbackRows: Record<string, unknown>[], rawRows: RowsSnapshot) {
   const seededFallback = seedRows(slug, fallbackRows);
 
-  if (typeof window === "undefined") {
-    return seededFallback;
-  }
-
-  const storageKey = getRowsStorageKey(slug);
-  let rawRows: string | null;
-
-  try {
-    rawRows = window.localStorage.getItem(storageKey);
-  } catch {
-    return seededFallback;
-  }
-
-  if (!rawRows) {
+  if (rawRows === undefined || !rawRows) {
     return seededFallback;
   }
 
@@ -85,11 +112,7 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
       return seedRows(slug, parsed);
     }
   } catch {
-    try {
-      window.localStorage.removeItem(storageKey);
-    } catch {
-      // Ignore storage cleanup failures; fallback rows keep the UI usable.
-    }
+    // Invalid stored rows are ignored; the next successful edit will overwrite them.
   }
 
   return seededFallback;
@@ -105,16 +128,26 @@ function persistRows(slug: string, rows: Record<string, unknown>[]) {
   } catch {
     // CRUD state remains in memory if browser storage is unavailable or full.
   }
+  notifyRowsChange();
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
+export function ModuleShell({ slug, config, title }: { slug: string; config: ModuleConfig; title: string }) {
   const { user, ready } = useSession(true);
   const router = useRouter();
-  const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
+  const storedRowsSnapshot = useSyncExternalStore(
+    subscribeToRowsChange,
+    () => getRowsSnapshot(slug),
+    getServerRowsSnapshot
+  );
+  const storedRows = useMemo(
+    () => rowsFromSnapshot(slug, config.data, storedRowsSnapshot),
+    [config.data, slug, storedRowsSnapshot]
+  );
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config?.data ?? []));
+  const [memoryRows, setMemoryRows] = useState<Record<string, unknown>[] | null>(null);
+  const rows = memoryRows ?? storedRows;
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -128,13 +161,14 @@ export function ModuleShell({ slug }: { slug: string }) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
 
-  useEffect(() => {
-    if (!config) {
-      return;
-    }
-
-    persistRows(slug, rows);
-  }, [config, rows, slug]);
+  const updateRows = useCallback(
+    (updater: (currentRows: Record<string, unknown>[]) => Record<string, unknown>[]) => {
+      const nextRows = updater(rows);
+      setMemoryRows(nextRows);
+      persistRows(slug, nextRows);
+    },
+    [rows, slug]
+  );
 
   useEffect(() => {
     if (ready && user && !hasModuleAccess) {
@@ -163,29 +197,17 @@ export function ModuleShell({ slug }: { slug: string }) {
     return <LoadingScreen label="جاري تحويلك إلى لوحة التحكم..." />;
   }
 
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
-    );
-  }
-
   /* ── Handlers ── */
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
-      setRows((prev) => prev.map((row) => (row[rowIdKey] === editTarget[rowIdKey] ? { ...row, ...data } : row)));
+      updateRows((prev) => prev.map((row) => (row[rowIdKey] === editTarget[rowIdKey] ? { ...row, ...data } : row)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
       const newRow = { ...data, [rowIdKey]: `${slug}-${Date.now()}` };
-      setRows((prev) => [newRow, ...prev]);
+      updateRows((prev) => [newRow, ...prev]);
       pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
     }
     setModalOpen(false);
@@ -193,7 +215,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   };
 
   const handleDeleteConfirm = () => {
-    setRows((prev) => prev.filter((row) => row[rowIdKey] !== deleteTarget?.[rowIdKey]));
+    updateRows((prev) => prev.filter((row) => row[rowIdKey] !== deleteTarget?.[rowIdKey]));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
   };
@@ -291,7 +313,7 @@ export function ModuleShell({ slug }: { slug: string }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {moduleIconMap[slug] ?? "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                {moduleIconMap[slug] ?? "📌"} {title}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rows.length} {entityPlural} — جميع البيانات محدثة
