@@ -1,13 +1,12 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { jsonResponse, readJsonBody, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
   if (error) return error;
 
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(
+  return jsonResponse(
     clients.map((c) => ({
       id: c.id,
       name: c.name,
@@ -25,7 +24,9 @@ export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
 
-  const body = await request.json();
+  const parsed = await readJsonBody<Record<string, unknown>>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const created = await prisma.client.create({
     data: {
       name: String(body.name ?? ""),
@@ -35,5 +36,5 @@ export async function POST(request: Request) {
       status: String(body.status ?? "نشط"),
     },
   });
-  return NextResponse.json({ id: created.id }, { status: 201 });
+  return jsonResponse({ id: created.id }, { status: 201 });
 }

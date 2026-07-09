@@ -1,8 +1,17 @@
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
 import type { UserRole } from "@/generated/prisma/client";
 
 export const AUTH_COOKIE = "naiosh-auth-token";
+const fallbackSecret = "naiosh-law-dev-secret-change-in-production";
+const validRoles = new Set<UserRole>([
+  "admin",
+  "lawyer",
+  "consultant",
+  "judge",
+  "client",
+  "industrial_agent",
+  "employee",
+]);
 
 export type AuthPayload = {
   sub: string;
@@ -12,8 +21,19 @@ export type AuthPayload = {
 };
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET ?? "naiosh-law-dev-secret-change-in-production";
-  return new TextEncoder().encode(secret);
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET is required in production.");
+  }
+  return new TextEncoder().encode(secret ?? fallbackSecret);
+}
+
+export function getJwtSecret() {
+  return getSecret();
+}
+
+export function isUserRole(value: unknown): value is UserRole {
+  return typeof value === "string" && validRoles.has(value as UserRole);
 }
 
 export async function signToken(payload: AuthPayload) {
@@ -28,14 +48,19 @@ export async function signToken(payload: AuthPayload) {
 export async function verifyToken(token: string): Promise<AuthPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    if (!payload.sub || typeof payload.email !== "string" || typeof payload.name !== "string") {
+    if (
+      !payload.sub ||
+      typeof payload.email !== "string" ||
+      typeof payload.name !== "string" ||
+      !isUserRole(payload.role)
+    ) {
       return null;
     }
     return {
       sub: payload.sub,
       email: payload.email,
       name: payload.name,
-      role: payload.role as UserRole,
+      role: payload.role,
     };
   } catch {
     return null;
@@ -43,6 +68,7 @@ export async function verifyToken(token: string): Promise<AuthPayload | null> {
 }
 
 export async function getSessionFromCookies(): Promise<AuthPayload | null> {
+  const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE)?.value;
   if (!token) return null;

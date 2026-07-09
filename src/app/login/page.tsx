@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers } from "@/data/auth";
+import { demoAccounts, type SessionUser } from "@/data/auth";
+import { writeSessionMirror } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -25,41 +26,88 @@ const perks = [
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+
+  const errorForStatus = (status: number, fallback: string) => {
+    if (status === 400) return "يرجى إدخال بريد إلكتروني وكلمة مرور صالحين.";
+    if (status === 401) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    if (status === 413) return "بيانات تسجيل الدخول كبيرة جدًا.";
+    if (status === 415) return "تعذر إرسال الطلب بصيغته الحالية.";
+    if (status === 503) return "خدمة الجلسات غير مهيأة حاليًا.";
+    return fallback;
+  };
+
+  const finishLogin = (user: SessionUser) => {
+    writeSessionMirror(user);
+    const nextParam = new URLSearchParams(window.location.search).get("next");
+    router.refresh();
+    router.push(nextParam === "/app" || nextParam?.startsWith("/app/") ? nextParam : "/app/dashboard");
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError("");
 
+    let response: Response;
     try {
-      const res = await fetch("/api/auth/login", {
+      response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "فشل تسجيل الدخول");
-        setLoading(false);
-        return;
-      }
-      router.push("/app/dashboard");
     } catch {
-      setError("تعذر الاتصال بالخادم");
+      setError("تعذر الاتصال بخدمة تسجيل الدخول الآن.");
       setLoading(false);
+      return;
     }
+
+    if (!response.ok) {
+      setError(errorForStatus(response.status, "تعذر تسجيل الدخول الآن."));
+      setLoading(false);
+      return;
+    }
+
+    const data = (await response.json()) as { user: SessionUser };
+    finishLogin(data.user);
   };
 
-  const fillDemo = (role: "admin" | "client") => {
-    const user = demoUsers.find((u) => u.role === role)!;
-    setEmail(user.email);
-    setPassword(user.password);
+  const loginDemo = async (role: "admin" | "client") => {
+    const account = demoAccounts.find((u) => u.role === role);
+    if (!account) {
+      setError("تعذر العثور على الحساب التجريبي.");
+      return;
+    }
+    setEmail(account.email);
     setError("");
+    setLoading(true);
+
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: account.email, password: account.password }),
+      });
+    } catch {
+      setError("تعذر الاتصال بخدمة تسجيل الدخول الآن.");
+      setLoading(false);
+      return;
+    }
+
+    if (!response.ok) {
+      setError(errorForStatus(response.status, "تعذر بدء الحساب التجريبي الآن."));
+      setLoading(false);
+      return;
+    }
+
+    const data = (await response.json()) as { user: SessionUser };
+    finishLogin(data.user);
   };
 
   return (
@@ -286,7 +334,9 @@ export default function LoginPage() {
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
-                onClick={() => fillDemo("admin")}
+                type="button"
+                onClick={() => void loginDemo("admin")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -313,7 +363,9 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
-                onClick={() => fillDemo("client")}
+                type="button"
+                onClick={() => void loginDemo("client")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -360,7 +412,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
-              <label className="input-label">البريد الإلكتروني</label>
+              <label className="input-label" htmlFor="login-email">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -375,6 +427,7 @@ export default function LoginPage() {
                   ✉️
                 </span>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -387,7 +440,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label className="input-label" htmlFor="login-password">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -409,6 +462,7 @@ export default function LoginPage() {
                   {showPass ? "🙈" : "👁️"}
                 </button>
                 <input
+                  id="login-password"
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

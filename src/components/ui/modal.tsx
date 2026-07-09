@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -13,17 +13,78 @@ type Props = {
   saveLabel?: string;
 };
 
+function inputTypeFor(field: FormField) {
+  if (field.type === "number" || field.type === "email" || field.type === "tel" || field.type === "date") {
+    return field.type;
+  }
+  return "text";
+}
+
+function createDefaults(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    defaults[field.key] = initial?.[field.key] ?? "";
+  });
+  return defaults;
+}
+
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
+  const [form, setForm] = useState<Record<string, unknown>>(() => createDefaults(fields, initial));
   const [saving, setSaving] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const formId = useId();
 
   useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
+    if (!open) {
+      return;
     }
-  }, [open, initial, fields]);
+
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.body.style.overflow = "hidden";
+
+    const focusableSelector =
+      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusFirst = () => panelRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+        (element) => element.offsetParent !== null
+      );
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    focusFirst();
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -32,7 +93,6 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
     onSave(form);
     setSaving(false);
   };
@@ -53,6 +113,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -78,6 +143,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
             onClick={onClose}
+            type="button"
+            aria-label="إغلاق النافذة"
             style={{
               width: 34,
               height: 34,
@@ -106,14 +173,17 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             }}
             className="modal-form-grid"
           >
-            {fields.map((f) => (
+            {fields.map((f) => {
+              const fieldId = `${formId}-${f.key}`;
+              return (
               <div
                 key={f.key}
                 style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
               >
-                <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
+                <label className="input-label" htmlFor={fieldId}>{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
                 {f.type === "select" ? (
                   <select
+                    id={fieldId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -127,6 +197,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
+                    id={fieldId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -137,7 +208,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
-                    type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                    id={fieldId}
+                    type={inputTypeFor(f)}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -146,11 +218,12 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div className="modal-actions" style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={onClose}
@@ -181,7 +254,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       </div>
 
       <style>{`
-        @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) {
+          .modal-form-grid { grid-template-columns: 1fr !important; }
+          .modal-actions { flex-direction: column-reverse; }
+          .modal-actions button { width: 100%; }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }

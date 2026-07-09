@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { jsonError, jsonResponse, readJsonBody, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -10,15 +9,17 @@ export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
 
   const item = await prisma.case.findUnique({ where: { id } });
-  if (!item) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
-  return NextResponse.json(item);
+  if (!item) return jsonError("غير موجود", 404);
+  return jsonResponse(item);
 }
 
 export async function PATCH(request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  const body = await request.json();
+  const parsed = await readJsonBody<Record<string, unknown>>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   const updated = await prisma.case.update({
     where: { id },
@@ -32,7 +33,7 @@ export async function PATCH(request: Request, { params }: Params) {
       notes: body.notes !== undefined ? String(body.notes) : undefined,
     },
   });
-  return NextResponse.json(updated);
+  return jsonResponse(updated);
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
@@ -40,5 +41,5 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) return error;
   const { id } = await params;
   await prisma.case.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  return jsonResponse({ ok: true });
 }

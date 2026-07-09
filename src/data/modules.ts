@@ -1,4 +1,4 @@
-export type Role = "admin" | "client";
+export type Role = "admin" | "lawyer" | "consultant" | "judge" | "client" | "industrial_agent" | "employee";
 
 export type LegalModule = {
   slug: string;
@@ -9,13 +9,35 @@ export type LegalModule = {
   workflow: string[];
   relations: string[];
   dbTables: string[];
-  permissions: Record<Role, string[]>;
+  permissions: Record<"admin" | "client", string[]>;
 };
 
 const basePermissions = {
   admin: ["عرض", "إضافة", "تعديل", "اعتماد", "تقارير"],
   client: ["عرض الحالة", "تحميل المستندات", "متابعة التنبيهات"],
 };
+
+export const moduleIcons: Record<string, string> = {
+  dashboard: "⊞",
+  "case-management": "⚖️",
+  "clients-management": "👥",
+  "court-sessions": "🏛️",
+  "follow-up-center": "📋",
+  "legal-accounting": "💰",
+  "legal-services": "📝",
+  "legal-consultations": "💬",
+  "internal-requests": "📤",
+  "complaints-management": "🔔",
+  "smart-templates": "🤖",
+  "reports-center": "📊",
+  administration: "⚙️",
+  "notifications-center": "🛎️",
+  integrations: "🔗",
+  "ai-center": "🧠",
+  "general-tools": "🛠️",
+};
+
+export const adminOnlyModuleSlugs = ["administration", "integrations", "ai-center"];
 
 export const modules: LegalModule[] = [
   { slug: "dashboard", title: "لوحة التحكم", subtitle: "مؤشرات الأداء والملخصات اليومية", screens: ["مؤشرات الأداء", "إحصائيات القضايا", "الجلسات القادمة", "المهام اليومية", "التنبيهات", "الملخص المالي"], functions: ["مراقبة KPIs", "عرض تنبيهات ذكية", "فلترة حسب الفريق"], workflow: ["تحميل البيانات", "تحليل الحالة", "إرسال تنبيه"], relations: ["إدارة القضايا", "مركز المتابعات", "المحاسبة القانونية"], dbTables: ["dash_widgets", "alerts", "daily_tasks"], permissions: basePermissions },
@@ -38,3 +60,17 @@ export const modules: LegalModule[] = [
 ];
 
 export const moduleMap = Object.fromEntries(modules.map((item) => [item.slug, item]));
+
+export const operationalModules = modules.filter((item) => item.slug !== "dashboard");
+
+export function getModuleHref(slug: string) {
+  return slug === "dashboard" ? "/app/dashboard" : `/app/modules/${slug}`;
+}
+
+export function canAccessModule(role: Role, slug: string) {
+  return !adminOnlyModuleSlugs.includes(slug) || role === "admin" || role === "industrial_agent";
+}
+
+export function getVisibleOperationalModules(role?: Role) {
+  return operationalModules.filter((item) => !role || canAccessModule(role, item.slug));
+}

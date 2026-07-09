@@ -5,7 +5,16 @@ export type DemoUser = {
   password: string;
 };
 
-export const demoUsers: DemoUser[] = [
+export type UserRole =
+  | "admin"
+  | "lawyer"
+  | "consultant"
+  | "judge"
+  | "client"
+  | "industrial_agent"
+  | "employee";
+
+export const demoAccounts: DemoUser[] = [
   {
     role: "admin",
     name: "مدير النظام",
@@ -20,4 +29,10 @@ export const demoUsers: DemoUser[] = [
   },
 ];
 
-export const sessionKey = "naiosh-law-session";
+export type SessionUser = {
+  role: UserRole;
+  name: string;
+  email: string;
+};
+
+export const sessionStorageKey = "naiosh-law-session-user";

@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/api-helpers";
+import { jsonResponse, requireAuth } from "@/lib/api-helpers";
 
 export async function GET(request: Request) {
   const { error } = await requireAuth();
@@ -15,5 +14,5 @@ export async function GET(request: Request) {
     include: { entity: true },
   });
 
-  return NextResponse.json(officials);
+  return jsonResponse(officials);
 }

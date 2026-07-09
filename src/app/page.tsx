@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero";
 import { ModuleCard } from "@/components/module-card";
-import { modules } from "@/data/modules";
+import { operationalModules } from "@/data/modules";
 
 const features = [
   {
@@ -38,7 +38,7 @@ const features = [
 ];
 
 const statItems = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: String(operationalModules.length), label: "وحدة تشغيلية" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -189,7 +189,7 @@ export default function HomePage() {
                 marginBottom: "1rem",
               }}
             >
-              17 وحدة مترابطة وكاملة
+              {operationalModules.length} وحدة مترابطة وكاملة
             </h2>
             <p style={{ color: "#64748b", fontSize: "1.05rem", maxWidth: "500px", margin: "0 auto", lineHeight: 1.8 }}>
               كل وحدة مستقلة بشاشاتها ووظائفها وعلاقاتها وصلاحياتها الخاصة
@@ -200,7 +200,7 @@ export default function HomePage() {
             style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}
             className="modules-grid"
           >
-            {modules.map((item) => (
+            {operationalModules.map((item) => (
               <ModuleCard key={item.slug} item={item} />
             ))}
           </div>
@@ -255,11 +255,11 @@ export default function HomePage() {
               ابدأ تجربتك المجانية →
             </Link>
             <Link
-              href="/app/dashboard"
+              href="/login"
               className="btn-ghost-dark"
               style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}
             >
-              الدخول كزائر
+              عرض الحسابات التجريبية
             </Link>
           </div>
 

@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { jsonResponse, readJsonBody, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET(request: Request) {
   const { error } = await requireAuth();
@@ -14,13 +13,15 @@ export async function GET(request: Request) {
     orderBy: { sortOrder: "asc" },
     include: { branch: true, _count: { select: { cases: true } } },
   });
-  return NextResponse.json(items);
+  return jsonResponse(items);
 }
 
 export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
-  const body = await request.json();
+  const parsed = await readJsonBody<Record<string, unknown>>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const created = await prisma.legalSpecialization.create({
     data: {
       name: String(body.name),
@@ -28,5 +29,5 @@ export async function POST(request: Request) {
       description: body.description ? String(body.description) : null,
     },
   });
-  return NextResponse.json(created, { status: 201 });
+  return jsonResponse(created, { status: 201 });
 }

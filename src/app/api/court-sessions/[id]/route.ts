@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireWrite } from "@/lib/api-helpers";
+import { jsonResponse, readJsonBody, requireWrite } from "@/lib/api-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,7 +7,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  const body = await request.json();
+  const parsed = await readJsonBody<Record<string, unknown>>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   const updated = await prisma.courtSession.update({
     where: { id },
@@ -24,7 +25,7 @@ export async function PATCH(request: Request, { params }: Params) {
       lawyer: body.lawyer !== undefined ? String(body.lawyer) : undefined,
     },
   });
-  return NextResponse.json(updated);
+  return jsonResponse(updated);
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
@@ -32,5 +33,5 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) return error;
   const { id } = await params;
   await prisma.courtSession.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  return jsonResponse({ ok: true });
 }
