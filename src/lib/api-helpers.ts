@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies, canWrite } from "@/lib/auth";
+import { Prisma } from "@/generated/prisma/client";
 import type { UserRole } from "@/generated/prisma/client";
 
 type JsonBodyResult =
@@ -57,4 +58,19 @@ export async function parseJsonBody(
   } catch {
     return { body: null, error: jsonError("صيغة JSON غير صالحة", 400) };
   }
+}
+
+export function prismaErrorResponse(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2025") {
+      return jsonError("السجل غير موجود", 404);
+    }
+    if (error.code === "P2002") {
+      return jsonError("يوجد سجل آخر بنفس القيمة الفريدة", 409);
+    }
+    if (error.code === "P2003") {
+      return jsonError("لا يمكن تنفيذ العملية بسبب ارتباطات قاعدة البيانات", 409);
+    }
+  }
+  return null;
 }
