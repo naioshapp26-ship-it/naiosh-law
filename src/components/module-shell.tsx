@@ -25,8 +25,9 @@ export function ModuleShell({ slug }: { slug: string }) {
   const config = moduleConfigMap[slug];
   const apiEndpoint = getModuleApiEndpoint(slug);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [rows, setRows] = useState<Record<string, unknown>[]>(apiEndpoint ? [] : config?.data ?? []);
   const [loadingData, setLoadingData] = useState(!!apiEndpoint);
+  const [dataError, setDataError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -53,7 +54,10 @@ export function ModuleShell({ slug }: { slug: string }) {
         throw new Error("Invalid rows payload");
       }
       setRows(data);
+      setDataError("");
     } catch {
+      setRows([]);
+      setDataError("تعذر تحميل البيانات من الخادم. يرجى المحاولة مرة أخرى.");
       pushToast("error", "تعذر تحميل البيانات من الخادم");
     } finally {
       setLoadingData(false);
@@ -98,6 +102,13 @@ export function ModuleShell({ slug }: { slug: string }) {
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = async (data: Record<string, unknown>) => {
+    if (apiEndpoint && !canWrite) {
+      pushToast("error", "ليست لديك صلاحية تعديل هذه البيانات");
+      setModalOpen(false);
+      setEditTarget(null);
+      return;
+    }
+
     if (apiEndpoint && canWrite) {
       try {
         if (editTarget?.id) {
@@ -180,7 +191,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="view-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
@@ -189,11 +200,13 @@ export function ModuleShell({ slug }: { slug: string }) {
             ))}
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
-              className="btn-primary"
-              style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
-            >✏️ تعديل</button>
+            {canWrite && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
+              >✏️ تعديل</button>
+            )}
             <button
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
@@ -228,7 +241,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                  config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
+                إجمالي {rows.length} {config.entityName} — {dataError || "جميع البيانات محدثة"}
               </p>
             </div>
             <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
@@ -338,6 +351,9 @@ export function ModuleShell({ slug }: { slug: string }) {
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 560px) {
+          .view-detail-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </AppShell>

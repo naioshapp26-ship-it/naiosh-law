@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { handleApiError, readJsonObject, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -32,18 +32,23 @@ export async function GET() {
 export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
-  const body = await request.json();
+  const { body, error: bodyError } = await readJsonObject(request);
+  if (bodyError) return bodyError;
 
-  const created = await prisma.professional.create({
-    data: {
-      name: String(body.name),
-      type: body.type ?? "lawyer",
-      licenseNo: body.licenseNo ? String(body.licenseNo) : null,
-      phone: body.phone ? String(body.phone) : null,
-      email: body.email ? String(body.email) : null,
-      status: String(body.status ?? "نشط"),
-      bio: body.bio ? String(body.bio) : null,
-    },
-  });
-  return NextResponse.json(created, { status: 201 });
+  try {
+    const created = await prisma.professional.create({
+      data: {
+        name: String(body.name ?? ""),
+        type: body.type === "consultant" || body.type === "judge" ? body.type : "lawyer",
+        licenseNo: body.licenseNo ? String(body.licenseNo) : null,
+        phone: body.phone ? String(body.phone) : null,
+        email: body.email ? String(body.email) : null,
+        status: String(body.status ?? "نشط"),
+        bio: body.bio ? String(body.bio) : null,
+      },
+    });
+    return NextResponse.json(created, { status: 201 });
+  } catch (error) {
+    return handleApiError(error, "فشل إنشاء الملف المهني");
+  }
 }

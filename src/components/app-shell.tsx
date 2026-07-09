@@ -62,8 +62,11 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    router.replace("/login");
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } finally {
+      router.replace("/login");
+    }
   };
 
   const isActive = (href: string) => pathname === href;

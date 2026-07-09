@@ -6,11 +6,20 @@ import { AUTH_COOKIE } from "@/lib/auth";
 const DEV_JWT_SECRET = "naiosh-law-dev-secret-change-in-production";
 
 function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-  if (!secret && process.env.NODE_ENV === "production") {
+  const secret = process.env.JWT_SECRET ?? process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret && process.env.NAIOSH_REQUIRE_SESSION_SECRET === "true") {
     return null;
   }
   return new TextEncoder().encode(secret ?? DEV_JWT_SECRET);
+}
+
+function loginUrl(request: NextRequest) {
+  const url = new URL("/login", request.url);
+  const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  if (next !== "/login") {
+    url.searchParams.set("next", next);
+  }
+  return url;
 }
 
 export async function middleware(request: NextRequest) {
@@ -24,7 +33,7 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/app")) {
     if (!token || !secret) {
-      const res = NextResponse.redirect(new URL("/login", request.url));
+      const res = NextResponse.redirect(loginUrl(request));
       if (token) res.cookies.delete(AUTH_COOKIE);
       return res;
     }
@@ -32,7 +41,7 @@ export async function middleware(request: NextRequest) {
       await jwtVerify(token, secret);
       return NextResponse.next();
     } catch {
-      const res = NextResponse.redirect(new URL("/login", request.url));
+      const res = NextResponse.redirect(loginUrl(request));
       res.cookies.delete(AUTH_COOKIE);
       return res;
     }

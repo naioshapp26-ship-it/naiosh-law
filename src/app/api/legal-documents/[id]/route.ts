@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { readJsonObject, requireWrite } from "@/lib/api-helpers";
+import { handleApiError, readJsonObject, requireWrite } from "@/lib/api-helpers";
 import type { LibraryDocumentType } from "@/generated/prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
@@ -18,25 +18,33 @@ export async function PATCH(request: Request, { params }: Params) {
   const { body, error: bodyError } = await readJsonObject(request);
   if (bodyError) return bodyError;
 
-  const updated = await prisma.legalDocument.update({
-    where: { id },
-    data: {
-      title: body.title !== undefined ? String(body.title) : undefined,
-      type: body.type !== undefined ? normalizeDocumentType(body.type) : undefined,
-      category: body.category !== undefined ? String(body.category) || null : undefined,
-      summary: body.summary !== undefined ? String(body.summary) || null : undefined,
-      content: body.content !== undefined ? String(body.content) || null : undefined,
-      tags: body.tags !== undefined ? String(body.tags) || null : undefined,
-      status: body.status !== undefined ? String(body.status) : undefined,
-    },
-  });
-  return NextResponse.json(updated);
+  try {
+    const updated = await prisma.legalDocument.update({
+      where: { id },
+      data: {
+        title: body.title !== undefined ? String(body.title) : undefined,
+        type: body.type !== undefined ? normalizeDocumentType(body.type) : undefined,
+        category: body.category !== undefined ? String(body.category) || null : undefined,
+        summary: body.summary !== undefined ? String(body.summary) || null : undefined,
+        content: body.content !== undefined ? String(body.content) || null : undefined,
+        tags: body.tags !== undefined ? String(body.tags) || null : undefined,
+        status: body.status !== undefined ? String(body.status) : undefined,
+      },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    return handleApiError(error, "فشل تعديل المستند");
+  }
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  await prisma.legalDocument.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  try {
+    await prisma.legalDocument.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return handleApiError(error, "فشل حذف المستند");
+  }
 }

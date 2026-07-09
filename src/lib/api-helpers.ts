@@ -28,6 +28,30 @@ export function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
+function getErrorCode(error: unknown) {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === "string" ? code : null;
+  }
+  return null;
+}
+
+export function handleApiError(error: unknown, fallback = "تعذر تنفيذ الطلب") {
+  const code = getErrorCode(error);
+  if (code === "P2025") {
+    return jsonError("غير موجود", 404);
+  }
+  if (code === "P2002") {
+    return jsonError("يوجد سجل بنفس البيانات الفريدة", 409);
+  }
+  if (error instanceof Error && error.message.includes("DATABASE_URL is not set")) {
+    return jsonError("لم يتم ضبط اتصال قاعدة البيانات", 503);
+  }
+
+  console.error("API error:", error);
+  return jsonError(fallback, 500);
+}
+
 export async function readJsonObject(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().includes("application/json")) {

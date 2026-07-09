@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { AUTH_COOKIE, AuthConfigurationError, signToken } from "@/lib/auth";
-import { readJsonObject } from "@/lib/api-helpers";
+import { AUTH_COOKIE, AuthConfigurationError, isSecureRequest, signToken } from "@/lib/auth";
+import { handleApiError, readJsonObject } from "@/lib/api-helpers";
 
 export async function POST(request: Request) {
   try {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     });
     response.cookies.set(AUTH_COOKIE, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecureRequest(request),
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
@@ -48,7 +48,6 @@ export async function POST(request: Request) {
     if (error instanceof AuthConfigurationError) {
       return NextResponse.json({ error: "إعدادات المصادقة غير مكتملة" }, { status: 503 });
     }
-    console.error("Login error:", error);
-    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
+    return handleApiError(error, "خطأ في الخادم");
   }
 }

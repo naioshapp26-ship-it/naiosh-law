@@ -19,12 +19,21 @@ export type AuthPayload = {
   role: UserRole;
 };
 
+function requireConfiguredSecret() {
+  return process.env.NAIOSH_REQUIRE_SESSION_SECRET === "true";
+}
+
 function getSecret() {
-  const secret = process.env.JWT_SECRET;
-  if (!secret && process.env.NODE_ENV === "production") {
-    throw new AuthConfigurationError("JWT_SECRET is required in production");
+  const secret = process.env.JWT_SECRET ?? process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret && requireConfiguredSecret()) {
+    throw new AuthConfigurationError("A session secret is required");
   }
   return new TextEncoder().encode(secret ?? DEV_JWT_SECRET);
+}
+
+export function isSecureRequest(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  return forwardedProto === "https" || new URL(request.url).protocol === "https:";
 }
 
 export async function signToken(payload: AuthPayload) {
