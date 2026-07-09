@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { sessionCookieName, sessionCookieOptions } from "@/lib/auth-session";
+import { getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
 
-export async function POST() {
+export async function POST(request: Request) {
   const response = NextResponse.json({ ok: true });
   response.cookies.set(sessionCookieName, "", {
-    ...sessionCookieOptions,
+    ...getSessionCookieOptions(request),
     expires: new Date(0),
     maxAge: 0,
   });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { encodeSession, sessionCookieName, sessionCookieOptions, sessionMaxAgeSeconds } from "@/lib/auth-session";
+import { encodeSession, getSessionCookieOptions, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const token = await encodeSession(user);
 
   response.cookies.set(sessionCookieName, token, {
-    ...sessionCookieOptions,
+    ...getSessionCookieOptions(request),
     maxAge: sessionMaxAgeSeconds,
   });
 

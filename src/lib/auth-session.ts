@@ -12,10 +12,10 @@ type SessionPayload = SessionUser & {
 
 export const sessionCookieName = "naiosh-law-session-token";
 export const sessionMaxAgeSeconds = 60 * 60 * 8;
-export const sessionCookieOptions = {
+
+const baseSessionCookieOptions = {
   httpOnly: true,
   sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
   path: "/",
 };
 
@@ -24,6 +24,30 @@ const decoder = new TextDecoder();
 
 function getSessionSecret() {
   return process.env.NAIOSH_SESSION_SECRET ?? "naiosh-law-demo-session-secret";
+}
+
+function shouldUseSecureCookie(request?: Request) {
+  if (process.env.NODE_ENV !== "production") {
+    return false;
+  }
+
+  if (!request) {
+    return true;
+  }
+
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  if (forwardedProto) {
+    return forwardedProto === "https";
+  }
+
+  return new URL(request.url).protocol === "https:";
+}
+
+export function getSessionCookieOptions(request?: Request) {
+  return {
+    ...baseSessionCookieOptions,
+    secure: shouldUseSecureCookie(request),
+  };
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {
