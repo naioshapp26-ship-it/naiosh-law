@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
-import { useSession } from "@/lib/session";
+import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import { useSession, canWriteRole } from "@/lib/session";
 
 type Tab = "documents" | "articles" | "circulars";
 
@@ -62,10 +63,10 @@ export default function LegalLibraryPage() {
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
     const q = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : "";
-    Promise.all([
+    return Promise.all([
       fetch(`/api/legal-documents${q}`, { credentials: "include" }).then((r) => r.json()),
       fetch(`/api/legal-articles${q}`, { credentials: "include" }).then((r) => r.json()),
       fetch(`/api/circular-instructions${q}`, { credentials: "include" }).then((r) => r.json()),
@@ -78,6 +79,12 @@ export default function LegalLibraryPage() {
       .finally(() => setLoading(false));
   }, [search]);
 
+  const { seed, seeding, Toast } = useSeedDemo(load);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const stats = useMemo(
     () => ({
       documents: documents.length,
@@ -89,15 +96,28 @@ export default function LegalLibraryPage() {
 
   if (!ready || !user) return null;
 
+  const canWrite = canWriteRole(user.role);
+  const isEmpty = !loading && documents.length === 0 && articles.length === 0 && circulars.length === 0 && !search.trim();
+
   return (
     <AppShell role={user.role} name={user.name}>
+      {Toast}
       <div style={{ maxWidth: 1200 }}>
-        <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.35rem" }}>
-          📖 المكتبة القانونية
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-          مستندات، مقالات قانونية، وتعليمات دائرية — بحث وفلترة حسب الفرع والتخصص
-        </p>
+        <PageHeader
+          icon="📖"
+          title="المكتبة القانونية"
+          subtitle="مستندات، مقالات قانونية، وتعليمات دائرية — بحث وفلترة حسب الفرع والتخصص"
+          actions={
+            <>
+              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل / إضافة بيانات</BtnPrimary>}
+              {isEmpty && (
+                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
+                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
+                </button>
+              )}
+            </>
+          }
+        />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
           {[
@@ -153,7 +173,9 @@ export default function LegalLibraryPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+          <PageLoader />
+        ) : isEmpty ? (
+          <EmptyState icon="📖" title="المكتبة فارغة" description="حمّل البيانات التجريبية لتظهر المستندات والمقالات والتعليمات الدائرية" onSeed={seed} seeding={seeding} canWrite={canWrite} />
         ) : (
           <>
             {tab === "documents" && (
@@ -193,7 +215,7 @@ export default function LegalLibraryPage() {
                     )}
                   </div>
                 ))}
-                {documents.length === 0 && <EmptyState text="لا توجد مستندات" />}
+                {documents.length === 0 && <TabEmpty text="لا توجد مستندات" />}
               </div>
             )}
 
@@ -221,7 +243,7 @@ export default function LegalLibraryPage() {
                     )}
                   </div>
                 ))}
-                {articles.length === 0 && <EmptyState text="لا توجد مقالات" />}
+                {articles.length === 0 && <TabEmpty text="لا توجد مقالات" />}
               </div>
             )}
 
@@ -261,7 +283,7 @@ export default function LegalLibraryPage() {
                     </div>
                   </div>
                 ))}
-                {circulars.length === 0 && <EmptyState text="لا توجد تعليمات دائرية" />}
+                {circulars.length === 0 && <TabEmpty text="لا توجد تعليمات دائرية" />}
               </div>
             )}
           </>
@@ -271,7 +293,7 @@ export default function LegalLibraryPage() {
   );
 }
 
-function EmptyState({ text }: { text: string }) {
+function TabEmpty({ text }: { text: string }) {
   return (
     <p style={{ color: "#64748b", textAlign: "center", padding: "2rem", gridColumn: "1 / -1" }}>
       {text}

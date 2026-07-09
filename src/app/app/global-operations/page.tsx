@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
-import { useSession } from "@/lib/session";
+import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import { useSession, canWriteRole } from "@/lib/session";
 
 type Tab = "supply" | "shipments" | "international" | "branches" | "alerts";
 
@@ -33,9 +34,9 @@ export default function GlobalOperationsPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    Promise.all([
+    return Promise.all([
       fetch("/api/supply-chain/partners", { credentials: "include" }).then((r) => r.json()),
       fetch("/api/supply-chain/shipments", { credentials: "include" }).then((r) => r.json()),
       fetch("/api/international-law", { credentials: "include" }).then((r) => r.json()),
@@ -52,6 +53,12 @@ export default function GlobalOperationsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const { seed, seeding, Toast } = useSeedDemo(load);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const ackAlert = async (id: string) => {
     await fetch(`/api/circular-alerts/${id}`, {
       method: "PATCH",
@@ -65,15 +72,28 @@ export default function GlobalOperationsPage() {
 
   if (!ready || !user) return null;
 
+  const canWrite = canWriteRole(user.role);
+  const isEmpty = !loading && partners.length === 0 && branches.length === 0;
+
   return (
     <AppShell role={user.role} name={user.name}>
+      {Toast}
       <div style={{ maxWidth: 1200 }}>
-        <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.35rem" }}>
-          🌍 العمليات العالمية
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-          سلسلة التوريد، القانون الدولي، فروع نايوش العالمية، وتنبيهات التعليمات الدائرية
-        </p>
+        <PageHeader
+          icon="🌍"
+          title="العمليات العالمية"
+          subtitle="سلسلة التوريد، القانون الدولي، فروع نايوش العالمية، وتنبيهات التعليمات الدائرية"
+          actions={
+            <>
+              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات</BtnPrimary>}
+              {isEmpty && (
+                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
+                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
+                </button>
+              )}
+            </>
+          }
+        />
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.25rem" }}>
           {tabs.map((t) => (
@@ -87,7 +107,9 @@ export default function GlobalOperationsPage() {
           ))}
         </div>
 
-        {loading ? <p style={{ color: "#64748b" }}>جاري التحميل...</p> : (
+        {loading ? <PageLoader /> : isEmpty ? (
+          <EmptyState icon="🌍" title="لا توجد بيانات عمليات" description="حمّل البيانات التجريبية لتظهر شركاء التوريد والفروع العالمية" onSeed={seed} seeding={seeding} canWrite={canWrite} />
+        ) : (
           <>
             {tab === "supply" && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>

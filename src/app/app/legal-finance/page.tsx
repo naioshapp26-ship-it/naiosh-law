@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { useSession } from "@/lib/session";
+import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import { useSession, canWriteRole } from "@/lib/session";
 
 type Tab =
   | "invoices"
@@ -158,6 +159,8 @@ export default function LegalFinancePage() {
     loadAll();
   }, []);
 
+  const { seed, seeding, Toast } = useSeedDemo(loadAll);
+
   const runCalculator = async () => {
     setCalcError("");
     setCalcResult(null);
@@ -187,15 +190,28 @@ export default function LegalFinancePage() {
 
   if (!ready || !user) return null;
 
+  const canWrite = canWriteRole(user.role);
+  const isEmpty = !loading && invoices.length === 0 && feeRules.length === 0;
+
   return (
     <AppShell role={user.role} name={user.name}>
+      {Toast}
       <div style={{ maxWidth: 1200 }}>
-        <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.35rem" }}>
-          💰 المالية القانونية المتقدمة
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-          الفواتير، قواعد الأتعاب، الكفالات، الضمانات، الإشعارات الرسمية والمدفوعات
-        </p>
+        <PageHeader
+          icon="💰"
+          title="المالية القانونية المتقدمة"
+          subtitle="الفواتير، قواعد الأتعاب، الكفالات، الضمانات، الإشعارات الرسمية والمدفوعات"
+          actions={
+            <>
+              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات مالية</BtnPrimary>}
+              {isEmpty && (
+                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
+                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
+                </button>
+              )}
+            </>
+          }
+        />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
           {[
@@ -235,7 +251,9 @@ export default function LegalFinancePage() {
         </div>
 
         {loading ? (
-          <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+          <PageLoader />
+        ) : isEmpty ? (
+          <EmptyState icon="💰" title="لا توجد بيانات مالية" description="حمّل البيانات التجريبية لتظهر الفواتير وقواعد الأتعاب والكفالات" onSeed={seed} seeding={seeding} canWrite={canWrite} />
         ) : (
           <>
             {tab === "invoices" && (

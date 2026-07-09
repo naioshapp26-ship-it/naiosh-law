@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { useSession } from "@/lib/session";
+import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import { useSession, canWriteRole } from "@/lib/session";
 
 type Tab = "branches" | "rules" | "logs" | "integrations" | "send";
 
@@ -115,6 +116,8 @@ export default function CommunicationsPage() {
     loadAll();
   }, []);
 
+  const { seed, seeding, Toast } = useSeedDemo(loadAll);
+
   const testIntegration = async (id: string) => {
     setTestingId(id);
     const res = await fetch(`/api/integrations/${id}`, { method: "POST", credentials: "include" });
@@ -147,15 +150,28 @@ export default function CommunicationsPage() {
 
   if (!ready || !user) return null;
 
+  const canWrite = canWriteRole(user.role);
+  const isEmpty = !loading && branches.length === 0 && rules.length === 0;
+
   return (
     <AppShell role={user.role} name={user.name}>
+      {Toast}
       <div style={{ maxWidth: 1200 }}>
-        <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.35rem" }}>
-          🛎️ الإشعارات والتكاملات
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-          فروع متعددة، قواعد إشعار، Resend للبريد، Twilio للرسائل والواتساب
-        </p>
+        <PageHeader
+          icon="🛎️"
+          title="الإشعارات والتكاملات"
+          subtitle="فروع متعددة، قواعد إشعار، Resend للبريد، Twilio للرسائل والواتساب"
+          actions={
+            <>
+              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات</BtnPrimary>}
+              {isEmpty && (
+                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
+                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
+                </button>
+              )}
+            </>
+          }
+        />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
           {[
@@ -195,7 +211,9 @@ export default function CommunicationsPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+          <PageLoader />
+        ) : isEmpty ? (
+          <EmptyState icon="🛎️" title="لا توجد بيانات اتصالات" description="حمّل البيانات التجريبية لتظهر الفروع وقواعد الإشعار والتكاملات" onSeed={seed} seeding={seeding} canWrite={canWrite} />
         ) : (
           <>
             {tab === "branches" && (

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { useSession } from "@/lib/session";
+import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import { useSession, canWriteRole } from "@/lib/session";
 
 type Tab = "approvals" | "policies" | "signatures" | "audit";
 
@@ -110,6 +111,8 @@ export default function GovernancePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, user?.role]);
 
+  const { seed, seeding, Toast } = useSeedDemo(loadAll);
+
   const resolveApproval = async (id: string, status: "approved" | "rejected") => {
     const res = await fetch(`/api/approval-requests/${id}`, {
       method: "PATCH",
@@ -141,16 +144,28 @@ export default function GovernancePage() {
 
   const pendingApprovals = approvals.filter((a) => a.statusRaw === "pending").length;
   const pendingSignatures = signatures.filter((s) => s.statusRaw === "pending").length;
+  const canWrite = canWriteRole(user.role);
+  const isEmpty = !loading && approvals.length === 0 && policies.length === 0;
 
   return (
     <AppShell role={user.role} name={user.name}>
+      {Toast}
       <div style={{ maxWidth: 1200 }}>
-        <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.35rem" }}>
-          ⚙️ الحوكمة والتوقيع الإلكتروني
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-          اعتمادات الوكيل الصناعي، سياسات الحوكمة، التوقيع الإلكتروني، وسجل التدقيق
-        </p>
+        <PageHeader
+          icon="⚙️"
+          title="الحوكمة والتوقيع الإلكتروني"
+          subtitle="اعتمادات الوكيل الصناعي، سياسات الحوكمة، التوقيع الإلكتروني، وسجل التدقيق"
+          actions={
+            <>
+              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات</BtnPrimary>}
+              {isEmpty && (
+                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
+                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
+                </button>
+              )}
+            </>
+          }
+        />
 
         {actionMsg && (
           <p style={{ background: "rgba(34,197,94,0.1)", color: "#16a34a", padding: "0.65rem 1rem", borderRadius: "10px", marginBottom: "1rem", fontWeight: 600, fontSize: "0.85rem" }}>
@@ -196,7 +211,9 @@ export default function GovernancePage() {
         </div>
 
         {loading ? (
-          <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+          <PageLoader />
+        ) : isEmpty ? (
+          <EmptyState icon="⚙️" title="لا توجد بيانات حوكمة" description="حمّل البيانات التجريبية لتظهر طلبات الاعتماد والسياسات والتوقيعات" onSeed={seed} seeding={seeding} canWrite={canWrite} />
         ) : (
           <>
             {tab === "approvals" && (
