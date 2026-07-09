@@ -98,8 +98,12 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
   }, []);
 
   useEffect(() => {
-    setRows(loadStoredRows(slug, config.data));
-    setStorageReady(true);
+    const timeoutId = window.setTimeout(() => {
+      setRows(loadStoredRows(slug, config.data));
+      setStorageReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [config.data, slug]);
 
   useEffect(() => {
