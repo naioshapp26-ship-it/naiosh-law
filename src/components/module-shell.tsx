@@ -142,8 +142,10 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
 
   useEffect(() => {
     if (apiEndpoint) {
-      void loadServerRows();
-      return;
+      const loadTimer = window.setTimeout(() => {
+        void loadServerRows();
+      }, 0);
+      return () => window.clearTimeout(loadTimer);
     }
 
     if (!storageKeys) {
