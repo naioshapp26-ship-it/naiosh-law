@@ -4,11 +4,13 @@ import { moduleIconMap } from "@/data/module-icons";
 
 type Props = {
   item: LegalModule;
+  requireLogin?: boolean;
 };
 
-export function ModuleCard({ item }: Props) {
+export function ModuleCard({ item, requireLogin = false }: Props) {
   const icon = moduleIconMap[item.slug] ?? "📌";
-  const href = item.slug === "dashboard" ? "/app/dashboard" : `/app/modules/${item.slug}`;
+  const appHref = item.slug === "dashboard" ? "/app/dashboard" : `/app/modules/${item.slug}`;
+  const href = requireLogin ? `/login?next=${encodeURIComponent(appHref)}` : appHref;
 
   return (
     <Link

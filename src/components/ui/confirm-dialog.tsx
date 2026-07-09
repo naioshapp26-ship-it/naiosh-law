@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 type Props = {
   open: boolean;
   title?: string;
@@ -10,7 +12,23 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCancel();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onCancel]);
+
   if (!open) return null;
+
   return (
     <div
       style={{
@@ -29,6 +47,9 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         className="card-white"
         style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={title}
       >
         <div
           style={{
@@ -62,7 +83,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
               border: "1px solid #e2e8f0",
               background: "#f8f9fb",
               cursor: "pointer",
-              fontFamily: "var(--font-cairo)",
+              fontFamily: "var(--font)",
               fontWeight: 600,
               fontSize: "0.875rem",
               color: "#475569",
@@ -80,7 +101,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
               border: "none",
               background: "#ef4444",
               cursor: "pointer",
-              fontFamily: "var(--font-cairo)",
+              fontFamily: "var(--font)",
               fontWeight: 700,
               fontSize: "0.875rem",
               color: "#ffffff",

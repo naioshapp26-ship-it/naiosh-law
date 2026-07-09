@@ -1,3 +1,5 @@
+"use client";
+
 export type KpiCard = {
   label: string;
   value: string | number;

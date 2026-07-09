@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { decodeSession, sessionCookieName } from "@/lib/auth-session";
+import { decodeSession, sessionCookieName, sessionCookieOptions } from "@/lib/auth-session";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -8,7 +8,11 @@ export async function GET() {
 
   if (!user) {
     const response = NextResponse.json({ message: "No active session." }, { status: 401 });
-    response.cookies.delete(sessionCookieName);
+    response.cookies.set(sessionCookieName, "", {
+      ...sessionCookieOptions,
+      expires: new Date(0),
+      maxAge: 0,
+    });
 
     return response;
   }

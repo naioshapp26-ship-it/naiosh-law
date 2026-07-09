@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
 import type { SessionUser } from "@/lib/auth-session";
@@ -74,14 +74,24 @@ function parseStoredSession(raw: string | null): SessionUser | null {
   return null;
 }
 
+function loginPathWithNext() {
+  if (typeof window === "undefined") {
+    return "/login";
+  }
+
+  const next = `${window.location.pathname}${window.location.search}`;
+  return next.startsWith("/app") ? `/login?next=${encodeURIComponent(next)}` : "/login";
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
+  const [checkingServerSession, setCheckingServerSession] = useState(false);
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
     getServerSessionSnapshot
   );
-  const ready = rawSession !== undefined;
+  const ready = rawSession !== undefined && !checkingServerSession;
   const user = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
 
   useEffect(() => {
@@ -90,17 +100,15 @@ export function useSession(redirectIfMissing = false) {
       return;
     }
 
-    if (ready && !user && redirectIfMissing) {
-      router.replace("/login");
-    }
-  }, [ready, rawSession, user, redirectIfMissing, router]);
+  }, [rawSession, user]);
 
   useEffect(() => {
-    if (!ready || !user || !redirectIfMissing) {
+    if (rawSession === undefined || !redirectIfMissing) {
       return;
     }
 
     const controller = new AbortController();
+    setCheckingServerSession(!user);
 
     fetch("/api/auth/session", {
       cache: "no-store",
@@ -109,31 +117,47 @@ export function useSession(redirectIfMissing = false) {
       .then(async (response) => {
         if (!response.ok) {
           clearStoredSession();
-          router.replace("/login");
+          router.replace(loginPathWithNext());
           return;
         }
 
         const payload = (await response.json()) as { user?: SessionUser };
         if (payload.user) {
           saveSession(payload.user);
+        } else {
+          clearStoredSession();
+          router.replace(loginPathWithNext());
         }
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
+        clearStoredSession();
+        router.replace(loginPathWithNext());
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setCheckingServerSession(false);
+        }
       });
 
-    return () => controller.abort();
-  }, [ready, user, redirectIfMissing, router]);
+    return () => {
+      controller.abort();
+      setCheckingServerSession(false);
+    };
+  }, [rawSession, user, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({
       user,
       ready,
-      logout: () => {
+      logout: async () => {
+        const response = await fetch("/api/auth/logout", { method: "POST" });
+        if (!response.ok) {
+          throw new Error("Logout failed.");
+        }
         clearStoredSession();
-        void fetch("/api/auth/logout", { method: "POST" });
         router.replace("/login");
       },
     }),

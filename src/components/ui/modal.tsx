@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -33,6 +33,17 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
   const [saving, setSaving] = useState(false);
 
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -70,6 +81,9 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
           animation: "fade-in-up 0.22s ease",
         }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         {/* Header */}
         <div
@@ -165,7 +179,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
                 border: "1px solid #e2e8f0",
                 background: "#f8f9fb",
                 cursor: "pointer",
-                fontFamily: "var(--font-cairo)",
+                fontFamily: "var(--font)",
                 fontWeight: 600,
                 fontSize: "0.875rem",
                 color: "#475569",

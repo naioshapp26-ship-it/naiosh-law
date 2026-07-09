@@ -1,20 +1,38 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { moduleConfigMap } from "@/data/module-configs";
+import { moduleIconMap } from "@/data/module-icons";
 import { moduleMap } from "@/data/modules";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
-let toastCounter = 0;
-
 const rowIdKey = "_rowId";
+
+const entityPluralMap: Record<string, string> = {
+  قضية: "قضايا",
+  موكل: "موكلين",
+  جلسة: "جلسات",
+  متابعة: "متابعات",
+  "سجل مالي": "سجلات مالية",
+  خدمة: "خدمات",
+  استشارة: "استشارات",
+  طلب: "طلبات",
+  شكوى: "شكاوى",
+  قالب: "قوالب",
+  تقرير: "تقارير",
+  مستخدم: "مستخدمين",
+  إشعار: "إشعارات",
+  تكامل: "تكاملات",
+  "مهمة AI": "مهام AI",
+  مهمة: "مهام",
+};
 
 function seedRows(slug: string, rows: Record<string, unknown>[]) {
   return rows.map((row, index) => ({
@@ -23,10 +41,15 @@ function seedRows(slug: string, rows: Record<string, unknown>[]) {
   }));
 }
 
+function getEntityPlural(entityName: string) {
+  return entityPluralMap[entityName] ?? entityName;
+}
+
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
+  const toastCounter = useRef(0);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config?.data ?? []));
   const [modalOpen, setModalOpen] = useState(false);
@@ -37,7 +60,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
-    const id = ++toastCounter;
+    const id = ++toastCounter.current;
     setToasts((prev) => [...prev, { id, type, text }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
@@ -100,8 +123,11 @@ export function ModuleShell({ slug }: { slug: string }) {
 
     link.href = url;
     link.download = `${slug}-report.csv`;
+    link.style.display = "none";
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
     pushToast("success", "✅ تم تجهيز ملف CSV بنجاح");
     setReportOpen(false);
   };
@@ -110,6 +136,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
+  const entityPlural = config ? getEntityPlural(config.entityName) : "";
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -148,7 +175,7 @@ export function ModuleShell({ slug }: { slug: string }) {
             )}
             <button
               onClick={() => setViewTarget(null)}
-              style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
+              style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
           </div>
         </div>
@@ -173,20 +200,16 @@ export function ModuleShell({ slug }: { slug: string }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {config.entityName === "قضية" ? "⚖️" :
-                 config.entityName === "موكل" ? "👥" :
-                 config.entityName === "جلسة" ? "🏛️" :
-                 config.entityName === "متابعة" ? "📋" :
-                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                {moduleIconMap[slug] ?? "📌"} {moduleMap[slug]?.title ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
+                إجمالي {rows.length} {entityPlural} — جميع البيانات محدثة
               </p>
             </div>
             <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
               <button
                 onClick={() => setReportOpen(true)}
-                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.18s" }}
+                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font)", fontWeight: 600, fontSize: "0.85rem", color: "#475569", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.18s" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#e2e8f0"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#f1f5f9"; }}
               >
@@ -216,7 +239,7 @@ export function ModuleShell({ slug }: { slug: string }) {
             onView={setViewTarget}
             onEdit={isAdmin ? openEdit : undefined}
             onDelete={isAdmin ? setDeleteTarget : undefined}
-            searchPlaceholder={`بحث في ${config.entityName}ات...`}
+            searchPlaceholder={`بحث في ${entityPlural}...`}
           />
         </div>
       </div>
@@ -258,7 +281,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
-              اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
+              اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {entityPlural}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {[
@@ -267,7 +290,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                 <button
                   key={opt.label}
                   onClick={opt.action}
-                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
+                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}
                 >
@@ -292,8 +315,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         @media (max-width: 600px) {
           .view-modal-grid { grid-template-columns: 1fr !important; }
           .toast-stack {
-            right: 1rem !important;
-            left: 1rem !important;
+            inset-inline: 1rem !important;
             bottom: 5.5rem !important;
           }
         }

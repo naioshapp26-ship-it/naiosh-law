@@ -24,6 +24,15 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+function getSafeNextPath() {
+  if (typeof window === "undefined") {
+    return "/app/dashboard";
+  }
+
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next?.startsWith("/app/") || next === "/app" ? next : "/app/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -35,7 +44,7 @@ export default function LoginPage() {
 
   const completeLogin = (user: SessionUser) => {
     saveSession(user);
-    router.push("/app/dashboard");
+    router.push(getSafeNextPath());
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -325,7 +334,7 @@ export default function LoginPage() {
                   border: "1.5px solid #e2e8f0",
                   background: "#f8f9fb",
                   cursor: "pointer",
-                  fontFamily: "var(--font-cairo)",
+                  fontFamily: "var(--font)",
                   transition: "all 0.2s",
                   textAlign: "center",
                   opacity: demoLoading && demoLoading !== profile.role ? 0.55 : 1,
@@ -340,7 +349,7 @@ export default function LoginPage() {
                 }}
               >
                 <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  {profile.role === "admin" ? "⚙️ Admin" : "👤 Client"}
+                  {profile.role === "admin" ? "⚙️ مدير النظام" : "👤 عميل"}
                 </span>
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
                   {demoLoading === profile.role ? "جاري الدخول..." : profile.label}

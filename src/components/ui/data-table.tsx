@@ -57,6 +57,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const firstColumnKey = columns[0]?.key;
   const primaryColumn = columns[0];
   const badgeColumn = columns.find((column) => column.type === "badge");
+  const mobileDetailColumns = columns.filter(
+    (column) => column.key !== primaryColumn?.key && column.key !== badgeColumn?.key
+  );
 
   const getRowKey = (row: Record<string, unknown>, index: number) => {
     const fallback = firstColumnKey ? row[firstColumnKey] : undefined;
@@ -227,7 +230,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                                 fontSize: "0.73rem",
                                 fontWeight: 600,
                                 color: "#475569",
-                                fontFamily: "var(--font-cairo)",
+                                fontFamily: "var(--font)",
                                 transition: "all 0.15s",
                               }}
                               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
@@ -248,7 +251,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                                 fontSize: "0.73rem",
                                 fontWeight: 600,
                                 color: "#c3152a",
-                                fontFamily: "var(--font-cairo)",
+                                fontFamily: "var(--font)",
                                 transition: "all 0.15s",
                               }}
                               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
@@ -269,7 +272,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                                 fontSize: "0.73rem",
                                 fontWeight: 600,
                                 color: "#dc2626",
-                                fontFamily: "var(--font-cairo)",
+                                fontFamily: "var(--font)",
                                 transition: "all 0.15s",
                               }}
                               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
@@ -315,7 +318,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
-                {columns.slice(1, 5).map((col) => (
+                {mobileDetailColumns.map((col) => (
                   <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
                     <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700 }}>{col.label}</span>
                     <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0 }}>{renderCell(col, row)}</span>
@@ -328,7 +331,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {onView && (
                     <button
                       onClick={() => onView(row)}
-                      style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font-cairo)", flex: 1 }}
+                      style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font)", flex: 1 }}
                     >
                       👁 عرض
                     </button>
@@ -336,7 +339,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {onEdit && (
                     <button
                       onClick={() => onEdit(row)}
-                      style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font-cairo)", flex: 1 }}
+                      style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font)", flex: 1 }}
                     >
                       ✏️ تعديل
                     </button>
@@ -344,7 +347,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {onDelete && (
                     <button
                       onClick={() => onDelete(row)}
-                      style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font-cairo)", flex: 1 }}
+                      style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font)", flex: 1 }}
                     >
                       🗑 حذف
                     </button>
@@ -376,6 +379,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             <button
               disabled={currentPage === 1}
               onClick={() => setPage(currentPage - 1)}
+              aria-label="الصفحة السابقة"
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
@@ -385,7 +389,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 opacity: currentPage === 1 ? 0.5 : 1,
               }}
             >
-              ›
+              السابق
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
               const p = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
@@ -413,6 +417,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             <button
               disabled={currentPage === totalPages}
               onClick={() => setPage(currentPage + 1)}
+              aria-label="الصفحة التالية"
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
@@ -422,7 +427,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 opacity: currentPage === totalPages ? 0.5 : 1,
               }}
             >
-              ‹
+              التالي
             </button>
           </div>
         </div>

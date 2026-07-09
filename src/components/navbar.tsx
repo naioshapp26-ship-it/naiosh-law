@@ -29,7 +29,7 @@ export function Navbar() {
   const links = [
     { href: "/#features", label: "المميزات" },
     { href: "/#modules", label: "الوحدات" },
-    { href: "/app/dashboard", label: "عرض تجريبي" },
+    { href: "/login?next=/app/dashboard", label: "عرض تجريبي" },
   ];
 
   return (

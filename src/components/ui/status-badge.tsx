@@ -1,3 +1,5 @@
+"use client";
+
 export type BadgeColor = "green" | "red" | "yellow" | "blue" | "gray" | "purple" | "orange" | "teal";
 
 const colorMap: Record<BadgeColor, { bg: string; color: string; border: string }> = {

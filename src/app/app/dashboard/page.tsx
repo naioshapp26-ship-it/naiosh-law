@@ -32,6 +32,12 @@ const recentTasks = [
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
   const [completedTasks, setCompletedTasks] = useState<Set<number>>(() => new Set());
+  const todayLabel = new Intl.DateTimeFormat("ar-EG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
 
   const toggleTask = (index: number) => {
     setCompletedTasks((current) => {
@@ -85,7 +91,7 @@ export default function DashboardPage() {
             لوحة التحكم
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            الأربعاء، 8 يوليو 2026 — مرحبًا {user.name}
+            {todayLabel} — مرحبًا {user.name}
           </p>
         </div>
 
@@ -244,8 +250,11 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => (
-                <div
+              {recentTasks.map((t, i) => {
+                const completed = completedTasks.has(i);
+
+                return (
+                <label
                   key={i}
                   style={{
                     display: "flex",
@@ -255,11 +264,12 @@ export default function DashboardPage() {
                     background: "#f8f9fb",
                     borderRadius: "12px",
                     border: "1px solid #e2e8f0",
+                    cursor: "pointer",
                   }}
                 >
                   <input
                     type="checkbox"
-                    checked={completedTasks.has(i)}
+                    checked={completed}
                     onChange={() => toggleTask(i)}
                     style={{
                       width: 16,
@@ -274,10 +284,10 @@ export default function DashboardPage() {
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: 600,
-                        color: completedTasks.has(i) ? "#94a3b8" : "#0a0a12",
+                        color: completed ? "#94a3b8" : "#0a0a12",
                         marginBottom: "0.25rem",
                         lineHeight: 1.4,
-                        textDecoration: completedTasks.has(i) ? "line-through" : "none",
+                        textDecoration: completed ? "line-through" : "none",
                       }}
                     >
                       {t.task}
@@ -303,8 +313,9 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   </div>
-                </div>
-              ))}
+                </label>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -341,10 +352,11 @@ export default function DashboardPage() {
         @media (max-width: 900px) {
           .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .two-col { grid-template-columns: 1fr !important; }
-          .mod-grid { grid-template-columns: 1fr !important; }
+          .mod-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 600px) {
           .kpi-grid { grid-template-columns: 1fr !important; }
+          .mod-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </AppShell>

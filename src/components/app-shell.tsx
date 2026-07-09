@@ -19,6 +19,11 @@ type SidebarContentProps = {
   onClose: () => void;
 };
 
+const roleLabels: Record<Props["role"], string> = {
+  admin: "مدير النظام",
+  client: "عميل",
+};
+
 function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
 
@@ -131,7 +136,7 @@ function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
           borderRadius: "12px", padding: "0.85rem",
         }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
-            {role === "admin" ? "Admin" : "Client"}
+            {roleLabels[role]}
           </p>
           <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
             {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
@@ -230,7 +235,7 @@ export function AppShell({ role, name, children }: Props) {
               </div>
               <div className="user-name-block">
                 <div style={{ color: "#0a0a12", fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.2 }}>{name}</div>
-                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{role === "admin" ? "Admin" : "Client"}</div>
+                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{roleLabels[role]}</div>
               </div>
             </div>
 
@@ -241,7 +246,7 @@ export function AppShell({ role, name, children }: Props) {
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font-cairo)",
+                cursor: "pointer", fontFamily: "var(--font)",
                 transition: "all 0.2s", whiteSpace: "nowrap",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
@@ -339,7 +344,7 @@ export function AppShell({ role, name, children }: Props) {
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
             background: "none", border: "none", cursor: "pointer",
-            fontFamily: "var(--font-cairo)", flex: 1,
+            fontFamily: "var(--font)", flex: 1,
           }}
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>
