@@ -24,7 +24,7 @@ const itemAnim = {
   },
 };
 
-const headlineRows = [["إدارة القضايا", "والموكلين بذكاء", "لا مثيل له"]];
+const headlineRows = [["إدارة القضايا", "والموكلين بذكاء"]];
 
 export function HeroSection() {
   return (
@@ -123,14 +123,15 @@ export function HeroSection() {
         >
           {/* ── Text column ── */}
           <motion.div
+            className="hero-content-col"
             variants={container}
             initial="hidden"
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "980px",
-              marginInlineStart: "auto",
-              marginInlineEnd: 0,
+              maxWidth: "1000px",
+              marginInline: "auto",
+              paddingInlineStart: "min(430px, 36vw)",
               textAlign: "right",
             }}
           >
@@ -176,11 +177,9 @@ export function HeroSection() {
                 marginBottom: "1.75rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
-                flexDirection: "row",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "flex-end",
-                flexWrap: "wrap",
-                gap: "0.85rem",
+                gap: "0.35rem",
               }}
               variants={container}
             >
@@ -202,11 +201,7 @@ export function HeroSection() {
                       variants={itemAnim}
                       style={{
                         display: "inline-block",
-                        color: part === "لا مثيل له" ? "#c3152a" : "#ffffff",
-                        textShadow:
-                          part === "لا مثيل له"
-                            ? "0 0 40px rgba(195,21,42,0.5)"
-                            : "none",
+                        color: "#ffffff",
                       }}
                     >
                       {part}
@@ -214,6 +209,18 @@ export function HeroSection() {
                   ))}
                 </span>
               ))}
+              <motion.span
+                variants={itemAnim}
+                style={{
+                  color: "#c3152a",
+                  textShadow: "0 0 40px rgba(195,21,42,0.5)",
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "right",
+                }}
+              >
+                لا مثيل له
+              </motion.span>
             </motion.h1>
 
             {/* Subtext */}
@@ -223,7 +230,8 @@ export function HeroSection() {
                 color: "#94a3b8",
                 fontSize: "1.08rem",
                 lineHeight: 1.9,
-                maxWidth: "560px",
+                maxWidth: "620px",
+                marginInlineStart: "auto",
                 marginBottom: "2.75rem",
               }}
             >
@@ -571,6 +579,9 @@ export function HeroSection() {
             width: 320px !important;
             opacity: 0.8;
           }
+          .hero-content-col {
+            padding-inline-start: 300px !important;
+          }
         }
         @media (max-width: 980px) {
           .hero-heading {
@@ -581,7 +592,15 @@ export function HeroSection() {
           .hero-grid {
             display: block !important;
           }
+          .hero-content-col {
+            max-width: 760px !important;
+            padding-inline-start: 0 !important;
+            text-align: center !important;
+          }
           .hero-heading {
+            justify-content: center !important;
+          }
+          .hero-cta, .hero-stats {
             justify-content: center !important;
           }
           .hero-card-col {
