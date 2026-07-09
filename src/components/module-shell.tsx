@@ -38,11 +38,30 @@ const entityPluralMap: Record<string, string> = {
   مهمة: "مهام",
 };
 
+const focusableSelector = [
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "a[href]",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
 function seedRows(slug: string, rows: Record<string, unknown>[]) {
   return rows.map((row, index) => ({
     ...row,
     [rowIdKey]: row[rowIdKey] ?? `${slug}-${index}`,
   }));
+}
+
+function getFocusableElements(container: HTMLElement | null) {
+  if (!container) {
+    return [];
+  }
+
+  return Array.from(container.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+    (element) => !element.hasAttribute("disabled") && element.getAttribute("aria-hidden") !== "true"
+  );
 }
 
 function getEntityPlural(entityName: string) {
@@ -118,6 +137,8 @@ export function ModuleShell({ slug, config, title }: Props) {
   const [reportOpen, setReportOpen] = useState(false);
   const rowsReadyForPersistenceRef = useRef(false);
   const toastTimersRef = useRef<number[]>([]);
+  const viewDialogRef = useRef<HTMLDivElement>(null);
+  const reportDialogRef = useRef<HTMLDivElement>(null);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -183,12 +204,46 @@ export function ModuleShell({ slug, config, title }: Props) {
       return;
     }
 
+    const dialogRef = viewTarget ? viewDialogRef : reportDialogRef;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    window.setTimeout(() => {
+      const dialog = dialogRef.current;
+      const firstFocusable = getFocusableElements(dialog)[0];
+
+      (firstFocusable ?? dialog)?.focus();
+    }, 0);
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setViewTarget(null);
         setReportOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(dialogRef.current);
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+
+      if (!firstElement || !lastElement) {
+        event.preventDefault();
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
@@ -197,6 +252,7 @@ export function ModuleShell({ slug, config, title }: Props) {
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
     };
   }, [reportOpen, viewTarget]);
 
@@ -268,11 +324,13 @@ export function ModuleShell({ slug, config, title }: Props) {
         role="presentation"
       >
         <div
+          ref={viewDialogRef}
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-label={`تفاصيل ${config.entityName}`}
+          tabIndex={-1}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
@@ -402,11 +460,13 @@ export function ModuleShell({ slug, config, title }: Props) {
           role="presentation"
         >
           <div
+            ref={reportDialogRef}
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, maxHeight: "min(90vh, calc(100vh - 2rem))", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label="تصدير التقارير"
+            tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>

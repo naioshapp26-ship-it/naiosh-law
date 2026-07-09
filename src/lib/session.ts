@@ -146,14 +146,16 @@ export function useSession(redirectIfMissing = false) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        setVerifiedUser(null);
-        setVerifiedRawSession(rawSession);
-        clearStoredSession();
-        router.replace(loginPathWithNext());
+
+        if (cachedUser) {
+          setVerifiedUser(cachedUser);
+          setVerifiedRawSession(rawSession);
+          setVerified(true);
+        }
       });
 
     return () => controller.abort();
-  }, [rawSession, redirectIfMissing, router]);
+  }, [cachedUser, rawSession, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({

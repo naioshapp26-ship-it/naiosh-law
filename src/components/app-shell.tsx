@@ -256,13 +256,13 @@ export function AppShell({ role, name, children }: Props) {
           {/* Right: Notifications + User + Logout */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* Notification bell */}
-            <button type="button" style={{
+            <button type="button" disabled className="notification-btn" style={{
               width: 36, height: 36, borderRadius: "10px",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
-              cursor: "default", display: "flex", alignItems: "center",
+              cursor: "not-allowed", display: "flex", alignItems: "center",
               justifyContent: "center", fontSize: "0.9rem", position: "relative",
               flexShrink: 0, opacity: 0.8,
-            }} aria-label="التنبيهات" aria-disabled="true">
+            }} aria-label="التنبيهات غير متاحة حاليًا" title="التنبيهات غير متاحة حاليًا">
               🔔
               <span style={{
                 position: "absolute", top: 6, insetInlineEnd: 6,
@@ -430,7 +430,7 @@ export function AppShell({ role, name, children }: Props) {
           main               { padding: 1rem !important; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
         }
         @media (max-width: 420px) {
-          header button[aria-label="التنبيهات"] { display: none !important; }
+          .notification-btn { display: none !important; }
           header button:not(.hamburger-btn) { padding-inline: 0.6rem !important; }
         }
         @media (min-width: 769px) {
@@ -438,6 +438,7 @@ export function AppShell({ role, name, children }: Props) {
           .drawer-header     { display: none; }
         }
         @keyframes slide-drawer {
+          /* The app is RTL, so inline-start is the right edge. */
           from { transform: translateX(100%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
         }
