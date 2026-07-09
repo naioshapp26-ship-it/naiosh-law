@@ -188,6 +188,10 @@ function DailyTasks({ userEmail }: { userEmail: string }) {
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const dashboardDate = useMemo(
+    () => new Intl.DateTimeFormat("ar-EG", { dateStyle: "full" }).format(new Date()),
+    []
+  );
 
   if (!ready || !user) {
     return (
@@ -229,7 +233,7 @@ export default function DashboardPage() {
             لوحة التحكم
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            الأربعاء، 8 يوليو 2026 — مرحبًا {user.name}
+            {dashboardDate} — مرحبًا {user.name}
           </p>
         </div>
 

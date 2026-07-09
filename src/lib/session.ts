@@ -2,9 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { sessionStorageKey, type SessionUser } from "@/data/auth";
+import { sessionStorageKey, type SessionUser, type UserRole } from "@/data/auth";
 
 const SESSION_RETRY_DELAYS_MS = [200, 500];
+const validRoles = new Set<UserRole>([
+  "admin",
+  "lawyer",
+  "consultant",
+  "judge",
+  "client",
+  "industrial_agent",
+  "employee",
+]);
+
+export type { SessionUser, UserRole };
 
 function isSessionUser(value: unknown): value is SessionUser {
   if (!value || typeof value !== "object") {
@@ -13,7 +24,8 @@ function isSessionUser(value: unknown): value is SessionUser {
 
   const candidate = value as Partial<SessionUser>;
   return (
-    (candidate.role === "admin" || candidate.role === "client") &&
+    typeof candidate.role === "string" &&
+    validRoles.has(candidate.role as UserRole) &&
     typeof candidate.name === "string" &&
     typeof candidate.email === "string"
   );
@@ -75,6 +87,7 @@ export async function clearServerSession() {
   const response = await fetch("/api/auth/logout", {
     method: "POST",
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -93,7 +106,7 @@ async function fetchSessionWithRetry() {
 
   for (let attempt = 0; attempt <= SESSION_RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
       if (response.status < 500) {
         return response;
       }
@@ -114,7 +127,7 @@ async function fetchSessionWithRetry() {
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(() => readSessionMirror());
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -151,10 +164,8 @@ export function useSession(redirectIfMissing = false) {
         }
       } catch {
         if (!cancelled) {
-          setUser(null);
-          writeSessionMirror(null);
           setReady(true);
-          if (redirectIfMissing) {
+          if (redirectIfMissing && !readSessionMirror()) {
             router.replace(`/login?next=${encodeURIComponent(pathname)}`);
           }
         }
@@ -169,9 +180,9 @@ export function useSession(redirectIfMissing = false) {
   }, [pathname, redirectIfMissing, router]);
 
   const logout = useCallback(async () => {
-    writeSessionMirror(null);
     try {
       await clearServerSession();
+      writeSessionMirror(null);
     } finally {
       router.replace("/login");
       router.refresh();
@@ -188,4 +199,8 @@ export function useSession(redirectIfMissing = false) {
   );
 
   return api;
+}
+
+export function canWriteRole(role: UserRole) {
+  return ["admin", "lawyer", "consultant", "industrial_agent", "employee"].includes(role);
 }

@@ -1,8 +1,4 @@
-import { NextRequest } from "next/server";
-import { sessionCookieName } from "@/data/auth";
-import { jsonError, jsonResponse, readJsonBody } from "@/lib/api-response";
-import { getExpiredSessionCookieOptions } from "@/lib/session-cookie";
-import { verifySessionToken } from "@/lib/session-token";
+import { jsonError, jsonResponse, readJsonBody, requireAuth } from "@/lib/api-helpers";
 
 const integrations = new Set(["sms", "email", "payments", "sign", "courts", "tax", "ocr", "analytics"]);
 
@@ -10,27 +6,13 @@ type Props = {
   params: Promise<{ integration: string }>;
 };
 
-async function requireAdmin(request: NextRequest) {
-  const token = request.cookies.get(sessionCookieName)?.value;
-  const user = await verifySessionToken(token);
-  if (!user) {
-    const response = jsonError("Unauthenticated.", 401);
-    if (token) {
-      response.cookies.set(getExpiredSessionCookieOptions(request));
-    }
-    return { response };
-  }
-  if (user.role !== "admin") {
-    return { response: jsonError("Forbidden.", 403) };
-  }
-  return { user };
+async function requireIntegrationAdmin() {
+  return requireAuth(["admin", "industrial_agent"]);
 }
 
-export async function GET(request: NextRequest, { params }: Props) {
-  const auth = await requireAdmin(request);
-  if ("response" in auth) {
-    return auth.response;
-  }
+export async function GET(_request: Request, { params }: Props) {
+  const { error } = await requireIntegrationAdmin();
+  if (error) return error;
 
   const integration = (await params).integration.toLowerCase();
   if (!integrations.has(integration)) {
@@ -44,11 +26,9 @@ export async function GET(request: NextRequest, { params }: Props) {
   });
 }
 
-export async function POST(request: NextRequest, { params }: Props) {
-  const auth = await requireAdmin(request);
-  if ("response" in auth) {
-    return auth.response;
-  }
+export async function POST(request: Request, { params }: Props) {
+  const { error } = await requireIntegrationAdmin();
+  if (error) return error;
 
   const integration = (await params).integration.toLowerCase();
   if (!integrations.has(integration)) {

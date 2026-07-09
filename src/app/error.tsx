@@ -1,6 +1,6 @@
 "use client";
 
-export default function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
+export default function ErrorPage({ reset }: { error: Error; reset: () => void }) {
   return (
     <main
       style={{
@@ -18,7 +18,7 @@ export default function ErrorPage({ error, reset }: { error: Error; reset: () =>
           حدث خطأ غير متوقع
         </h1>
         <p style={{ color: "#64748b", marginBottom: "1.5rem" }}>
-          {error.message || "تعذر تحميل هذه الصفحة. حاول مرة أخرى."}
+          تعذر تحميل هذه الصفحة. حاول مرة أخرى.
         </p>
         <button type="button" onClick={reset} className="btn-primary">
           إعادة المحاولة

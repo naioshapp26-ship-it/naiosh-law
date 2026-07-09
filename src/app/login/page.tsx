@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoAccounts, sessionStorageKey, type SessionUser } from "@/data/auth";
+import { demoAccounts, type SessionUser } from "@/data/auth";
+import { writeSessionMirror } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -30,13 +31,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const finishLogin = (user: SessionUser) => {
-    try {
-      window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
-    } catch {
-      // The httpOnly cookie remains authoritative if storage is blocked.
-    }
+  const errorForStatus = (status: number, fallback: string) => {
+    if (status === 400) return "يرجى إدخال بريد إلكتروني وكلمة مرور صالحين.";
+    if (status === 401) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    if (status === 413) return "بيانات تسجيل الدخول كبيرة جدًا.";
+    if (status === 415) return "تعذر إرسال الطلب بصيغته الحالية.";
+    if (status === 503) return "خدمة الجلسات غير مهيأة حاليًا.";
+    return fallback;
+  };
 
+  const finishLogin = (user: SessionUser) => {
+    writeSessionMirror(user);
     const nextParam = new URLSearchParams(window.location.search).get("next");
     router.refresh();
     router.push(nextParam === "/app" || nextParam?.startsWith("/app/") ? nextParam : "/app/dashboard");
@@ -52,6 +57,7 @@ export default function LoginPage() {
       response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
     } catch {
@@ -61,7 +67,7 @@ export default function LoginPage() {
     }
 
     if (!response.ok) {
-      setError(response.status === 401 ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذر تسجيل الدخول الآن.");
+      setError(errorForStatus(response.status, "تعذر تسجيل الدخول الآن."));
       setLoading(false);
       return;
     }
@@ -72,9 +78,11 @@ export default function LoginPage() {
 
   const loginDemo = async (role: "admin" | "client") => {
     const account = demoAccounts.find((u) => u.role === role);
-    if (account) {
-      setEmail(account.email);
+    if (!account) {
+      setError("تعذر العثور على الحساب التجريبي.");
+      return;
     }
+    setEmail(account.email);
     setError("");
     setLoading(true);
 
@@ -83,7 +91,8 @@ export default function LoginPage() {
       response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ demo: true, role }),
+        credentials: "include",
+        body: JSON.stringify({ email: account.email, password: account.password }),
       });
     } catch {
       setError("تعذر الاتصال بخدمة تسجيل الدخول الآن.");
@@ -92,7 +101,7 @@ export default function LoginPage() {
     }
 
     if (!response.ok) {
-      setError("تعذر بدء الحساب التجريبي الآن.");
+      setError(errorForStatus(response.status, "تعذر بدء الحساب التجريبي الآن."));
       setLoading(false);
       return;
     }
@@ -403,7 +412,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
-              <label className="input-label">البريد الإلكتروني</label>
+              <label className="input-label" htmlFor="login-email">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -418,6 +427,7 @@ export default function LoginPage() {
                   ✉️
                 </span>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -430,7 +440,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label className="input-label" htmlFor="login-password">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -452,6 +462,7 @@ export default function LoginPage() {
                   {showPass ? "🙈" : "👁️"}
                 </button>
                 <input
+                  id="login-password"
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

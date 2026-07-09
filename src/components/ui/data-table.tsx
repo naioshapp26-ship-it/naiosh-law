@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -41,6 +41,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const searchInputId = useId();
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc((a) => !a);
@@ -100,6 +101,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       {/* Search + count */}
       <div className="table-toolbar" style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1 }}>
+          <label htmlFor={searchInputId} className="sr-only">بحث في السجلات</label>
           <span
             style={{
               position: "absolute",
@@ -114,6 +116,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             🔍
           </span>
           <input
+            id={searchInputId}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={searchPlaceholder}
@@ -149,10 +152,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
-                {columns.map((col) => (
+                {columns.map((col) => {
+                  const sortable = col.sortable !== false;
+                  const ariaSort = sortKey === col.key ? (sortAsc ? "ascending" : "descending") : "none";
+                  return (
                   <th
                     key={col.key}
-                    onClick={() => col.sortable !== false && handleSort(col.key)}
+                    aria-sort={sortable ? ariaSort : undefined}
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",
@@ -160,18 +166,40 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                       color: "#475569",
                       fontSize: "0.75rem",
                       whiteSpace: "nowrap",
-                      cursor: col.sortable !== false ? "pointer" : "default",
+                      cursor: sortable ? "pointer" : "default",
                       userSelect: "none",
                     }}
                   >
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
-                        {sortAsc ? " ↑" : " ↓"}
-                      </span>
+                    {sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSort(col.key)}
+                        style={{
+                          alignItems: "center",
+                          background: "transparent",
+                          border: 0,
+                          color: "inherit",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          font: "inherit",
+                          fontWeight: 700,
+                          gap: "0.25rem",
+                          padding: 0,
+                        }}
+                      >
+                        <span>{col.label}</span>
+                        {sortKey === col.key && (
+                          <span style={{ color: "#c3152a" }} aria-hidden="true">
+                            {sortAsc ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      col.label
                     )}
                   </th>
-                ))}
+                  );
+                })}
                 {hasActions && (
                   <th
                     style={{

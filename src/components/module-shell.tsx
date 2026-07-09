@@ -8,7 +8,8 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleConfig } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
-import { useSession } from "@/lib/session";
+import { canWriteRole, useSession } from "@/lib/session";
+import { getModuleApiEndpoint } from "@/lib/module-api";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -86,9 +87,12 @@ function escapeCsvCell(value: unknown) {
 
 export function ModuleShell({ slug, config }: { slug: string; config: ModuleConfig }) {
   const { user, ready } = useSession(true);
+  const apiEndpoint = getModuleApiEndpoint(slug);
+  const canWrite = user ? canWriteRole(user.role) : false;
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(config.data);
   const [rowsHydrated, setRowsHydrated] = useState(false);
+  const [loadingData, setLoadingData] = useState(!!apiEndpoint);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -111,7 +115,37 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
     toastTimersRef.current.push(timeoutId);
   }, []);
 
+  const loadServerRows = useCallback(async () => {
+    if (!apiEndpoint) {
+      return;
+    }
+
+    setLoadingData(true);
+    try {
+      const response = await fetch(apiEndpoint, { cache: "no-store", credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Failed to load module rows.");
+      }
+      const data = (await response.json()) as unknown;
+      if (!Array.isArray(data)) {
+        throw new Error("Module API returned an invalid payload.");
+      }
+      setRows(data as Record<string, unknown>[]);
+    } catch {
+      pushToast("error", "تعذر تحميل البيانات من الخادم، سيتم عرض البيانات التجريبية.");
+      setRows(config.data);
+    } finally {
+      setRowsHydrated(true);
+      setLoadingData(false);
+    }
+  }, [apiEndpoint, config.data, pushToast]);
+
   useEffect(() => {
+    if (apiEndpoint) {
+      void loadServerRows();
+      return;
+    }
+
     if (!storageKeys) {
       return;
     }
@@ -123,10 +157,10 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
     }, 0);
 
     return () => window.clearTimeout(hydrationTimer);
-  }, [config, storageKeys]);
+  }, [apiEndpoint, config, loadServerRows, storageKeys]);
 
   useEffect(() => {
-    if (!storageKeys || !rowsHydrated || typeof window === "undefined") {
+    if (apiEndpoint || !storageKeys || !rowsHydrated || typeof window === "undefined") {
       return;
     }
 
@@ -135,7 +169,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
     } catch {
       // Keep the in-memory table usable if browser storage quota is unavailable.
     }
-  }, [rows, rowsHydrated, storageKeys]);
+  }, [apiEndpoint, rows, rowsHydrated, storageKeys]);
 
   useEffect(() => {
     return () => {
@@ -211,7 +245,33 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
-  const handleSave = (data: Record<string, unknown>) => {
+  const handleSave = async (data: Record<string, unknown>) => {
+    if (apiEndpoint && canWrite) {
+      try {
+        const response = await fetch(editTarget?.id ? `${apiEndpoint}/${editTarget.id}` : apiEndpoint, {
+          method: editTarget?.id ? "PATCH" : "POST",
+          cache: "no-store",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to save module row.");
+        }
+        await loadServerRows();
+        pushToast(
+          "success",
+          editTarget ? `✅ تم تعديل ${config.entityName} بنجاح` : `✅ تمت إضافة ${config.entityName} جديد بنجاح`
+        );
+      } catch {
+        pushToast("error", "تعذر حفظ البيانات على الخادم الآن.");
+        return;
+      }
+      setModalOpen(false);
+      setEditTarget(null);
+      return;
+    }
+
     if (editTarget) {
       const targetIdentity = getRowIdentity(editTarget);
       setRows((prev) => prev.map((r) => (getRowIdentity(r) === targetIdentity ? { ...r, ...data } : r)));
@@ -225,7 +285,26 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
     setEditTarget(null);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
+    if (apiEndpoint && canWrite && deleteTarget?.id) {
+      try {
+        const response = await fetch(`${apiEndpoint}/${deleteTarget.id}`, {
+          method: "DELETE",
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to delete module row.");
+        }
+        await loadServerRows();
+        pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
+      } catch {
+        pushToast("error", "تعذر حذف السجل من الخادم الآن.");
+      }
+      setDeleteTarget(null);
+      return;
+    }
+
     const targetIdentity = getRowIdentity(deleteTarget);
     setRows((prev) => prev.filter((r) => getRowIdentity(r) !== targetIdentity));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
@@ -292,7 +371,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
             ))}
           </div>
           <div className="module-detail-actions" style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            {user.role === "admin" && (
+            {canWrite && (
               <button
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
                 type="button"
@@ -347,7 +426,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
               >
                 📊 تقارير
               </button>
-              {user.role === "admin" && (
+              {canWrite && (
                 <button
                   onClick={openAdd}
                   className="btn-primary"
@@ -365,14 +444,18 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
 
         {/* Data Table */}
         <div className="card-white" style={{ padding: "1.5rem" }}>
-          <DataTable
-            columns={config.columns}
-            data={rows}
-            onView={setViewTarget}
-            onEdit={user.role === "admin" ? openEdit : undefined}
-            onDelete={user.role === "admin" ? setDeleteTarget : undefined}
-            searchPlaceholder={`بحث في ${config.entityName}ات...`}
-          />
+          {loadingData ? (
+            <p style={{ color: "#64748b", padding: "2rem", textAlign: "center" }}>جاري تحميل البيانات...</p>
+          ) : (
+            <DataTable
+              columns={config.columns}
+              data={rows}
+              onView={setViewTarget}
+              onEdit={canWrite ? openEdit : undefined}
+              onDelete={canWrite ? setDeleteTarget : undefined}
+              searchPlaceholder={`بحث في ${config.entityName}ات...`}
+            />
+          )}
         </div>
       </div>
 

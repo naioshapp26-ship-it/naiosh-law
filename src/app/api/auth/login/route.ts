@@ -1,22 +1,23 @@
-import type { SessionUser } from "@/data/auth";
-import { findDemoCredential, findDemoCredentialByRole } from "@/data/server-auth";
-import { jsonError, jsonResponse, readJsonBody } from "@/lib/api-response";
-import { getSessionCookieOptions } from "@/lib/session-cookie";
-import { createSessionToken } from "@/lib/session-token";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { jsonError, jsonResponse, readJsonBody } from "@/lib/api-helpers";
 
 type LoginBody = {
   email?: unknown;
   password?: unknown;
-  role?: unknown;
-  demo?: unknown;
 };
 
-function isRole(value: unknown): value is SessionUser["role"] {
-  return value === "admin" || value === "client";
-}
-
-function demoLoginEnabled() {
-  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
+function isSecureRequest(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  if (forwardedProto) {
+    return forwardedProto === "https";
+  }
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
 }
 
 export async function POST(request: Request) {
@@ -25,36 +26,50 @@ export async function POST(request: Request) {
     return parsed.response;
   }
 
-  const body = parsed.data;
-  if (body.demo === true && !demoLoginEnabled()) {
-    return jsonError("Demo login is disabled.", 403);
-  }
-
-  const user =
-    body.demo === true && isRole(body.role)
-      ? findDemoCredentialByRole(body.role)
-      : typeof body.email === "string" && typeof body.password === "string"
-        ? findDemoCredential(body.email, body.password)
-        : undefined;
-
-  if (!user) {
-    return jsonError("Invalid credentials.", 401);
-  }
-
-  const sessionUser: SessionUser = {
-    role: user.role,
-    name: user.name,
-    email: user.email,
-  };
-
-  let token: string;
   try {
-    token = await createSessionToken(sessionUser);
-  } catch {
-    return jsonError("Session service is not configured.", 503);
-  }
+    const body = parsed.data;
+    const email = String(body.email ?? "").trim().toLowerCase();
+    const password = String(body.password ?? "");
 
-  const response = jsonResponse({ user: sessionUser });
-  response.cookies.set(getSessionCookieOptions(request, token));
-  return response;
+    if (!email || !password) {
+      return jsonError("البريد وكلمة المرور مطلوبان", 400);
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.active) {
+      return jsonError("البريد الإلكتروني أو كلمة المرور غير صحيحة", 401);
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return jsonError("البريد الإلكتروني أو كلمة المرور غير صحيحة", 401);
+    }
+
+    let token: string;
+    try {
+      token = await signToken({
+        sub: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      });
+    } catch {
+      return jsonError("Session service is not configured.", 503);
+    }
+
+    const response = jsonResponse({
+      user: { email: user.email, name: user.name, role: user.role },
+    });
+    response.cookies.set(AUTH_COOKIE, token, {
+      httpOnly: true,
+      secure: isSecureRequest(request),
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return response;
+  } catch (error) {
+    console.error("Login error:", error);
+    return jsonError("خطأ في الخادم", 500);
+  }
 }

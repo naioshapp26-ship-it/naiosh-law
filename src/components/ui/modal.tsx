@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -32,6 +32,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   const [form, setForm] = useState<Record<string, unknown>>(() => createDefaults(fields, initial));
   const [saving, setSaving] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const formId = useId();
 
   useEffect(() => {
     if (!open) {
@@ -172,14 +173,17 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             }}
             className="modal-form-grid"
           >
-            {fields.map((f) => (
+            {fields.map((f) => {
+              const fieldId = `${formId}-${f.key}`;
+              return (
               <div
                 key={f.key}
                 style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
               >
-                <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
+                <label className="input-label" htmlFor={fieldId}>{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
                 {f.type === "select" ? (
                   <select
+                    id={fieldId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -193,6 +197,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
+                    id={fieldId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -203,6 +208,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
+                    id={fieldId}
                     type={inputTypeFor(f)}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
@@ -212,7 +218,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Actions */}

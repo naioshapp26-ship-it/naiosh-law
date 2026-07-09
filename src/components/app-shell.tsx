@@ -4,12 +4,28 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/data/modules";
-import { clearServerSession, writeSessionMirror } from "@/lib/session";
+import { clearServerSession, type UserRole, writeSessionMirror } from "@/lib/session";
 
 type Props = {
-  role: "admin" | "client";
+  role: UserRole;
   name: string;
   children: React.ReactNode;
+};
+
+const extraNav = [
+  { href: "/app/legal-knowledge", label: "التصنيف القانوني", icon: "📚" },
+  { href: "/app/professional-network", label: "الشبكة المهنية", icon: "🤝" },
+  { href: "/app/official-entities", label: "الجهات الرسمية", icon: "🏢" },
+];
+
+const roleLabels: Record<UserRole, string> = {
+  admin: "Admin",
+  lawyer: "Lawyer",
+  consultant: "Consultant",
+  judge: "Judge",
+  client: "Client",
+  industrial_agent: "Industrial Agent",
+  employee: "Employee",
 };
 
 export function AppShell({ role, name, children }: Props) {
@@ -94,10 +110,9 @@ export function AppShell({ role, name, children }: Props) {
 
     setLoggingOut(true);
     setLogoutError("");
-    writeSessionMirror(null);
-
     try {
       await clearServerSession();
+      writeSessionMirror(null);
       router.replace("/login");
       router.refresh();
     } catch {
@@ -170,6 +185,30 @@ export function AppShell({ role, name, children }: Props) {
         </Link>
       </div>
 
+      <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
+        {extraNav.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setDrawerOpen(false)}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.6rem",
+                padding: "0.6rem 0.75rem", borderRadius: "10px",
+                fontSize: "0.84rem", fontWeight: active ? 700 : 500,
+                color: sidebarText,
+                background: active ? sidebarActiveBg : "transparent",
+                textDecoration: "none", transition: "all 0.15s",
+              }}
+            >
+              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Section label */}
       <p style={{
         fontSize: "0.62rem", fontWeight: 700, color: sidebarSoftText,
@@ -218,10 +257,10 @@ export function AppShell({ role, name, children }: Props) {
           borderRadius: "12px", padding: "0.85rem",
         }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
-            {role === "admin" ? "Admin" : "Client"}
+            {roleLabels[role]}
           </p>
           <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
-            {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
+            {role === "client" ? "عرض الحالة والمستندات" : "صلاحية تشغيلية على النظام"}
           </p>
         </div>
       </div>
@@ -311,11 +350,11 @@ export function AppShell({ role, name, children }: Props) {
                 background: "rgba(195,21,42,0.1)", display: "flex",
                 alignItems: "center", justifyContent: "center", fontSize: "0.8rem",
               }}>
-                {role === "admin" ? "⚙️" : "👤"}
+                {role === "client" ? "👤" : "⚙️"}
               </div>
               <div className="user-name-block">
                 <div style={{ color: "#0a0a12", fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.2 }}>{name}</div>
-                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{role === "admin" ? "Admin" : "Client"}</div>
+                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{roleLabels[role]}</div>
               </div>
             </div>
 
@@ -375,6 +414,29 @@ export function AppShell({ role, name, children }: Props) {
               </Link>
             </div>
 
+            <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
+              {extraNav.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "0.6rem",
+                      padding: "0.6rem 0.75rem", borderRadius: "10px",
+                      fontSize: "0.84rem", fontWeight: active ? 700 : 500,
+                      color: sidebarText,
+                      background: active ? sidebarActiveBg : "transparent",
+                      textDecoration: "none", transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
             <p style={{
               fontSize: "0.62rem", fontWeight: 700, color: sidebarSoftText,
               letterSpacing: "0.06em", textTransform: "uppercase",
@@ -411,10 +473,10 @@ export function AppShell({ role, name, children }: Props) {
                 borderRadius: "12px", padding: "0.9rem",
               }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: sidebarText, marginBottom: "0.2rem" }}>
-                  {role === "admin" ? "Admin" : "Client"}
+                  {roleLabels[role]}
                 </p>
                 <p style={{ fontSize: "0.67rem", color: sidebarMutedText, lineHeight: 1.5 }}>
-                  {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
+                  {role === "client" ? "عرض الحالة والمستندات" : "صلاحية تشغيلية على النظام"}
                 </p>
               </div>
             </div>
@@ -527,6 +589,9 @@ export function AppShell({ role, name, children }: Props) {
         @media (max-width: 420px) {
           .app-header-actions {
             gap: 0.35rem !important;
+          }
+          .app-header-actions > button[aria-label="التنبيهات"] {
+            display: none !important;
           }
           .app-user-chip,
           .app-logout-button {

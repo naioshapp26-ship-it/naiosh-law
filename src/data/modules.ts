@@ -1,4 +1,4 @@
-export type Role = "admin" | "client";
+export type Role = "admin" | "lawyer" | "consultant" | "judge" | "client" | "industrial_agent" | "employee";
 
 export type LegalModule = {
   slug: string;
@@ -9,7 +9,7 @@ export type LegalModule = {
   workflow: string[];
   relations: string[];
   dbTables: string[];
-  permissions: Record<Role, string[]>;
+  permissions: Record<"admin" | "client", string[]>;
 };
 
 const basePermissions = {
@@ -68,7 +68,7 @@ export function getModuleHref(slug: string) {
 }
 
 export function canAccessModule(role: Role, slug: string) {
-  return role === "admin" || !adminOnlyModuleSlugs.includes(slug);
+  return !adminOnlyModuleSlugs.includes(slug) || role === "admin" || role === "industrial_agent";
 }
 
 export function getVisibleOperationalModules(role?: Role) {

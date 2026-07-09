@@ -1,9 +1,8 @@
-import { NextRequest } from "next/server";
-import { jsonResponse } from "@/lib/api-response";
-import { getExpiredSessionCookieOptions } from "@/lib/session-cookie";
+import { AUTH_COOKIE } from "@/lib/auth";
+import { jsonResponse } from "@/lib/api-helpers";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   const response = jsonResponse({ ok: true });
-  response.cookies.set(getExpiredSessionCookieOptions(request));
+  response.cookies.delete(AUTH_COOKIE);
   return response;
 }

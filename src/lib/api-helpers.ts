@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getSessionFromCookies, canWrite } from "@/lib/auth";
+import type { UserRole } from "@/generated/prisma/client";
 
 const JSON_BODY_LIMIT_BYTES = 64 * 1024;
 
@@ -19,7 +21,27 @@ export function jsonResponse<T>(body: T, init: ResponseInit = {}) {
   });
 }
 
-export function jsonError(message: string, status: number) {
+export async function requireAuth(roles?: UserRole[]) {
+  const session = await getSessionFromCookies();
+  if (!session) {
+    return { error: jsonError("غير مصرح", 401), session: null };
+  }
+  if (roles && !roles.includes(session.role)) {
+    return { error: jsonError("صلاحية غير كافية", 403), session: null };
+  }
+  return { error: null, session };
+}
+
+export async function requireWrite() {
+  const result = await requireAuth();
+  if (result.error) return result;
+  if (!canWrite(result.session!.role)) {
+    return { error: jsonError("صلاحية القراءة فقط", 403), session: null };
+  }
+  return result;
+}
+
+export function jsonError(message: string, status = 400) {
   return jsonResponse({ error: message }, { status });
 }
 
@@ -38,6 +60,7 @@ export async function readJsonBody<T>(
   } catch {
     return { ok: false, response: jsonError("Invalid JSON body.", 400) };
   }
+
   if (raw.length > JSON_BODY_LIMIT_BYTES) {
     return { ok: false, response: jsonError("JSON body is too large.", 413) };
   }
