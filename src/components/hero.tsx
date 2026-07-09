@@ -24,6 +24,10 @@ const itemAnim = {
   },
 };
 
+const headlineRows = [
+  ["إدارة القضايا", "والموكلين بذكاء"],
+];
+
 export function HeroSection() {
   return (
     <section
@@ -122,11 +126,11 @@ export function HeroSection() {
           {/* ── Text column ── */}
           <motion.div
             variants={container}
-            initial="show"
+            initial="hidden"
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "720px",
+              maxWidth: "960px",
               marginInline: "auto",
               textAlign: "center",
             }}
@@ -163,28 +167,50 @@ export function HeroSection() {
             </div>
 
             {/* Heading */}
-            <h1
+            <motion.h1
               className="hero-heading"
               style={{
                 fontSize: "clamp(2.6rem, 4.5vw, 4.75rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.18,
+                lineHeight: 1.12,
                 marginBottom: "1.75rem",
                 letterSpacing: "-0.02em",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "0.35rem",
               }}
+              variants={container}
             >
-              إدارة القضايا والموكلين بذكاء
-              <br />
+              {headlineRows.map((row, rowIndex) => (
+                <span
+                  key={rowIndex}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.85rem",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {row.map((part) => (
+                    <motion.span key={part} variants={itemAnim} style={{ display: "inline-block" }}>
+                      {part}
+                    </motion.span>
+                  ))}
+                </span>
+              ))}
               <span
                 style={{
                   color: "#c3152a",
                   textShadow: "0 0 40px rgba(195,21,42,0.5)",
+                  display: "inline-block",
                 }}
               >
                 لا مثيل له
               </span>
-            </h1>
+            </motion.h1>
 
             {/* Subtext */}
             <p
@@ -540,6 +566,11 @@ export function HeroSection() {
           .hero-card-col {
             width: 320px !important;
             opacity: 0.8;
+          }
+        }
+        @media (max-width: 980px) {
+          .hero-heading {
+            line-height: 1.2 !important;
           }
         }
         @media (max-width: 900px) {
