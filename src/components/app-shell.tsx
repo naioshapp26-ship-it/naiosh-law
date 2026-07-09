@@ -154,10 +154,6 @@ export function AppShell({ role, name, children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    setDrawerOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!drawerOpen) {
       return;
     }
