@@ -58,33 +58,19 @@ function readCheckedTaskIds(storageKey: string) {
   }
 }
 
-export default function DashboardPage() {
-  const { user, ready } = useSession(true);
-  const [checkedTaskIds, setCheckedTaskIds] = useState<Set<string>>(() => new Set());
-  const [tasksHydrated, setTasksHydrated] = useState(false);
-  const taskStorageKey = user ? getTaskStorageKey(user.email) : null;
+function DailyTasks({ userEmail }: { userEmail: string }) {
+  const taskStorageKey = getTaskStorageKey(userEmail);
+  const [checkedTaskIds, setCheckedTaskIds] = useState<Set<string>>(
+    () => new Set(readCheckedTaskIds(taskStorageKey))
+  );
 
   useEffect(() => {
-    if (!taskStorageKey) {
-      return;
-    }
-
-    setTasksHydrated(false);
-    setCheckedTaskIds(new Set(readCheckedTaskIds(taskStorageKey)));
-    setTasksHydrated(true);
-  }, [taskStorageKey]);
-
-  useEffect(() => {
-    if (!taskStorageKey || !tasksHydrated) {
-      return;
-    }
-
     try {
       window.localStorage.setItem(taskStorageKey, JSON.stringify(Array.from(checkedTaskIds)));
     } catch {
       // Task checks are non-critical UI state; keep the dashboard interactive.
     }
-  }, [checkedTaskIds, taskStorageKey, tasksHydrated]);
+  }, [checkedTaskIds, taskStorageKey]);
 
   const completedTasks = useMemo(
     () => recentTasks.filter((task) => checkedTaskIds.has(task.id)).length,
@@ -102,6 +88,106 @@ export default function DashboardPage() {
       return next;
     });
   };
+
+  return (
+    <div className="card-white" style={{ padding: "1.5rem" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.25rem",
+        }}
+      >
+        <h2 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12" }}>
+          المهام اليومية
+        </h2>
+        <span
+          style={{
+            background: "rgba(195,21,42,0.08)",
+            color: "#c3152a",
+            borderRadius: "8px",
+            padding: "0.2rem 0.65rem",
+            fontSize: "0.7rem",
+            fontWeight: 700,
+          }}
+        >
+          {completedTasks}/{recentTasks.length} منجزة
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {recentTasks.map((t) => {
+          const checked = checkedTaskIds.has(t.id);
+          return (
+            <div
+              key={t.id}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.75rem",
+                padding: "0.85rem",
+                background: checked ? "rgba(34,197,94,0.06)" : "#f8f9fb",
+                borderRadius: "12px",
+                border: `1px solid ${checked ? "rgba(34,197,94,0.22)" : "#e2e8f0"}`,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggleTask(t.id)}
+                aria-label={`تحديد إنجاز ${t.task}`}
+                style={{
+                  width: 16,
+                  height: 16,
+                  accentColor: "#c3152a",
+                  marginTop: "0.2rem",
+                  flexShrink: 0,
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: checked ? "#64748b" : "#0a0a12",
+                    marginBottom: "0.25rem",
+                    lineHeight: 1.4,
+                    textDecoration: checked ? "line-through" : "none",
+                  }}
+                >
+                  {t.task}
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span
+                    style={{
+                      background:
+                        t.priority === "عاجل"
+                          ? "rgba(239,68,68,0.1)"
+                          : "rgba(100,116,139,0.1)",
+                      color: t.priority === "عاجل" ? "#ef4444" : "#64748b",
+                      borderRadius: "5px",
+                      padding: "0.1rem 0.45rem",
+                      fontSize: "0.62rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {t.priority}
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
+                    {t.due}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  const { user, ready } = useSession(true);
 
   if (!ready || !user) {
     return (
@@ -276,99 +362,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Tasks */}
-          <div className="card-white" style={{ padding: "1.5rem" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1.25rem",
-              }}
-            >
-              <h2 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12" }}>
-                المهام اليومية
-              </h2>
-              <span
-                style={{
-                  background: "rgba(195,21,42,0.08)",
-                  color: "#c3152a",
-                  borderRadius: "8px",
-                  padding: "0.2rem 0.65rem",
-                  fontSize: "0.7rem",
-                  fontWeight: 700,
-                }}
-              >
-                {completedTasks}/{recentTasks.length} منجزة
-              </span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t) => {
-                const checked = checkedTaskIds.has(t.id);
-                return (
-                  <div
-                    key={t.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "0.75rem",
-                      padding: "0.85rem",
-                      background: checked ? "rgba(34,197,94,0.06)" : "#f8f9fb",
-                      borderRadius: "12px",
-                      border: `1px solid ${checked ? "rgba(34,197,94,0.22)" : "#e2e8f0"}`,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleTask(t.id)}
-                      aria-label={`تحديد إنجاز ${t.task}`}
-                      style={{
-                        width: 16,
-                        height: 16,
-                        accentColor: "#c3152a",
-                        marginTop: "0.2rem",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontSize: "0.8rem",
-                          fontWeight: 600,
-                          color: checked ? "#64748b" : "#0a0a12",
-                          marginBottom: "0.25rem",
-                          lineHeight: 1.4,
-                          textDecoration: checked ? "line-through" : "none",
-                        }}
-                      >
-                        {t.task}
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span
-                          style={{
-                            background:
-                              t.priority === "عاجل"
-                                ? "rgba(239,68,68,0.1)"
-                                : "rgba(100,116,139,0.1)",
-                            color: t.priority === "عاجل" ? "#ef4444" : "#64748b",
-                            borderRadius: "5px",
-                            padding: "0.1rem 0.45rem",
-                            fontSize: "0.62rem",
-                            fontWeight: 700,
-                          }}
-                        >
-                          {t.priority}
-                        </span>
-                        <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
-                          {t.due}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <DailyTasks key={user.email} userEmail={user.email} />
         </div>
 
         {/* Modules quick access */}
