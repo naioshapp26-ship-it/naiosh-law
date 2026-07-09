@@ -153,7 +153,7 @@ export function useSession(redirectIfMissing = false) {
       });
 
     return () => controller.abort();
-  }, [cachedUser, rawSession, redirectIfMissing, router]);
+  }, [rawSession, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({

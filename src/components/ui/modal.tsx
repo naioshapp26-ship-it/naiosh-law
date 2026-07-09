@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -28,21 +28,76 @@ function inputType(type: FormField["type"]) {
   return "text";
 }
 
+const focusableSelector = [
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "a[href]",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
+function getFocusableElements(container: HTMLElement | null) {
+  if (!container) {
+    return [];
+  }
+
+  return Array.from(container.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+    (element) => !element.hasAttribute("disabled") && element.getAttribute("aria-hidden") !== "true"
+  );
+}
+
+function fieldMaxLength(type: FormField["type"]) {
+  return type === "textarea" ? 600 : 160;
+}
+
 function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Omit<Props, "open">) {
   const [form, setForm] = useState<Record<string, unknown>>(() => buildInitialForm(fields, initial));
   const [saving, setSaving] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
   useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    getFocusableElements(dialogRef.current)[0]?.focus();
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(dialogRef.current);
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+
+      if (!firstElement || !lastElement) {
+        event.preventDefault();
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
   }, [onClose]);
 
   useEffect(() => {
@@ -81,6 +136,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
       role="presentation"
     >
       <div
+        ref={dialogRef}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -95,7 +151,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby="module-form-dialog-title"
       >
         {/* Header */}
         <div
@@ -106,9 +162,13 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id="module-form-dialog-title" style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>
+            {title}
+          </h2>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="إغلاق النافذة"
             style={{
               width: 34,
               height: 34,
@@ -161,6 +221,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
+                    maxLength={fieldMaxLength(f.type)}
                     rows={3}
                     className="input-field"
                     style={{ resize: "vertical", minHeight: 80 }}
@@ -172,6 +233,9 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
+                    maxLength={inputType(f.type) === "number" ? undefined : fieldMaxLength(f.type)}
+                    min={inputType(f.type) === "number" ? 0 : undefined}
+                    inputMode={f.type === "tel" ? "tel" : f.type === "number" ? "numeric" : undefined}
                     className="input-field"
                     placeholder={f.placeholder}
                   />

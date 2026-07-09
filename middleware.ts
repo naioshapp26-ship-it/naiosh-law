@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SessionConfigurationError, decodeSession, sessionCookieName } from "@/lib/auth-session";
+import {
+  SessionConfigurationError,
+  decodeSession,
+  getSessionCookieOptions,
+  sessionCookieName,
+} from "@/lib/auth-session";
 import { canAccessModule } from "@/lib/module-access";
 
 function getModuleSlug(pathname: string) {
   const match = pathname.match(/^\/app\/modules\/([^/]+)/u);
   return match?.[1] ?? null;
+}
+
+function clearSessionCookie(response: NextResponse, request: NextRequest) {
+  response.cookies.set(sessionCookieName, "", {
+    ...getSessionCookieOptions(request),
+    expires: new Date(0),
+    maxAge: 0,
+  });
 }
 
 export async function middleware(request: NextRequest) {
@@ -14,15 +27,15 @@ export async function middleware(request: NextRequest) {
     user = await decodeSession(request.cookies.get(sessionCookieName)?.value);
   } catch (error) {
     if (error instanceof SessionConfigurationError) {
-      return NextResponse.json(
-        { message: "Authentication is not configured." },
-        {
-          status: 503,
-          headers: {
-            "Cache-Control": "no-store",
-          },
-        }
-      );
+      const isLoginPage = request.nextUrl.pathname === "/login";
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+      const response = isLoginPage
+        ? NextResponse.next()
+        : NextResponse.redirect(loginUrl);
+
+      clearSessionCookie(response, request);
+      return response;
     }
 
     throw error;

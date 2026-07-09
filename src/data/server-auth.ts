@@ -6,7 +6,7 @@ type DemoUser = SessionUser & {
   password: string;
 };
 
-export const demoUsers: DemoUser[] = [
+const demoUsers: DemoUser[] = [
   {
     role: "admin",
     name: "مدير النظام",

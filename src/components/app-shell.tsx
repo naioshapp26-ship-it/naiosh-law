@@ -343,8 +343,6 @@ export function AppShell({ role, name, children }: Props) {
           <div
             style={{
               position: "fixed", inset: 0, zIndex: 200,
-              display: "flex",
-              justifyContent: "flex-start",
             }}
             role="presentation"
           >
@@ -355,7 +353,7 @@ export function AppShell({ role, name, children }: Props) {
             />
             {/* Drawer panel */}
             <div style={{
-              position: "relative", zIndex: 1,
+              position: "absolute", zIndex: 1, insetBlock: 0, insetInlineStart: 0,
               width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
@@ -391,11 +389,12 @@ export function AppShell({ role, name, children }: Props) {
                 display: "flex", flexDirection: "column", alignItems: "center",
                 gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
                 textDecoration: "none", flex: 1,
+                minWidth: 0,
                 background: active ? "rgba(195,21,42,0.08)" : "transparent",
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
-              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {item.label}
               </span>
             </Link>
@@ -411,7 +410,7 @@ export function AppShell({ role, name, children }: Props) {
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
             background: "none", border: "none", cursor: "pointer",
-            fontFamily: "var(--font)", flex: 1,
+            fontFamily: "var(--font)", flex: 1, minWidth: 0,
           }}
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>

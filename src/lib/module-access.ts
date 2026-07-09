@@ -2,7 +2,7 @@ import type { SessionRole } from "@/lib/auth-session";
 
 const adminOnlyModuleSlugs = new Set(["administration", "integrations", "ai-center"]);
 
-export function isAdminOnlyModule(slug: string) {
+function isAdminOnlyModule(slug: string) {
   return adminOnlyModuleSlugs.has(slug);
 }
 

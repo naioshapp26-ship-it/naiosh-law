@@ -185,9 +185,18 @@ export function ModuleShell({ slug, config, title }: Props) {
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setViewTarget(null);
+        setReportOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [reportOpen, viewTarget]);
 
@@ -268,7 +277,9 @@ export function ModuleShell({ slug, config, title }: Props) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
+              aria-label="إغلاق نافذة التفاصيل"
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
@@ -283,12 +294,14 @@ export function ModuleShell({ slug, config, title }: Props) {
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             {isAdmin && (
               <button
+                type="button"
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
                 className="btn-primary"
                 style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
               >✏️ تعديل</button>
             )}
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
@@ -397,13 +410,14 @@ export function ModuleShell({ slug, config, title }: Props) {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <button type="button" onClick={() => setReportOpen(false)} aria-label="إغلاق نافذة التقارير" style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {entityPlural}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <button
+                type="button"
                 onClick={downloadCsvReport}
                 style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font)", width: "100%", transition: "all 0.18s" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}

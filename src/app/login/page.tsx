@@ -24,6 +24,21 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+const loginErrorMessages: Record<string, string> = {
+  "Authentication is not configured.":
+    "إعدادات المصادقة غير مكتملة. يرجى ضبط مفتاح الجلسة ثم إعادة المحاولة.",
+  "Demo login is not enabled.":
+    "الدخول التجريبي غير مفعّل على هذا النشر.",
+  "Request body is too large.":
+    "بيانات الدخول كبيرة جدًا. اختصر المدخلات ثم حاول مرة أخرى.",
+  "Content-Type must be application/json.":
+    "تعذر معالجة طلب الدخول. حدّث الصفحة ثم حاول مرة أخرى.",
+  "Invalid JSON payload.":
+    "تعذر قراءة بيانات الدخول. تحقق من المدخلات ثم حاول مرة أخرى.",
+  "JSON request body is required.":
+    "أدخل بيانات الدخول المطلوبة ثم حاول مرة أخرى.",
+};
+
 function getSafeNextPath() {
   if (typeof window === "undefined") {
     return "/app/dashboard";
@@ -31,6 +46,23 @@ function getSafeNextPath() {
 
   const next = new URLSearchParams(window.location.search).get("next");
   return next?.startsWith("/app/") || next === "/app" ? next : "/app/dashboard";
+}
+
+async function getLoginErrorMessage(response: Response, fallback: string) {
+  if (response.status === 401) {
+    return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+  }
+
+  try {
+    const payload = (await response.json()) as { message?: unknown };
+    if (typeof payload.message === "string") {
+      return loginErrorMessages[payload.message] ?? payload.message;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
 }
 
 export default function LoginPage() {
@@ -60,7 +92,7 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+        setError(await getLoginErrorMessage(response, "تعذر تسجيل الدخول. حاول مرة أخرى."));
         return;
       }
 
@@ -85,7 +117,7 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("تعذر بدء الحساب التجريبي.");
+        setError(await getLoginErrorMessage(response, "تعذر بدء الحساب التجريبي."));
         return;
       }
 
@@ -323,39 +355,39 @@ export default function LoginPage() {
             </p>
             <div className="quick-demo-actions" style={{ display: "flex", gap: "0.75rem" }}>
               {demoLoginProfiles.map((profile) => (
-              <button
-                key={profile.role}
-                type="button"
-                onClick={() => loginDemo(profile.role)}
-                disabled={!!demoLoading || loading}
-                style={{
-                  flex: 1,
-                  padding: "0.65rem",
-                  borderRadius: "10px",
-                  border: "1.5px solid #e2e8f0",
-                  background: "#f8f9fb",
-                  cursor: "pointer",
-                  fontFamily: "var(--font)",
-                  transition: "all 0.2s",
-                  textAlign: "center",
-                  opacity: demoLoading && demoLoading !== profile.role ? 0.55 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
-                  (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
-                }}
-              >
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  {profile.role === "admin" ? "⚙️ مدير النظام" : "👤 عميل"}
-                </span>
-                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
-                  {demoLoading === profile.role ? "جاري الدخول..." : profile.label}
-                </span>
-              </button>
+                <button
+                  key={profile.role}
+                  type="button"
+                  onClick={() => loginDemo(profile.role)}
+                  disabled={!!demoLoading || loading}
+                  style={{
+                    flex: 1,
+                    padding: "0.65rem",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e2e8f0",
+                    background: "#f8f9fb",
+                    cursor: "pointer",
+                    fontFamily: "var(--font)",
+                    transition: "all 0.2s",
+                    textAlign: "center",
+                    opacity: demoLoading && demoLoading !== profile.role ? 0.55 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
+                    (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
+                    {profile.role === "admin" ? "⚙️ مدير النظام" : "👤 عميل"}
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
+                    {demoLoading === profile.role ? "جاري الدخول..." : profile.label}
+                  </span>
+                </button>
               ))}
             </div>
           </motion.div>
@@ -523,7 +555,8 @@ export default function LoginPage() {
       <style>{`
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
-          .login-wrap { background: #f8f9fb !important; }
+          .login-wrap { background: #f8f9fb !important; min-height: 100svh !important; }
+          .login-form-panel { min-height: 100svh !important; }
         }
         @media (max-width: 480px) {
           .login-form-panel { padding: 2rem 1rem !important; }

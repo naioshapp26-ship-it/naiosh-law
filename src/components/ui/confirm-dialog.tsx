@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type Props = {
   open: boolean;
@@ -11,20 +11,69 @@ type Props = {
   loading?: boolean;
 };
 
+const focusableSelector = [
+  "button:not([disabled])",
+  "a[href]",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
+function getFocusableElements(container: HTMLElement | null) {
+  if (!container) {
+    return [];
+  }
+
+  return Array.from(container.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+    (element) => !element.hasAttribute("disabled") && element.getAttribute("aria-hidden") !== "true"
+  );
+}
+
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    getFocusableElements(dialogRef.current)[0]?.focus();
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onCancel();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(dialogRef.current);
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+
+      if (!firstElement || !lastElement) {
+        event.preventDefault();
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
   }, [open, onCancel]);
 
   useEffect(() => {
@@ -59,12 +108,14 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
       role="presentation"
     >
       <div
+        ref={dialogRef}
         className="card-white"
         style={{ maxWidth: 400, width: "100%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
         role="alertdialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
       >
         <div
           style={{
@@ -82,10 +133,10 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         >
           🗑️
         </div>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
+        <h3 id="confirm-dialog-title" style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
           {title}
         </h3>
-        <p style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
+        <p id="confirm-dialog-message" style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
           {message}
         </p>
         <div style={{ display: "flex", gap: "0.75rem" }}>

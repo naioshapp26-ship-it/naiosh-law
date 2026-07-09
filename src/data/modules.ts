@@ -1,8 +1,6 @@
 import { canAccessModule } from "@/lib/module-access";
 import type { SessionRole } from "@/lib/auth-session";
 
-export type Role = "admin" | "client";
-
 export type LegalModule = {
   slug: string;
   title: string;
@@ -12,7 +10,7 @@ export type LegalModule = {
   workflow: string[];
   relations: string[];
   dbTables: string[];
-  permissions: Record<Role, string[]>;
+  permissions: Record<SessionRole, string[]>;
 };
 
 const basePermissions = {
@@ -20,7 +18,7 @@ const basePermissions = {
   client: ["عرض الحالة", "تحميل المستندات", "متابعة التنبيهات"],
 };
 
-export const modules: LegalModule[] = [
+const modules: LegalModule[] = [
   { slug: "dashboard", title: "لوحة التحكم", subtitle: "مؤشرات الأداء والملخصات اليومية", screens: ["مؤشرات الأداء", "إحصائيات القضايا", "الجلسات القادمة", "المهام اليومية", "التنبيهات", "الملخص المالي"], functions: ["مراقبة KPIs", "عرض تنبيهات ذكية", "فلترة حسب الفريق"], workflow: ["تحميل البيانات", "تحليل الحالة", "إرسال تنبيه"], relations: ["إدارة القضايا", "مركز المتابعات", "المحاسبة القانونية"], dbTables: ["dash_widgets", "alerts", "daily_tasks"], permissions: basePermissions },
   { slug: "case-management", title: "إدارة القضايا", subtitle: "إدارة الملف القانوني بالكامل", screens: ["القضايا", "الإجراءات", "الجلسات", "الأحكام", "التنفيذ", "المرفقات", "سير العمل", "سجل التعديلات", "الرسوم والمدفوعات"], functions: ["إضافة قضية", "تحديث مراحل القضية", "أرشفة المستندات"], workflow: ["فتح قضية", "إسناد مسؤول", "متابعة الجلسات", "إغلاق القضية"], relations: ["إدارة الموكلين", "إدارة الجلسات", "المحاسبة القانونية"], dbTables: ["cases", "case_steps", "case_judgments", "case_payments"], permissions: basePermissions },
   { slug: "clients-management", title: "إدارة الموكلين", subtitle: "بيانات العملاء والعقود والوثائق", screens: ["بيانات الموكلين", "الوكالات", "العقود", "الوثائق", "الجهات المرجعية", "التقارير"], functions: ["ملف موكل", "إدارة الوثائق", "تقارير العميل"], workflow: ["تسجيل موكل", "توقيع وكالة", "تحديث ملف"], relations: ["إدارة القضايا", "الاستشارات القانونية"], dbTables: ["clients", "contracts", "client_docs"], permissions: basePermissions },
