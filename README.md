@@ -1,6 +1,6 @@
 # Naiosh Law
 
-Arabic RTL legal-operations dashboard built with Next.js App Router, React, Tailwind CSS, and Framer Motion.
+Arabic RTL legal-operations dashboard built with Next.js App Router, React, and Tailwind CSS.
 
 ## Getting Started
 
@@ -37,7 +37,7 @@ In production, demo login is disabled unless `NAIOSH_ENABLE_DEMO_LOGIN=true` is 
 
 ```bash
 npm run lint
-npm run typecheck
+npm run typecheck # runs next typegen before tsc
 npm run build
 ```
 

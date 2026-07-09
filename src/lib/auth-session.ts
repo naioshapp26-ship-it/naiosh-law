@@ -22,6 +22,17 @@ const baseSessionCookieOptions = {
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+export class SessionConfigurationError extends Error {
+  constructor() {
+    super("NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be configured in production.");
+    this.name = "SessionConfigurationError";
+  }
+}
+
+export function isSessionConfigurationError(error: unknown): error is SessionConfigurationError {
+  return error instanceof SessionConfigurationError;
+}
+
 function getSessionSecret() {
   const configuredSecret =
     process.env.NAIOSH_SESSION_SECRET ?? process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
@@ -31,9 +42,7 @@ function getSessionSecret() {
   }
 
   if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
-    throw new Error(
-      "NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be configured in production."
-    );
+    throw new SessionConfigurationError();
   }
 
   return "naiosh-law-demo-session-secret";
@@ -143,7 +152,17 @@ export async function decodeSession(token?: string | null): Promise<SessionUser 
     return null;
   }
 
-  const expectedSignature = await createSignature(payloadPart);
+  let expectedSignature: string;
+
+  try {
+    expectedSignature = await createSignature(payloadPart);
+  } catch (error) {
+    if (isSessionConfigurationError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 
   if (!constantTimeEqual(signaturePart, expectedSignature)) {
     return null;

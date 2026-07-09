@@ -224,9 +224,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {upcomingSessions.map((s, i) => (
+              {upcomingSessions.map((s) => (
                 <div
-                  key={i}
+                  key={s.case}
                   style={{
                     padding: "0.9rem",
                     background: "#f8f9fb",
@@ -304,7 +304,7 @@ export default function DashboardPage() {
 
                 return (
                 <label
-                  key={i}
+                  key={t.task}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",

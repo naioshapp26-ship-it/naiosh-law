@@ -154,6 +154,8 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [logoutPending, setLogoutPending] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
   const bottomModuleItems = getVisibleOperationalModules(role)
     .filter((item) => preferredBottomModuleSlugs.includes(item.slug))
     .slice(0, 3);
@@ -187,6 +189,22 @@ export function AppShell({ role, name, children }: Props) {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [drawerOpen]);
+
+  const handleLogout = async () => {
+    if (logoutPending) {
+      return;
+    }
+
+    setLogoutPending(true);
+    setLogoutError("");
+
+    try {
+      await logout();
+    } catch {
+      setLogoutError("تعذر تسجيل الخروج. تحقق من الاتصال ثم حاول مرة أخرى.");
+      setLogoutPending(false);
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
@@ -238,24 +256,8 @@ export function AppShell({ role, name, children }: Props) {
             </Link>
           </div>
 
-          {/* Right: Notifications + User + Logout */}
+          {/* Right: User + Logout */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
-            {/* Notification bell */}
-            <button style={{
-              width: 36, height: 36, borderRadius: "10px",
-              background: "#f8f9fb", border: "1px solid #e2e8f0",
-              cursor: "pointer", display: "flex", alignItems: "center",
-              justifyContent: "center", fontSize: "0.9rem", position: "relative",
-              flexShrink: 0,
-            }} aria-label="التنبيهات">
-              🔔
-              <span style={{
-                position: "absolute", top: 6, insetInlineEnd: 6,
-                width: 7, height: 7, borderRadius: "50%",
-                background: "#c3152a", border: "1.5px solid #fff",
-              }} />
-            </button>
-
             {/* User chip */}
             <div style={{
               display: "flex", alignItems: "center", gap: "0.5rem",
@@ -277,22 +279,61 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={handleLogout}
+              disabled={logoutPending}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font)",
-                transition: "all 0.2s", whiteSpace: "nowrap",
+                cursor: logoutPending ? "not-allowed" : "pointer", fontFamily: "var(--font)",
+                transition: "all 0.2s", whiteSpace: "nowrap", opacity: logoutPending ? 0.65 : 1,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
+              onMouseEnter={(e) => {
+                if (!logoutPending) {
+                  (e.currentTarget as HTMLElement).style.background = "#c3152a";
+                  (e.currentTarget as HTMLElement).style.color = "#fff";
+                }
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)";
+                (e.currentTarget as HTMLElement).style.color = "#c3152a";
+              }}
             >
-              خروج
+              {logoutPending ? "جارٍ..." : "خروج"}
             </button>
           </div>
         </div>
       </header>
+
+      {logoutError ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            top: "4.5rem",
+            insetInline: "1rem",
+            zIndex: 120,
+            display: "flex",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              background: "#c3152a",
+              color: "#fff",
+              borderRadius: "12px",
+              padding: "0.75rem 1rem",
+              fontSize: "0.82rem",
+              fontWeight: 700,
+              boxShadow: "0 12px 35px rgba(195,21,42,0.25)",
+            }}
+          >
+            {logoutError}
+          </div>
+        </div>
+      ) : null}
 
       {/* ── Body ── */}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -312,7 +353,7 @@ export function AppShell({ role, name, children }: Props) {
             style={{
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex",
-              justifyContent: "flex-start",
+              justifyContent: "flex-end",
             }}
             role="presentation"
           >
@@ -326,7 +367,7 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
-              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
               <SidebarContent pathname={pathname} role={role} onClose={() => setDrawerOpen(false)} />
@@ -358,12 +399,12 @@ export function AppShell({ role, name, children }: Props) {
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
-                textDecoration: "none", flex: 1,
+                textDecoration: "none", flex: 1, minWidth: 0,
                 background: active ? "rgba(195,21,42,0.08)" : "transparent",
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
-              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8", maxWidth: "4.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8", width: "100%", maxWidth: "4.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
                 {item.label}
               </span>
             </Link>
@@ -376,7 +417,7 @@ export function AppShell({ role, name, children }: Props) {
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
             background: "none", border: "none", cursor: "pointer",
-            fontFamily: "var(--font)", flex: 1,
+            fontFamily: "var(--font)", flex: 1, minWidth: 0,
           }}
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>
@@ -396,7 +437,6 @@ export function AppShell({ role, name, children }: Props) {
           main               { padding: 1rem !important; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
         }
         @media (max-width: 420px) {
-          header button[aria-label="التنبيهات"] { display: none !important; }
           header button:not(.hamburger-btn) { padding-inline: 0.6rem !important; }
         }
         @media (min-width: 769px) {

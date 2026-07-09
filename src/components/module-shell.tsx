@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -154,11 +154,17 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const toastTimers = useRef<Map<string, ReturnType<typeof window.setTimeout>>>(new Map());
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timeoutId = window.setTimeout(() => {
+      toastTimers.current.delete(id);
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+
+    toastTimers.current.set(id, timeoutId);
   }, []);
 
   const updateRows = useCallback(
@@ -175,6 +181,15 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
       router.replace("/app/dashboard");
     }
   }, [hasModuleAccess, ready, router, user]);
+
+  useEffect(() => {
+    const timers = toastTimers.current;
+
+    return () => {
+      timers.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      timers.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (!viewTarget && !reportOpen) {

@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { encodeSession, getSessionCookieOptions, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
+import {
+  encodeSession,
+  getSessionCookieOptions,
+  isSessionConfigurationError,
+  sessionCookieName,
+  sessionMaxAgeSeconds,
+} from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
 import { readJsonBody } from "@/lib/api-request";
@@ -46,7 +52,20 @@ export async function POST(request: Request) {
 
   const user = toSessionUser(demoUser);
   const response = NextResponse.json({ user });
-  const token = await encodeSession(user);
+  let token: string;
+
+  try {
+    token = await encodeSession(user);
+  } catch (error) {
+    if (isSessionConfigurationError(error)) {
+      return NextResponse.json(
+        { message: "Session secret is not configured." },
+        { status: 503 }
+      );
+    }
+
+    throw error;
+  }
 
   response.cookies.set(sessionCookieName, token, {
     ...getSessionCookieOptions(request),
