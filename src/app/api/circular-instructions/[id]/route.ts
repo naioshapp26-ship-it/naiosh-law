@@ -11,16 +11,15 @@ export async function PATCH(request: Request, { params }: Params) {
   const { body, error: bodyError } = await readJsonObject(request);
   if (bodyError) return bodyError;
 
-  const updated = await prisma.client.update({
+  const updated = await prisma.circularInstruction.update({
     where: { id },
     data: {
-      name: body.name !== undefined ? String(body.name) : undefined,
-      type: body.type !== undefined ? String(body.type) : undefined,
-      phone: body.phone !== undefined ? String(body.phone) || null : undefined,
-      email: body.email !== undefined ? String(body.email) || null : undefined,
-      nationalId: body.nationalId !== undefined ? String(body.nationalId) || null : undefined,
-      notes: body.notes !== undefined ? String(body.notes) || null : undefined,
+      title: body.title !== undefined ? String(body.title) : undefined,
+      issuer: body.issuer !== undefined ? String(body.issuer) : undefined,
+      summary: body.summary !== undefined ? String(body.summary) || null : undefined,
+      content: body.content !== undefined ? String(body.content) || null : undefined,
       status: body.status !== undefined ? String(body.status) : undefined,
+      effectiveDate: body.effectiveDate !== undefined ? String(body.effectiveDate) || null : undefined,
     },
   });
   return NextResponse.json(updated);
@@ -30,6 +29,6 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  await prisma.client.delete({ where: { id } });
+  await prisma.circularInstruction.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite, jsonError } from "@/lib/api-helpers";
+import { readJsonObject, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -31,21 +31,40 @@ export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
 
-  const body = await request.json();
-  const count = await prisma.case.count();
-  const caseNo = body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
+  const { body, error: bodyError } = await readJsonObject(request);
+  if (bodyError) return bodyError;
 
-  const created = await prisma.case.create({
-    data: {
-      caseNo,
-      clientName: String(body.client ?? ""),
-      type: String(body.type ?? "مدني"),
-      court: String(body.court ?? ""),
-      status: String(body.status ?? "نشطة"),
-      nextDate: body.nextDate ? String(body.nextDate) : null,
-      fees: body.fees != null ? String(body.fees) : null,
-      notes: body.notes ? String(body.notes) : null,
-    },
+  const created = await prisma.$transaction(async (tx) => {
+    const count = await tx.case.count();
+    const caseNo = body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
+    const clientName = String(body.client ?? "").trim();
+    const client = clientName
+      ? await tx.client.findFirst({ where: { name: clientName }, select: { id: true } })
+      : null;
+
+    const item = await tx.case.create({
+      data: {
+        caseNo: String(caseNo),
+        clientId: client?.id,
+        clientName,
+        type: String(body.type ?? "مدني"),
+        court: String(body.court ?? ""),
+        status: String(body.status ?? "نشطة"),
+        nextDate: body.nextDate ? String(body.nextDate) : null,
+        fees: body.fees != null ? String(body.fees) : null,
+        notes: body.notes ? String(body.notes) : null,
+      },
+    });
+
+    if (client) {
+      const casesCount = await tx.case.count({ where: { clientId: client.id } });
+      await tx.client.update({
+        where: { id: client.id },
+        data: { casesCount },
+      });
+    }
+
+    return item;
   });
 
   return NextResponse.json({ id: created.id, caseNo: created.caseNo }, { status: 201 });
