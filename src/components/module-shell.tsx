@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleConfig } from "@/data/module-configs";
 import { useSession } from "@/lib/session";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { canAccessModule } from "@/lib/module-routing";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
@@ -39,6 +40,11 @@ function normalizeRows(slug: string, rows: Record<string, unknown>[]): ModuleRow
   }));
 }
 
+function escapeCsvValue(value: unknown) {
+  const text = String(value ?? "");
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
 export function ModuleShell({
   slug,
   config,
@@ -58,6 +64,8 @@ export function ModuleShell({
   const [deleteTarget, setDeleteTarget] = useState<ModuleRow | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const viewDialogRef = useDialogAccessibility<HTMLDivElement>(Boolean(viewTarget), () => setViewTarget(null));
+  const reportDialogRef = useDialogAccessibility<HTMLDivElement>(reportOpen, () => setReportOpen(false));
 
   useEffect(() => {
     return () => {
@@ -137,6 +145,28 @@ export function ModuleShell({
     setDeleteTarget(null);
   };
 
+  const handleExportCsv = () => {
+    try {
+      const header = config.columns.map((column) => escapeCsvValue(column.label)).join(",");
+      const body = rows
+        .map((row) => config.columns.map((column) => escapeCsvValue(row[column.key])).join(","))
+        .join("\n");
+      const blob = new Blob([`\ufeff${header}\n${body}`], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${slug}-report.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setReportOpen(false);
+      pushToast("success", "✅ تم تصدير تقرير CSV بنجاح");
+    } catch {
+      pushToast("error", "تعذر تصدير التقرير. حاول مرة أخرى.");
+    }
+  };
+
   const firstCol = config.columns[0]?.key;
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
@@ -155,11 +185,17 @@ export function ModuleShell({
       >
         <div
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
+          ref={viewDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="module-view-title"
+          tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
+            <h2 id="module-view-title" style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
@@ -174,11 +210,13 @@ export function ModuleShell({
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             <button
+              type="button"
               onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
               className="btn-primary"
               style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
             >✏️ تعديل</button>
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
@@ -285,24 +323,36 @@ export function ModuleShell({
           <div
             className="report-modal-panel"
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
+            ref={reportDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="module-report-title"
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <h2 id="module-report-title" style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
+              <button type="button" onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+                { icon: "📕", label: "تصدير PDF", desc: "يتطلب خدمة تقارير خارجية في النسخة الإنتاجية", enabled: false },
+                { icon: "📗", label: "تصدير Excel", desc: "يتطلب خدمة تقارير خارجية في النسخة الإنتاجية", enabled: false },
+                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى", enabled: true },
               ].map((opt) => (
                 <button
+                  type="button"
                   key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
+                  onClick={() => {
+                    if (opt.enabled) {
+                      handleExportCsv();
+                      return;
+                    }
+                    pushToast("error", `${opt.label} غير متاح في نسخة العرض؛ استخدم CSV.`);
+                  }}
                   style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}

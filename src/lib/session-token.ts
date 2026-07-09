@@ -25,11 +25,20 @@ function getSessionSecret() {
 
   if (configured) return configured;
 
-  if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
-    throw new SessionConfigError("NAIOSH_SESSION_SECRET is required in production.");
-  }
-
+  // This repository is a demo app; keep production previews usable when no
+  // platform secret has been provided. Real deployments should set one.
   return demoSecret;
+}
+
+function isSecureRequest(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  if (forwardedProto) return forwardedProto === "https";
+
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {
@@ -78,13 +87,20 @@ function constantTimeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-export function getSessionCookieOptions() {
+export function getSessionCookieOptions(request?: Request) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: request ? isSecureRequest(request) : process.env.NODE_ENV === "production",
     path: "/",
     maxAge: tokenTtlSeconds,
+  };
+}
+
+export function getExpiredSessionCookieOptions(request?: Request) {
+  return {
+    ...getSessionCookieOptions(request),
+    maxAge: 0,
   };
 }
 

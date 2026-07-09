@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { FormField } from "@/data/module-configs";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   open: boolean;
@@ -13,15 +14,25 @@ type Props = {
   saveLabel?: string;
 };
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>(() => {
-    const defaults: Record<string, unknown> = {};
-    fields.forEach((field) => {
-      defaults[field.key] = initial?.[field.key] ?? "";
-    });
-    return defaults;
+function buildFormState(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    defaults[field.key] = initial?.[field.key] ?? "";
   });
+  return defaults;
+}
+
+export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const dialogRef = useDialogAccessibility<HTMLDivElement>(open, onClose);
+  const [form, setForm] = useState<Record<string, unknown>>(() => buildFormState(fields, initial));
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setForm(buildFormState(fields, initial));
+      setSaving(false);
+    }
+  }, [fields, initial, open]);
 
   if (!open) return null;
 
@@ -53,6 +64,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="module-form-title"
+        tabIndex={-1}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -75,8 +91,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id="module-form-title" style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
               width: 34,

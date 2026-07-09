@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const response = NextResponse.json({ user });
-    response.cookies.set(sessionCookieName, await createSessionToken(user), getSessionCookieOptions());
+    response.cookies.set(sessionCookieName, await createSessionToken(user), getSessionCookieOptions(request));
     return response;
   } catch (error) {
     if (error instanceof SessionConfigError) {

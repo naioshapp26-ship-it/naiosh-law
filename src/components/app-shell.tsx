@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { useSession } from "@/lib/session";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { clearStoredSession } from "@/lib/session";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { getVisibleOperationalModules } from "@/lib/module-routing";
 
 type Props = {
@@ -34,8 +35,10 @@ const iconMap: Record<string, string> = {
 
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
-  const { logout: endSession } = useSession();
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const drawerRef = useDialogAccessibility<HTMLDivElement>(drawerOpen, () => setDrawerOpen(false));
   const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
@@ -44,20 +47,22 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarSoftText = "rgba(255,255,255,0.64)";
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
-  const logout = () => {
-    endSession();
+  const logout = async () => {
+    setLogoutError("");
+    clearStoredSession();
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+    } catch {
+      setLogoutError("تعذر إنهاء الجلسة على الخادم، سيتم توجيهك لتسجيل الدخول.");
+    } finally {
+      router.replace("/login");
+    }
   };
 
   const isActive = (href: string) => pathname === href;
-
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [drawerOpen]);
 
   const sidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -282,6 +287,11 @@ export function AppShell({ role, name, children }: Props) {
             </button>
           </div>
         </div>
+        {logoutError && (
+          <div style={{ padding: "0 1rem 0.65rem", color: "#c3152a", fontSize: "0.75rem", fontWeight: 700 }}>
+            {logoutError}
+          </div>
+        )}
       </header>
 
       {/* ── Body ── */}
@@ -372,7 +382,13 @@ export function AppShell({ role, name, children }: Props) {
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
             {/* Drawer panel */}
-            <div style={{
+            <div
+              ref={drawerRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة الوحدات"
+              tabIndex={-1}
+              style={{
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { canAccessModule } from "@/lib/module-routing";
-import { decodeSessionToken, SessionConfigError, sessionCookieName } from "@/lib/session-token";
+import { decodeSessionToken, getExpiredSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
 
 const protectedPrefix = "/app";
 
@@ -13,7 +13,7 @@ function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", safeAppPath(request.nextUrl.pathname, request.nextUrl.search));
   const response = NextResponse.redirect(loginUrl);
-  response.cookies.delete(sessionCookieName);
+  response.cookies.set(sessionCookieName, "", getExpiredSessionCookieOptions(request));
   return response;
 }
 

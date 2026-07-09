@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decodeSessionToken, SessionConfigError, sessionCookieName } from "@/lib/session-token";
+import { decodeSessionToken, getExpiredSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
         { error: "unauthorized", message: "A valid session is required." },
         { status: 401 }
       );
-      response.cookies.delete(sessionCookieName);
+      response.cookies.set(sessionCookieName, "", getExpiredSessionCookieOptions(request));
       return response;
     }
 
