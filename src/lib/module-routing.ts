@@ -7,8 +7,8 @@ export function getModuleHref(slug: string) {
 }
 
 export function canAccessModule(role: Role, slug: string) {
-  const module = moduleMap[slug];
-  return Boolean(module?.permissions[role]?.length);
+  const legalModule = moduleMap[slug];
+  return Boolean(legalModule?.permissions[role]?.length);
 }
 
 export function getVisibleOperationalModules(role: Role): LegalModule[] {
