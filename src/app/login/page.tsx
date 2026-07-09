@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoAccounts, sessionStorageKey, type SessionUser } from "@/data/auth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -25,36 +25,65 @@ const perks = [
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+
+  const finishLogin = (user: SessionUser) => {
+    try {
+      window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+    } catch {
+      // The httpOnly cookie remains authoritative if storage is blocked.
+    }
+
+    const nextParam = new URLSearchParams(window.location.search).get("next");
+    router.push(nextParam?.startsWith("/app") ? nextParam : "/app/dashboard");
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      setError(response.status === 401 ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذر تسجيل الدخول الآن.");
       setLoading(false);
       return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
-    router.push("/app/dashboard");
+
+    const data = (await response.json()) as { user: SessionUser };
+    finishLogin(data.user);
   };
 
-  const fillDemo = (role: "admin" | "client") => {
-    const user = demoUsers.find((u) => u.role === role)!;
-    setEmail(user.email);
-    setPassword(user.password);
+  const loginDemo = async (role: "admin" | "client") => {
+    const account = demoAccounts.find((u) => u.role === role);
+    if (account) {
+      setEmail(account.email);
+    }
     setError("");
+    setLoading(true);
+
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ demo: true, role }),
+    });
+
+    if (!response.ok) {
+      setError("تعذر بدء الحساب التجريبي الآن.");
+      setLoading(false);
+      return;
+    }
+
+    const data = (await response.json()) as { user: SessionUser };
+    finishLogin(data.user);
   };
 
   return (
@@ -281,7 +310,8 @@ export default function LoginPage() {
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
-                onClick={() => fillDemo("admin")}
+                onClick={() => void loginDemo("admin")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -308,7 +338,8 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
-                onClick={() => fillDemo("client")}
+                onClick={() => void loginDemo("client")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -13,23 +13,68 @@ import { useSession } from "@/lib/session";
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
 let toastCounter = 0;
+const moduleStoragePrefix = "naiosh-law-module-rows:";
+const identityKeys = ["_id", "id", "caseNo", "ref", "jobId", "email", "endpoint", "name", "title"];
+
+function loadStoredRows(slug: string, fallback: Record<string, unknown>[]) {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(`${moduleStoragePrefix}${slug}`);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : fallback;
+  } catch {
+    window.localStorage.removeItem(`${moduleStoragePrefix}${slug}`);
+    return fallback;
+  }
+}
+
+function getRowIdentity(row: Record<string, unknown> | null) {
+  if (!row) {
+    return "";
+  }
+
+  for (const key of identityKeys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && value !== "") {
+      return `${key}:${String(value)}`;
+    }
+  }
+
+  return JSON.stringify(row);
+}
 
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadStoredRows(slug, config?.data ?? []));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
+
+  useEffect(() => {
+    if (!config || typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(`${moduleStoragePrefix}${slug}`, JSON.stringify(rows));
+    } catch {
+      // Keep the in-memory table usable if browser storage quota is unavailable.
+    }
+  }, [config, rows, slug]);
 
   if (!ready || !user) {
     return (
@@ -60,7 +105,8 @@ export function ModuleShell({ slug }: { slug: string }) {
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
-      setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
+      const targetIdentity = getRowIdentity(editTarget);
+      setRows((prev) => prev.map((r) => (getRowIdentity(r) === targetIdentity ? { ...r, ...data } : r)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
       const newRow = { ...data, _id: Date.now() };
@@ -72,7 +118,8 @@ export function ModuleShell({ slug }: { slug: string }) {
   };
 
   const handleDeleteConfirm = () => {
-    setRows((prev) => prev.filter((r) => r !== deleteTarget));
+    const targetIdentity = getRowIdentity(deleteTarget);
+    setRows((prev) => prev.filter((r) => getRowIdentity(r) !== targetIdentity));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
   };
@@ -124,9 +171,6 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
     );
   };
-
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <AppShell role={user.role} name={user.name}>
@@ -194,15 +238,18 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal
-        open={modalOpen}
-        title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
-        fields={config.formFields}
-        initial={editTarget ?? undefined}
-        onSave={handleSave}
-        onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
-      />
+      {modalOpen && (
+        <Modal
+          key={getRowIdentity(editTarget) || "new"}
+          open={modalOpen}
+          title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
+          fields={config.formFields}
+          initial={editTarget ?? undefined}
+          onSave={handleSave}
+          onClose={() => { setModalOpen(false); setEditTarget(null); }}
+          saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
+        />
+      )}
 
       {/* View Modal */}
       {renderViewModal()}
