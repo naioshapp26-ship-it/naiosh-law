@@ -14,7 +14,11 @@ function getClientSessionSnapshot(): SessionSnapshot {
     return undefined;
   }
 
-  return window.localStorage.getItem(sessionKey);
+  try {
+    return window.localStorage.getItem(sessionKey);
+  } catch {
+    return null;
+  }
 }
 
 function getServerSessionSnapshot(): SessionSnapshot {
@@ -44,12 +48,20 @@ function notifySessionChange() {
 }
 
 export function saveSession(user: SessionUser) {
-  window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  try {
+    window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  } catch {
+    // The signed cookie remains the source of truth when browser storage is unavailable.
+  }
   notifySessionChange();
 }
 
 export function clearStoredSession() {
-  window.localStorage.removeItem(sessionKey);
+  try {
+    window.localStorage.removeItem(sessionKey);
+  } catch {
+    // Ignore storage errors so logout/session validation can still complete.
+  }
   notifySessionChange();
 }
 

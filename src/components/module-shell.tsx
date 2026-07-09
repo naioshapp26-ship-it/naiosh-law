@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
 import { StatsRow } from "@/components/ui/stats-row";
@@ -10,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
 import { moduleMap } from "@/data/modules";
+import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
@@ -65,7 +67,13 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
   }
 
   const storageKey = getRowsStorageKey(slug);
-  const rawRows = window.localStorage.getItem(storageKey);
+  let rawRows: string | null;
+
+  try {
+    rawRows = window.localStorage.getItem(storageKey);
+  } catch {
+    return seededFallback;
+  }
 
   if (!rawRows) {
     return seededFallback;
@@ -77,7 +85,11 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
       return seedRows(slug, parsed);
     }
   } catch {
-    window.localStorage.removeItem(storageKey);
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      // Ignore storage cleanup failures; fallback rows keep the UI usable.
+    }
   }
 
   return seededFallback;
@@ -88,13 +100,19 @@ function persistRows(slug: string, rows: Record<string, unknown>[]) {
     return;
   }
 
-  window.localStorage.setItem(getRowsStorageKey(slug), JSON.stringify(rows));
+  try {
+    window.localStorage.setItem(getRowsStorageKey(slug), JSON.stringify(rows));
+  } catch {
+    // CRUD state remains in memory if browser storage is unavailable or full.
+  }
 }
 
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
+  const router = useRouter();
   const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
+  const hasModuleAccess = !!user && canAccessModule(user.role, slug);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config?.data ?? []));
   const [modalOpen, setModalOpen] = useState(false);
@@ -118,8 +136,18 @@ export function ModuleShell({ slug }: { slug: string }) {
     persistRows(slug, rows);
   }, [config, rows, slug]);
 
+  useEffect(() => {
+    if (ready && user && !hasModuleAccess) {
+      router.replace("/app/dashboard");
+    }
+  }, [hasModuleAccess, ready, router, user]);
+
   if (!ready || !user) {
     return <LoadingScreen />;
+  }
+
+  if (!hasModuleAccess) {
+    return <LoadingScreen label="جاري تحويلك إلى لوحة التحكم..." />;
   }
 
   if (!config) {

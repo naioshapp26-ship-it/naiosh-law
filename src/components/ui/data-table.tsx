@@ -83,7 +83,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       );
     }
     if (col.type === "number") {
-      return <span style={{ fontWeight: 600 }}>{String(val)}</span>;
+      return <span style={{ fontWeight: 600 }}>{String(val ?? "—")}</span>;
     }
     return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
   };

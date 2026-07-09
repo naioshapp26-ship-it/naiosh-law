@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { decodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
 
 const integrationCatalog: Record<string, { name: string; latencyMs: number }> = {
   sms: { name: "SMS Gateway", latencyMs: 142 },
@@ -18,6 +20,24 @@ type RouteContext = {
 async function getIntegration(context: RouteContext) {
   const { integration } = await context.params;
   return { slug: integration, config: integrationCatalog[integration] };
+}
+
+async function requireSession(request: Request) {
+  const cookieStore = await cookies();
+  const user = await decodeSession(cookieStore.get(sessionCookieName)?.value);
+
+  if (user) {
+    return user;
+  }
+
+  const response = NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  response.cookies.set(sessionCookieName, "", {
+    ...getSessionCookieOptions(request),
+    expires: new Date(0),
+    maxAge: 0,
+  });
+
+  return response;
 }
 
 async function parseOptionalJson(request: Request) {
@@ -49,7 +69,12 @@ function healthPayload(slug: string, config: { name: string; latencyMs: number }
   };
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
+  const session = await requireSession(request);
+  if (session instanceof NextResponse) {
+    return session;
+  }
+
   const { slug, config } = await getIntegration(context);
 
   if (!config) {
@@ -60,6 +85,11 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
+  const session = await requireSession(request);
+  if (session instanceof NextResponse) {
+    return session;
+  }
+
   const { slug, config } = await getIntegration(context);
 
   if (!config) {

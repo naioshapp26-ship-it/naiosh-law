@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { operationalModules } from "@/data/modules";
+import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
 import { useSession } from "@/lib/session";
 
@@ -26,6 +26,7 @@ const roleLabels: Record<Props["role"], string> = {
 
 function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
+  const visibleModules = getVisibleOperationalModules(role);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -104,7 +105,7 @@ function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {operationalModules.map((item) => {
+        {visibleModules.map((item) => {
           const href = `/app/modules/${item.slug}`;
           const active = pathname === href;
           return (

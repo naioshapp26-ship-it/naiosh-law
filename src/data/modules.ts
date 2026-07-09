@@ -1,3 +1,6 @@
+import { canAccessModule } from "@/lib/module-access";
+import type { SessionRole } from "@/lib/auth-session";
+
 export type Role = "admin" | "client";
 
 export type LegalModule = {
@@ -38,5 +41,9 @@ export const modules: LegalModule[] = [
 ];
 
 export const operationalModules = modules.filter((item) => item.slug !== "dashboard");
+
+export function getVisibleOperationalModules(role: SessionRole) {
+  return operationalModules.filter((item) => canAccessModule(role, item.slug));
+}
 
 export const moduleMap = Object.fromEntries(modules.map((item) => [item.slug, item]));
