@@ -1,3 +1,4 @@
+import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -84,6 +85,7 @@ async function main() {
   await prisma.case.deleteMany();
   await prisma.consultation.deleteMany();
   await prisma.client.deleteMany();
+  await prisma.officialEntity.deleteMany();
   await prisma.professional.deleteMany();
   await prisma.legalSpecialization.deleteMany();
   await prisma.legalSubject.deleteMany();
@@ -249,14 +251,16 @@ async function main() {
     { caseNo: "#2024-0280", clientName: "خالد عبد الرحمن عمر", type: "جنائي", court: "محكمة الجنايات القاهرة", status: "نشطة", nextDate: "18 يوليو 2026", fees: "55000", clientId: clientRecords[4].id },
   ];
 
+  const caseRecords = [];
   for (const c of casesData) {
-    await prisma.case.create({
+    const createdCase = await prisma.case.create({
       data: {
         ...c,
         branchId: branchRecords[3].id,
         specializationId: specRecords[0].id,
       },
     });
+    caseRecords.push(createdCase);
   }
 
   await prisma.courtSession.createMany({
@@ -308,7 +312,7 @@ async function main() {
         status: "pending",
         priority: "عالٍ",
         entity: "case",
-        entityId: "#2024-0548",
+        entityId: caseRecords[1].id,
         requestedAt: "2026-07-01",
       },
       {

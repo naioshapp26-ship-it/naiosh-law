@@ -21,7 +21,13 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     if (open) {
       const defaults: Record<string, unknown> = {};
       fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
+      let cancelled = false;
+      void Promise.resolve().then(() => {
+        if (!cancelled) setForm(defaults);
+      });
+      return () => {
+        cancelled = true;
+      };
     }
   }, [open, initial, fields]);
 
