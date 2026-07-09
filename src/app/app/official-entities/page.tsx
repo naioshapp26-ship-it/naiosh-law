@@ -23,6 +23,13 @@ type Official = {
   entity: { name: string } | null;
 };
 
+async function fetchList<T>(url: string): Promise<T[]> {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 export default function OfficialEntitiesPage() {
   const { user, ready } = useSession(true);
   const [entities, setEntities] = useState<Entity[]>([]);
@@ -30,8 +37,8 @@ export default function OfficialEntitiesPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/official-entities", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/court-officials", { credentials: "include" }).then((r) => r.json()),
+      fetchList<Entity>("/api/official-entities"),
+      fetchList<Official>("/api/court-officials"),
     ]).then(([ents, offs]) => {
       setEntities(ents);
       setOfficials(offs);

@@ -27,6 +27,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -41,7 +42,9 @@ export function ModuleShell({ slug }: { slug: string }) {
       const res = await fetch(apiEndpoint, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setRows(data);
+        setRows(Array.isArray(data) ? data : []);
+      } else {
+        pushToast("error", "تعذر تحميل البيانات من الخادم");
       }
     } catch {
       pushToast("error", "تعذر تحميل البيانات من الخادم");
@@ -51,7 +54,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, [apiEndpoint, pushToast]);
 
   useEffect(() => {
-    loadRows();
+    void Promise.resolve().then(loadRows);
   }, [loadRows]);
 
   const canWrite = user ? canWriteRole(user.role) : false;
@@ -190,9 +193,6 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   };
 
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
-
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
@@ -263,15 +263,18 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal
-        open={modalOpen}
-        title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
-        fields={config.formFields}
-        initial={editTarget ?? undefined}
-        onSave={handleSave}
-        onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
-      />
+      {modalOpen && (
+        <Modal
+          key={editTarget?.id ? String(editTarget.id) : "new"}
+          open={modalOpen}
+          title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
+          fields={config.formFields}
+          initial={editTarget ?? undefined}
+          onSave={handleSave}
+          onClose={() => { setModalOpen(false); setEditTarget(null); }}
+          saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
+        />
+      )}
 
       {/* View Modal */}
       {renderViewModal()}

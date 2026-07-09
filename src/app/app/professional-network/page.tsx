@@ -24,6 +24,13 @@ type NetworkItem = {
   date: string;
 };
 
+async function fetchList<T>(url: string): Promise<T[]> {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 export default function ProfessionalNetworkPage() {
   const { user, ready } = useSession(true);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -32,8 +39,8 @@ export default function ProfessionalNetworkPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/professionals", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/professional-network", { credentials: "include" }).then((r) => r.json()),
+      fetchList<Professional>("/api/professionals"),
+      fetchList<NetworkItem>("/api/professional-network"),
     ]).then(([pros, net]) => {
       setProfessionals(pros);
       setNetwork(net);

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
-import { getSessionFromCookies } from "@/lib/auth";
 
 export async function GET() {
   const { error, session } = await requireAuth();

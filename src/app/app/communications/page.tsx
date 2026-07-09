@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useSession } from "@/lib/session";
 
@@ -75,6 +75,13 @@ const tdStyle: React.CSSProperties = {
   borderBottom: "1px solid #f1f5f9",
 };
 
+async function fetchList<T>(url: string): Promise<T[]> {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 export default function CommunicationsPage() {
   const { user, ready } = useSession(true);
   const [tab, setTab] = useState<Tab>("branches");
@@ -94,33 +101,34 @@ export default function CommunicationsPage() {
   const [sendResult, setSendResult] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
 
-  const loadAll = () => {
+  const loadAll = useCallback(async () => {
     setLoading(true);
-    Promise.all([
-      fetch("/api/office-branches", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/notification-rules", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/notification-logs", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/integrations", { credentials: "include" }).then((r) => r.json()),
-    ])
-      .then(([b, r, l, i]) => {
-        setBranches(b);
-        setRules(r);
-        setNotifLogs(l);
-        setIntegrations(i);
-      })
-      .finally(() => setLoading(false));
-  };
+    try {
+      const [b, r, l, i] = await Promise.all([
+        fetchList<Branch>("/api/office-branches"),
+        fetchList<Rule>("/api/notification-rules"),
+        fetchList<NotifLog>("/api/notification-logs"),
+        fetchList<Integration>("/api/integrations"),
+      ]);
+      setBranches(b);
+      setRules(r);
+      setNotifLogs(l);
+      setIntegrations(i);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    loadAll();
-  }, []);
+    void Promise.resolve().then(loadAll);
+  }, [loadAll]);
 
   const testIntegration = async (id: string) => {
     setTestingId(id);
     const res = await fetch(`/api/integrations/${id}`, { method: "POST", credentials: "include" });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     setSendResult(data.message ?? (data.success ? "الاتصال ناجح" : "فشل الاتصال"));
-    loadAll();
+    await loadAll();
     setTestingId(null);
   };
 
@@ -132,7 +140,7 @@ export default function CommunicationsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sendForm),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setSendResult(data.error ?? "فشل الإرسال");
       return;
@@ -142,7 +150,7 @@ export default function CommunicationsPage() {
         ? `تمت المحاكاة: ${data.status} (${data.provider})`
         : `تم الإرسال: ${data.status} (${data.provider})`
     );
-    loadAll();
+    await loadAll();
   };
 
   if (!ready || !user) return null;

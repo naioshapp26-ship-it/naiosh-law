@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite, jsonError } from "@/lib/api-helpers";
+import { requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
