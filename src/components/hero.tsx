@@ -171,14 +171,12 @@ export function HeroSection() {
                 fontSize: "clamp(2.6rem, 4.5vw, 4.75rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.12,
+                lineHeight: 1.18,
                 marginBottom: "1.75rem",
                 letterSpacing: "-0.02em",
               }}
             >
-              إدارة القضايا
-              <br />
-              والموكلين بذكاء
+              إدارة القضايا والموكلين بذكاء
               <br />
               <span
                 style={{
