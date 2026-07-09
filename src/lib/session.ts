@@ -75,17 +75,17 @@ function updateSessionSnapshot(next: SessionSnapshot) {
 }
 
 export function writeStoredSession(user: SessionUser, notify = true): boolean {
+  let stored = true;
   try {
     window.localStorage.setItem(sessionKey, JSON.stringify(user));
-    sessionSnapshot = { user, ready: true };
-    if (notify) {
-      window.dispatchEvent(new Event(sessionChangeEvent));
-      emitSessionChange();
-    }
-    return true;
   } catch {
-    return false;
+    stored = false;
   }
+  updateSessionSnapshot({ user, ready: true });
+  if (notify) {
+    window.dispatchEvent(new Event(sessionChangeEvent));
+  }
+  return stored;
 }
 
 export function clearStoredSession(notify = true) {
@@ -95,10 +95,9 @@ export function clearStoredSession(notify = true) {
     } catch {
       // Private browsing or storage policy failures should not block logout.
     }
-    sessionSnapshot = { user: null, ready: true };
+    updateSessionSnapshot({ user: null, ready: true });
     if (notify) {
       window.dispatchEvent(new Event(sessionChangeEvent));
-      emitSessionChange();
     }
   }
 }
