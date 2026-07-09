@@ -26,6 +26,7 @@ function seedRows(slug: string, rows: Record<string, unknown>[]) {
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
+  const isAdmin = user?.role === "admin";
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config?.data ?? []));
   const [modalOpen, setModalOpen] = useState(false);
@@ -87,6 +88,24 @@ export function ModuleShell({ slug }: { slug: string }) {
     setDeleteTarget(null);
   };
 
+  const downloadCsvReport = () => {
+    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const csv = [
+      config.columns.map((column) => escapeCsv(column.label)).join(","),
+      ...rows.map((row) => config.columns.map((column) => escapeCsv(row[column.key])).join(",")),
+    ].join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${slug}-report.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    pushToast("success", "✅ تم تجهيز ملف CSV بنجاح");
+    setReportOpen(false);
+  };
+
   const firstCol = config.columns[0]?.key;
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
@@ -120,11 +139,13 @@ export function ModuleShell({ slug }: { slug: string }) {
             ))}
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
-              className="btn-primary"
-              style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
-            >✏️ تعديل</button>
+            {isAdmin && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
+              >✏️ تعديل</button>
+            )}
             <button
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
@@ -171,7 +192,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               >
                 📊 تقارير
               </button>
-              {user.role === "admin" && (
+              {isAdmin && (
                 <button
                   onClick={openAdd}
                   className="btn-primary"
@@ -193,8 +214,8 @@ export function ModuleShell({ slug }: { slug: string }) {
             columns={config.columns}
             data={rows}
             onView={setViewTarget}
-            onEdit={user.role === "admin" ? openEdit : undefined}
-            onDelete={user.role === "admin" ? setDeleteTarget : undefined}
+            onEdit={isAdmin ? openEdit : undefined}
+            onDelete={isAdmin ? setDeleteTarget : undefined}
             searchPlaceholder={`بحث في ${config.entityName}ات...`}
           />
         </div>
@@ -241,13 +262,11 @@ export function ModuleShell({ slug }: { slug: string }) {
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى", action: downloadCsvReport },
               ].map((opt) => (
                 <button
                   key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
+                  onClick={opt.action}
                   style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}

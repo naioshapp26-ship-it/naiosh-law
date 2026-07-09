@@ -1,22 +1,23 @@
-export type DemoUser = {
-  role: "admin" | "client";
-  name: string;
-  email: string;
-  password: string;
+import type { SessionUser } from "@/lib/auth-session";
+
+export type { SessionUser };
+
+export type DemoLoginProfile = SessionUser & {
+  label: string;
 };
 
-export const demoUsers: DemoUser[] = [
+export const demoLoginProfiles: DemoLoginProfile[] = [
   {
     role: "admin",
+    label: "مدير النظام",
     name: "مدير النظام",
     email: "admin@naioshlaw.com",
-    password: "Admin@123",
   },
   {
     role: "client",
+    label: "عميل تجريبي",
     name: "عميل تجريبي",
     email: "client@naioshlaw.com",
-    password: "Client@123",
   },
 ];
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
@@ -30,6 +31,21 @@ const recentTasks = [
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const [completedTasks, setCompletedTasks] = useState<Set<number>>(() => new Set());
+
+  const toggleTask = (index: number) => {
+    setCompletedTasks((current) => {
+      const next = new Set(current);
+
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+
+      return next;
+    });
+  };
 
   if (!ready || !user) {
     return (
@@ -243,6 +259,8 @@ export default function DashboardPage() {
                 >
                   <input
                     type="checkbox"
+                    checked={completedTasks.has(i)}
+                    onChange={() => toggleTask(i)}
                     style={{
                       width: 16,
                       height: 16,
@@ -256,9 +274,10 @@ export default function DashboardPage() {
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: 600,
-                        color: "#0a0a12",
+                        color: completedTasks.has(i) ? "#94a3b8" : "#0a0a12",
                         marginBottom: "0.25rem",
                         lineHeight: 1.4,
+                        textDecoration: completedTasks.has(i) ? "line-through" : "none",
                       }}
                     >
                       {t.task}

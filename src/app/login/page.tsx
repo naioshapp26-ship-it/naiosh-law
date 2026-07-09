@@ -3,7 +3,9 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoLoginProfiles } from "@/data/auth";
+import { saveSession } from "@/lib/session";
+import type { SessionUser } from "@/lib/auth-session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,37 +26,67 @@ const perks = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@naioshlaw.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<SessionUser["role"] | null>(null);
   const [showPass, setShowPass] = useState(false);
+
+  const completeLogin = (user: SessionUser) => {
+    saveSession(user);
+    router.push("/app/dashboard");
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+        return;
+      }
+
+      const payload = (await response.json()) as { user: SessionUser };
+      completeLogin(payload.user);
+    } catch {
+      setError("تعذر الاتصال بالخادم. حاول مرة أخرى.");
+    } finally {
       setLoading(false);
-      return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
-    router.push("/app/dashboard");
   };
 
-  const fillDemo = (role: "admin" | "client") => {
-    const user = demoUsers.find((u) => u.role === role)!;
-    setEmail(user.email);
-    setPassword(user.password);
+  const loginDemo = async (role: SessionUser["role"]) => {
+    setDemoLoading(role);
     setError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demo: true, role }),
+      });
+
+      if (!response.ok) {
+        setError("تعذر بدء الحساب التجريبي.");
+        return;
+      }
+
+      const payload = (await response.json()) as { user: SessionUser };
+      completeLogin(payload.user);
+    } catch {
+      setError("تعذر الاتصال بالخادم. حاول مرة أخرى.");
+    } finally {
+      setDemoLoading(null);
+    }
   };
 
   return (
@@ -280,8 +312,12 @@ export default function LoginPage() {
               دخول سريع تجريبي:
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
+              {demoLoginProfiles.map((profile) => (
               <button
-                onClick={() => fillDemo("admin")}
+                key={profile.role}
+                type="button"
+                onClick={() => loginDemo(profile.role)}
+                disabled={!!demoLoading || loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -292,6 +328,7 @@ export default function LoginPage() {
                   fontFamily: "var(--font-cairo)",
                   transition: "all 0.2s",
                   textAlign: "center",
+                  opacity: demoLoading && demoLoading !== profile.role ? 0.55 : 1,
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
@@ -303,37 +340,13 @@ export default function LoginPage() {
                 }}
               >
                 <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  ⚙️ Admin
+                  {profile.role === "admin" ? "⚙️ Admin" : "👤 Client"}
                 </span>
-                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
-              </button>
-              <button
-                onClick={() => fillDemo("client")}
-                style={{
-                  flex: 1,
-                  padding: "0.65rem",
-                  borderRadius: "10px",
-                  border: "1.5px solid #e2e8f0",
-                  background: "#f8f9fb",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-cairo)",
-                  transition: "all 0.2s",
-                  textAlign: "center",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
-                  (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
-                }}
-              >
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  👤 Client
+                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
+                  {demoLoading === profile.role ? "جاري الدخول..." : profile.label}
                 </span>
-                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>عميل تجريبي</span>
               </button>
+              ))}
             </div>
           </motion.div>
 
@@ -437,7 +450,7 @@ export default function LoginPage() {
             <motion.button
               variants={fadeUp}
               type="submit"
-              disabled={loading}
+              disabled={loading || !!demoLoading}
               className="btn-primary"
               style={{
                 width: "100%",
@@ -492,7 +505,7 @@ export default function LoginPage() {
               lineHeight: 1.6,
             }}
           >
-            هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري
+            هذا نظام تجريبي للعرض — استخدم الدخول السريع أو بيانات الحساب التجريبي اليدوية عند الحاجة
           </motion.p>
         </motion.div>
       </div>

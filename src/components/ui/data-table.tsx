@@ -55,6 +55,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
   const hasActions = !!(onEdit || onDelete || onView);
   const firstColumnKey = columns[0]?.key;
+  const primaryColumn = columns[0];
+  const badgeColumn = columns.find((column) => column.type === "badge");
 
   const getRowKey = (row: Record<string, unknown>, index: number) => {
     const fallback = firstColumnKey ? row[firstColumnKey] : undefined;
@@ -86,7 +88,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   return (
     <div>
       {/* Search + count */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+      <div className="data-table-toolbar" style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1 }}>
           <span
             style={{
@@ -133,7 +135,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}
       >
-        <div style={{ overflowX: "auto" }}>
+        <div className="data-table-desktop-scroll" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
@@ -287,9 +289,77 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       </div>
 
+      <div className="data-table-mobile-list" style={{ display: "none", flexDirection: "column", gap: "0.85rem" }}>
+        {paged.length === 0 ? (
+          <div className="card-white" style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+            <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
+          </div>
+        ) : (
+          paged.map((row, i) => (
+            <div key={getRowKey(row, i)} className="card-white" style={{ padding: "1rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "0.85rem", alignItems: "flex-start", marginBottom: "0.85rem" }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 700, marginBottom: "0.25rem" }}>
+                    {columns[0]?.label ?? "السجل"}
+                  </p>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {primaryColumn ? renderCell(primaryColumn, row) : "—"}
+                  </div>
+                </div>
+                {badgeColumn ? (
+                  <div style={{ flexShrink: 0 }}>
+                    {renderCell(badgeColumn, row)}
+                  </div>
+                ) : null}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
+                {columns.slice(1, 5).map((col) => (
+                  <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
+                    <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700 }}>{col.label}</span>
+                    <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0 }}>{renderCell(col, row)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {hasActions && (
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f1f5f9" }}>
+                  {onView && (
+                    <button
+                      onClick={() => onView(row)}
+                      style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font-cairo)", flex: 1 }}
+                    >
+                      👁 عرض
+                    </button>
+                  )}
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(row)}
+                      style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font-cairo)", flex: 1 }}
+                    >
+                      ✏️ تعديل
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(row)}
+                      style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font-cairo)", flex: 1 }}
+                    >
+                      🗑 حذف
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
       {/* Pagination */}
       {totalPages > 1 && (
         <div
+          className="data-table-pagination"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -357,6 +427,29 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           </div>
         </div>
       )}
+      <style>{`
+        @media (max-width: 700px) {
+          .data-table-toolbar {
+            flex-direction: column;
+            align-items: stretch !important;
+          }
+          .data-table-desktop-scroll {
+            display: none;
+          }
+          .data-table-mobile-list {
+            display: flex !important;
+          }
+          .data-table-pagination {
+            align-items: stretch !important;
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+          .data-table-pagination > div {
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
     </div>
   );
 }

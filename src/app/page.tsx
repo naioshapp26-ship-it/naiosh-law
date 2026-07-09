@@ -3,6 +3,7 @@ import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero";
 import { ModuleCard } from "@/components/module-card";
 import { operationalModules } from "@/data/modules";
+import { marketingStats } from "@/data/marketing";
 
 const features = [
   {
@@ -37,13 +38,6 @@ const features = [
   },
 ];
 
-const statItems = [
-  { value: "16", label: "وحدة تشغيلية" },
-  { value: "128+", label: "قضية نشطة" },
-  { value: "500+", label: "موكل مسجل" },
-  { value: "99.9%", label: "وقت التشغيل" },
-];
-
 export default function HomePage() {
   return (
     <>
@@ -68,7 +62,7 @@ export default function HomePage() {
             }}
             className="stats-grid"
           >
-            {statItems.map((s) => (
+            {marketingStats.map((s) => (
               <div key={s.label}>
                 <div
                   style={{ fontSize: "2.4rem", fontWeight: 900, color: "#c3152a", lineHeight: 1 }}
@@ -254,15 +248,15 @@ export default function HomePage() {
               ابدأ تجربتك المجانية →
             </Link>
             <Link
-              href="/app/dashboard"
+              href="/login"
               className="btn-ghost-dark"
               style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}
             >
-              الدخول كزائر
+              دخول تجريبي سريع
             </Link>
           </div>
 
-          {/* Demo credentials */}
+          {/* Demo roles */}
           <div
             style={{
               display: "flex",
@@ -273,11 +267,11 @@ export default function HomePage() {
             }}
           >
             {[
-              { label: "مدير النظام", email: "admin@naioshlaw.com" },
-              { label: "عميل تجريبي", email: "client@naioshlaw.com" },
+              { label: "مدير النظام", hint: "صلاحيات كاملة لإدارة البيانات" },
+              { label: "عميل تجريبي", hint: "عرض الحالة والمستندات" },
             ].map((u) => (
               <div
-                key={u.email}
+                key={u.label}
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.08)",
@@ -290,7 +284,7 @@ export default function HomePage() {
                   {u.label}
                 </p>
                 <p style={{ color: "#475569", fontSize: "0.75rem", marginTop: "0.15rem" }}>
-                  {u.email}
+                  {u.hint}
                 </p>
               </div>
             ))}

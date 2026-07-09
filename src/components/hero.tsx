@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-
-const stats = [
-  { value: "16", label: "وحدة تشغيلية" },
-  { value: "128+", label: "قضية نشطة" },
-  { value: "500+", label: "موكل مسجل" },
-  { value: "99.9%", label: "وقت التشغيل" },
-];
+import { marketingStats } from "@/data/marketing";
 
 const container = {
   hidden: {},
@@ -222,8 +216,8 @@ export function HeroSection() {
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 ابدأ الآن مجانًا →
               </Link>
-              <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
-                عرض تجريبي مباشر
+              <Link href="/login" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
+                دخول تجريبي سريع
               </Link>
             </motion.div>
 
@@ -240,7 +234,7 @@ export function HeroSection() {
                 justifyContent: "center",
               }}
             >
-              {stats.map((s) => (
+              {marketingStats.map((s) => (
                 <div key={s.label}>
                   <div
                     style={{

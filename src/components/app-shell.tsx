@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { operationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
-import { sessionKey } from "@/data/auth";
+import { useSession } from "@/lib/session";
 
 type Props = {
   role: "admin" | "client";
@@ -144,15 +144,8 @@ function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
 
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
-  const router   = useRouter();
+  const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const logout = () => {
-    window.localStorage.removeItem(sessionKey);
-    router.replace("/login");
-  };
-
-  const isActive = (href: string) => pathname === href;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
@@ -269,69 +262,7 @@ export function AppShell({ role, name, children }: Props) {
           borderInlineEnd: "1px solid #e2e8f0",
           overflowY: "auto", flexShrink: 0,
         }}>
-          <div style={{ padding: "1rem 0" }}>
-            {/* Dashboard */}
-            <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: "flex", alignItems: "center", gap: "0.6rem",
-                  padding: "0.6rem 0.75rem", borderRadius: "10px",
-                  fontSize: "0.85rem", fontWeight: isActive("/app/dashboard") ? 700 : 500,
-                  color: isActive("/app/dashboard") ? "#c3152a" : "#64748b",
-                  background: isActive("/app/dashboard") ? "rgba(195,21,42,0.08)" : "transparent",
-                  textDecoration: "none",
-                }}
-              >
-                <span style={{ fontSize: "1rem" }}>{moduleIconMap.dashboard}</span>
-                <span>لوحة التحكم</span>
-              </Link>
-            </div>
-
-            <p style={{
-              fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8",
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              padding: "0.75rem 1.5rem 0.35rem",
-            }}>الوحدات التشغيلية</p>
-
-            <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {operationalModules.map((item) => {
-                const href   = `/app/modules/${item.slug}`;
-                const active = pathname === href;
-                return (
-                  <Link
-                    key={item.slug}
-                    href={href}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "0.6rem",
-                      padding: "0.6rem 0.75rem", borderRadius: "10px",
-                      fontSize: "0.84rem", fontWeight: active ? 700 : 500,
-                      color: active ? "#c3152a" : "#64748b",
-                      background: active ? "rgba(195,21,42,0.08)" : "transparent",
-                      textDecoration: "none", transition: "all 0.15s",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{moduleIconMap[item.slug] ?? "📌"}</span>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div style={{ padding: "1rem 0.75rem 0" }}>
-              <div style={{
-                background: "rgba(195,21,42,0.05)", border: "1px solid rgba(195,21,42,0.1)",
-                borderRadius: "12px", padding: "0.9rem",
-              }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
-                  {role === "admin" ? "Admin" : "Client"}
-                </p>
-                <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
-                  {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <SidebarContent pathname={pathname} role={role} onClose={() => {}} />
         </aside>
 
         {/* ── Mobile Drawer Overlay ── */}

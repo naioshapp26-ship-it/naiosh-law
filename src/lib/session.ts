@@ -3,12 +3,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
-
-export type SessionUser = {
-  role: "admin" | "client";
-  name: string;
-  email: string;
-};
+import type { SessionUser } from "@/lib/auth-session";
 
 const sessionChangeEvent = "naiosh-law-session-change";
 
@@ -27,6 +22,10 @@ function getServerSessionSnapshot(): SessionSnapshot {
 }
 
 function subscribeToSessionChange(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
   window.addEventListener("storage", onStoreChange);
   window.addEventListener(sessionChangeEvent, onStoreChange);
 
@@ -37,7 +36,21 @@ function subscribeToSessionChange(onStoreChange: () => void) {
 }
 
 function notifySessionChange() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
   window.dispatchEvent(new Event(sessionChangeEvent));
+}
+
+export function saveSession(user: SessionUser) {
+  window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  notifySessionChange();
+}
+
+export function clearStoredSession() {
+  window.localStorage.removeItem(sessionKey);
+  notifySessionChange();
 }
 
 function parseStoredSession(raw: string | null): SessionUser | null {
@@ -73,8 +86,7 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     if (ready && rawSession && !user) {
-      window.localStorage.removeItem(sessionKey);
-      notifySessionChange();
+      clearStoredSession();
       return;
     }
 
@@ -83,13 +95,45 @@ export function useSession(redirectIfMissing = false) {
     }
   }, [ready, rawSession, user, redirectIfMissing, router]);
 
+  useEffect(() => {
+    if (!ready || !user || !redirectIfMissing) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetch("/api/auth/session", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          clearStoredSession();
+          router.replace("/login");
+          return;
+        }
+
+        const payload = (await response.json()) as { user?: SessionUser };
+        if (payload.user) {
+          saveSession(payload.user);
+        }
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+      });
+
+    return () => controller.abort();
+  }, [ready, user, redirectIfMissing, router]);
+
   const api = useMemo(
     () => ({
       user,
       ready,
       logout: () => {
-        window.localStorage.removeItem(sessionKey);
-        notifySessionChange();
+        clearStoredSession();
+        void fetch("/api/auth/logout", { method: "POST" });
         router.replace("/login");
       },
     }),
