@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
 import type { SessionUser } from "@/lib/auth-session";
@@ -85,17 +85,16 @@ function loginPathWithNext() {
 
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [checkingServerSession, setCheckingServerSession] = useState(false);
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
     getServerSessionSnapshot
   );
-  const ready = rawSession !== undefined && !checkingServerSession;
+  const ready = rawSession !== undefined;
   const user = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
 
   useEffect(() => {
-    if (ready && rawSession && !user) {
+    if (rawSession !== undefined && rawSession && !user) {
       clearStoredSession();
       return;
     }
@@ -108,7 +107,6 @@ export function useSession(redirectIfMissing = false) {
     }
 
     const controller = new AbortController();
-    setCheckingServerSession(!user);
 
     fetch("/api/auth/session", {
       cache: "no-store",
@@ -135,17 +133,9 @@ export function useSession(redirectIfMissing = false) {
         }
         clearStoredSession();
         router.replace(loginPathWithNext());
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setCheckingServerSession(false);
-        }
       });
 
-    return () => {
-      controller.abort();
-      setCheckingServerSession(false);
-    };
+    return () => controller.abort();
   }, [rawSession, user, redirectIfMissing, router]);
 
   const api = useMemo(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -11,7 +11,7 @@ import { moduleIconMap } from "@/data/module-icons";
 import { moduleMap } from "@/data/modules";
 import { useSession } from "@/lib/session";
 
-type ToastMsg = { id: number; type: "success" | "error"; text: string };
+type ToastMsg = { id: string; type: "success" | "error"; text: string };
 
 const rowIdKey = "_rowId";
 
@@ -49,7 +49,6 @@ export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
-  const toastCounter = useRef(0);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config?.data ?? []));
   const [modalOpen, setModalOpen] = useState(false);
@@ -60,7 +59,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
-    const id = ++toastCounter.current;
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setToasts((prev) => [...prev, { id, type, text }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
