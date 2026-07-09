@@ -233,14 +233,14 @@ export function AppShell({ role, name, children }: Props) {
           </div>
 
           {/* Right: Notifications + User + Logout */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* Notification bell */}
-            <button style={{
+            <Link href="/app/modules/notifications-center" className="notification-link" style={{
               width: 36, height: 36, borderRadius: "10px",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               cursor: "pointer", display: "flex", alignItems: "center",
               justifyContent: "center", fontSize: "0.9rem", position: "relative",
-              flexShrink: 0,
+              flexShrink: 0, textDecoration: "none",
             }} aria-label="التنبيهات">
               🔔
               <span style={{
@@ -248,13 +248,13 @@ export function AppShell({ role, name, children }: Props) {
                 width: 7, height: 7, borderRadius: "50%",
                 background: "#c3152a", border: "1.5px solid #fff",
               }} />
-            </button>
+            </Link>
 
             {/* User chip */}
-            <div style={{
+            <div className="user-chip" style={{
               display: "flex", alignItems: "center", gap: "0.5rem",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
-              borderRadius: "10px", padding: "0.4rem 0.75rem",
+              borderRadius: "10px", padding: "0.4rem 0.75rem", minWidth: 0,
             }}>
               <div style={{
                 width: 26, height: 26, borderRadius: "7px",
@@ -471,6 +471,11 @@ export function AppShell({ role, name, children }: Props) {
         @media (max-width: 420px) {
           .logout-text       { display: none; }
           .logout-icon       { display: inline; }
+          .app-header-actions { gap: 0.35rem !important; }
+          .user-chip          { padding: 0.35rem !important; }
+        }
+        @media (max-width: 340px) {
+          .notification-link  { display: none !important; }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

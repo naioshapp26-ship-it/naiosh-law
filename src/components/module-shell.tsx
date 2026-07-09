@@ -104,6 +104,7 @@ export function ModuleShell({
 
   const [rows, setRows] = useState<ModuleRow[]>(() => (config ? normalizeRows(slug, config.data) : []));
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalInstance, setModalInstance] = useState(0);
   const [editTarget, setEditTarget] = useState<ModuleRow | null>(null);
   const [viewTarget, setViewTarget] = useState<ModuleRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ModuleRow | null>(null);
@@ -171,11 +172,31 @@ export function ModuleShell({
     );
   }
 
+  const canManageRows = sessionVerified && user.role === "admin";
+
   /* ── Handlers ── */
-  const openAdd = () => { setEditTarget(null); setModalOpen(true); };
-  const openEdit = (row: Record<string, unknown>) => { setEditTarget(row as ModuleRow); setModalOpen(true); };
+  const openAdd = () => {
+    if (!canManageRows) return;
+    setEditTarget(null);
+    setModalInstance((current) => current + 1);
+    setModalOpen(true);
+  };
+
+  const openEdit = (row: Record<string, unknown>) => {
+    if (!canManageRows) return;
+    setEditTarget(row as ModuleRow);
+    setModalInstance((current) => current + 1);
+    setModalOpen(true);
+  };
 
   const handleSave = (data: Record<string, unknown>) => {
+    if (!canManageRows) {
+      setModalOpen(false);
+      setEditTarget(null);
+      pushToast("error", "لا تملك صلاحية تعديل السجلات.");
+      return;
+    }
+
     if (editTarget) {
       setRows((prev) => prev.map((row) => (row._id === editTarget._id ? { ...row, ...data } : row)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
@@ -189,6 +210,12 @@ export function ModuleShell({
   };
 
   const handleDeleteConfirm = () => {
+    if (!canManageRows) {
+      setDeleteTarget(null);
+      pushToast("error", "لا تملك صلاحية حذف السجلات.");
+      return;
+    }
+
     setRows((prev) => prev.filter((row) => row._id !== deleteTarget?._id));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
@@ -199,9 +226,8 @@ export function ModuleShell({
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
   const modalKey = editTarget
-    ? `edit-${slug}-${editTarget._id}`
-    : `add-${slug}`;
-  const canManageRows = sessionVerified && user.role === "admin";
+    ? `edit-${slug}-${editTarget._id}-${modalInstance}`
+    : `add-${slug}-${modalInstance}`;
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -236,11 +262,13 @@ export function ModuleShell({
             ))}
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
-              className="btn-primary"
-              style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
-            >✏️ تعديل</button>
+            {canManageRows && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
+              >✏️ تعديل</button>
+            )}
             <button
               onClick={closeViewDialog}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}

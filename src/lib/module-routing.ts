@@ -9,6 +9,7 @@ export function getModuleHref(slug: string) {
 }
 
 export function canAccessModule(role: Role, slug: string) {
+  if (!operationalModules.some((item) => item.slug === slug)) return false;
   return role === "admin" || !adminOnlySlugs.has(slug);
 }
 

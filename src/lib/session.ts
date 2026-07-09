@@ -16,7 +16,6 @@ type SessionSnapshot = {
 };
 
 let sessionSnapshot = initialSnapshot;
-let hydratedFromStorage = false;
 let verificationRequest: Promise<SessionFetchResult> | null = null;
 
 export type { SessionUser };
@@ -91,13 +90,11 @@ function subscribeToSession(callback: () => void) {
   listeners.add(callback);
   const handleExternalChange = () => {
     const storedUser = readStoredSession();
-    const isSameVerifiedUser =
-      !!storedUser &&
-      !!sessionSnapshot.user &&
-      sessionSnapshot.verified &&
-      storedUser.email === sessionSnapshot.user.email &&
-      storedUser.role === sessionSnapshot.user.role;
-    updateSessionSnapshot({ user: storedUser, ready: true, verified: isSameVerifiedUser });
+    updateSessionSnapshot({
+      user: storedUser,
+      ready: !storedUser,
+      verified: false,
+    });
   };
   window.addEventListener("storage", handleExternalChange);
   window.addEventListener(sessionChangeEvent, handleExternalChange);
@@ -113,10 +110,6 @@ function getServerSessionSnapshot() {
 }
 
 function getClientSessionSnapshot() {
-  if (!hydratedFromStorage && typeof window !== "undefined") {
-    hydratedFromStorage = true;
-    sessionSnapshot = { user: readStoredSession(), ready: false, verified: false };
-  }
   return sessionSnapshot;
 }
 
@@ -162,11 +155,17 @@ export function useSession(redirectIfMissing = false) {
     let cancelled = false;
     const optimisticUser = readStoredSession();
 
-    if (!sessionSnapshot.ready) {
+    if (!ready && optimisticUser && !user) {
       updateSessionSnapshot({ user: optimisticUser, ready: false, verified: false });
     }
 
-    if (sessionSnapshot.ready && sessionSnapshot.verified) {
+    if (ready && verified) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (ready && !user && !optimisticUser) {
       return () => {
         cancelled = true;
       };
@@ -187,19 +186,14 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
-        // Keep a cookie-trusted or locally mirrored user through transient
-        // network failures; middleware still guards protected server routes.
-        updateSessionSnapshot({
-          user: sessionSnapshot.user ?? optimisticUser,
-          ready: true,
-          verified: false,
-        });
+        clearStoredSession(false);
+        updateSessionSnapshot({ user: null, ready: true, verified: false });
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [ready, user, verified]);
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {

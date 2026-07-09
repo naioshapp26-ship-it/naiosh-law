@@ -25,11 +25,15 @@ function getSessionSecret() {
 
   if (configured) return configured;
 
-  if (process.env.NAIOSH_REQUIRE_SESSION_SECRET === "true") {
-    throw new SessionConfigError("NAIOSH_SESSION_SECRET is required in production.");
+  const allowDemoSecret =
+    process.env.NODE_ENV !== "production" ||
+    process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET === "true";
+
+  if (allowDemoSecret) {
+    return demoSecret;
   }
 
-  return demoSecret;
+  throw new SessionConfigError("NAIOSH_SESSION_SECRET is required in production.");
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {
