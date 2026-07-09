@@ -1,11 +1,10 @@
-"use client";
-
-import { useMemo } from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
 import { getVisibleOperationalModules } from "@/lib/module-routing";
-import { useSession } from "@/lib/session";
+import { readSessionToken, sessionCookieName } from "@/lib/session-shared";
 
 const kpis = [
   { label: "القضايا النشطة", value: "128", delta: "+7 هذا الأسبوع", icon: "⚖️", color: "#c3152a" },
@@ -29,51 +28,21 @@ const recentTasks = [
   { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
-export default function DashboardPage() {
-  const { user, ready } = useSession(true);
-  const todayLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat("ar-EG", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(new Date()),
-    []
-  );
-  const visibleModules = useMemo(
-    () => (user ? getVisibleOperationalModules(user.role) : []),
-    [user]
-  );
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const user = await readSessionToken(cookieStore.get(sessionCookieName)?.value);
 
-  if (!ready || !user) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f4f6f9",
-        }}
-      >
-        <div style={{ textAlign: "center", color: "#64748b" }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              border: "3px solid #e2e8f0",
-              borderTopColor: "#c3152a",
-              animation: "spin-slow 0.9s linear infinite",
-              margin: "0 auto 1rem",
-            }}
-          />
-          <p>جاري التحميل...</p>
-        </div>
-      </div>
-    );
+  if (!user) {
+    redirect("/login?next=/app/dashboard");
   }
+
+  const todayLabel = new Intl.DateTimeFormat("ar-EG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+  const visibleModules = getVisibleOperationalModules(user.role);
 
   return (
     <AppShell role={user.role} name={user.name}>

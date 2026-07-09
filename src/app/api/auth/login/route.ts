@@ -5,6 +5,7 @@ import {
   createSessionToken,
   isDemoLoginEnabled,
   isSecureRequest,
+  isSessionConfigError,
   sessionCookieName,
   sessionMaxAgeSeconds,
   type Role,
@@ -56,7 +57,19 @@ export async function POST(request: Request) {
   }
 
   const sessionUser = toSessionUser(user);
-  const token = await createSessionToken(sessionUser);
+  let token: string;
+  try {
+    token = await createSessionToken(sessionUser);
+  } catch (error) {
+    if (isSessionConfigError(error)) {
+      return NextResponse.json(
+        { ok: false, error: "Session signing is not configured for this environment" },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
+
   const response = NextResponse.json({ ok: true, user: sessionUser });
 
   response.cookies.set({

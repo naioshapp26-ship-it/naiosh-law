@@ -98,8 +98,10 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
           setUser(null);
         }
       } catch {
-        // Keep the optimistic UI cache on transient network/server failures.
-        // Explicit 401/invalid responses above remain authoritative and clear it.
+        if (active && redirectIfMissing && !initialUser) {
+          removeStorageItem(sessionStorageKey);
+          setUser(null);
+        }
       } finally {
         if (active) {
           setReady(true);
@@ -117,7 +119,7 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
       window.removeEventListener("storage", syncSession);
       window.removeEventListener(sessionChangedEvent, syncSession);
     };
-  }, [initialUser]);
+  }, [initialUser, redirectIfMissing]);
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {

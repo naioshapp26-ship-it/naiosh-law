@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -14,6 +14,7 @@ type Props = {
 };
 
 const PAGE_SIZE = 10;
+const CARD_LAYOUT_WIDTH = 820;
 const textCollator = new Intl.Collator("ar", {
   numeric: true,
   sensitivity: "base",
@@ -43,18 +44,37 @@ function parseNumericValue(value: unknown) {
 }
 
 function useCardLayout() {
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [isCardLayout, setIsCardLayout] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 760px)");
-    const update = () => setIsCardLayout(media.matches);
-
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
+  const containerRef = useCallback((node: HTMLDivElement | null) => {
+    setContainer(node);
   }, []);
 
-  return isCardLayout;
+  useEffect(() => {
+    if (!container) {
+      return;
+    }
+
+    const update = (width = container.getBoundingClientRect().width) => {
+      setIsCardLayout(width < CARD_LAYOUT_WIDTH);
+    };
+
+    update();
+    if (typeof ResizeObserver === "undefined") {
+      const handleResize = () => update();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      update(entries[0]?.contentRect.width);
+    });
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [container]);
+
+  return { isCardLayout, containerRef };
 }
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
@@ -63,7 +83,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
-  const isCardLayout = useCardLayout();
+  const { isCardLayout, containerRef } = useCardLayout();
   const normalizedSearch = search.trim().toLowerCase();
 
   const handleSort = (key: string) => {
@@ -229,9 +249,18 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   };
 
   return (
-    <div>
+    <div ref={containerRef}>
       {/* Search + count */}
-      <div className="data-table-toolbar" style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+      <div
+        className="data-table-toolbar"
+        style={{
+          display: "flex",
+          flexDirection: isCardLayout ? "column" : "row",
+          gap: "0.75rem",
+          marginBottom: "1rem",
+          alignItems: isCardLayout ? "stretch" : "center",
+        }}
+      >
         <div style={{ position: "relative", flex: 1 }}>
           <label className="sr-only" htmlFor={searchId}>
             {searchPlaceholder}
@@ -388,7 +417,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           </div>
         </div>
       ) : (
-      <div className="data-table-cards">
+      <div className="data-table-cards" style={{ display: "grid", gap: "0.85rem" }}>
         {paged.length === 0 ? (
           <div className="card-white" style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
@@ -442,7 +471,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: isCardLayout ? "stretch" : "center",
+            flexDirection: isCardLayout ? "column" : "row",
+            gap: isCardLayout ? "0.75rem" : undefined,
             marginTop: "1rem",
             fontSize: "0.8rem",
             color: "#64748b",
@@ -517,11 +548,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .data-table-scroll {
           -webkit-overflow-scrolling: touch;
         }
-        @media (max-width: 760px) {
-          .data-table-toolbar {
-            align-items: stretch !important;
-            flex-direction: column;
-          }
+        @media (max-width: 520px) {
           .data-table-pagination {
             align-items: stretch !important;
             flex-direction: column;
@@ -530,10 +557,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .pagination-buttons {
             justify-content: center;
             flex-wrap: wrap;
-          }
-          .data-table-cards {
-            display: grid;
-            gap: 0.85rem;
           }
         }
       `}</style>

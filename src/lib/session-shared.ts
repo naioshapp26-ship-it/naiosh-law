@@ -18,6 +18,13 @@ const fallbackSessionSecret = "naiosh-law-demo-session-secret";
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
+export class SessionConfigError extends Error {
+  constructor() {
+    super("NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be set in production");
+    this.name = "SessionConfigError";
+  }
+}
+
 function isProductionRuntime() {
   return process.env.NODE_ENV === "production";
 }
@@ -33,12 +40,14 @@ function getSessionSecret() {
   }
 
   if (isProductionRuntime() && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
-    throw new Error(
-      "NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be set in production"
-    );
+    throw new SessionConfigError();
   }
 
   return fallbackSessionSecret;
+}
+
+export function isSessionConfigError(error: unknown): error is SessionConfigError {
+  return error instanceof SessionConfigError;
 }
 
 export function isDemoLoginEnabled() {
@@ -142,7 +151,16 @@ export async function readSessionToken(token: string | undefined | null) {
     return null;
   }
 
-  const expectedSignature = await sign(body);
+  let expectedSignature: string;
+  try {
+    expectedSignature = await sign(body);
+  } catch (error) {
+    if (isSessionConfigError(error)) {
+      return null;
+    }
+    throw error;
+  }
+
   if (!safeEqual(signature, expectedSignature)) {
     return null;
   }
