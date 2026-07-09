@@ -537,6 +537,18 @@ export function HeroSection() {
             display: none;
           }
         }
+        @media (max-width: 520px) {
+          .hero-stats {
+            gap: 1.25rem !important;
+          }
+          .hero-cta {
+            align-items: stretch !important;
+            flex-direction: column;
+          }
+          .hero-cta > a {
+            text-align: center;
+          }
+        }
       `}</style>
     </section>
   );

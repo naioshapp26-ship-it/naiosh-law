@@ -1,5 +1,5 @@
 import { modules } from "@/data/modules";
-import type { Role } from "@/lib/session-shared";
+import type { Role } from "@/lib/session-client";
 
 export const moduleIcons: Record<string, string> = {
   dashboard: "⊞",

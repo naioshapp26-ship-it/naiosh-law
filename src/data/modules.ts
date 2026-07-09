@@ -1,4 +1,4 @@
-export type Role = "admin" | "client";
+import type { Role } from "@/lib/session-client";
 
 export type LegalModule = {
   slug: string;

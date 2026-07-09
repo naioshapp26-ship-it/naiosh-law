@@ -71,7 +71,7 @@ export default function HomePage() {
             {statItems.map((s) => (
               <div key={s.label}>
                 <div
-                  style={{ fontSize: "2.4rem", fontWeight: 900, color: "#c3152a", lineHeight: 1 }}
+                  style={{ fontSize: "clamp(1.8rem, 6vw, 2.4rem)", fontWeight: 900, color: "#c3152a", lineHeight: 1 }}
                 >
                   {s.value}
                 </div>
@@ -87,7 +87,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Features ── */}
-      <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
+      <section id="features" className="landing-section" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -104,7 +104,7 @@ export default function HomePage() {
             </p>
             <h2
               style={{
-                fontSize: "2.5rem",
+                fontSize: "clamp(1.8rem, 5vw, 2.5rem)",
                 fontWeight: 900,
                 color: "#0a0a12",
                 letterSpacing: "-0.02em",
@@ -165,7 +165,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Modules ── */}
-      <section id="modules" style={{ background: "#ffffff", padding: "6rem 0" }}>
+      <section id="modules" className="landing-section" style={{ background: "#ffffff", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -182,7 +182,7 @@ export default function HomePage() {
             </p>
             <h2
               style={{
-                fontSize: "2.5rem",
+                fontSize: "clamp(1.8rem, 5vw, 2.5rem)",
                 fontWeight: 900,
                 color: "#0a0a12",
                 letterSpacing: "-0.02em",
@@ -209,6 +209,7 @@ export default function HomePage() {
 
       {/* ── CTA ── */}
       <section
+        className="landing-section"
         style={{
           background: "#0a0a12",
           padding: "6rem 0",
@@ -233,7 +234,7 @@ export default function HomePage() {
         <div className="container-max" style={{ position: "relative" }}>
           <h2
             style={{
-              fontSize: "2.75rem",
+              fontSize: "clamp(1.9rem, 6vw, 2.75rem)",
               fontWeight: 900,
               color: "#ffffff",
               letterSpacing: "-0.02em",
@@ -337,6 +338,7 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .modules-grid { grid-template-columns: 1fr !important; }
+          .landing-section { padding-block: 4rem !important; }
         }
         @media (min-width: 769px) and (max-width: 1100px) {
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }

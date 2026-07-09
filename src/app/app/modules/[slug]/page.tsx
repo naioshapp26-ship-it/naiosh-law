@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { ModulePageClient } from "@/components/module-page-client";
+import { ModuleShell } from "@/components/module-shell";
 import { moduleConfigMap } from "@/data/module-configs";
 import { canAccessModule } from "@/lib/module-routing";
-import { readSessionToken, sessionCookieName } from "@/lib/session-shared";
+import { readSessionToken, sessionCookieName } from "@/lib/session-server";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -31,5 +31,5 @@ export default async function ModulePage({ params }: Props) {
     redirect("/app/dashboard");
   }
 
-  return <ModulePageClient slug={slug} />;
+  return <ModuleShell key={slug} slug={slug} />;
 }

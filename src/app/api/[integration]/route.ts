@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { readJsonObject } from "@/lib/api-request";
 import {
-  getCookieValue,
   readSessionToken,
   sessionCookieName,
-} from "@/lib/session-shared";
+} from "@/lib/session-server";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +28,8 @@ function getIntegration(slug: string) {
   return null;
 }
 
-async function requireSession(request: Request) {
-  const token = getCookieValue(request.headers.get("cookie"), sessionCookieName);
-  const user = await readSessionToken(token);
+async function requireSession(request: NextRequest) {
+  const user = await readSessionToken(request.cookies.get(sessionCookieName)?.value);
 
   if (!user) {
     return NextResponse.json(
@@ -42,7 +41,7 @@ async function requireSession(request: Request) {
   return null;
 }
 
-export async function GET(request: Request, { params }: RouteContext) {
+export async function GET(request: NextRequest, { params }: RouteContext) {
   const authError = await requireSession(request);
   if (authError) {
     return authError;
@@ -70,7 +69,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   });
 }
 
-export async function POST(request: Request, { params }: RouteContext) {
+export async function POST(request: NextRequest, { params }: RouteContext) {
   const authError = await requireSession(request);
   if (authError) {
     return authError;
@@ -86,21 +85,9 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "Invalid JSON payload" },
-      { status: 400 }
-    );
-  }
-
-  if (payload !== null && (typeof payload !== "object" || Array.isArray(payload))) {
-    return NextResponse.json(
-      { ok: false, error: "Payload must be a JSON object" },
-      { status: 400 }
-    );
+  const parsedBody = await readJsonObject(request);
+  if (parsedBody.error) {
+    return parsedBody.error;
   }
 
   return NextResponse.json(
@@ -109,7 +96,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       endpoint: `/api/${integration}`,
       acceptedAt: new Date().toISOString(),
       integration: config.name,
-      payload,
+      payload: parsedBody.data,
     },
     { status: 202 }
   );

@@ -6,9 +6,9 @@ import {
   isSessionUser,
   sessionStorageKey,
   type SessionUser,
-} from "@/lib/session-shared";
+} from "@/lib/session-client";
 
-export type { SessionUser } from "@/lib/session-shared";
+export type { SessionUser } from "@/lib/session-client";
 
 const sessionChangedEvent = "naiosh-law:session-changed";
 
@@ -88,7 +88,8 @@ export function useSession(redirectIfMissing = false) {
         }
       } catch {
         if (active) {
-          setUser(readStoredUser());
+          window.localStorage.removeItem(sessionStorageKey);
+          setUser(null);
         }
       } finally {
         if (active) {

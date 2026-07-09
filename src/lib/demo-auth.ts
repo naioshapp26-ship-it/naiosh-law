@@ -1,4 +1,4 @@
-import type { SessionUser } from "@/lib/session-shared";
+import type { SessionUser } from "@/lib/session-client";
 
 export type DemoUser = SessionUser & {
   password: string;

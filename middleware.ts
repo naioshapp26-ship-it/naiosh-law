@@ -4,7 +4,7 @@ import {
   getSafeAppPath,
   readSessionToken,
   sessionCookieName,
-} from "@/lib/session-shared";
+} from "@/lib/session-server";
 
 export async function middleware(request: NextRequest) {
   const session = await readSessionToken(request.cookies.get(sessionCookieName)?.value);

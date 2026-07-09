@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
@@ -17,30 +17,32 @@ const kpis = [
 ];
 
 const upcomingSessions = [
-  { case: "قضية استئناف تجارية", court: "محكمة الاستئناف القاهرة", date: "الأربعاء 15 يوليو", room: "الغرفة 7", status: "قريبة" },
-  { case: "قضية نزاع عقاري", court: "المحكمة الابتدائية الجيزة", date: "الخميس 16 يوليو", room: "القاعة 3", status: "مجدولة" },
-  { case: "دعوى تعويض تجاري", court: "محكمة التحكيم", date: "الأحد 19 يوليو", room: "قاعة A", status: "مجدولة" },
+  { id: "appeal-commercial", case: "قضية استئناف تجارية", court: "محكمة الاستئناف القاهرة", date: "الأربعاء 15 يوليو", room: "الغرفة 7", status: "قريبة" },
+  { id: "real-estate-dispute", case: "قضية نزاع عقاري", court: "المحكمة الابتدائية الجيزة", date: "الخميس 16 يوليو", room: "القاعة 3", status: "مجدولة" },
+  { id: "commercial-compensation", case: "دعوى تعويض تجاري", court: "محكمة التحكيم", date: "الأحد 19 يوليو", room: "قاعة A", status: "مجدولة" },
 ];
 
 const recentTasks = [
-  { task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
-  { task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
-  { task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
-  { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
+  { id: "defense-memo-2024-0547", task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
+  { id: "agency-contract-review", task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
+  { id: "appeal-documents", task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
+  { id: "fees-invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
-  const todayLabel = useMemo(
-    () =>
+  const [todayLabel, setTodayLabel] = useState("");
+
+  useEffect(() => {
+    setTodayLabel(
       new Intl.DateTimeFormat("ar-EG", {
         weekday: "long",
         day: "numeric",
         month: "long",
         year: "numeric",
-      }).format(new Date()),
-    []
-  );
+      }).format(new Date())
+    );
+  }, []);
   const visibleModules = useMemo(
     () => (user ? getVisibleOperationalModules(user.role) : []),
     [user]
@@ -84,7 +86,7 @@ export default function DashboardPage() {
             لوحة التحكم
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            {todayLabel} — مرحبًا {user.name}
+            {todayLabel ? `${todayLabel} — ` : ""}مرحبًا {user.name}
           </p>
         </div>
 
@@ -168,9 +170,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {upcomingSessions.map((s, i) => (
+              {upcomingSessions.map((s) => (
                 <div
-                  key={i}
+                  key={s.id}
                   style={{
                     padding: "0.9rem",
                     background: "#f8f9fb",
@@ -243,9 +245,9 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => (
+              {recentTasks.map((t) => (
                 <div
-                  key={i}
+                  key={t.id}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
@@ -341,6 +343,7 @@ export default function DashboardPage() {
         }
         @media (max-width: 600px) {
           .kpi-grid { grid-template-columns: 1fr !important; }
+          .card-white { overflow-wrap: anywhere; }
         }
       `}</style>
     </AppShell>

@@ -1,17 +1,16 @@
-export type Role = "admin" | "client";
-
-export type SessionUser = {
-  role: Role;
-  name: string;
-  email: string;
-};
+import {
+  isSessionUser,
+  sessionCookieName,
+  type SessionUser,
+} from "@/lib/session-client";
 
 type SessionPayload = SessionUser & {
   exp: number;
 };
 
-export const sessionCookieName = "naiosh-law-session";
-export const sessionStorageKey = "naiosh-law-session";
+export { sessionCookieName };
+export type { Role, SessionUser } from "@/lib/session-client";
+
 export const sessionMaxAgeSeconds = 60 * 60 * 8;
 
 const fallbackSessionSecret = "naiosh-law-demo-session-secret";
@@ -19,11 +18,16 @@ const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 function getSessionSecret() {
-  return (
+  const secret =
     process.env.NAIOSH_SESSION_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    fallbackSessionSecret
-  );
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET;
+
+  if (secret && secret.trim() !== "") {
+    return secret;
+  }
+
+  return process.env.NODE_ENV === "production" ? null : fallbackSessionSecret;
 }
 
 function encodeBase64Url(bytes: Uint8Array) {
@@ -49,9 +53,14 @@ function decodeBase64Url(value: string) {
 }
 
 async function sign(value: string) {
+  const secret = getSessionSecret();
+  if (!secret) {
+    return null;
+  }
+
   const key = await crypto.subtle.importKey(
     "raw",
-    textEncoder.encode(getSessionSecret()),
+    textEncoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -74,21 +83,6 @@ function safeEqual(left: string, right: string) {
   return result === 0;
 }
 
-export function isSessionUser(value: unknown): value is SessionUser {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<SessionUser>;
-  return (
-    (candidate.role === "admin" || candidate.role === "client") &&
-    typeof candidate.name === "string" &&
-    candidate.name.trim() !== "" &&
-    typeof candidate.email === "string" &&
-    candidate.email.includes("@")
-  );
-}
-
 export async function createSessionToken(user: SessionUser) {
   const payload: SessionPayload = {
     ...user,
@@ -96,6 +90,10 @@ export async function createSessionToken(user: SessionUser) {
   };
   const body = encodeBase64Url(textEncoder.encode(JSON.stringify(payload)));
   const signature = await sign(body);
+
+  if (!signature) {
+    throw new Error("A session secret is required to create session tokens in production.");
+  }
 
   return `${body}.${signature}`;
 }
@@ -111,7 +109,7 @@ export async function readSessionToken(token: string | undefined | null) {
   }
 
   const expectedSignature = await sign(body);
-  if (!safeEqual(signature, expectedSignature)) {
+  if (!expectedSignature || !safeEqual(signature, expectedSignature)) {
     return null;
   }
 
@@ -136,33 +134,3 @@ export async function readSessionToken(token: string | undefined | null) {
   }
 }
 
-export function getCookieValue(cookieHeader: string | null | undefined, name: string) {
-  if (!cookieHeader) {
-    return null;
-  }
-
-  const prefix = `${name}=`;
-  const match = cookieHeader
-    .split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(prefix));
-
-  return match ? decodeURIComponent(match.slice(prefix.length)) : null;
-}
-
-export function getSafeAppPath(value: string | null | undefined, fallback = "/app/dashboard") {
-  if (!value || !value.startsWith("/app") || value.startsWith("//") || value.includes("\\")) {
-    return fallback;
-  }
-
-  try {
-    const parsed = new URL(value, "https://naiosh-law.local");
-    if (parsed.origin !== "https://naiosh-law.local" || !parsed.pathname.startsWith("/app")) {
-      return fallback;
-    }
-
-    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-  } catch {
-    return fallback;
-  }
-}

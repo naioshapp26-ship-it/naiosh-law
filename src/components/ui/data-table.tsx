@@ -14,10 +14,25 @@ type Props = {
 };
 
 const PAGE_SIZE = 10;
+const arabicCollator = new Intl.Collator("ar", { numeric: true, sensitivity: "base" });
 
 function getRowKey(row: Record<string, unknown>, index: number) {
   const stableId = row._id ?? row.id ?? row.caseNo ?? row.jobId ?? row.requestId ?? row.invoiceNo ?? row.code;
   return stableId ? String(stableId) : `row-${index}`;
+}
+
+function getSortableValue(row: Record<string, unknown>, column?: Column) {
+  if (!column) {
+    return "";
+  }
+
+  const value = row[column.key];
+  if (column.type === "currency" || column.type === "number") {
+    const numeric = Number(String(value ?? "").replace(/,/g, ""));
+    return Number.isFinite(numeric) ? numeric : Number.NEGATIVE_INFINITY;
+  }
+
+  return String(value ?? "");
 }
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
@@ -26,6 +41,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
   const normalizedSearch = search.trim().toLowerCase();
+  const sortColumn = useMemo(
+    () => columns.find((column) => column.key === sortKey),
+    [columns, sortKey]
+  );
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc((a) => !a);
@@ -48,12 +67,16 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     () =>
       sortKey
         ? [...filtered].sort((a, b) => {
-            const va = String(a[sortKey] ?? "");
-            const vb = String(b[sortKey] ?? "");
-            return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+            const va = getSortableValue(a, sortColumn);
+            const vb = getSortableValue(b, sortColumn);
+            const result =
+              typeof va === "number" && typeof vb === "number"
+                ? va - vb
+                : arabicCollator.compare(String(va), String(vb));
+            return sortAsc ? result : -result;
           })
         : filtered,
-    [filtered, sortAsc, sortKey]
+    [filtered, sortAsc, sortColumn, sortKey]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
@@ -427,7 +450,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .data-table-scroll {
           -webkit-overflow-scrolling: touch;
         }
-        @media (max-width: 700px) {
+        @media (max-width: 820px) {
           .data-table-toolbar {
             align-items: stretch !important;
             flex-direction: column;
@@ -450,6 +473,17 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .data-table-cards {
             display: grid !important;
             gap: 0.85rem;
+          }
+        }
+        @media (max-width: 420px) {
+          .data-table-cards article > div > div {
+            grid-template-columns: minmax(76px, 0.38fr) minmax(0, 1fr) !important;
+          }
+          .row-actions {
+            width: 100%;
+          }
+          .row-actions > button {
+            flex: 1 1 96px;
           }
         }
       `}</style>

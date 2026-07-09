@@ -5,7 +5,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearSessionUser } from "@/lib/session";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/lib/module-routing";
-import type { Role } from "@/lib/session-shared";
+import type { Role } from "@/lib/session-client";
 
 type Props = {
   role: Role;
@@ -202,7 +202,7 @@ export function AppShell({ role, name, children }: Props) {
           </div>
 
           {/* Right: Notifications + User + Logout */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* Notification bell */}
             <button style={{
               width: 36, height: 36, borderRadius: "10px",
@@ -224,6 +224,7 @@ export function AppShell({ role, name, children }: Props) {
               display: "flex", alignItems: "center", gap: "0.5rem",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               borderRadius: "10px", padding: "0.4rem 0.75rem",
+              minWidth: 0,
             }}>
               <div style={{
                 width: 26, height: 26, borderRadius: "7px",
@@ -251,7 +252,8 @@ export function AppShell({ role, name, children }: Props) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
-              خروج
+              <span className="logout-label">خروج</span>
+              <span className="logout-icon" aria-hidden="true" style={{ display: "none" }}>↩</span>
             </button>
           </div>
         </div>
@@ -346,7 +348,7 @@ export function AppShell({ role, name, children }: Props) {
             />
             {/* Drawer panel */}
             <div style={{
-              position: "relative", zIndex: 1,
+              position: "relative", zIndex: 1, insetInlineStart: 0,
               width: 280, background: "#ffffff",
               height: "100%", overflowY: "auto",
               boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
@@ -367,7 +369,7 @@ export function AppShell({ role, name, children }: Props) {
       <nav className="mobile-bottom-nav" style={{
         display: "none", position: "fixed", bottom: 0, insetInline: 0,
         background: "#ffffff", borderTop: "1px solid #e2e8f0",
-        padding: "0.5rem 0.75rem",
+        padding: "0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom))",
         zIndex: 100,
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
@@ -394,6 +396,7 @@ export function AppShell({ role, name, children }: Props) {
         })}
         {/* All modules button */}
         <button
+          type="button"
           onClick={() => setDrawerOpen(true)}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
@@ -416,7 +419,28 @@ export function AppShell({ role, name, children }: Props) {
           .logo-text         { display: none; }
           .user-name-block   { display: none; }
           .drawer-header     { display: flex !important; }
-          main               { padding-bottom: 5rem !important; }
+          main               { padding: 1rem !important; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
+        }
+        @media (max-width: 420px) {
+          .header-actions {
+            gap: 0.35rem !important;
+          }
+          .header-actions > button[aria-label="التنبيهات"] {
+            display: none !important;
+          }
+          .logout-label {
+            display: none;
+          }
+          .logout-icon {
+            display: inline !important;
+          }
+          .mobile-bottom-nav {
+            padding-inline: 0.35rem !important;
+          }
+          .mobile-bottom-nav a,
+          .mobile-bottom-nav button {
+            padding-inline: 0.35rem !important;
+          }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

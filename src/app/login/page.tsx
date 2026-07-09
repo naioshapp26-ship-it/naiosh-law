@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { demoAccounts } from "@/data/auth";
 import { saveSessionUser, type SessionUser } from "@/lib/session";
-import { getSafeAppPath, type Role } from "@/lib/session-shared";
+import { getSafeAppPath, type Role } from "@/lib/session-client";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -336,6 +336,7 @@ export default function LoginPage() {
             </p>
             <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
               <button
+                type="button"
                 onClick={() => loginDemo("admin")}
                 disabled={loading}
                 style={{
@@ -364,6 +365,7 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
+                type="button"
                 onClick={() => loginDemo("client")}
                 disabled={loading}
                 style={{
@@ -558,10 +560,11 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+          .login-wrap > div:last-child { min-height: 100dvh !important; }
         }
         @media (max-width: 480px) {
           .demo-login-buttons { flex-direction: column; }
-          .login-wrap > div:last-child { padding: 2rem 1rem !important; }
+          .login-wrap > div:last-child { padding: 1.5rem 1rem !important; }
         }
       `}</style>
     </div>

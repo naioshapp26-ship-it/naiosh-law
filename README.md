@@ -37,6 +37,7 @@ npm audit --audit-level=moderate
 
 - `src/app/api/auth/*` - login, logout, and session validation.
 - `src/app/api/[integration]/route.ts` - authenticated demo integration endpoints.
-- `src/lib/session-shared.ts` - shared signed session token helpers.
+- `src/lib/session-client.ts` - browser-safe session types, keys, and redirect helpers.
+- `src/lib/session-server.ts` - signed session token and cookie helpers.
 - `src/lib/module-routing.ts` - module URLs and role visibility.
 - `src/components/module-shell.tsx` - module CRUD demo shell.
