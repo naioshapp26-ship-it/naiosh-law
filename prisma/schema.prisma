@@ -1,0 +1,283 @@
+// Naiosh Law ERP — PostgreSQL Schema (Phases 0–2)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth & Users ───────────────────────────────────────────
+
+enum UserRole {
+  admin
+  lawyer
+  consultant
+  judge
+  client
+  industrial_agent
+  employee
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(client)
+  phone     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  professional       Professional?
+  networkRequests    ProfessionalNetwork[] @relation("Requester")
+  networkReceived    ProfessionalNetwork[] @relation("Receiver")
+  auditLogs          AuditLog[]
+}
+
+// ─── Core ERP (Phase 0) ─────────────────────────────────────
+
+model Client {
+  id         String   @id @default(cuid())
+  name       String
+  type       String   @default("فرد")
+  phone      String?
+  email      String?
+  nationalId String?
+  status     String   @default("نشط")
+  casesCount Int      @default(0)
+  since      DateTime @default(now())
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cases Case[]
+}
+
+model Case {
+  id               String   @id @default(cuid())
+  caseNo           String   @unique
+  clientId         String?
+  client           Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName       String
+  type             String
+  court            String
+  status           String   @default("نشطة")
+  nextDate         String?
+  fees             String?
+  notes            String?
+  branchId         String?
+  branch           LegalBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  sessions  CourtSession[]
+  subjects  CaseSubject[]
+}
+
+model CourtSession {
+  id        String   @id @default(cuid())
+  caseId    String?
+  case      Case?    @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  caseNo    String?
+  client    String?
+  court     String
+  room      String?
+  date      String
+  time      String?
+  type      String   @default("جلسة")
+  status    String   @default("مجدولة")
+  lawyer    String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Consultation {
+  id               String   @id @default(cuid())
+  clientName       String
+  topic            String
+  branchId         String?
+  branch           LegalBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  status           String   @default("جديد")
+  lawyer           String?
+  date             String?
+  fees             String?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// ─── Legal Knowledge Base (Phase 1) ─────────────────────────
+
+model LegalBranch {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  specializations LegalSpecialization[]
+  cases           Case[]
+  consultations   Consultation[]
+}
+
+model LegalSpecialization {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  branchId    String?
+  branch      LegalBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lawyers       LawyerSpecialization[]
+  cases         Case[]
+  consultations Consultation[]
+  subjects      SpecializationSubject[]
+}
+
+model LegalSubject {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cases          CaseSubject[]
+  specializations SpecializationSubject[]
+}
+
+model LawyerSpecialization {
+  professionalId   String
+  professional     Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  specializationId String
+  specialization   LegalSpecialization @relation(fields: [specializationId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, specializationId])
+}
+
+model CaseSubject {
+  caseId    String
+  case      Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   LegalSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([caseId, subjectId])
+}
+
+model SpecializationSubject {
+  specializationId String
+  specialization   LegalSpecialization @relation(fields: [specializationId], references: [id], onDelete: Cascade)
+  subjectId        String
+  subject          LegalSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([specializationId, subjectId])
+}
+
+// ─── Professional Network (Phase 2) ─────────────────────────
+
+enum ProfessionalType {
+  lawyer
+  consultant
+  judge
+}
+
+model Professional {
+  id        String           @id @default(cuid())
+  userId    String?          @unique
+  user      User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name      String
+  type      ProfessionalType @default(lawyer)
+  licenseNo String?
+  phone     String?
+  email     String?
+  rating    Float            @default(0)
+  status    String           @default("نشط")
+  bio       String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  specializations LawyerSpecialization[]
+  courtOfficial   CourtOfficial?
+}
+
+enum NetworkRequestType {
+  collaboration
+  case_referral
+  opinion_request
+}
+
+enum NetworkRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+model ProfessionalNetwork {
+  id          String               @id @default(cuid())
+  requesterId String
+  requester   User                 @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User                 @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  type        NetworkRequestType
+  status      NetworkRequestStatus @default(pending)
+  caseRef     String?
+  message     String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model OfficialEntity {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("جهة حكومية")
+  city      String?
+  address   String?
+  phone     String?
+  email     String?
+  status    String   @default("نشط")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  officials CourtOfficial[]
+}
+
+model CourtOfficial {
+  id         String          @id @default(cuid())
+  entityId   String?
+  entity     OfficialEntity? @relation(fields: [entityId], references: [id], onDelete: SetNull)
+  professionalId String?     @unique
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  name       String
+  role       String
+  court      String?
+  chamber    String?
+  phone      String?
+  status     String          @default("نشط")
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+// ─── Audit (Phase 0 foundation) ───────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  createdAt DateTime @default(now())
+}

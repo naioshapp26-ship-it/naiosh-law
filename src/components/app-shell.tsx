@@ -4,13 +4,19 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { modules } from "@/data/modules";
-import { sessionKey } from "@/data/auth";
+import type { UserRole } from "@/lib/session";
 
 type Props = {
-  role: "admin" | "client";
+  role: UserRole;
   name: string;
   children: React.ReactNode;
 };
+
+const extraNav = [
+  { href: "/app/legal-knowledge", label: "التصنيف القانوني", icon: "📚" },
+  { href: "/app/professional-network", label: "الشبكة المهنية", icon: "🤝" },
+  { href: "/app/official-entities", label: "الجهات الرسمية", icon: "🏢" },
+];
 
 const iconMap: Record<string, string> = {
   "dashboard":             "⊞",
@@ -43,8 +49,8 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarSoftText = "rgba(255,255,255,0.64)";
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
-  const logout = () => {
-    window.localStorage.removeItem(sessionKey);
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     router.replace("/login");
   };
 
@@ -109,6 +115,30 @@ export function AppShell({ role, name, children }: Props) {
           <span style={{ fontSize: "1rem" }}>⊞</span>
           <span>لوحة التحكم</span>
         </Link>
+      </div>
+
+      <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
+        {extraNav.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setDrawerOpen(false)}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.6rem",
+                padding: "0.6rem 0.75rem", borderRadius: "10px",
+                fontSize: "0.84rem", fontWeight: active ? 700 : 500,
+                color: sidebarText,
+                background: active ? sidebarActiveBg : "transparent",
+                textDecoration: "none", transition: "all 0.15s",
+              }}
+            >
+              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Section label */}
@@ -301,6 +331,29 @@ export function AppShell({ role, name, children }: Props) {
                 <span style={{ fontSize: "1rem" }}>⊞</span>
                 <span>لوحة التحكم</span>
               </Link>
+            </div>
+
+            <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
+              {extraNav.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "0.6rem",
+                      padding: "0.6rem 0.75rem", borderRadius: "10px",
+                      fontSize: "0.84rem", fontWeight: active ? 700 : 500,
+                      color: sidebarText,
+                      background: active ? sidebarActiveBg : "transparent",
+                      textDecoration: "none", transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
 
             <p style={{

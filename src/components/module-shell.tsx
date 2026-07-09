@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -8,7 +8,8 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
-import { useSession } from "@/lib/session";
+import { useSession, canWriteRole } from "@/lib/session";
+import { getModuleApiEndpoint } from "@/lib/module-api";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -17,8 +18,10 @@ let toastCounter = 0;
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
+  const apiEndpoint = getModuleApiEndpoint(slug);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [loadingData, setLoadingData] = useState(!!apiEndpoint);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -30,6 +33,28 @@ export function ModuleShell({ slug }: { slug: string }) {
     setToasts((prev) => [...prev, { id, type, text }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
+
+  const loadRows = useCallback(async () => {
+    if (!apiEndpoint) return;
+    setLoadingData(true);
+    try {
+      const res = await fetch(apiEndpoint, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setRows(data);
+      }
+    } catch {
+      pushToast("error", "تعذر تحميل البيانات من الخادم");
+    } finally {
+      setLoadingData(false);
+    }
+  }, [apiEndpoint, pushToast]);
+
+  useEffect(() => {
+    loadRows();
+  }, [loadRows]);
+
+  const canWrite = user ? canWriteRole(user.role) : false;
 
   if (!ready || !user) {
     return (
@@ -58,8 +83,34 @@ export function ModuleShell({ slug }: { slug: string }) {
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
-  const handleSave = (data: Record<string, unknown>) => {
-    if (editTarget) {
+  const handleSave = async (data: Record<string, unknown>) => {
+    if (apiEndpoint && canWrite) {
+      try {
+        if (editTarget?.id) {
+          const res = await fetch(`${apiEndpoint}/${editTarget.id}`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          if (!res.ok) throw new Error();
+          pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
+        } else {
+          const res = await fetch(apiEndpoint, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          if (!res.ok) throw new Error();
+          pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
+        }
+        await loadRows();
+      } catch {
+        pushToast("error", "فشل حفظ البيانات");
+        return;
+      }
+    } else if (editTarget) {
       setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
@@ -71,9 +122,23 @@ export function ModuleShell({ slug }: { slug: string }) {
     setEditTarget(null);
   };
 
-  const handleDeleteConfirm = () => {
-    setRows((prev) => prev.filter((r) => r !== deleteTarget));
-    pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
+  const handleDeleteConfirm = async () => {
+    if (apiEndpoint && canWrite && deleteTarget?.id) {
+      try {
+        const res = await fetch(`${apiEndpoint}/${deleteTarget.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error();
+        await loadRows();
+        pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
+      } catch {
+        pushToast("error", "فشل حذف السجل");
+      }
+    } else {
+      setRows((prev) => prev.filter((r) => r !== deleteTarget));
+      pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
+    }
     setDeleteTarget(null);
   };
 
@@ -164,7 +229,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               >
                 📊 تقارير
               </button>
-              {user.role === "admin" && (
+              {canWrite && (
                 <button
                   onClick={openAdd}
                   className="btn-primary"
@@ -182,14 +247,18 @@ export function ModuleShell({ slug }: { slug: string }) {
 
         {/* Data Table */}
         <div className="card-white" style={{ padding: "1.5rem" }}>
-          <DataTable
-            columns={config.columns}
-            data={rows}
-            onView={setViewTarget}
-            onEdit={user.role === "admin" ? openEdit : undefined}
-            onDelete={user.role === "admin" ? setDeleteTarget : undefined}
-            searchPlaceholder={`بحث في ${config.entityName}ات...`}
-          />
+          {loadingData ? (
+            <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
+          ) : (
+            <DataTable
+              columns={config.columns}
+              data={rows}
+              onView={setViewTarget}
+              onEdit={canWrite ? openEdit : undefined}
+              onDelete={canWrite ? setDeleteTarget : undefined}
+              searchPlaceholder={`بحث في ${config.entityName}ات...`}
+            />
+          )}
         </div>
       </div>
 

@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoUsers } from "@/data/auth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -34,20 +34,25 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "فشل تسجيل الدخول");
+        setLoading(false);
+        return;
+      }
+      router.push("/app/dashboard");
+    } catch {
+      setError("تعذر الاتصال بالخادم");
       setLoading(false);
-      return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
-    router.push("/app/dashboard");
   };
 
   const fillDemo = (role: "admin" | "client") => {
