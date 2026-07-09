@@ -17,6 +17,28 @@ const basePermissions = {
   client: ["عرض الحالة", "تحميل المستندات", "متابعة التنبيهات"],
 };
 
+export const moduleIcons: Record<string, string> = {
+  dashboard: "⊞",
+  "case-management": "⚖️",
+  "clients-management": "👥",
+  "court-sessions": "🏛️",
+  "follow-up-center": "📋",
+  "legal-accounting": "💰",
+  "legal-services": "📝",
+  "legal-consultations": "💬",
+  "internal-requests": "📤",
+  "complaints-management": "🔔",
+  "smart-templates": "🤖",
+  "reports-center": "📊",
+  administration: "⚙️",
+  "notifications-center": "🛎️",
+  integrations: "🔗",
+  "ai-center": "🧠",
+  "general-tools": "🛠️",
+};
+
+export const adminOnlyModuleSlugs = ["administration", "integrations", "ai-center"];
+
 export const modules: LegalModule[] = [
   { slug: "dashboard", title: "لوحة التحكم", subtitle: "مؤشرات الأداء والملخصات اليومية", screens: ["مؤشرات الأداء", "إحصائيات القضايا", "الجلسات القادمة", "المهام اليومية", "التنبيهات", "الملخص المالي"], functions: ["مراقبة KPIs", "عرض تنبيهات ذكية", "فلترة حسب الفريق"], workflow: ["تحميل البيانات", "تحليل الحالة", "إرسال تنبيه"], relations: ["إدارة القضايا", "مركز المتابعات", "المحاسبة القانونية"], dbTables: ["dash_widgets", "alerts", "daily_tasks"], permissions: basePermissions },
   { slug: "case-management", title: "إدارة القضايا", subtitle: "إدارة الملف القانوني بالكامل", screens: ["القضايا", "الإجراءات", "الجلسات", "الأحكام", "التنفيذ", "المرفقات", "سير العمل", "سجل التعديلات", "الرسوم والمدفوعات"], functions: ["إضافة قضية", "تحديث مراحل القضية", "أرشفة المستندات"], workflow: ["فتح قضية", "إسناد مسؤول", "متابعة الجلسات", "إغلاق القضية"], relations: ["إدارة الموكلين", "إدارة الجلسات", "المحاسبة القانونية"], dbTables: ["cases", "case_steps", "case_judgments", "case_payments"], permissions: basePermissions },
@@ -38,3 +60,17 @@ export const modules: LegalModule[] = [
 ];
 
 export const moduleMap = Object.fromEntries(modules.map((item) => [item.slug, item]));
+
+export const operationalModules = modules.filter((item) => item.slug !== "dashboard");
+
+export function getModuleHref(slug: string) {
+  return slug === "dashboard" ? "/app/dashboard" : `/app/modules/${slug}`;
+}
+
+export function canAccessModule(role: Role, slug: string) {
+  return role === "admin" || !adminOnlyModuleSlugs.includes(slug);
+}
+
+export function getVisibleOperationalModules(role?: Role) {
+  return operationalModules.filter((item) => !role || canAccessModule(role, item.slug));
+}

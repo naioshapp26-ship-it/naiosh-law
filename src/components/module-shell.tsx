@@ -1,35 +1,100 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
-import { moduleMap } from "@/data/modules";
+import type { ModuleConfig } from "@/data/module-configs";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
 let toastCounter = 0;
+const moduleStoragePrefix = "naiosh-law-module-rows:";
+const identityKeys = ["_id", "id", "caseNo", "ref", "jobId", "email", "endpoint", "name", "title"];
 
-export function ModuleShell({ slug }: { slug: string }) {
+function loadStoredRows(slug: string, fallback: Record<string, unknown>[]) {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(`${moduleStoragePrefix}${slug}`);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : fallback;
+  } catch {
+    try {
+      window.localStorage.removeItem(`${moduleStoragePrefix}${slug}`);
+    } catch {
+      // Ignore storage cleanup failures; the in-memory fallback remains usable.
+    }
+    return fallback;
+  }
+}
+
+function getRowIdentity(row: Record<string, unknown> | null) {
+  if (!row) {
+    return "";
+  }
+
+  for (const key of identityKeys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && value !== "") {
+      return `${key}:${String(value)}`;
+    }
+  }
+
+  return JSON.stringify(row);
+}
+
+type ModuleShellProps = {
+  slug: string;
+  title: string;
+  config: ModuleConfig;
+};
+
+export function ModuleShell({ slug, title, config }: ModuleShellProps) {
   const { user, ready } = useSession(true);
-  const config = moduleConfigMap[slug];
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadStoredRows(slug, config.data));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
+  const toastTimeouts = useRef<number[]>([]);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timeoutId = window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+      toastTimeouts.current = toastTimeouts.current.filter((item) => item !== timeoutId);
+    }, 3500);
+    toastTimeouts.current.push(timeoutId);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      toastTimeouts.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      toastTimeouts.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(`${moduleStoragePrefix}${slug}`, JSON.stringify(rows));
+    } catch {
+      // Keep the in-memory table usable if browser storage quota is unavailable.
+    }
+  }, [config, rows, slug]);
 
   if (!ready || !user) {
     return (
@@ -42,25 +107,14 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   }
 
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
-    );
-  }
-
   /* ── Handlers ── */
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
-      setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
+      const targetIdentity = getRowIdentity(editTarget);
+      setRows((prev) => prev.map((r) => (getRowIdentity(r) === targetIdentity ? { ...r, ...data } : r)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
       const newRow = { ...data, _id: Date.now() };
@@ -72,7 +126,8 @@ export function ModuleShell({ slug }: { slug: string }) {
   };
 
   const handleDeleteConfirm = () => {
-    setRows((prev) => prev.filter((r) => r !== deleteTarget));
+    const targetIdentity = getRowIdentity(deleteTarget);
+    setRows((prev) => prev.filter((r) => getRowIdentity(r) !== targetIdentity));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
   };
@@ -91,6 +146,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         onClick={() => setViewTarget(null)}
       >
         <div
+          className="module-overlay-panel"
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -101,7 +157,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="module-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
@@ -109,7 +165,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div className="module-modal-actions" style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             <button
               onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
               className="btn-primary"
@@ -125,13 +181,10 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   };
 
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
-
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="module-toasts" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}
@@ -149,7 +202,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                  config.entityName === "موكل" ? "👥" :
                  config.entityName === "جلسة" ? "🏛️" :
                  config.entityName === "متابعة" ? "📋" :
-                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                 config.entityName === "سجل مالي" ? "💰" : "📌"} {title}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
@@ -194,15 +247,18 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal
-        open={modalOpen}
-        title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
-        fields={config.formFields}
-        initial={editTarget ?? undefined}
-        onSave={handleSave}
-        onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
-      />
+      {modalOpen && (
+        <Modal
+          key={getRowIdentity(editTarget) || "new"}
+          open={modalOpen}
+          title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
+          fields={config.formFields}
+          initial={editTarget ?? undefined}
+          onSave={handleSave}
+          onClose={() => { setModalOpen(false); setEditTarget(null); }}
+          saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
+        />
+      )}
 
       {/* View Modal */}
       {renderViewModal()}
@@ -222,6 +278,7 @@ export function ModuleShell({ slug }: { slug: string }) {
           onClick={() => setReportOpen(false)}
         >
           <div
+            className="module-overlay-panel"
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -262,6 +319,29 @@ export function ModuleShell({ slug }: { slug: string }) {
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 640px) {
+          .module-overlay-panel {
+            max-height: calc(100vh - 2rem) !important;
+            padding: 1.25rem !important;
+          }
+          .module-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .module-modal-actions {
+            flex-direction: column;
+          }
+          .module-modal-actions button {
+            width: 100%;
+          }
+          .module-toasts {
+            bottom: 5.75rem !important;
+            inset-inline: 1rem !important;
+          }
+          .module-toasts > div {
+            max-width: none !important;
+            width: 100%;
+          }
         }
       `}</style>
     </AppShell>
