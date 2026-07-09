@@ -24,7 +24,17 @@ export default function NotFound() {
           <Link href="/" className="btn-primary" style={{ padding: "0.75rem 1.25rem" }}>
             الصفحة الرئيسية
           </Link>
-          <Link href="/app/dashboard" className="btn-ghost-dark" style={{ padding: "0.75rem 1.25rem", color: "#0a0a12" }}>
+          <Link
+            href="/app/dashboard"
+            style={{
+              padding: "0.75rem 1.25rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+              background: "#f8f9fb",
+              color: "#0a0a12",
+              fontWeight: 700,
+            }}
+          >
             لوحة التحكم
           </Link>
         </div>

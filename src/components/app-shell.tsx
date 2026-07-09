@@ -16,10 +16,11 @@ type Props = {
 
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
-  const router   = useRouter();
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerRef = useDialogAccessibility<HTMLDivElement>(drawerOpen, () => setDrawerOpen(false));
   const visibleModules = getVisibleOperationalModules(role);
+  const roleLabel = role === "admin" ? "مدير النظام" : "عميل";
   const bottomNavItems = [
     { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية", slug: "dashboard" },
     { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا", slug: "case-management" },
@@ -143,7 +144,7 @@ export function AppShell({ role, name, children }: Props) {
           borderRadius: "12px", padding: "0.85rem",
         }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
-            {role === "admin" ? "Admin" : "Client"}
+            {roleLabel}
           </p>
           <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
             {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
@@ -238,7 +239,7 @@ export function AppShell({ role, name, children }: Props) {
               </div>
               <div className="user-name-block">
                 <div style={{ color: "#0a0a12", fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.2 }}>{name}</div>
-                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{role === "admin" ? "Admin" : "Client"}</div>
+                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{roleLabel}</div>
               </div>
             </div>
 
@@ -328,7 +329,7 @@ export function AppShell({ role, name, children }: Props) {
                 borderRadius: "12px", padding: "0.9rem",
               }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
-                  {role === "admin" ? "Admin" : "Client"}
+                  {roleLabel}
                 </p>
                 <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
                   {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}

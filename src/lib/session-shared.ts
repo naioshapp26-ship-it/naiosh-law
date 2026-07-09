@@ -31,6 +31,19 @@ function getSessionSecret() {
   return fallbackSessionSecret;
 }
 
+export function isSecureRequest(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  if (forwardedProto) {
+    return forwardedProto === "https";
+  }
+
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
+
 function encodeBase64Url(bytes: Uint8Array) {
   let binary = "";
   for (let index = 0; index < bytes.length; index += 1) {

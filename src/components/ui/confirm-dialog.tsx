@@ -29,6 +29,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         justifyContent: "center",
         background: "rgba(10,10,18,0.55)",
         backdropFilter: "blur(4px)",
+        padding: "1rem",
       }}
       onClick={onCancel}
     >
@@ -40,7 +41,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         aria-describedby={messageId}
         tabIndex={-1}
         className="card-white"
-        style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
+        style={{ maxWidth: 400, width: "100%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -65,7 +66,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         <p id={messageId} style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
           {message}
         </p>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div className="confirm-dialog-actions" style={{ display: "flex", gap: "0.75rem" }}>
           <button
             type="button"
             onClick={onCancel}
@@ -105,6 +106,17 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
             {loading ? "جاري الحذف..." : "تأكيد الحذف"}
           </button>
         </div>
+        <style>{`
+          @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @media (max-width: 420px) {
+            .confirm-dialog-actions {
+              flex-direction: column-reverse;
+            }
+          }
+        `}</style>
       </div>
     </div>
   );

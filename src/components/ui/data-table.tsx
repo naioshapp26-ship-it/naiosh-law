@@ -46,7 +46,7 @@ function useCardLayout() {
   const [isCardLayout, setIsCardLayout] = useState(false);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 700px)");
+    const media = window.matchMedia("(max-width: 760px)");
     const update = () => setIsCardLayout(media.matches);
 
     update();
@@ -517,7 +517,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .data-table-scroll {
           -webkit-overflow-scrolling: touch;
         }
-        @media (max-width: 700px) {
+        @media (max-width: 760px) {
           .data-table-toolbar {
             align-items: stretch !important;
             flex-direction: column;

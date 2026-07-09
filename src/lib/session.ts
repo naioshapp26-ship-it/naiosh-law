@@ -78,10 +78,7 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
         return;
       }
       const storedUser = readStoredUser();
-      setUser(storedUser ?? initialUser);
-      if (storedUser ?? initialUser) {
-        setReady(true);
-      }
+      setUser(initialUser ?? storedUser);
     };
 
     const validateCookieSession = async () => {

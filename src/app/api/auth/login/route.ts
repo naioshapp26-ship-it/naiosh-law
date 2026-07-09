@@ -3,6 +3,7 @@ import { demoUsers, toSessionUser } from "@/lib/demo-auth";
 import { readJsonObject } from "@/lib/api-request";
 import {
   createSessionToken,
+  isSecureRequest,
   sessionCookieName,
   sessionMaxAgeSeconds,
   type Role,
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecureRequest(request),
     path: "/",
     maxAge: sessionMaxAgeSeconds,
   });
