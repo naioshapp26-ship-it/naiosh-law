@@ -15,6 +15,14 @@ function isRole(value: unknown): value is SessionUser["role"] {
   return value === "admin" || value === "client";
 }
 
+function isLoginBody(value: unknown): value is LoginBody {
+  return typeof value === "object" && value !== null;
+}
+
+function demoLoginEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
+}
+
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
@@ -24,7 +32,11 @@ export async function POST(request: Request) {
   if (!parsedBody.ok) {
     return parsedBody.response;
   }
-  const body = parsedBody.data;
+  const body = isLoginBody(parsedBody.data) ? parsedBody.data : {};
+
+  if (body.demo === true && !demoLoginEnabled()) {
+    return jsonError("Demo login is disabled.", 403);
+  }
 
   const user =
     body.demo === true && isRole(body.role)

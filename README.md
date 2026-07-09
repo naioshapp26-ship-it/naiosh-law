@@ -15,6 +15,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 The login page supports one-click demo access for admin and client roles. Passwords are validated only on the server and sessions are stored in an httpOnly signed cookie.
 
+One-click demo login is available automatically in local development. In production, enable it only for demo environments:
+
+```bash
+NAIOSH_ENABLE_DEMO_LOGIN=true
+```
+
 Set one of these secrets outside local development:
 
 ```bash

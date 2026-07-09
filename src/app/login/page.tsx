@@ -46,20 +46,25 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (!response.ok) {
-      setError(response.status === 401 ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذر تسجيل الدخول الآن.");
+      if (!response.ok) {
+        setError(response.status === 401 ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذر تسجيل الدخول الآن.");
+        setLoading(false);
+        return;
+      }
+
+      const data = (await response.json()) as { user: SessionUser };
+      finishLogin(data.user);
+    } catch {
+      setError("تعذر الاتصال بالخادم. حاول مرة أخرى.");
       setLoading(false);
-      return;
     }
-
-    const data = (await response.json()) as { user: SessionUser };
-    finishLogin(data.user);
   };
 
   const loginDemo = async (role: "admin" | "client") => {
@@ -70,20 +75,25 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ demo: true, role }),
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ demo: true, role }),
+      });
 
-    if (!response.ok) {
-      setError("تعذر بدء الحساب التجريبي الآن.");
+      if (!response.ok) {
+        setError("تعذر بدء الحساب التجريبي الآن.");
+        setLoading(false);
+        return;
+      }
+
+      const data = (await response.json()) as { user: SessionUser };
+      finishLogin(data.user);
+    } catch {
+      setError("تعذر الاتصال بالخادم. حاول مرة أخرى.");
       setLoading(false);
-      return;
     }
-
-    const data = (await response.json()) as { user: SessionUser };
-    finishLogin(data.user);
   };
 
   return (
