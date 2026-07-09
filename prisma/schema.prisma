@@ -3,6 +3,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+}
 
 datasource db {
   provider = "postgresql"
@@ -464,6 +465,7 @@ model CircularInstruction {
   tags          String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+}
 
 // ─── Notifications & Integrations (Phase 5) ───────────────
 
@@ -574,6 +576,7 @@ model IntegrationLog {
   success       Boolean     @default(true)
   errorMessage  String?
   createdAt     DateTime    @default(now())
+}
 
 // ─── Governance & E-Signing (Phase 6) ─────────────────────
 
