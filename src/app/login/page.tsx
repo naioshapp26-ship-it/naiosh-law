@@ -2,19 +2,9 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { demoAccounts } from "@/data/auth";
 import { saveSessionUser, type SessionUser } from "@/lib/session";
 import { getSafeAppPath, type Role } from "@/lib/session-shared";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  },
-};
 
 const perks = [
   "إدارة شاملة للقضايا والموكلين",
@@ -304,14 +294,11 @@ export default function LoginPage() {
           minHeight: "100vh",
         }}
       >
-        <motion.div
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
-          initial="hidden"
-          animate="show"
+        <div
           style={{ width: "100%", maxWidth: "420px" }}
         >
           {/* Heading */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "2.5rem" }}>
+          <div className="login-anim" style={{ marginBottom: "2.5rem" }}>
             <h1
               style={{
                 fontSize: "2rem",
@@ -326,10 +313,10 @@ export default function LoginPage() {
             <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
               سجّل دخولك للوصول إلى لوحة التحكم الكاملة
             </p>
-          </motion.div>
+          </div>
 
           {/* Quick demo buttons */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "2rem" }}>
+          <div className="login-anim" style={{ marginBottom: "2rem", animationDelay: "0.06s" }}>
             <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
               دخول سريع تجريبي:
             </p>
@@ -391,26 +378,27 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>عميل تجريبي</span>
               </button>
             </div>
-          </motion.div>
+          </div>
 
           {/* Divider */}
-          <motion.div
-            variants={fadeUp}
+          <div
+            className="login-anim"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "1rem",
               marginBottom: "2rem",
+              animationDelay: "0.12s",
             }}
           >
             <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
             <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 500 }}>أو ادخل يدويًا</span>
             <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
-          </motion.div>
+          </div>
 
           {/* Form */}
           <form onSubmit={onSubmit}>
-            <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
+            <div className="login-anim" style={{ marginBottom: "1.25rem", animationDelay: "0.18s" }}>
               <label className="input-label">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
@@ -435,9 +423,9 @@ export default function LoginPage() {
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
+            <div className="login-anim" style={{ marginBottom: "1.5rem", animationDelay: "0.24s" }}>
               <label className="input-label">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
@@ -469,12 +457,11 @@ export default function LoginPage() {
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
-            </motion.div>
+            </div>
 
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
+              <div
+                className="login-error"
                 style={{
                   background: "rgba(195,21,42,0.06)",
                   border: "1px solid rgba(195,21,42,0.2)",
@@ -487,14 +474,13 @@ export default function LoginPage() {
                 }}
               >
                 ⚠️ {error}
-              </motion.div>
+              </div>
             )}
 
-            <motion.button
-              variants={fadeUp}
+            <button
               type="submit"
               disabled={loading}
-              className="btn-primary"
+              className="btn-primary login-anim"
               style={{
                 width: "100%",
                 padding: "1rem",
@@ -504,6 +490,7 @@ export default function LoginPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "0.5rem",
+                animationDelay: "0.3s",
               }}
             >
               {loading ? (
@@ -534,26 +521,37 @@ export default function LoginPage() {
               ) : (
                 <>دخول النظام →</>
               )}
-            </motion.button>
+            </button>
           </form>
 
           {/* Hint */}
-          <motion.p
-            variants={fadeUp}
+          <p
+            className="login-anim"
             style={{
               textAlign: "center",
               color: "#94a3b8",
               fontSize: "0.78rem",
               marginTop: "1.75rem",
               lineHeight: 1.6,
+              animationDelay: "0.36s",
             }}
           >
             هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري بدون كشف كلمات المرور في المتصفح
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
       </div>
 
       <style>{`
+        .login-anim {
+          animation: login-fade-up 0.45s ease both;
+        }
+        .login-error {
+          animation: login-fade-up 0.22s ease both;
+        }
+        @keyframes login-fade-up {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }

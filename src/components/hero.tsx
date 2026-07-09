@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { modules } from "@/data/modules";
 
 const moduleCount = modules.length;
@@ -11,11 +10,6 @@ const stats = [
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
 ];
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
-};
 
 export function HeroSection() {
   return (
@@ -115,10 +109,7 @@ export function HeroSection() {
           className="hero-grid"
         >
           {/* ── Text column ── */}
-          <motion.div
-            variants={container}
-            initial="show"
-            animate="show"
+          <div
             style={{
               width: "100%",
               maxWidth: "720px",
@@ -254,15 +245,10 @@ export function HeroSection() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* ── Visual column ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-            className="float-anim hero-card-col"
-          >
+          <div className="float-anim hero-card-col">
             {/* Main case card */}
             <div
               className="glass-dark"
@@ -401,10 +387,7 @@ export function HeroSection() {
             </div>
 
             {/* Alert mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -413,6 +396,7 @@ export function HeroSection() {
                 alignItems: "center",
                 gap: "0.85rem",
                 boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+                animation: "hero-fade-in 0.5s ease 1.1s both",
               }}
             >
               <div
@@ -452,13 +436,10 @@ export function HeroSection() {
               >
                 عاجل
               </span>
-            </motion.div>
+            </div>
 
             {/* Stats mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -467,6 +448,7 @@ export function HeroSection() {
                 alignItems: "center",
                 gap: "1.5rem",
                 boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+                animation: "hero-fade-in 0.5s ease 1.3s both",
               }}
             >
               {[
@@ -483,16 +465,13 @@ export function HeroSection() {
                   </p>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
+      <div
         style={{
           position: "absolute",
           bottom: "2rem",
@@ -505,6 +484,7 @@ export function HeroSection() {
           color: "#334155",
           fontSize: "0.7rem",
           fontWeight: 500,
+          animation: "hero-fade-in 0.45s ease 1.8s both",
         }}
       >
         <span>اكتشف المزيد</span>
@@ -523,7 +503,7 @@ export function HeroSection() {
             strokeLinejoin="round"
           />
         </svg>
-      </motion.div>
+      </div>
 
       <style>{`
         @media (max-width: 1200px) {

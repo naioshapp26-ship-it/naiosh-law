@@ -17,12 +17,36 @@ type SessionResponse = {
   user?: SessionUser;
 };
 
+function readStorageValue(key: string) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorageValue(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // The httpOnly cookie is authoritative; localStorage is only a UI hydration mirror.
+  }
+}
+
+function removeStorageValue(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore unavailable browser storage and continue with in-memory state.
+  }
+}
+
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const raw = window.localStorage.getItem(sessionStorageKey);
+  const raw = readStorageValue(sessionStorageKey);
   if (!raw) {
     return null;
   }
@@ -40,17 +64,17 @@ export function readStoredUser(): SessionUser | null {
     // Clear invalid demo sessions so a corrupt localStorage value cannot break the app.
   }
 
-  window.localStorage.removeItem(sessionStorageKey);
+  removeStorageValue(sessionStorageKey);
   return null;
 }
 
 export function saveSessionUser(user: SessionUser) {
-  window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+  writeStorageValue(sessionStorageKey, JSON.stringify(user));
   window.dispatchEvent(new Event(sessionChangedEvent));
 }
 
 export async function clearSessionUser() {
-  window.localStorage.removeItem(sessionStorageKey);
+  removeStorageValue(sessionStorageKey);
   window.dispatchEvent(new Event(sessionChangedEvent));
 
   try {
@@ -85,15 +109,15 @@ export function useSession(redirectIfMissing = false) {
         }
 
         if (response.ok && result.ok && result.user) {
-          window.localStorage.setItem(sessionStorageKey, JSON.stringify(result.user));
+          writeStorageValue(sessionStorageKey, JSON.stringify(result.user));
           setUser(result.user);
         } else {
-          window.localStorage.removeItem(sessionStorageKey);
+          removeStorageValue(sessionStorageKey);
           setUser(null);
         }
       } catch {
         if (active) {
-          window.localStorage.removeItem(sessionStorageKey);
+          removeStorageValue(sessionStorageKey);
           setUser(null);
         }
       } finally {

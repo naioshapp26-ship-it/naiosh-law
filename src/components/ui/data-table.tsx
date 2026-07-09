@@ -250,7 +250,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         }}
       >
         <div className="data-table-scroll" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (
@@ -475,7 +475,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .data-table-scroll {
           -webkit-overflow-scrolling: touch;
         }
-        @media (max-width: 700px) {
+        @media (max-width: 900px) {
           .data-table-toolbar {
             align-items: stretch !important;
             flex-direction: column;
@@ -498,6 +498,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .data-table-cards {
             display: grid !important;
             gap: 0.85rem;
+          }
+        }
+        @media (max-width: 520px) {
+          .data-table-cards article {
+            padding: 0.85rem !important;
           }
         }
       `}</style>
