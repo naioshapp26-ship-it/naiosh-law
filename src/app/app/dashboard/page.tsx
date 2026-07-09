@@ -145,12 +145,16 @@ export default function DashboardPage() {
     () => parseCompletedTasks(completedTasksSnapshot, taskStorageScope),
     [completedTasksSnapshot, taskStorageScope]
   );
-  const todayLabel = new Intl.DateTimeFormat("ar-EG", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+  const todayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("ar-EG", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date()),
+    []
+  );
 
   const toggleTask = (taskId: string) => {
     const next = new Set(completedTasks);
@@ -343,7 +347,7 @@ export default function DashboardPage() {
 
                 return (
                 <label
-                  key={t.task}
+                  key={t.id}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",

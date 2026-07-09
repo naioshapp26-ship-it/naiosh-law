@@ -15,7 +15,7 @@ export const demoUsers: DemoUser[] = [
   },
   {
     role: "client",
-    name: "عميل تجريبي",
+    name: "أحمد محمد الصاوي",
     email: "client@naioshlaw.com",
     password: "Client@123",
   },

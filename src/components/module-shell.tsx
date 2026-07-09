@@ -12,6 +12,7 @@ import type { ModuleConfig } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
 import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
+import type { SessionUser } from "@/lib/auth-session";
 
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
 type MemoryRows = {
@@ -126,17 +127,110 @@ function rowsFromSnapshot(slug: string, fallbackRows: Record<string, unknown>[],
   return seededFallback;
 }
 
+function normalizeSearchText(value: unknown) {
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("ar-EG");
+}
+
+function clientMatchTerms(user: SessionUser) {
+  const terms = new Set([normalizeSearchText(user.name), normalizeSearchText(user.email)]);
+  const nameParts = normalizeSearchText(user.name).split(" ").filter(Boolean);
+
+  if (nameParts.length > 1) {
+    terms.add(`${nameParts[0]} ${nameParts[nameParts.length - 1]}`);
+  }
+
+  return [...terms].filter(Boolean);
+}
+
+function rowBelongsToClient(slug: string, row: Record<string, unknown>, user: SessionUser) {
+  if (slug === "notifications-center") {
+    return normalizeSearchText(row.audience).includes("الموكل");
+  }
+
+  const searchableValues = ["client", "name", "email"].map((key) => normalizeSearchText(row[key]));
+  const terms = clientMatchTerms(user);
+
+  return searchableValues.some((value) => terms.some((term) => value === term || value.includes(term)));
+}
+
+function getVisibleRows(slug: string, rows: Record<string, unknown>[], user: SessionUser) {
+  if (user.role === "admin") {
+    return rows;
+  }
+
+  return rows.filter((row) => rowBelongsToClient(slug, row, user));
+}
+
+function modulePrefix(slug: string) {
+  return slug
+    .split("-")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 4) || "ROW";
+}
+
+function generatePrimaryValue(firstColumnKey: string, slug: string, rows: Record<string, unknown>[]) {
+  if (firstColumnKey === "id") {
+    const maxId = rows.reduce((max, row) => {
+      const id = Number(row.id);
+      return Number.isFinite(id) ? Math.max(max, id) : max;
+    }, 0);
+
+    return maxId + 1;
+  }
+
+  const suffix = Date.now().toString().slice(-6);
+
+  if (firstColumnKey === "caseNo") {
+    return `#${new Date().getFullYear()}-${suffix}`;
+  }
+
+  if (firstColumnKey === "invoiceNo") {
+    return `INV-${new Date().getFullYear()}-${suffix}`;
+  }
+
+  if (firstColumnKey === "jobId") {
+    return `AI-${suffix}`;
+  }
+
+  return `${modulePrefix(slug)}-${suffix}`;
+}
+
+function withGeneratedPrimaryValue(
+  data: Record<string, unknown>,
+  config: ModuleConfig,
+  slug: string,
+  rows: Record<string, unknown>[]
+) {
+  const firstColumnKey = config.columns[0]?.key;
+
+  if (!firstColumnKey || String(data[firstColumnKey] ?? "").trim()) {
+    return data;
+  }
+
+  return {
+    ...data,
+    [firstColumnKey]: generatePrimaryValue(firstColumnKey, slug, rows),
+  };
+}
+
 function persistRows(slug: string, scope: string, rows: Record<string, unknown>[]) {
   if (typeof window === "undefined") {
-    return;
+    return false;
   }
 
   try {
     window.localStorage.setItem(getRowsStorageKey(slug, scope), JSON.stringify(rows));
   } catch {
-    // CRUD state remains in memory if browser storage is unavailable or full.
+    notifyRowsChange();
+    return false;
   }
   notifyRowsChange();
+  return true;
 }
 
 export function ModuleShell({ slug, config, title }: { slug: string; config: ModuleConfig; title: string }) {
@@ -158,6 +252,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
 
   const [memoryRows, setMemoryRows] = useState<MemoryRows | null>(null);
   const rows = memoryRows?.scopeKey === rowsStateKey ? memoryRows.rows : storedRows;
+  const visibleRows = useMemo(() => (user ? getVisibleRows(slug, rows, user) : rows), [rows, slug, user]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -181,7 +276,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
     (updater: (currentRows: Record<string, unknown>[]) => Record<string, unknown>[]) => {
       const nextRows = updater(rows);
       setMemoryRows({ scopeKey: rowsStateKey, rows: nextRows });
-      persistRows(slug, rowsStorageScope, nextRows);
+      return persistRows(slug, rowsStorageScope, nextRows);
     },
     [rows, rowsStateKey, rowsStorageScope, slug]
   );
@@ -237,29 +332,50 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = (data: Record<string, unknown>) => {
+    const persistenceError = "تم تطبيق التغيير مؤقتًا فقط؛ تعذر حفظه في مساحة التخزين المحلية.";
+
     if (editTarget) {
-      updateRows((prev) => prev.map((row) => (row[rowIdKey] === editTarget[rowIdKey] ? { ...row, ...data } : row)));
-      pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
+      const persisted = updateRows((prev) =>
+        prev.map((row) => (row[rowIdKey] === editTarget[rowIdKey] ? { ...row, ...data } : row))
+      );
+      pushToast(
+        persisted ? "success" : "error",
+        persisted ? `✅ تم تعديل ${config.entityName} بنجاح` : persistenceError
+      );
     } else {
-      const newRow = { ...data, [rowIdKey]: `${slug}-${Date.now()}` };
-      updateRows((prev) => [newRow, ...prev]);
-      pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
+      const newRow = {
+        ...withGeneratedPrimaryValue(data, config, slug, rows),
+        [rowIdKey]: `${slug}-${Date.now()}`,
+      };
+      const persisted = updateRows((prev) => [newRow, ...prev]);
+      pushToast(
+        persisted ? "success" : "error",
+        persisted ? `✅ تمت إضافة ${config.entityName} جديد بنجاح` : persistenceError
+      );
     }
     setModalOpen(false);
     setEditTarget(null);
   };
 
   const handleDeleteConfirm = () => {
-    updateRows((prev) => prev.filter((row) => row[rowIdKey] !== deleteTarget?.[rowIdKey]));
-    pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
+    const persisted = updateRows((prev) => prev.filter((row) => row[rowIdKey] !== deleteTarget?.[rowIdKey]));
+    pushToast(
+      persisted ? "success" : "error",
+      persisted ? `🗑️ تم حذف ${config.entityName} بنجاح` : "تم حذف السجل مؤقتًا فقط؛ تعذر تحديث التخزين المحلي."
+    );
     setDeleteTarget(null);
   };
 
   const downloadCsvReport = () => {
-    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const escapeCsv = (value: unknown) => {
+      const rawValue = String(value ?? "");
+      const safeValue = /^[=+\-@]/u.test(rawValue.trimStart()) ? `'${rawValue}` : rawValue;
+
+      return `"${safeValue.replace(/"/g, '""')}"`;
+    };
     const csv = [
       config.columns.map((column) => escapeCsv(column.label)).join(","),
-      ...rows.map((row) => config.columns.map((column) => escapeCsv(row[column.key])).join(",")),
+      ...visibleRows.map((row) => config.columns.map((column) => escapeCsv(row[column.key])).join(",")),
     ].join("\n");
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -352,7 +468,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
                 {moduleIconMap[slug] ?? "📌"} {title}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {entityPlural} — جميع البيانات محدثة
+                إجمالي {visibleRows.length} {entityPlural} — جميع البيانات محدثة
               </p>
             </div>
             <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
@@ -384,7 +500,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
         <div className="card-white" style={{ padding: "1.5rem" }}>
           <DataTable
             columns={config.columns}
-            data={rows}
+            data={visibleRows}
             onView={setViewTarget}
             onEdit={isAdmin ? openEdit : undefined}
             onDelete={isAdmin ? setDeleteTarget : undefined}
@@ -434,7 +550,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
               <button onClick={() => setReportOpen(false)} aria-label="إغلاق تصدير التقارير" style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
-              اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {entityPlural}
+              اختر صيغة التصدير المناسبة لـ {visibleRows.length} سجل في {entityPlural}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <button

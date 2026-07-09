@@ -84,6 +84,20 @@ function cacheVerifiedSession(rawSession: SessionSnapshot, user: SessionUser) {
   };
 }
 
+function isSessionUser(value: unknown): value is SessionUser {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const parsed = value as Partial<SessionUser>;
+
+  return (
+    (parsed.role === "admin" || parsed.role === "client") &&
+    typeof parsed.name === "string" &&
+    typeof parsed.email === "string"
+  );
+}
+
 export function saveSession(user: SessionUser) {
   const serializedUser = serializeSession(user);
 
@@ -112,13 +126,9 @@ function parseStoredSession(raw: string | null): SessionUser | null {
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<SessionUser>;
-    if (
-      (parsed.role === "admin" || parsed.role === "client") &&
-      typeof parsed.name === "string" &&
-      typeof parsed.email === "string"
-    ) {
-      return parsed as SessionUser;
+    const parsed = JSON.parse(raw) as unknown;
+    if (isSessionUser(parsed)) {
+      return parsed;
     }
   } catch {
     return null;
@@ -195,7 +205,7 @@ export function useSession(redirectIfMissing = false) {
   const hydrated = rawSession !== undefined;
   const cachedUser = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
   const reusableVerifiedUser = useMemo(() => getFreshVerifiedSession(rawSession), [rawSession]);
-  const user = redirectIfMissing ? verifiedUser ?? reusableVerifiedUser ?? cachedUser : cachedUser;
+  const user = redirectIfMissing ? verifiedUser ?? reusableVerifiedUser : cachedUser;
   const ready =
     hydrated &&
     (!redirectIfMissing ||
@@ -233,8 +243,8 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
-        const payload = (await response.json()) as { user?: SessionUser };
-        if (payload.user) {
+        const payload = (await response.json()) as { user?: unknown };
+        if (isSessionUser(payload.user)) {
           setVerifiedUser(payload.user);
           setVerifiedRawSession(rawSession);
           setVerified(true);
@@ -256,14 +266,6 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
-        if (cachedUser) {
-          setVerifiedUser(cachedUser);
-          setVerifiedRawSession(rawSession);
-          setVerified(true);
-          cacheVerifiedSession(rawSession, cachedUser);
-          return;
-        }
-
         setVerifiedUser(null);
         setVerified(false);
         setVerifiedRawSession(rawSession);
@@ -272,7 +274,7 @@ export function useSession(redirectIfMissing = false) {
       });
 
     return () => controller.abort();
-  }, [cachedUser, rawSession, redirectIfMissing, router]);
+  }, [rawSession, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({

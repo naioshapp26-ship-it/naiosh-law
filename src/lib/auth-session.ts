@@ -34,11 +34,14 @@ export function isSessionConfigurationError(error: unknown): error is SessionCon
 }
 
 function getSessionSecret() {
-  const configuredSecret =
-    process.env.NAIOSH_SESSION_SECRET ?? process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  const configuredSecret = [
+    process.env.NAIOSH_SESSION_SECRET,
+    process.env.AUTH_SECRET,
+    process.env.NEXTAUTH_SECRET,
+  ].find((secret) => !!secret?.trim());
 
   if (configuredSecret) {
-    return configuredSecret;
+    return configuredSecret.trim();
   }
 
   if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
@@ -53,16 +56,20 @@ function shouldUseSecureCookie(request?: Request) {
     return false;
   }
 
+  if (process.env.NAIOSH_ALLOW_INSECURE_SESSION_COOKIE === "true") {
+    return false;
+  }
+
   if (!request) {
     return true;
   }
 
   const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
   if (forwardedProto) {
-    return forwardedProto === "https";
+    return forwardedProto !== "http";
   }
 
-  return new URL(request.url).protocol === "https:";
+  return true;
 }
 
 export function getSessionCookieOptions(request?: Request) {
@@ -146,7 +153,13 @@ export async function decodeSession(token?: string | null): Promise<SessionUser 
     return null;
   }
 
-  const [payloadPart, signaturePart] = token.split(".");
+  const tokenParts = token.split(".");
+
+  if (tokenParts.length !== 2) {
+    return null;
+  }
+
+  const [payloadPart, signaturePart] = tokenParts;
 
   if (!payloadPart || !signaturePart) {
     return null;

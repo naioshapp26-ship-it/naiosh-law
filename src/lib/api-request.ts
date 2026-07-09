@@ -21,6 +21,41 @@ function hasJsonContentType(request: Request) {
   return request.headers.get("content-type")?.toLowerCase().includes(jsonContentType) ?? false;
 }
 
+async function readTextWithByteLimit(request: Request, maxBytes: number): Promise<JsonResult<string>> {
+  if (!request.body) {
+    return { ok: true, data: "" };
+  }
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let receivedBytes = 0;
+  let body = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      receivedBytes += value.byteLength;
+      if (receivedBytes > maxBytes) {
+        await reader.cancel();
+        return { ok: false, response: jsonError("JSON payload is too large.", 413) };
+      }
+
+      body += decoder.decode(value, { stream: true });
+    }
+
+    body += decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+
+  return { ok: true, data: body };
+}
+
 export async function readJsonBody<T>(
   request: Request,
   { optional = false, emptyBodyValue, maxBytes = defaultMaxJsonBytes }: ReadJsonOptions<T> = {}
@@ -39,11 +74,11 @@ export async function readJsonBody<T>(
     return { ok: false, response: jsonError("Content-Type must be application/json.", 415) };
   }
 
-  const rawBody = await request.text();
-
-  if (new TextEncoder().encode(rawBody).byteLength > maxBytes) {
-    return { ok: false, response: jsonError("JSON payload is too large.", 413) };
+  const rawBodyResult = await readTextWithByteLimit(request, maxBytes);
+  if (!rawBodyResult.ok) {
+    return rawBodyResult;
   }
+  const rawBody = rawBodyResult.data;
 
   if (!rawBody.trim()) {
     if (optional) {

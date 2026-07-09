@@ -14,6 +14,8 @@ npm ci
 Use a long random `NAIOSH_SESSION_SECRET` value outside local demos. The app also recognizes `AUTH_SECRET` and
 `NEXTAUTH_SECRET` as fallback secret names. Production requests fail closed without one of these values unless
 `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true` is set for a deliberate temporary demo deployment.
+Production session cookies are marked `Secure` by default; only set `NAIOSH_ALLOW_INSECURE_SESSION_COOKIE=true`
+for local HTTP-only production smoke tests.
 
 Run the development server:
 
@@ -32,6 +34,7 @@ The login page includes demo admin and client profiles. Manual demo credentials 
 
 Session state is signed in an httpOnly cookie. Client storage is only used as a UI cache for the demo experience.
 In production, demo login is disabled unless `NAIOSH_ENABLE_DEMO_LOGIN=true` is configured.
+The seeded client demo maps to one mock client record so client-role views stay scoped in the demo UI.
 
 ## Verification
 

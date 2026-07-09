@@ -16,7 +16,7 @@ export const demoLoginProfiles: DemoLoginProfile[] = [
   {
     role: "client",
     label: "عميل تجريبي",
-    name: "عميل تجريبي",
+    name: "أحمد محمد الصاوي",
     email: "client@naioshlaw.com",
   },
 ];
