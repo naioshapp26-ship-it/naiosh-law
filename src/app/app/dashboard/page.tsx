@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
 import { ModuleCard } from "@/components/module-card";
 import { getVisibleOperationalModules } from "@/data/modules";
+import { readStorageValue, removeStorageValue, writeStorageValue } from "@/lib/browser-storage";
 import { useSession } from "@/lib/session";
 
 const kpis = [
@@ -30,9 +31,41 @@ const recentTasks = [
   { id: "invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
+const completedTasksStorageKey = "naiosh-law-dashboard-completed-tasks";
+const knownTaskIds = new Set(recentTasks.map((task) => task.id));
+
+function loadCompletedTasks() {
+  const rawTasks = readStorageValue(completedTasksStorageKey);
+
+  if (!rawTasks) {
+    return new Set<string>();
+  }
+
+  try {
+    const parsed = JSON.parse(rawTasks) as unknown;
+
+    if (Array.isArray(parsed)) {
+      return new Set(
+        parsed.filter((taskId): taskId is string => (
+          typeof taskId === "string" && knownTaskIds.has(taskId)
+        ))
+      );
+    }
+  } catch {
+    removeStorageValue(completedTasksStorageKey);
+  }
+
+  return new Set<string>();
+}
+
+function persistCompletedTasks(tasks: Set<string>) {
+  writeStorageValue(completedTasksStorageKey, JSON.stringify(Array.from(tasks)));
+}
+
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(() => new Set());
+  const tasksReadyForPersistenceRef = useRef(false);
   const todayLabel = useMemo(
     () =>
       new Intl.DateTimeFormat("ar-EG", {
@@ -43,6 +76,32 @@ export default function DashboardPage() {
       }).format(new Date()),
     []
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    tasksReadyForPersistenceRef.current = false;
+
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      tasksReadyForPersistenceRef.current = true;
+      setCompletedTasks(loadCompletedTasks());
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tasksReadyForPersistenceRef.current) {
+      return;
+    }
+
+    persistCompletedTasks(completedTasks);
+  }, [completedTasks]);
 
   const toggleTask = (taskId: string) => {
     setCompletedTasks((current) => {

@@ -375,7 +375,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
                 {mobileDetailColumns.map((col) => (
-                  <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
+                  <div key={col.key} className="mobile-detail-row" style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
                     <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700, flexShrink: 0 }}>{col.label}</span>
                     <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0, overflowWrap: "anywhere" }}>{renderCell(col, row)}</span>
                   </div>
@@ -516,6 +516,16 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .data-table-pagination > div {
             justify-content: center;
             flex-wrap: wrap;
+          }
+        }
+        @media (max-width: 420px) {
+          .mobile-detail-row {
+            align-items: stretch !important;
+            flex-direction: column !important;
+            gap: 0.25rem !important;
+          }
+          .mobile-detail-row > span:last-child {
+            text-align: start !important;
           }
         }
       `}</style>

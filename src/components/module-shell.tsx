@@ -263,11 +263,13 @@ export function ModuleShell({ slug, config, title }: Props) {
     if (!viewTarget) return null;
     return (
       <div
+        className="module-overlay"
         style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
         onClick={() => setViewTarget(null)}
         role="presentation"
       >
         <div
+          className="module-dialog-panel"
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
@@ -291,7 +293,7 @@ export function ModuleShell({ slug, config, title }: Props) {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div className="module-dialog-actions" style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             {isAdmin && (
               <button
                 type="button"
@@ -397,11 +399,13 @@ export function ModuleShell({ slug, config, title }: Props) {
       {/* Reports Modal */}
       {reportOpen && (
         <div
+          className="module-overlay"
           style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
           onClick={() => setReportOpen(false)}
           role="presentation"
         >
           <div
+            className="module-dialog-panel"
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, maxHeight: "min(90vh, calc(100vh - 2rem))", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
@@ -441,6 +445,22 @@ export function ModuleShell({ slug, config, title }: Props) {
           to   { opacity: 1; transform: translateY(0); }
         }
         @media (max-width: 600px) {
+          .module-overlay {
+            align-items: flex-start !important;
+            padding: 0.75rem !important;
+            padding-top: calc(0.75rem + env(safe-area-inset-top)) !important;
+          }
+          .module-dialog-panel {
+            border-radius: 16px !important;
+            max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top)) !important;
+            padding: 1.25rem !important;
+          }
+          .module-dialog-actions {
+            flex-direction: column-reverse !important;
+          }
+          .module-dialog-actions > button {
+            width: 100% !important;
+          }
           .view-modal-grid { grid-template-columns: 1fr !important; }
           .card-white { padding-inline: 1rem !important; }
           .toast-stack {

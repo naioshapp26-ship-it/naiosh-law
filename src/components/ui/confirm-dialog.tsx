@@ -93,6 +93,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
 
   return (
     <div
+      className="confirm-dialog-backdrop"
       style={{
         position: "fixed",
         inset: 0,
@@ -109,7 +110,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
     >
       <div
         ref={dialogRef}
-        className="card-white"
+        className="card-white confirm-dialog-panel"
         style={{ maxWidth: 400, width: "100%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
         role="alertdialog"
@@ -139,7 +140,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         <p id="confirm-dialog-message" style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
           {message}
         </p>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div className="confirm-dialog-actions" style={{ display: "flex", gap: "0.75rem" }}>
           <button
             onClick={onCancel}
             style={{
@@ -178,6 +179,22 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
           </button>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 480px) {
+          .confirm-dialog-backdrop {
+            align-items: flex-start !important;
+            padding: 0.75rem !important;
+            padding-top: calc(0.75rem + env(safe-area-inset-top)) !important;
+          }
+          .confirm-dialog-panel {
+            border-radius: 16px !important;
+            padding: 1.25rem !important;
+          }
+          .confirm-dialog-actions {
+            flex-direction: column-reverse !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

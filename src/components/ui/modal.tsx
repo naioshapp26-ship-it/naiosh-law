@@ -121,6 +121,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
 
   return (
     <div
+      className="modal-backdrop"
       style={{
         position: "fixed",
         inset: 0,
@@ -137,6 +138,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
     >
       <div
         ref={dialogRef}
+        className="module-modal-panel"
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -276,6 +278,18 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
       </div>
 
       <style>{`
+        @media (max-width: 760px) {
+          .modal-backdrop {
+            align-items: flex-start !important;
+            padding: 0.75rem !important;
+            padding-top: calc(0.75rem + env(safe-area-inset-top)) !important;
+          }
+          .module-modal-panel {
+            border-radius: 16px !important;
+            max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top)) !important;
+            padding: 1.25rem !important;
+          }
+        }
         @media (max-width: 600px) {
           .modal-form-grid { grid-template-columns: 1fr !important; }
           .modal-actions { flex-direction: column-reverse; }

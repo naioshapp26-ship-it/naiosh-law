@@ -45,8 +45,8 @@ npm run build
 
 ## Data model
 
-This repository currently ships static demo module data. Module add/edit/delete actions persist to browser
-`localStorage` per module so demo changes survive refreshes, but there is no database, ORM, or migration layer yet.
+This repository currently ships static demo module data. Module add/edit/delete actions and dashboard task checks persist
+to browser `localStorage` so demo changes survive refreshes, but there is no database, ORM, or migration layer yet.
 
 Integration demo endpoints are available at `/api/sms`, `/api/email`, `/api/payments`, `/api/sign`, `/api/courts`,
 `/api/tax`, `/api/ocr`, and `/api/analytics`.
