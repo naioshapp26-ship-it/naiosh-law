@@ -10,15 +10,40 @@ export type SessionUser = {
   email: string;
 };
 
+function readStoredUser(): SessionUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(sessionKey);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<SessionUser>;
+    if (
+      (parsed.role === "admin" || parsed.role === "client") &&
+      typeof parsed.name === "string" &&
+      typeof parsed.email === "string"
+    ) {
+      return {
+        role: parsed.role,
+        name: parsed.name,
+        email: parsed.email,
+      };
+    }
+  } catch {
+    // Clear invalid demo sessions so a corrupt localStorage value cannot break the app.
+  }
+
+  window.localStorage.removeItem(sessionKey);
+  return null;
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user] = useState<SessionUser | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    const raw = window.localStorage.getItem(sessionKey);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
-  });
+  const [user] = useState<SessionUser | null>(readStoredUser);
   const ready = true;
 
   useEffect(() => {
