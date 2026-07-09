@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { canAccessModule } from "@/lib/module-routing";
 import {
   getSafeAppPath,
   readSessionToken,
@@ -23,6 +24,14 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
+  }
+
+  const moduleMatch = request.nextUrl.pathname.match(/^\/app\/modules\/([^/]+)/);
+  if (moduleMatch) {
+    const slug = decodeURIComponent(moduleMatch[1]);
+    if (!canAccessModule(slug, session.role)) {
+      return NextResponse.redirect(new URL("/app/dashboard", request.url));
+    }
   }
 
   return NextResponse.next();
