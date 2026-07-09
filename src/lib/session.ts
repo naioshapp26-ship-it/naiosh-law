@@ -112,7 +112,6 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     if (!redirectIfMissing) {
-      setServerValidated(true);
       return;
     }
 
@@ -121,13 +120,11 @@ export function useSession(redirectIfMissing = false) {
     }
 
     if (lastValidatedSession.current === rawSession) {
-      setServerValidated(true);
       return;
     }
 
     const controller = new AbortController();
     lastValidatedSession.current = rawSession;
-    setServerValidated(false);
 
     fetch("/api/auth/session", {
       cache: "no-store",
