@@ -151,12 +151,16 @@ export default function DashboardPage() {
     () => parseCompletedTasks(completedTasksSnapshot, taskStorageScope),
     [completedTasksSnapshot, taskStorageScope]
   );
-  const todayLabel = new Intl.DateTimeFormat("ar-EG", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+  const todayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("ar-EG", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date()),
+    []
+  );
 
   const toggleTask = (taskId: string) => {
     const next = new Set(completedTasks);
@@ -280,6 +284,7 @@ export default function DashboardPage() {
                   }}
                 >
                   <div
+                    className="session-card-header"
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
@@ -386,7 +391,7 @@ export default function DashboardPage() {
                     >
                       {t.task}
                     </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <div className="task-meta-row" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <span
                         style={{
                           background:
@@ -451,6 +456,18 @@ export default function DashboardPage() {
         @media (max-width: 600px) {
           .kpi-grid { grid-template-columns: 1fr !important; }
           .mod-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 420px) {
+          .session-card-header {
+            align-items: flex-start !important;
+            flex-direction: column;
+            gap: 0.4rem;
+          }
+          .task-meta-row {
+            align-items: flex-start !important;
+            flex-direction: column;
+            gap: 0.35rem !important;
+          }
         }
       `}</style>
     </AppShell>
