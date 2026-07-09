@@ -72,6 +72,9 @@ async function main() {
   console.log("🌱 Seeding Naiosh Law database...");
 
   await prisma.auditLog.deleteMany();
+  await prisma.circularInstruction.deleteMany();
+  await prisma.legalArticle.deleteMany();
+  await prisma.legalDocument.deleteMany();
   await prisma.professionalNetwork.deleteMany();
   await prisma.caseSubject.deleteMany();
   await prisma.specializationSubject.deleteMany();
@@ -252,6 +255,132 @@ async function main() {
       { caseNo: "#2024-0547", client: "أحمد محمد الصاوي", court: "محكمة الاستئناف القاهرة", room: "7", date: "15 يوليو 2026", time: "10:00", status: "مجدولة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0548", client: "شركة النيل للتجارة", court: "المحكمة الابتدائية الجيزة", room: "3", date: "16 يوليو 2026", time: "11:30", status: "قريبة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0280", client: "خالد عبد الرحمن عمر", court: "محكمة الجنايات القاهرة", room: "12", date: "18 يوليو 2026", time: "09:00", status: "مجدولة", lawyer: "أحمد المحامي" },
+    ],
+  });
+
+  // Phase 4 — Legal Library
+  await prisma.legalDocument.createMany({
+    data: [
+      {
+        title: "قانون الإثبات في المواد المدنية والتجارية",
+        type: "law",
+        category: "تشريعات",
+        branchId: branchRecords[1].id,
+        specializationId: specRecords[0].id,
+        summary: "ينظم قواعد الإثبات أمام المحاكم المدنية والتجارية ويحدد وسائل الإثبات المقبولة.",
+        tags: "إثبات,مدني,تجاري",
+        status: "منشور",
+        publishedAt: "2024-01-01",
+      },
+      {
+        title: "نموذج عقد بيع تجاري",
+        type: "contract_template",
+        category: "عقود",
+        branchId: branchRecords[3].id,
+        specializationId: specRecords[0].id,
+        summary: "قالب جاهز لعقود البيع التجاري مع بنود الضمان والتسليم والدفع.",
+        tags: "عقد,بيع,تجاري",
+        status: "منشور",
+        publishedAt: "2025-06-15",
+      },
+      {
+        title: "نموذج مذكرة دفاع جنائي",
+        type: "memo_template",
+        category: "مذكرات",
+        branchId: branchRecords[2].id,
+        specializationId: specRecords[16].id,
+        summary: "هيكل مذكرة دفاع أمام محاكم الجنايات مع أقسام الوقائع والدفوع والطلبات.",
+        tags: "جنائي,مذكرة,دفاع",
+        status: "منشور",
+        publishedAt: "2025-09-01",
+      },
+      {
+        title: "لائحة تنظيم جلسات المحاكم الابتدائية",
+        type: "regulation",
+        category: "لوائح",
+        branchId: branchRecords[4].id,
+        summary: "تنظم إجراءات الجلسات والتأجيل والحضور والغياب في المحاكم الابتدائية.",
+        tags: "إجراءات,محاكم",
+        status: "منشور",
+        publishedAt: "2023-11-20",
+      },
+    ],
+  });
+
+  await prisma.legalArticle.createMany({
+    data: [
+      {
+        title: "مبادئ المسؤولية التعاقدية في العقود التجارية",
+        author: "د. سارة المستشارة",
+        branchId: branchRecords[3].id,
+        specializationId: specRecords[0].id,
+        summary: "تحليل للمسؤولية التعاقدية وشروط الإخلال والتعويض في العقود التجارية المعاصرة.",
+        content: "تتناول هذه المقالة أسس المسؤولية التعاقدية...",
+        tags: "عقود,تجاري,مسؤولية",
+        readMinutes: 8,
+        status: "منشور",
+        publishedAt: "2026-02-10",
+      },
+      {
+        title: "حق الدفاع في القضايا الجنائية — ضمانات دستورية",
+        author: "أحمد المحامي",
+        branchId: branchRecords[2].id,
+        specializationId: specRecords[16].id,
+        summary: "مراجعة لضمانات حق الدفاع في الدستور والقانون والممارسة القضائية.",
+        tags: "جنائي,دفاع,دستور",
+        readMinutes: 12,
+        status: "منشور",
+        publishedAt: "2026-03-05",
+      },
+      {
+        title: "التحكيم التجاري الدولي: نظرة مقارنة",
+        author: "د. منى الاستشارية",
+        branchId: branchRecords[3].id,
+        specializationId: specRecords[11].id,
+        summary: "مقارنة بين أنظمة التحكيم في مصر والمركز القومي للتحكيم والقواعد الدولية.",
+        tags: "تحكيم,دولي,تجاري",
+        readMinutes: 15,
+        status: "منشور",
+        publishedAt: "2026-04-18",
+      },
+    ],
+  });
+
+  await prisma.circularInstruction.createMany({
+    data: [
+      {
+        circularNo: "تعميم مجلس القضاء 12/2025",
+        title: "تنظيم إجراءات الجلسات عن بُعد",
+        issuer: "مجلس القضاء الأعلى",
+        branchId: branchRecords[4].id,
+        issueDate: "2025-12-01",
+        effectiveDate: "2026-01-01",
+        summary: "يحدد شروط عقد الجلسات عن بُعد ومتطلبات التوثيق والحضور الإلكتروني.",
+        status: "ساري",
+        tags: "جلسات,إلكتروني",
+      },
+      {
+        circularNo: "وزارة العدل 45/2026",
+        title: "تحديث رسوم التوثيق والشهر العقاري",
+        issuer: "وزارة العدل",
+        branchId: branchRecords[1].id,
+        issueDate: "2026-01-15",
+        effectiveDate: "2026-02-01",
+        summary: "تعديل جداول الرسوم الخاصة بتوثيق العقود والشهر العقاري.",
+        status: "ساري",
+        tags: "رسوم,توثيق",
+      },
+      {
+        circularNo: "محكمة النقض 8/2024",
+        title: "مبادئ توحيد الاجتهاد في القضايا التجارية",
+        issuer: "محكمة النقض",
+        branchId: branchRecords[3].id,
+        issueDate: "2024-09-20",
+        effectiveDate: "2024-10-01",
+        summary: "تعليمات بشأن توحيد المبادئ القضائية في نزاعات الشركات والإفلاس.",
+        status: "ملغى",
+        tags: "نقض,تجاري",
+      },
     ],
   });
 
