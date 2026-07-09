@@ -136,27 +136,36 @@ export function HeroSection() {
             }}
           >
             {/* Badge */}
-            <div className="hero-badge" style={{ marginBottom: "1.75rem" }}>
+            <div
+              className="hero-badge"
+              style={{
+                marginBottom: "1.1rem",
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
               <span
+                className="hero-badge-pill"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.55rem",
+                  gap: "0.7rem",
                   background: "rgba(195,21,42,0.1)",
                   border: "1px solid rgba(195,21,42,0.28)",
                   borderRadius: "100px",
-                  padding: "0.45rem 1.25rem",
+                  padding: "0.62rem 1.6rem",
                   color: "#fca5a5",
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  letterSpacing: "0.03em",
+                  fontSize: "0.94rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
                 }}
               >
                 <span
                   className="pulse-dot"
                   style={{
-                    width: 7,
-                    height: 7,
+                    width: 9,
+                    height: 9,
                     borderRadius: "50%",
                     background: "#c3152a",
                     flexShrink: 0,
@@ -563,6 +572,13 @@ export function HeroSection() {
       </motion.div>
 
       <style>{`
+        @keyframes hero-badge-drift {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        .hero-badge-pill {
+          animation: hero-badge-drift 3.4s ease-in-out infinite;
+        }
         @media (max-width: 1200px) {
           .hero-card-col {
             width: 320px !important;
@@ -576,6 +592,10 @@ export function HeroSection() {
           .hero-heading {
             line-height: 1.12 !important;
             font-size: clamp(2.5rem, 7.5vw, 4.2rem) !important;
+          }
+          .hero-badge-pill {
+            font-size: 0.86rem !important;
+            padding: 0.52rem 1.25rem !important;
           }
         }
         @media (max-width: 900px) {
