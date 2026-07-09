@@ -282,7 +282,7 @@ export function AppShell({ role, name, children }: Props) {
             {/* Drawer panel */}
             <div style={{
               position: "relative", zIndex: 1,
-              width: 280, background: "#ffffff",
+              width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
@@ -356,7 +356,7 @@ export function AppShell({ role, name, children }: Props) {
           .logo-text         { display: none; }
           .user-name-block   { display: none; }
           .drawer-header     { display: flex !important; }
-          main               { padding-bottom: 5rem !important; }
+          main               { padding: 1rem 0.75rem 5rem !important; }
         }
         @media (max-width: 420px) {
           header button[aria-label="التنبيهات"] { display: none !important; }

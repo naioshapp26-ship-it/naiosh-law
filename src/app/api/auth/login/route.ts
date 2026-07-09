@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { encodeSession, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
+import { encodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
 
@@ -38,13 +38,7 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ user });
   const token = await encodeSession(user);
 
-  response.cookies.set(sessionCookieName, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: sessionMaxAgeSeconds,
-  });
+  response.cookies.set(sessionCookieName, token, getSessionCookieOptions());
 
   return response;
 }

@@ -6,8 +6,7 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
-import { moduleMap } from "@/data/modules";
+import type { ModuleConfig } from "@/data/module-configs";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
@@ -23,12 +22,17 @@ function seedRows(slug: string, rows: Record<string, unknown>[]) {
   }));
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
+type ModuleShellProps = {
+  slug: string;
+  config: ModuleConfig;
+  moduleTitle?: string;
+};
+
+export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
   const { user, ready } = useSession(true);
-  const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config?.data ?? []));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config.data));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -50,18 +54,6 @@ export function ModuleShell({ slug }: { slug: string }) {
           <p>جاري التحميل...</p>
         </div>
       </div>
-    );
-  }
-
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
     );
   }
 
@@ -177,7 +169,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                  config.entityName === "موكل" ? "👥" :
                  config.entityName === "جلسة" ? "🏛️" :
                  config.entityName === "متابعة" ? "📋" :
-                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleTitle ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
@@ -292,8 +284,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         @media (max-width: 600px) {
           .view-modal-grid { grid-template-columns: 1fr !important; }
           .toast-stack {
-            right: 1rem !important;
-            left: 1rem !important;
+            inset-inline: 1rem !important;
             bottom: 5.5rem !important;
           }
         }

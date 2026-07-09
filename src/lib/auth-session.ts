@@ -17,7 +17,34 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 function getSessionSecret() {
-  return process.env.NAIOSH_SESSION_SECRET ?? "naiosh-law-demo-session-secret";
+  const secret = process.env.NAIOSH_SESSION_SECRET;
+
+  if (secret) {
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NAIOSH_SESSION_SECRET must be set in production.");
+  }
+
+  return "naiosh-law-demo-session-secret";
+}
+
+export function getSessionCookieOptions(maxAge = sessionMaxAgeSeconds) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge,
+  };
+}
+
+export function getExpiredSessionCookieOptions() {
+  return {
+    ...getSessionCookieOptions(0),
+    expires: new Date(0),
+  };
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {

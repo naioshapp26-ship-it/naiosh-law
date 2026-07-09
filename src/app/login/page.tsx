@@ -24,6 +24,20 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+function getSafeNextPath() {
+  if (typeof window === "undefined") {
+    return "/app/dashboard";
+  }
+
+  const next = new URLSearchParams(window.location.search).get("next");
+
+  if (next?.startsWith("/app") && !next.startsWith("//")) {
+    return next;
+  }
+
+  return "/app/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -35,7 +49,7 @@ export default function LoginPage() {
 
   const completeLogin = (user: SessionUser) => {
     saveSession(user);
-    router.push("/app/dashboard");
+    router.replace(getSafeNextPath());
   };
 
   const onSubmit = async (event: FormEvent) => {
