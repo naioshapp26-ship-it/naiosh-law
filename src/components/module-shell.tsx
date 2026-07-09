@@ -120,8 +120,15 @@ export function ModuleShell({
 
   useEffect(() => {
     if (!config) return;
-    setRows(readInitialRows(slug, config.data));
-    setHydratedRowsKey(slug);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setRows(readInitialRows(slug, config.data));
+      setHydratedRowsKey(slug);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [config, slug]);
 
   useEffect(() => {

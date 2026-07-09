@@ -34,7 +34,9 @@ export default function LoginPage() {
   useEffect(() => {
     const errorCode = new URLSearchParams(window.location.search).get("error");
     if (errorCode === "session_configuration_error") {
-      setError("إعدادات الجلسة غير مكتملة على الخادم.");
+      queueMicrotask(() => {
+        setError("إعدادات الجلسة غير مكتملة على الخادم.");
+      });
     }
   }, []);
 

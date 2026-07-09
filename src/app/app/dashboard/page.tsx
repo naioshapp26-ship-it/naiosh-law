@@ -54,8 +54,15 @@ export default function DashboardPage() {
   const [tasksHydrated, setTasksHydrated] = useState(false);
 
   useEffect(() => {
-    setCompletedTasks(readCompletedTasks());
-    setTasksHydrated(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setCompletedTasks(readCompletedTasks());
+      setTasksHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
