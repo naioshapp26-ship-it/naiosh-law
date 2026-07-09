@@ -13,7 +13,7 @@ function getJwtSecret() {
   return new TextEncoder().encode(secret ?? DEV_JWT_SECRET);
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(AUTH_COOKIE)?.value;
   const secret = getJwtSecret();
@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
       await jwtVerify(token, secret);
       return NextResponse.redirect(new URL("/app/dashboard", request.url));
     } catch {
-      // invalid token — allow login page
+      // Invalid token: allow the login page to render.
     }
   }
 
