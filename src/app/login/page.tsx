@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoUsers } from "@/data/auth";
+import { getSafeAppPath, writeStoredSession } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -34,7 +35,6 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
     const user = demoUsers.find(
       (item) => item.email === email && item.password === password
     );
@@ -43,11 +43,14 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
-    router.push("/app/dashboard");
+    const stored = writeStoredSession({ role: user.role, name: user.name, email: user.email });
+    if (!stored) {
+      setError("تعذر حفظ الجلسة في هذا المتصفح. يرجى تفعيل التخزين المحلي والمحاولة مرة أخرى.");
+      setLoading(false);
+      return;
+    }
+    const next = getSafeAppPath(new URLSearchParams(window.location.search).get("next"));
+    router.push(next);
   };
 
   const fillDemo = (role: "admin" | "client") => {

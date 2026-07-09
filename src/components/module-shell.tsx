@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import Link from "next/link";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -9,6 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { useSession } from "@/lib/session";
+import { canAccessModule } from "@/lib/module-routing";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -17,6 +19,7 @@ let toastCounter = 0;
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
+  const toastTimers = useRef<number[]>([]);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
   const [modalOpen, setModalOpen] = useState(false);
@@ -24,11 +27,32 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
+
+  useEffect(() => {
+    setRows(config?.data ?? []);
+    setModalOpen(false);
+    setEditTarget(null);
+    setViewTarget(null);
+    setDeleteTarget(null);
+    setReportOpen(false);
+  }, [config]);
+
+  useEffect(() => {
+    return () => {
+      toastTimers.current.forEach(window.clearTimeout);
+      toastTimers.current = [];
+    };
+  }, []);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timer = window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+      toastTimers.current = toastTimers.current.filter((item) => item !== timer);
+    }, 3500);
+    toastTimers.current.push(timer);
   }, []);
 
   if (!ready || !user) {
@@ -49,6 +73,21 @@ export function ModuleShell({ slug }: { slug: string }) {
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
           <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
           <p>الرابط ({slug}) غير معرّف في النظام.</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!canAccessModule(user.role, slug)) {
+    return (
+      <AppShell role={user.role} name={user.name}>
+        <div style={{ textAlign: "center", padding: "5rem 1rem", color: "#64748b" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔒</div>
+          <h2 style={{ fontWeight: 800, marginBottom: "0.5rem", color: "#0a0a12" }}>لا تملك صلاحية الوصول</h2>
+          <p style={{ marginBottom: "1.5rem" }}>هذه الوحدة متاحة لحسابات الإدارة فقط.</p>
+          <Link href="/app/dashboard" className="btn-primary">
+            العودة إلى لوحة التحكم
+          </Link>
         </div>
       </AppShell>
     );
@@ -124,9 +163,6 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
     );
   };
-
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <AppShell role={user.role} name={user.name}>

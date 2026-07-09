@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -15,6 +15,11 @@ type Props = {
 
 const PAGE_SIZE = 10;
 
+const toComparableNumber = (value: unknown) => {
+  const numeric = Number(String(value ?? "").replace(/[^\d.-]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -27,25 +32,42 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     setPage(1);
   };
 
-  const filtered = data.filter((row) => {
+  const filtered = useMemo(() => data.filter((row) => {
     if (!search) return true;
+    const query = search.toLowerCase().trim();
     return columns.some((c) =>
-      String(row[c.key] ?? "").toLowerCase().includes(search.toLowerCase())
+      String(row[c.key] ?? "").toLowerCase().includes(query)
     );
-  });
+  }), [columns, data, search]);
 
-  const sorted = sortKey
-    ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
-      })
-    : filtered;
+  const sorted = useMemo(() => {
+    if (!sortKey) return filtered;
+    const column = columns.find((item) => item.key === sortKey);
+    return [...filtered].sort((a, b) => {
+      const value = column?.type === "number" || column?.type === "currency"
+        ? toComparableNumber(a[sortKey]) - toComparableNumber(b[sortKey])
+        : String(a[sortKey] ?? "").localeCompare(String(b[sortKey] ?? ""), "ar", {
+            numeric: true,
+            sensitivity: "base",
+          });
+      return sortAsc ? value : -value;
+    });
+  }, [columns, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const hasActions = !!(onEdit || onDelete || onView);
+  const firstColumnKey = columns[0]?.key;
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const getRowKey = (row: Record<string, unknown>, index: number) =>
+    String(row._id ?? (firstColumnKey ? row[firstColumnKey] : "") ?? index);
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
@@ -55,9 +77,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       return <StatusBadge label={String(val)} color="gray" />;
     }
     if (col.type === "currency") {
+      const amount = toComparableNumber(val);
       return (
         <span style={{ fontWeight: 700, color: "#0a0a12" }}>
-          {Number(String(val).replace(/,/g, "")).toLocaleString("ar-EG")} ج.م
+          {amount.toLocaleString("ar-EG")} ج.م
         </span>
       );
     }
@@ -117,8 +140,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}
       >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+        <div className="desktop-table-wrap" style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (
@@ -173,7 +196,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               ) : (
                 paged.map((row, i) => (
                   <tr
-                    key={i}
+                    key={getRowKey(row, i)}
                     style={{
                       borderBottom: "1px solid #f1f5f9",
                       transition: "background 0.15s",
@@ -269,11 +292,74 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             </tbody>
           </table>
         </div>
+        <div className="mobile-card-list" style={{ display: "none", padding: "0.75rem", background: "#f8f9fb" }}>
+          {paged.length === 0 ? (
+            <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+              <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
+            </div>
+          ) : (
+            paged.map((row, index) => (
+              <article
+                key={getRowKey(row, index)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "14px",
+                  padding: "0.95rem",
+                  boxShadow: "0 2px 8px rgba(15,23,42,0.05)",
+                }}
+              >
+                <div style={{ display: "grid", gap: "0.75rem" }}>
+                  {columns.map((col) => (
+                    <div key={col.key}>
+                      <p style={{ color: "#94a3b8", fontSize: "0.68rem", fontWeight: 700, marginBottom: "0.22rem" }}>
+                        {col.label}
+                      </p>
+                      <div style={{ fontSize: "0.85rem", overflowWrap: "anywhere" }}>
+                        {renderCell(col, row)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {hasActions && (
+                  <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap", marginTop: "0.9rem" }}>
+                    {onView && (
+                      <button
+                        onClick={() => onView(row)}
+                        style={{ flex: "1 1 80px", background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem", cursor: "pointer", fontSize: "0.76rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font-cairo)" }}
+                      >
+                        👁 عرض
+                      </button>
+                    )}
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(row)}
+                        style={{ flex: "1 1 80px", background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem", cursor: "pointer", fontSize: "0.76rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font-cairo)" }}
+                      >
+                        ✏️ تعديل
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(row)}
+                        style={{ flex: "1 1 80px", background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem", cursor: "pointer", fontSize: "0.76rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font-cairo)" }}
+                      >
+                        🗑 حذف
+                      </button>
+                    )}
+                  </div>
+                )}
+              </article>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div
+          className="data-table-pagination"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -286,7 +372,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           <span>
             صفحة {page} من {totalPages} — {sorted.length} سجل إجمالاً
           </span>
-          <div style={{ display: "flex", gap: "0.3rem" }}>
+          <div className="data-table-pages" style={{ display: "flex", gap: "0.3rem" }}>
             <button
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
@@ -341,6 +427,26 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           </div>
         </div>
       )}
+      <style>{`
+        @media (max-width: 760px) {
+          .desktop-table-wrap { display: none; }
+          .mobile-card-list {
+            display: grid !important;
+            gap: 0.75rem;
+          }
+        }
+        @media (max-width: 600px) {
+          .data-table-pagination {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.75rem;
+          }
+          .data-table-pages {
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
     </div>
   );
 }
