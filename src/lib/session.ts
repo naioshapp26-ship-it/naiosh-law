@@ -66,3 +66,7 @@ export function useSession(redirectIfMissing = false) {
 export function canWriteRole(role: UserRole) {
   return ["admin", "lawyer", "consultant", "industrial_agent", "employee"].includes(role);
 }
+
+export function canApproveRole(role: UserRole) {
+  return role === "admin" || role === "industrial_agent";
+}
