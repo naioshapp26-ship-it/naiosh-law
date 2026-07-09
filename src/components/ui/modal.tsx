@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -20,17 +20,17 @@ function inputTypeFor(field: FormField) {
   return "text";
 }
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
-  const [saving, setSaving] = useState(false);
+function createDefaults(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    defaults[field.key] = initial?.[field.key] ?? "";
+  });
+  return defaults;
+}
 
-  useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
-    }
-  }, [open, initial, fields]);
+export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const [form, setForm] = useState<Record<string, unknown>>(() => createDefaults(fields, initial));
+  const [saving, setSaving] = useState(false);
 
   if (!open) return null;
 

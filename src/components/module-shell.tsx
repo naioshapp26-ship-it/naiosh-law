@@ -238,15 +238,18 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal
-        open={modalOpen}
-        title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
-        fields={config.formFields}
-        initial={editTarget ?? undefined}
-        onSave={handleSave}
-        onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
-      />
+      {modalOpen && (
+        <Modal
+          key={getRowIdentity(editTarget) || "new"}
+          open={modalOpen}
+          title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
+          fields={config.formFields}
+          initial={editTarget ?? undefined}
+          onSave={handleSave}
+          onClose={() => { setModalOpen(false); setEditTarget(null); }}
+          saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
+        />
+      )}
 
       {/* View Modal */}
       {renderViewModal()}
