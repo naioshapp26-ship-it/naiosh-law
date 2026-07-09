@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
@@ -24,19 +24,20 @@ function buildFormState(fields: FormField[], initial?: Record<string, unknown>) 
 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
   const dialogRef = useDialogAccessibility<HTMLDivElement>(open, onClose);
-  const [form, setForm] = useState<Record<string, unknown>>(() => buildFormState(fields, initial));
+  const formKey = useMemo(
+    () => fields.map((field) => `${field.key}:${String(initial?.[field.key] ?? "")}`).join("|"),
+    [fields, initial]
+  );
+  const initialForm = useMemo(() => buildFormState(fields, initial), [fields, initial]);
+  const [formState, setFormState] = useState(() => ({ key: formKey, values: initialForm }));
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setForm(buildFormState(fields, initial));
-      setSaving(false);
-    }
-  }, [fields, initial, open]);
 
   if (!open) return null;
 
-  const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
+  const form = formState.key === formKey ? formState.values : initialForm;
+  const set = (key: string, value: unknown) => {
+    setFormState({ key: formKey, values: { ...form, [key]: value } });
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
