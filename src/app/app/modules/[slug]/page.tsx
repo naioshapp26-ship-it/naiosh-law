@@ -17,6 +17,11 @@ export default async function ModulePage({ params }: Props) {
     redirect("/app/dashboard");
   }
 
+  const config = moduleConfigMap[slug];
+  if (!config) {
+    notFound();
+  }
+
   const cookieStore = await cookies();
   const user = await verifySessionToken(cookieStore.get(sessionCookieName)?.value);
   if (!user) {
@@ -24,11 +29,6 @@ export default async function ModulePage({ params }: Props) {
   }
   if (!canAccessModule(user.role, slug)) {
     redirect("/app/dashboard");
-  }
-
-  const config = moduleConfigMap[slug];
-  if (!config) {
-    notFound();
   }
 
   return <ModuleShell key={slug} slug={slug} title={moduleMap[slug]?.title ?? config.entityName} config={config} />;
