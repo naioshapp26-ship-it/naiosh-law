@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { parseJsonBody } from "@/lib/api-helpers";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const parsed = await parseJsonBody(request);
+    if (parsed.error) return parsed.error;
+    const body = parsed.body;
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { requireAuth, requireWrite, parseJsonBody } from "@/lib/api-helpers";
+import type { ProfessionalType } from "@/generated/prisma/client";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -32,12 +33,14 @@ export async function GET() {
 export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
-  const body = await request.json();
+  const parsed = await parseJsonBody(request);
+  if (parsed.error) return parsed.error;
+  const body = parsed.body;
 
   const created = await prisma.professional.create({
     data: {
       name: String(body.name),
-      type: body.type ?? "lawyer",
+      type: (body.type ? String(body.type) : "lawyer") as ProfessionalType,
       licenseNo: body.licenseNo ? String(body.licenseNo) : null,
       phone: body.phone ? String(body.phone) : null,
       email: body.email ? String(body.email) : null,

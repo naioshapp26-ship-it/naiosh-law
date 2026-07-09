@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { requireAuth, requireWrite, parseJsonBody } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -31,9 +31,13 @@ export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
 
-  const body = await request.json();
+  const parsed = await parseJsonBody(request);
+  if (parsed.error) return parsed.error;
+  const body = parsed.body;
   const count = await prisma.case.count();
-  const caseNo = body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
+  const caseNo = body.caseNo
+    ? String(body.caseNo)
+    : `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
 
   const created = await prisma.case.create({
     data: {

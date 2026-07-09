@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireWrite } from "@/lib/api-helpers";
+import { requireWrite, parseJsonBody } from "@/lib/api-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,7 +8,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  const body = await request.json();
+  const parsed = await parseJsonBody(request);
+  if (parsed.error) return parsed.error;
+  const body = parsed.body;
 
   const updated = await prisma.client.update({
     where: { id },

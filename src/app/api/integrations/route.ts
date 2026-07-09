@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { requireAuth, requireWrite, parseJsonBody } from "@/lib/api-helpers";
 import { labelIntegrationType } from "@/lib/notifications";
 import type { IntegrationType } from "@/generated/prisma/client";
 
@@ -32,7 +32,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
-  const body = await request.json();
+  const parsed = await parseJsonBody(request);
+  if (parsed.error) return parsed.error;
+  const body = parsed.body;
 
   const apiKey = body.apiKey ? String(body.apiKey) : null;
   const masked = apiKey ? `${apiKey.slice(0, 4)}••••${apiKey.slice(-4)}` : null;

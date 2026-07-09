@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireWrite } from "@/lib/api-helpers";
+import { requireWrite, parseJsonBody } from "@/lib/api-helpers";
 import { dispatchNotification } from "@/lib/notifications";
 import type { NotificationChannel } from "@/generated/prisma/client";
 
@@ -8,7 +8,9 @@ export async function POST(request: Request) {
   const { error, session } = await requireWrite();
   if (error) return error;
 
-  const body = await request.json();
+  const parsed = await parseJsonBody(request);
+  if (parsed.error) return parsed.error;
+  const body = parsed.body;
   const channel = (body.channel as NotificationChannel) ?? "email";
   const recipient = String(body.recipient ?? "");
   const subject = body.subject ? String(body.subject) : undefined;
