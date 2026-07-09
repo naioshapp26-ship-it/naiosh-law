@@ -114,9 +114,10 @@ export function HeroSection() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 420px",
-            gap: "4rem",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 460px)",
+            gap: "clamp(2rem, 4vw, 4rem)",
             alignItems: "center",
+            justifyContent: "center",
           }}
           className="hero-grid"
         >
@@ -125,6 +126,12 @@ export function HeroSection() {
             variants={container}
             initial="show"
             animate="show"
+            style={{
+              width: "100%",
+              maxWidth: "720px",
+              marginInline: "auto",
+              textAlign: "center",
+            }}
           >
             {/* Badge */}
             <div className="hero-badge" style={{ marginBottom: "1.75rem" }}>
@@ -201,7 +208,13 @@ export function HeroSection() {
             {/* CTAs */}
             <div
               className="hero-cta"
-              style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "3.75rem" }}
+              style={{
+                display: "flex",
+                gap: "1rem",
+                flexWrap: "wrap",
+                marginBottom: "3.75rem",
+                justifyContent: "center",
+              }}
             >
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 ابدأ الآن مجانًا →
@@ -220,6 +233,7 @@ export function HeroSection() {
                 flexWrap: "wrap",
                 paddingTop: "2rem",
                 borderTop: "1px solid rgba(255,255,255,0.07)",
+                justifyContent: "center",
               }}
             >
               {stats.map((s) => (
@@ -519,6 +533,11 @@ export function HeroSection() {
       </motion.div>
 
       <style>{`
+        @media (max-width: 1200px) {
+          .hero-grid {
+            grid-template-columns: minmax(0, 1fr) 360px !important;
+          }
+        }
         @media (max-width: 900px) {
           .hero-grid {
             grid-template-columns: 1fr !important;
