@@ -57,7 +57,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
   const hasActions = !!(onEdit || onDelete || onView);
   const rowKey = (row: Record<string, unknown>, index: number) =>
-    String(row._id ?? columns.map((col) => row[col.key] ?? "").join("|") || index);
+    String(row._id ?? (columns.map((col) => row[col.key] ?? "").join("|") || index));
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
