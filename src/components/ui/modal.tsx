@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -29,6 +29,8 @@ function inputType(type: FormField["type"]) {
 }
 
 function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Omit<Props, "open">) {
+  const titleId = useId();
+  const formId = useId();
   const [form, setForm] = useState<Record<string, unknown>>(() => buildInitialForm(fields, initial));
   const [saving, setSaving] = useState(false);
 
@@ -95,7 +97,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
       >
         {/* Header */}
         <div
@@ -106,9 +108,10 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id={titleId} style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
             onClick={onClose}
+            aria-label="إغلاق النافذة"
             style={{
               width: 34,
               height: 34,
@@ -137,14 +140,18 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
             }}
             className="modal-form-grid"
           >
-            {fields.map((f) => (
+            {fields.map((f) => {
+              const inputId = `${formId}-${f.key}`;
+
+              return (
               <div
                 key={f.key}
                 style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
               >
-                <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
+                <label className="input-label" htmlFor={inputId}>{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
                 {f.type === "select" ? (
                   <select
+                    id={inputId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -158,6 +165,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
+                    id={inputId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -168,6 +176,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
                   />
                 ) : (
                   <input
+                    id={inputId}
                     type={inputType(f.type)}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
@@ -177,7 +186,8 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
                   />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Actions */}

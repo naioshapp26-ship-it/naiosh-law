@@ -158,10 +158,11 @@ export function AppShell({ role, name, children }: Props) {
   const [logoutPending, setLogoutPending] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const lastDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const drawerPanelRef = useRef<HTMLDivElement | null>(null);
   const drawerWasOpenRef = useRef(false);
   const bottomModuleItems = getVisibleOperationalModules(role)
     .filter((item) => preferredBottomModuleSlugs.includes(item.slug))
-    .slice(0, 3);
+    .slice(0, 2);
   const bottomNavItems = [
     { href: "/app/dashboard", icon: moduleIconMap.dashboard, label: "الرئيسية" },
     ...bottomModuleItems.map((item) => ({
@@ -193,6 +194,12 @@ export function AppShell({ role, name, children }: Props) {
     };
 
     document.addEventListener("keydown", onKeyDown);
+    window.setTimeout(() => {
+      const firstFocusable = drawerPanelRef.current?.querySelector<HTMLElement>(
+        "a[href], button:not([disabled])"
+      );
+      firstFocusable?.focus();
+    }, 0);
 
     return () => {
       document.body.style.overflow = previousOverflow;
@@ -283,7 +290,7 @@ export function AppShell({ role, name, children }: Props) {
           {/* Right: User + Logout */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* User chip */}
-            <div style={{
+            <div className="user-chip" style={{
               display: "flex", alignItems: "center", gap: "0.5rem",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               borderRadius: "10px", padding: "0.4rem 0.75rem",
@@ -390,7 +397,7 @@ export function AppShell({ role, name, children }: Props) {
               aria-hidden="true"
             />
             {/* Drawer panel */}
-            <div id="app-mobile-drawer" style={{
+            <div id="app-mobile-drawer" ref={drawerPanelRef} style={{
               position: "relative", zIndex: 1,
               width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
@@ -468,6 +475,7 @@ export function AppShell({ role, name, children }: Props) {
         }
         @media (max-width: 420px) {
           header button:not(.hamburger-btn) { padding-inline: 0.6rem !important; }
+          .user-chip { display: none !important; }
         }
         @media (min-width: 901px) {
           .drawer-close-btn  { display: none; }

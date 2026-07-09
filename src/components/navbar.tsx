@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuPanelRef = useRef<HTMLDivElement | null>(null);
+  const menuWasOpenRef = useRef(false);
 
   useEffect(() => {
     let frameId = 0;
@@ -47,11 +50,27 @@ export function Navbar() {
     };
 
     document.addEventListener("keydown", onKeyDown);
+    window.setTimeout(() => {
+      const firstLink = menuPanelRef.current?.querySelector<HTMLElement>("a[href]");
+      firstLink?.focus();
+    }, 0);
 
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
     };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (menuOpen) {
+      menuWasOpenRef.current = true;
+      return;
+    }
+
+    if (menuWasOpenRef.current) {
+      menuButtonRef.current?.focus();
+      menuWasOpenRef.current = false;
+    }
   }, [menuOpen]);
 
   const navStyle: React.CSSProperties = {
@@ -157,6 +176,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
+          ref={menuButtonRef}
           onClick={() => setMenuOpen(!menuOpen)}
           style={{
             display: "none",
@@ -193,6 +213,10 @@ export function Navbar() {
       {menuOpen && (
         <div
           id="public-mobile-menu"
+          ref={menuPanelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="قائمة الموقع"
           style={{
             background: "rgba(10,10,18,0.97)",
             borderTop: "1px solid rgba(255,255,255,0.07)",

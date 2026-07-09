@@ -652,7 +652,6 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"name",     label:"اسم التكامل",  type:"text",   required:true },
       { key:"type",     label:"نوع التكامل",  type:"select", options:["رسائل نصية","بريد إلكتروني","مدفوعات","توقيع إلكتروني","بيانات خارجية","ضريبي","تحليلات","أخرى"] },
       { key:"endpoint", label:"API Endpoint", type:"text",   placeholder:"/api/..." },
-      { key:"apiKey",   label:"API Key",      type:"text",   placeholder:"مشفّر..." },
       { key:"status",   label:"الحالة",       type:"select", options:["متصل","منقطع","تحذير"] },
     ],
   },

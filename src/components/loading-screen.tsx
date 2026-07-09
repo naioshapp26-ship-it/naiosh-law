@@ -5,6 +5,9 @@ type Props = {
 export function LoadingScreen({ label = "جاري التحميل..." }: Props) {
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
       style={{
         minHeight: "100vh",
         display: "flex",
@@ -16,6 +19,7 @@ export function LoadingScreen({ label = "جاري التحميل..." }: Props) {
     >
       <div style={{ textAlign: "center", color: "#64748b" }}>
         <div
+          aria-hidden="true"
           style={{
             width: 40,
             height: 40,

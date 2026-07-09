@@ -196,6 +196,12 @@ export function useSession(redirectIfMissing = false) {
   const cachedUser = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
   const reusableVerifiedUser = useMemo(() => getFreshVerifiedSession(rawSession), [rawSession]);
   const user = redirectIfMissing ? verifiedUser ?? reusableVerifiedUser ?? cachedUser : cachedUser;
+  const sessionVerified =
+    !!rawSession &&
+    !!user &&
+    verifiedSessionCache?.rawSession === rawSession &&
+    verifiedSessionCache.user.email === user.email &&
+    verifiedSessionCache.user.role === user.role;
   const ready =
     hydrated &&
     (!redirectIfMissing ||
@@ -260,7 +266,6 @@ export function useSession(redirectIfMissing = false) {
           setVerifiedUser(cachedUser);
           setVerifiedRawSession(rawSession);
           setVerified(true);
-          cacheVerifiedSession(rawSession, cachedUser);
           return;
         }
 
@@ -278,6 +283,7 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
+      sessionVerified,
       logout: async () => {
         const response = await fetch("/api/auth/logout", { method: "POST" });
         if (!response.ok) {
@@ -287,7 +293,7 @@ export function useSession(redirectIfMissing = false) {
         router.replace("/login");
       },
     }),
-    [user, ready, router]
+    [user, ready, sessionVerified, router]
   );
 
   return api;

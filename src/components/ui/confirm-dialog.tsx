@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 
 type Props = {
   open: boolean;
@@ -12,6 +12,9 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+  const titleId = useId();
+  const messageId = useId();
+
   useEffect(() => {
     if (!open) {
       return;
@@ -64,7 +67,8 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         onClick={(e) => e.stopPropagation()}
         role="alertdialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
       >
         <div
           style={{
@@ -82,10 +86,10 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         >
           🗑️
         </div>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
+        <h3 id={titleId} style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
           {title}
         </h3>
-        <p style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
+        <p id={messageId} style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
           {message}
         </p>
         <div className="confirm-dialog-actions" style={{ display: "flex", gap: "0.75rem" }}>

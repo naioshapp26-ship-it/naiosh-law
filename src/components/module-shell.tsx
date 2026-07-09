@@ -140,9 +140,9 @@ function persistRows(slug: string, scope: string, rows: Record<string, unknown>[
 }
 
 export function ModuleShell({ slug, config, title }: { slug: string; config: ModuleConfig; title: string }) {
-  const { user, ready } = useSession(true);
+  const { user, ready, sessionVerified } = useSession(true);
   const router = useRouter();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = sessionVerified && user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
   const rowsStorageScope = getRowsStorageScope(user?.email);
   const rowsStateKey = `${rowsStorageScope}:${slug}`;
@@ -256,24 +256,28 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   };
 
   const downloadCsvReport = () => {
-    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const csv = [
-      config.columns.map((column) => escapeCsv(column.label)).join(","),
-      ...rows.map((row) => config.columns.map((column) => escapeCsv(row[column.key])).join(",")),
-    ].join("\n");
-    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    try {
+      const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const csv = [
+        config.columns.map((column) => escapeCsv(column.label)).join(","),
+        ...rows.map((row) => config.columns.map((column) => escapeCsv(row[column.key])).join(",")),
+      ].join("\n");
+      const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-    link.href = url;
-    link.download = `${slug}-report.csv`;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
-    pushToast("success", "✅ تم تجهيز ملف CSV بنجاح");
-    setReportOpen(false);
+      link.href = url;
+      link.download = `${slug}-report.csv`;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      pushToast("success", "✅ تم تجهيز ملف CSV بنجاح");
+      setReportOpen(false);
+    } catch {
+      pushToast("error", "تعذر تجهيز ملف التقرير. حاول مرة أخرى.");
+    }
   };
 
   const firstCol = config.columns[0]?.key;
@@ -335,7 +339,13 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div className="toast-stack" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div
+        className="toast-stack"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}
+      >
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}

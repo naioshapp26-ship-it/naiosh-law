@@ -78,7 +78,13 @@ function parseCompletedTaskStore(rawTasks: string | null) {
     return {};
   }
 
-  const parsed = JSON.parse(rawTasks) as unknown;
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(rawTasks) as unknown;
+  } catch {
+    return {};
+  }
 
   return parsed && typeof parsed === "object" && !Array.isArray(parsed)
     ? (parsed as Record<string, unknown>)
@@ -265,7 +271,7 @@ export default function DashboardPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
               {upcomingSessions.map((s) => (
                 <div
-                  key={s.case}
+                  key={`${s.case}:${s.date}:${s.room}`}
                   style={{
                     padding: "0.9rem",
                     background: "#f8f9fb",
@@ -343,7 +349,7 @@ export default function DashboardPage() {
 
                 return (
                 <label
-                  key={t.task}
+                  key={t.id}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",

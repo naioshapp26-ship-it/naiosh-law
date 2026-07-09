@@ -42,10 +42,11 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <HeroSection />
+      <main>
+        <HeroSection />
 
-      {/* ── Stats Bar ── */}
-      <section
+        {/* ── Stats Bar ── */}
+        <section
         style={{
           background: "#ffffff",
           borderBottom: "1px solid #e2e8f0",
@@ -78,10 +79,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
 
-      {/* ── Features ── */}
-      <section id="features" className="marketing-section" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
+        {/* ── Features ── */}
+        <section id="features" className="marketing-section" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -157,10 +158,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
 
-      {/* ── Modules ── */}
-      <section id="modules" className="marketing-section" style={{ background: "#ffffff", padding: "6rem 0" }}>
+        {/* ── Modules ── */}
+        <section id="modules" className="marketing-section" style={{ background: "#ffffff", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -201,10 +202,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
 
-      {/* ── CTA ── */}
-      <section
+        {/* ── CTA ── */}
+        <section
         className="marketing-section"
         style={{
           background: "#0a0a12",
@@ -294,7 +295,8 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
+      </main>
 
       {/* ── Footer ── */}
       <footer

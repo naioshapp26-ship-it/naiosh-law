@@ -121,6 +121,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     const fallback = firstColumnKey ? row[firstColumnKey] : undefined;
     return String(row[rowIdKey] ?? fallback ?? index);
   };
+  const getRowLabel = (row: Record<string, unknown>) => {
+    const fallback = firstColumnKey ? row[firstColumnKey] : undefined;
+    return String(fallback ?? "السجل");
+  };
+  const getSortDirection = (key: string) => (
+    sortKey === key ? (sortAsc ? "ascending" : "descending") : "none"
+  );
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
@@ -166,6 +173,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
             className="input-field"
             style={{ paddingInlineStart: "2.6rem" }}
           />
@@ -225,6 +233,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     {onView && (
                       <button
                         onClick={() => onView(row)}
+                        aria-label={`عرض ${getRowLabel(row)}`}
                         style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font)", flex: 1 }}
                       >
                         👁 عرض
@@ -233,6 +242,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     {onEdit && (
                       <button
                         onClick={() => onEdit(row)}
+                        aria-label={`تعديل ${getRowLabel(row)}`}
                         style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font)", flex: 1 }}
                       >
                         ✏️ تعديل
@@ -241,6 +251,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     {onDelete && (
                       <button
                         onClick={() => onDelete(row)}
+                        aria-label={`حذف ${getRowLabel(row)}`}
                         style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font)", flex: 1 }}
                       >
                         🗑 حذف
@@ -269,7 +280,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      onClick={() => col.sortable !== false && handleSort(col.key)}
+                      aria-sort={col.sortable === false ? undefined : getSortDirection(col.key)}
                       style={{
                         padding: "0.9rem 1rem",
                         textAlign: "start",
@@ -277,15 +288,43 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                         color: "#475569",
                         fontSize: "0.75rem",
                         whiteSpace: "nowrap",
-                        cursor: col.sortable !== false ? "pointer" : "default",
-                        userSelect: "none",
                       }}
                     >
-                      {col.label}
-                      {sortKey === col.key && (
-                        <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
-                          {sortAsc ? " ↑" : " ↓"}
-                        </span>
+                      {col.sortable === false ? (
+                        col.label
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSort(col.key)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.25rem",
+                            padding: 0,
+                            border: "none",
+                            background: "transparent",
+                            color: "inherit",
+                            cursor: "pointer",
+                            font: "inherit",
+                            fontWeight: 700,
+                            fontFamily: "var(--font)",
+                            userSelect: "none",
+                          }}
+                        >
+                          <span>{col.label}</span>
+                          {sortKey === col.key && (
+                            <span style={{ color: "#c3152a" }} aria-hidden="true">
+                              {sortAsc ? "↑" : "↓"}
+                            </span>
+                          )}
+                          <span className="sr-only">
+                            {sortKey === col.key
+                              ? sortAsc
+                                ? "مرتبة تصاعدياً"
+                                : "مرتبة تنازلياً"
+                              : "تفعيل الترتيب"}
+                          </span>
+                        </button>
                       )}
                     </th>
                   ))}
@@ -339,6 +378,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                             {onView && (
                               <button
                                 onClick={() => onView(row)}
+                                aria-label={`عرض ${getRowLabel(row)}`}
                                 style={{
                                   background: "#f1f5f9",
                                   border: "none",
@@ -360,6 +400,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                             {onEdit && (
                               <button
                                 onClick={() => onEdit(row)}
+                                aria-label={`تعديل ${getRowLabel(row)}`}
                                 style={{
                                   background: "rgba(195,21,42,0.07)",
                                   border: "none",
@@ -381,6 +422,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                             {onDelete && (
                               <button
                                 onClick={() => onDelete(row)}
+                                aria-label={`حذف ${getRowLabel(row)}`}
                                 style={{
                                   background: "rgba(239,68,68,0.08)",
                                   border: "none",
@@ -450,6 +492,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 <button
                   key={p}
                   onClick={() => setPage(p)}
+                  aria-label={`الصفحة ${p}`}
+                  aria-current={p === currentPage ? "page" : undefined}
                   style={{
                     padding: "0.4rem 0.65rem",
                     borderRadius: "8px",

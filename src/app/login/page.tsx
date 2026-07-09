@@ -7,6 +7,10 @@ import { saveSession } from "@/lib/session";
 import type { SessionUser } from "@/lib/auth-session";
 import { staticMotion as motion } from "@/components/ui/static-motion";
 
+const emailInputId = "login-email";
+const passwordInputId = "login-password";
+const loginErrorId = "login-error";
+
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: {
@@ -436,7 +440,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
-              <label className="input-label">البريد الإلكتروني</label>
+              <label className="input-label" htmlFor={emailInputId}>البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -451,19 +455,22 @@ export default function LoginPage() {
                   ✉️
                 </span>
                 <input
+                  id={emailInputId}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="input-field"
                   placeholder="example@naioshlaw.com"
+                  autoComplete="email"
+                  aria-describedby={error ? loginErrorId : undefined}
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
             </motion.div>
 
             <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label className="input-label" htmlFor={passwordInputId}>كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -481,16 +488,20 @@ export default function LoginPage() {
                     lineHeight: 1,
                   }}
                   aria-label="إظهار/إخفاء كلمة المرور"
+                  aria-pressed={showPass}
                 >
                   {showPass ? "🙈" : "👁️"}
                 </button>
                 <input
+                  id={passwordInputId}
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="input-field"
                   placeholder="••••••••"
+                  autoComplete="current-password"
+                  aria-describedby={error ? loginErrorId : undefined}
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
@@ -498,6 +509,9 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
+                id={loginErrorId}
+                role="alert"
+                aria-live="assertive"
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 style={{
@@ -583,6 +597,7 @@ export default function LoginPage() {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
           .compact-login-brand { display: flex !important; }
+          .login-form-panel { min-height: 100svh !important; }
         }
         @media (max-width: 480px) {
           .login-form-panel { padding: 2rem 1rem !important; }
