@@ -182,17 +182,16 @@ export function HeroSection() {
             <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(2rem, 4.2vw, 3.8rem)",
+                fontSize: "clamp(1.95rem, 3.9vw, 3.35rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.1,
+                lineHeight: 1.14,
                 marginBottom: "1.55rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
-                flexWrap: "nowrap",
-                justifyContent: "flex-end",
-                alignItems: "baseline",
-                gap: "0.75rem",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: "0.25rem",
               }}
               variants={container}
             >
@@ -200,10 +199,11 @@ export function HeroSection() {
                 className="hero-heading-main"
                 variants={itemAnim}
                 style={{
-                  display: "inline-block",
+                  display: "block",
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
-                  whiteSpace: "nowrap",
+                  whiteSpace: "normal",
+                  maxWidth: "100%",
                 }}
               >
                 {headlineText}
@@ -214,8 +214,8 @@ export function HeroSection() {
                 style={{
                   color: "#c3152a",
                   textShadow: "0 0 40px rgba(195,21,42,0.5)",
-                  display: "inline-block",
-                  whiteSpace: "nowrap",
+                  display: "block",
+                  whiteSpace: "normal",
                   fontSize: "0.96em",
                 }}
               >
@@ -593,12 +593,9 @@ export function HeroSection() {
         @media (max-width: 980px) {
           .hero-heading {
             line-height: 1.12 !important;
-            font-size: clamp(1.8rem, 5vw, 3rem) !important;
-            flex-wrap: wrap !important;
-            row-gap: 0.25rem !important;
+            font-size: clamp(1.65rem, 4.8vw, 2.7rem) !important;
           }
           .hero-heading-main {
-            white-space: normal !important;
             width: 100%;
           }
           .hero-badge-pill {
