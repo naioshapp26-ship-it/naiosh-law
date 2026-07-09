@@ -7,6 +7,7 @@ import type { SessionUser } from "@/lib/auth-session";
 
 const sessionChangeEvent = "naiosh-law-session-change";
 const sessionVerificationRetries = [250, 750];
+const transientSessionRetryDelayMs = 3000;
 const sessionVerificationMaxAgeMs = 60 * 1000;
 const sessionVerificationErrorMessage = "تعذر التحقق من الجلسة حاليًا. تحقق من الاتصال ثم أعد تحميل الصفحة.";
 
@@ -203,6 +204,7 @@ export function useSession(redirectIfMissing = false) {
   const [verified, setVerified] = useState(!redirectIfMissing);
   const [verifiedRawSession, setVerifiedRawSession] = useState<string | null | undefined>(undefined);
   const [verificationError, setVerificationError] = useState("");
+  const [verificationAttempt, setVerificationAttempt] = useState(0);
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
@@ -237,9 +239,29 @@ export function useSession(redirectIfMissing = false) {
     }
 
     const controller = new AbortController();
+    let active = true;
+    let retryTimeoutId: number | null = null;
+
+    const markTransientVerificationFailure = () => {
+      if (!active) {
+        return;
+      }
+
+      setVerifiedUser(null);
+      setVerified(false);
+      setVerifiedRawSession(rawSession);
+      setVerificationError(sessionVerificationErrorMessage);
+      retryTimeoutId = window.setTimeout(() => {
+        setVerificationAttempt((attempt) => attempt + 1);
+      }, transientSessionRetryDelayMs);
+    };
 
     fetchSessionWithRetry(controller.signal)
       .then(async (response) => {
+        if (!active) {
+          return;
+        }
+
         if (!response.ok) {
           setVerifiedRawSession(rawSession);
           if (isInvalidSessionResponse(response)) {
@@ -251,12 +273,15 @@ export function useSession(redirectIfMissing = false) {
             return;
           }
 
-          setVerified(true);
-          setVerificationError(sessionVerificationErrorMessage);
+          markTransientVerificationFailure();
           return;
         }
 
         const payload = (await response.json()) as { user?: unknown };
+        if (!active) {
+          return;
+        }
+
         if (isSessionUser(payload.user)) {
           setVerifiedUser(payload.user);
           setVerifiedRawSession(rawSession);
@@ -281,13 +306,17 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
-        setVerified(true);
-        setVerifiedRawSession(rawSession);
-        setVerificationError(sessionVerificationErrorMessage);
+        markTransientVerificationFailure();
       });
 
-    return () => controller.abort();
-  }, [rawSession, redirectIfMissing, router]);
+    return () => {
+      active = false;
+      controller.abort();
+      if (retryTimeoutId !== null) {
+        window.clearTimeout(retryTimeoutId);
+      }
+    };
+  }, [rawSession, redirectIfMissing, router, verificationAttempt]);
 
   const api = useMemo(
     () => ({

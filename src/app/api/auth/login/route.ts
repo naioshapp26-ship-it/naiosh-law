@@ -17,6 +17,12 @@ type LoginRequest = {
   demo?: unknown;
 };
 
+const noStoreResponse = {
+  headers: {
+    "Cache-Control": "private, no-store",
+  },
+};
+
 function isSessionRole(role: unknown): role is SessionRole {
   return role === "admin" || role === "client";
 }
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
   if (!isDemoLoginEnabled()) {
     return NextResponse.json(
       { message: "Demo login is disabled in this environment." },
-      { status: 403 }
+      { status: 403, ...noStoreResponse }
     );
   }
 
@@ -47,11 +53,14 @@ export async function POST(request: Request) {
         : undefined;
 
   if (!demoUser) {
-    return NextResponse.json({ message: "Invalid email or password." }, { status: 401 });
+    return NextResponse.json(
+      { message: "Invalid email or password." },
+      { status: 401, ...noStoreResponse }
+    );
   }
 
   const user = toSessionUser(demoUser);
-  const response = NextResponse.json({ user });
+  const response = NextResponse.json({ user }, noStoreResponse);
   let token: string;
 
   try {
@@ -60,7 +69,7 @@ export async function POST(request: Request) {
     if (isSessionConfigurationError(error)) {
       return NextResponse.json(
         { message: "Session secret is not configured." },
-        { status: 503 }
+        { status: 503, ...noStoreResponse }
       );
     }
 

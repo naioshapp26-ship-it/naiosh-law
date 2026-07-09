@@ -145,23 +145,24 @@ function clientMatchTerms(user: SessionUser) {
   return [...terms].filter(Boolean);
 }
 
+function valueMatchesClientAlias(value: unknown, aliases: string[]) {
+  const normalizedValue = normalizeSearchText(value);
+
+  return !!normalizedValue && aliases.includes(normalizedValue);
+}
+
 function rowBelongsToClient(slug: string, row: Record<string, unknown>, user: SessionUser) {
-  const terms = clientMatchTerms(user);
+  const aliases = clientMatchTerms(user);
 
   if (slug === "notifications-center") {
-    const audience = normalizeSearchText(row.audience);
-    const searchableValues = ["client", "name", "email"].map((key) => normalizeSearchText(row[key]));
+    const searchableFields = ["audience", "client", "name", "email"];
 
-    return (
-      audience === normalizeSearchText(user.name) ||
-      audience === normalizeSearchText(user.email) ||
-      searchableValues.some((value) => terms.some((term) => value === term || value.includes(term)))
-    );
+    return searchableFields.some((key) => valueMatchesClientAlias(row[key], aliases));
   }
 
-  const searchableValues = ["client", "name", "email"].map((key) => normalizeSearchText(row[key]));
+  const searchableFields = ["client", "name", "email"];
 
-  return searchableValues.some((value) => terms.some((term) => value === term || value.includes(term)));
+  return searchableFields.some((key) => valueMatchesClientAlias(row[key], aliases));
 }
 
 function getVisibleRows(slug: string, rows: Record<string, unknown>[], user: SessionUser) {
@@ -586,13 +587,15 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @media (max-width: 900px) {
+          .toast-stack {
+            inset-inline: 1rem !important;
+            bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
+          }
+        }
         @media (max-width: 600px) {
           .view-modal-grid { grid-template-columns: 1fr !important; }
           .card-white { padding-inline: 1rem !important; }
-          .toast-stack {
-            inset-inline: 1rem !important;
-            bottom: 5.5rem !important;
-          }
         }
       `}</style>
     </AppShell>

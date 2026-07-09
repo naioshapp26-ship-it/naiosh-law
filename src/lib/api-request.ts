@@ -14,7 +14,15 @@ const defaultMaxJsonBytes = 64 * 1024;
 const jsonContentType = "application/json";
 
 function jsonError(message: string, status: number) {
-  return NextResponse.json({ message }, { status });
+  return NextResponse.json(
+    { message },
+    {
+      status,
+      headers: {
+        "Cache-Control": "private, no-store",
+      },
+    }
+  );
 }
 
 function hasJsonContentType(request: Request) {

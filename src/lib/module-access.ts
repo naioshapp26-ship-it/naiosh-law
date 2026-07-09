@@ -22,7 +22,7 @@ const adminOnlyModuleSlugs = new Set([
   "general-tools",
 ]);
 
-export function isAdminOnlyModule(slug: string) {
+function isAdminOnlyModule(slug: string) {
   return adminOnlyModuleSlugs.has(slug);
 }
 

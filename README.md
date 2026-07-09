@@ -35,6 +35,8 @@ The login page includes demo admin and client profiles. Manual demo credentials 
 Session state is signed in an httpOnly cookie. Client storage is only used as a UI cache for the demo experience.
 In production, demo login is disabled unless `NAIOSH_ENABLE_DEMO_LOGIN=true` is configured.
 The seeded client demo maps to one mock client record so client-role views stay scoped in the demo UI.
+Protected pages re-check the cookie-backed session through `/api/auth/session` and retry transient verification
+failures instead of rendering stale or partial user state.
 
 ## Verification
 
@@ -51,3 +53,5 @@ This repository currently ships static demo module data. Module add/edit/delete 
 
 Integration demo endpoints are available at `/api/sms`, `/api/email`, `/api/payments`, `/api/sign`, `/api/courts`,
 `/api/tax`, `/api/ocr`, and `/api/analytics`.
+They require an active admin session and return `Cache-Control: private, no-store` because responses are scoped to
+the current session and environment.

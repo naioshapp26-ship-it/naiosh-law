@@ -383,6 +383,7 @@ export function AppShell({ role, name, children }: Props) {
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex",
               justifyContent: "flex-start",
+              direction: "rtl",
             }}
             role="dialog"
             aria-modal="true"
@@ -395,11 +396,12 @@ export function AppShell({ role, name, children }: Props) {
               aria-hidden="true"
             />
             {/* Drawer panel */}
-            <div id="app-mobile-drawer" style={{
+            <div id="app-mobile-drawer" className="mobile-drawer-panel" style={{
               position: "relative", zIndex: 1,
               width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
+              overscrollBehavior: "contain",
               animation: "slide-drawer 0.25s ease",
             }}>
               <SidebarContent pathname={pathname} role={role} onClose={closeDrawer} />
@@ -481,6 +483,11 @@ export function AppShell({ role, name, children }: Props) {
         @keyframes slide-drawer {
           from { transform: translateX(100%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .mobile-drawer-panel {
+            animation: none !important;
+          }
         }
       `}</style>
     </div>

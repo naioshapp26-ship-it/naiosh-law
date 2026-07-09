@@ -19,6 +19,12 @@ const integrationCatalog: Record<string, { name: string; latencyMs: number }> = 
   analytics: { name: "Analytics", latencyMs: 84 },
 };
 
+const noStoreResponse = {
+  headers: {
+    "Cache-Control": "private, no-store",
+  },
+};
+
 type RouteContext = {
   params: Promise<{ integration: string }>;
 };
@@ -32,7 +38,10 @@ async function getIntegration(context: RouteContext) {
 
 async function requireSession(request: Request) {
   if (!isSessionConfigurationAvailable()) {
-    return NextResponse.json({ message: "Session secret is not configured." }, { status: 503 });
+    return NextResponse.json(
+      { message: "Session secret is not configured." },
+      { status: 503, ...noStoreResponse }
+    );
   }
 
   const cookieStore = await cookies();
@@ -42,7 +51,10 @@ async function requireSession(request: Request) {
     return user;
   }
 
-  const response = NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  const response = NextResponse.json(
+    { message: "Authentication required." },
+    { status: 401, ...noStoreResponse }
+  );
   response.cookies.set(sessionCookieName, "", {
     ...getSessionCookieOptions(request),
     expires: new Date(0),
@@ -60,7 +72,10 @@ async function requireAdminSession(request: Request) {
   }
 
   if (session.role !== "admin") {
-    return NextResponse.json({ message: "Admin access required." }, { status: 403 });
+    return NextResponse.json(
+      { message: "Admin access required." },
+      { status: 403, ...noStoreResponse }
+    );
   }
 
   return session;
@@ -86,10 +101,13 @@ export async function GET(request: Request, context: RouteContext) {
   const { slug, config } = await getIntegration(context);
 
   if (!config) {
-    return NextResponse.json({ message: "Unknown integration endpoint." }, { status: 404 });
+    return NextResponse.json(
+      { message: "Unknown integration endpoint." },
+      { status: 404, ...noStoreResponse }
+    );
   }
 
-  return NextResponse.json(healthPayload(slug, config));
+  return NextResponse.json(healthPayload(slug, config), noStoreResponse);
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -101,7 +119,10 @@ export async function POST(request: Request, context: RouteContext) {
   const { slug, config } = await getIntegration(context);
 
   if (!config) {
-    return NextResponse.json({ message: "Unknown integration endpoint." }, { status: 404 });
+    return NextResponse.json(
+      { message: "Unknown integration endpoint." },
+      { status: 404, ...noStoreResponse }
+    );
   }
 
   const parsedBody = await readJsonBody<Record<string, unknown>>(request, {
@@ -119,6 +140,6 @@ export async function POST(request: Request, context: RouteContext) {
       requestId: `${slug}-${Date.now()}`,
       receivedFields: Object.keys(parsedBody.data).slice(0, 20),
     },
-    { status: 202 }
+    { status: 202, ...noStoreResponse }
   );
 }
