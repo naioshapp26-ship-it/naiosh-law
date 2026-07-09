@@ -9,8 +9,7 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const mobileMenuRef = useDialogAccessibility<HTMLDivElement>(
     menuOpen,
-    () => setMenuOpen(false),
-    { lockScroll: false }
+    () => setMenuOpen(false)
   );
 
   useEffect(() => {
@@ -139,6 +138,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
+          type="button"
           onClick={() => setMenuOpen(!menuOpen)}
           style={{
             display: "none",
@@ -177,7 +177,7 @@ export function Navbar() {
           id="landing-mobile-menu"
           ref={mobileMenuRef}
           role="dialog"
-          aria-modal="false"
+          aria-modal="true"
           aria-label="روابط التنقل"
           tabIndex={-1}
           style={{

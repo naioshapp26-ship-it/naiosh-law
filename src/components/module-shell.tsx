@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useId, useMemo } from "react";
+import { useState, useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -154,6 +154,7 @@ export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: M
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const toastTimersRef = useRef<number[]>([]);
   const viewDialogRef = useDialogAccessibility<HTMLDivElement>(
     Boolean(viewTarget),
     () => setViewTarget(null)
@@ -166,7 +167,15 @@ export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: M
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timer = window.setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    toastTimersRef.current.push(timer);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      toastTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+      toastTimersRef.current = [];
+    };
   }, []);
 
   useEffect(() => {
@@ -342,12 +351,14 @@ export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: M
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             {canManageRows && (
               <button
+                type="button"
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
                 className="btn-primary"
                 style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
               >✏️ تعديل</button>
             )}
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
@@ -392,6 +403,7 @@ export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: M
             </div>
             <div className="module-page-actions" style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
               <button
+                type="button"
                 onClick={() => setReportOpen(true)}
                 style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.18s" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#e2e8f0"; }}
@@ -401,6 +413,7 @@ export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: M
               </button>
               {canManageRows && (
                 <button
+                  type="button"
                   onClick={openAdd}
                   className="btn-primary"
                   style={{ padding: "0.6rem 1.4rem", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "0.4rem" }}

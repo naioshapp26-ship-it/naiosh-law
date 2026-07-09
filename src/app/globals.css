@@ -87,6 +87,11 @@ textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid rgba(195, 21, 42, 0.35);
+  outline-offset: 3px;
+}
+
 /* ── Cards ─────────────────────────────────── */
 .card-white {
   background: #ffffff;
@@ -96,9 +101,11 @@ textarea {
   transition: box-shadow 0.25s, transform 0.25s;
 }
 
-.card-white:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07), 0 20px 50px rgba(0, 0, 0, 0.07);
-  transform: translateY(-3px);
+@media (hover: hover) and (pointer: fine) {
+  .card-white:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07), 0 20px 50px rgba(0, 0, 0, 0.07);
+    transform: translateY(-3px);
+  }
 }
 
 .glass-dark {

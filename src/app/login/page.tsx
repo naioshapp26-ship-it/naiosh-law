@@ -337,6 +337,7 @@ export default function LoginPage() {
             </p>
             <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
               <button
+                type="button"
                 onClick={() => loginDemo("admin")}
                 disabled={loading}
                 style={{
@@ -365,6 +366,7 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
+                type="button"
                 onClick={() => loginDemo("client")}
                 disabled={loading}
                 style={{

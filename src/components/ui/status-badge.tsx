@@ -39,6 +39,7 @@ export function StatusBadge({ label, color, dot = true }: Props) {
     >
       {dot && (
         <span
+          aria-hidden="true"
           style={{
             width: 5,
             height: 5,

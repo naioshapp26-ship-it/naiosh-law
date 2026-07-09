@@ -67,8 +67,10 @@ export function AppShell({ role, name, children }: Props) {
           <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#0a0a12" }}>Naiosh Law</span>
         </div>
         <button
+          type="button"
           onClick={() => setDrawerOpen(false)}
           className="drawer-close-btn"
+          aria-label="إغلاق قائمة الوحدات"
           style={{
             width: 32, height: 32, border: "1px solid #e2e8f0",
             borderRadius: "8px", background: "#f8f9fb", cursor: "pointer",
@@ -174,6 +176,7 @@ export function AppShell({ role, name, children }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             {/* Hamburger — mobile only */}
             <button
+              type="button"
               onClick={() => setDrawerOpen(true)}
               className="hamburger-btn"
               style={{
@@ -221,7 +224,7 @@ export function AppShell({ role, name, children }: Props) {
                 position: "absolute", top: 6, insetInlineEnd: 6,
                 width: 7, height: 7, borderRadius: "50%",
                 background: "#c3152a", border: "1.5px solid #fff",
-              }} />
+              }} aria-hidden="true" />
             </Link>
 
             {/* User chip */}
@@ -245,6 +248,7 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
+              type="button"
               className="logout-btn"
               onClick={() => {
                 void logout();
@@ -395,6 +399,7 @@ export function AppShell({ role, name, children }: Props) {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 gap: "0.2rem", padding: "0.45rem 0.6rem", borderRadius: "10px",

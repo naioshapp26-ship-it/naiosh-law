@@ -18,6 +18,10 @@ type SessionResponse = {
   user?: SessionUser;
 };
 
+function keepCurrentSession(initialUser: SessionUser | null) {
+  return (current: SessionUser | null) => current ?? initialUser ?? readStoredUser();
+}
+
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
@@ -93,14 +97,15 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
         if (response.ok && result.ok && result.user) {
           writeStorageItem(sessionStorageKey, JSON.stringify(result.user));
           setUser(result.user);
-        } else {
+        } else if (response.status === 401) {
           removeStorageItem(sessionStorageKey);
           setUser(null);
+        } else {
+          setUser(keepCurrentSession(initialUser));
         }
       } catch {
         if (active) {
-          removeStorageItem(sessionStorageKey);
-          setUser(null);
+          setUser(keepCurrentSession(initialUser));
         }
       } finally {
         if (active) {
