@@ -88,11 +88,24 @@ function constantTimeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-export function getSessionCookieOptions() {
+function isSecureRequest(request?: Request) {
+  if (!request) return process.env.NODE_ENV === "production";
+
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  if (forwardedProto) return forwardedProto === "https";
+
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
+
+export function getSessionCookieOptions(request?: Request) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecureRequest(request),
     path: "/",
     maxAge: tokenTtlSeconds,
   };

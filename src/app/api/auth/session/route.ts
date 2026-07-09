@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
         { error: "unauthorized", message: "A valid session is required." },
         { status: 401 }
       );
-      response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(), maxAge: 0 });
+      response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(request), maxAge: 0 });
       return response;
     }
 

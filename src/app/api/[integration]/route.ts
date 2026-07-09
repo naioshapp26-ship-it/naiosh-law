@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isRecord, readJsonBody } from "@/lib/api-request";
-import { decodeSessionToken, SessionConfigError, sessionCookieName } from "@/lib/session-token";
+import {
+  decodeSessionToken,
+  getSessionCookieOptions,
+  SessionConfigError,
+  sessionCookieName,
+} from "@/lib/session-token";
 
 const integrations: Record<string, { name: string; type: string }> = {
   sms: { name: "SMS Gateway", type: "رسائل نصية" },
@@ -24,16 +29,22 @@ function integrationNotFound(integration: string) {
   );
 }
 
+function unauthorizedResponse(request: NextRequest) {
+  const response = NextResponse.json(
+    { error: "unauthorized", message: "A valid session is required." },
+    { status: 401 }
+  );
+  response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(request), maxAge: 0 });
+  return response;
+}
+
 async function requireAdminSession(request: NextRequest) {
   try {
     const user = await decodeSessionToken(request.cookies.get(sessionCookieName)?.value);
     if (!user) {
       return {
         ok: false as const,
-        response: NextResponse.json(
-          { error: "unauthorized", message: "A valid session is required." },
-          { status: 401 }
-        ),
+        response: unauthorizedResponse(request),
       };
     }
     if (user.role !== "admin") {
@@ -65,14 +76,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
   if (!session.ok) return session.response;
 
   const { integration } = await context.params;
-  const meta = integrations[integration];
+  const integrationSlug = integration.toLowerCase();
+  const meta = integrations[integrationSlug];
 
   if (!meta) {
     return integrationNotFound(integration);
   }
 
   return NextResponse.json({
-    integration,
+    integration: integrationSlug,
     ...meta,
     status: "connected",
     successRate: "99.2%",
@@ -85,7 +97,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!session.ok) return session.response;
 
   const { integration } = await context.params;
-  const meta = integrations[integration];
+  const integrationSlug = integration.toLowerCase();
+  const meta = integrations[integrationSlug];
 
   if (!meta) {
     return integrationNotFound(integration);
@@ -104,7 +117,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   return NextResponse.json(
     {
-      integration,
+      integration: integrationSlug,
       ...meta,
       status: "accepted",
       receivedFields: Object.keys(body.data),

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useRef } from "react";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   open: boolean;
@@ -12,22 +13,9 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
-  useEffect(() => {
-    if (!open) return;
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [onCancel, open]);
+  useDialogAccessibility({ open, containerRef: dialogRef, onClose: onCancel });
 
   if (!open) return null;
   return (
@@ -51,6 +39,8 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
+        ref={dialogRef}
       >
         <div
           style={{

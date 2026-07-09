@@ -20,7 +20,8 @@ export const demoCredentials: DemoCredential[] = [
 ];
 
 export function getDemoUserByCredentials(email: string, password: string): SessionUser | null {
-  const match = demoCredentials.find((user) => user.email === email && user.password === password);
+  const normalizedEmail = email.trim().toLowerCase();
+  const match = demoCredentials.find((user) => user.email.toLowerCase() === normalizedEmail && user.password === password);
   if (!match) return null;
   return { role: match.role, name: match.name, email: match.email };
 }

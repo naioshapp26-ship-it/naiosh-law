@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 import { getVisibleOperationalModules } from "@/lib/module-routing";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   role: "admin" | "client";
@@ -36,6 +37,7 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout: endSession } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
   const visibleModules = getVisibleOperationalModules(role);
   const preferredBottomSlugs = ["case-management", "court-sessions", "legal-accounting"];
   const bottomNavModules = preferredBottomSlugs
@@ -49,26 +51,15 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarSoftText = "rgba(255,255,255,0.64)";
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
   const logout = () => {
     endSession();
   };
 
   const isActive = (href: string) => pathname === href;
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawerOpen(false);
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [drawerOpen]);
+  useDialogAccessibility({ open: drawerOpen, containerRef: drawerRef, onClose: closeDrawer });
 
   const sidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -102,7 +93,7 @@ export function AppShell({ role, name, children }: Props) {
           <span style={{ fontWeight: 800, fontSize: "0.95rem", color: sidebarText }}>Naiosh Law</span>
         </div>
         <button
-          onClick={() => setDrawerOpen(false)}
+          onClick={closeDrawer}
           className="drawer-close-btn"
           style={{
             width: 32, height: 32, border: `1px solid ${sidebarBorder}`,
@@ -116,7 +107,7 @@ export function AppShell({ role, name, children }: Props) {
       <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
         <Link
           href="/app/dashboard"
-          onClick={() => setDrawerOpen(false)}
+          onClick={closeDrawer}
           style={{
             display: "flex", alignItems: "center", gap: "0.6rem",
             padding: "0.6rem 0.75rem", borderRadius: "10px",
@@ -154,7 +145,7 @@ export function AppShell({ role, name, children }: Props) {
             <Link
               key={item.slug}
               href={href}
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeDrawer}
               style={{
                 display: "flex", alignItems: "center", gap: "0.6rem",
                 padding: "0.6rem 0.75rem", borderRadius: "10px",
@@ -382,7 +373,7 @@ export function AppShell({ role, name, children }: Props) {
           >
             {/* Backdrop */}
             <div
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeDrawer}
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
             {/* Drawer panel */}
@@ -398,6 +389,7 @@ export function AppShell({ role, name, children }: Props) {
               aria-modal="true"
               aria-label="قائمة وحدات النظام"
               tabIndex={-1}
+              ref={drawerRef}
             >
               {sidebarContent}
             </div>

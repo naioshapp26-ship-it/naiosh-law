@@ -21,7 +21,7 @@ const toComparableNumber = (value: unknown) => {
 };
 
 function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState<boolean | null>(null);
+  const [matches, setMatches] = useState(false);
 
   useEffect(() => {
     const media = window.matchMedia(query);
@@ -72,8 +72,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const showDesktopTable = useCardLayout !== true;
-  const showMobileCards = useCardLayout !== false;
+  const showDesktopTable = !useCardLayout;
+  const showMobileCards = useCardLayout;
 
   const hasActions = !!(onEdit || onDelete || onView);
   const firstColumnKey = columns[0]?.key;

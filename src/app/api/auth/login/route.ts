@@ -26,10 +26,12 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = body.data as LoginBody;
+  const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : null;
+  const password = typeof payload.password === "string" ? payload.password : null;
   const user = isRole(payload.demoRole)
     ? getDemoUserByRole(payload.demoRole)
-    : typeof payload.email === "string" && typeof payload.password === "string"
-      ? getDemoUserByCredentials(payload.email, payload.password)
+    : email && password
+      ? getDemoUserByCredentials(email, password)
       : null;
 
   if (!user) {
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const response = NextResponse.json({ user });
-    response.cookies.set(sessionCookieName, await createSessionToken(user), getSessionCookieOptions());
+    response.cookies.set(sessionCookieName, await createSessionToken(user), getSessionCookieOptions(request));
     return response;
   } catch (error) {
     if (error instanceof SessionConfigError) {

@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleConfig } from "@/data/module-configs";
 import { useSession } from "@/lib/session";
 import { canAccessModule } from "@/lib/module-routing";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 type ModuleRow = Record<string, unknown> & { _id: string };
@@ -39,6 +40,54 @@ function normalizeRows(slug: string, rows: Record<string, unknown>[]): ModuleRow
   }));
 }
 
+function isBlankValue(value: unknown) {
+  return value === undefined || value === null || value === "";
+}
+
+function getNextNumericValue(rows: ModuleRow[], key: string) {
+  return rows.reduce((max, row) => {
+    const numeric = Number(String(row[key] ?? "").replace(/[^\d]/g, ""));
+    return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
+  }, 0) + 1;
+}
+
+function getReferencePrefix(slug: string, rows: ModuleRow[]) {
+  const firstRef = rows.find((row) => typeof row.ref === "string")?.ref;
+  const prefix = typeof firstRef === "string" ? firstRef.match(/^[A-Za-z]+/)?.[0] : null;
+  if (prefix) return prefix;
+  return slug
+    .split("-")
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+    .slice(0, 4) || "REF";
+}
+
+function buildDisplayRow(config: ModuleConfig, slug: string, rows: ModuleRow[], data: Record<string, unknown>): ModuleRow {
+  const nextSequence = getNextNumericValue(rows, config.columns[0]?.key ?? "_id");
+  const year = new Date().getFullYear();
+  const row: ModuleRow = { ...data, _id: `${slug}-${Date.now()}` };
+
+  config.columns.forEach((column) => {
+    if (!isBlankValue(row[column.key])) return;
+
+    if (column.key === "id") {
+      row[column.key] = nextSequence;
+    } else if (column.key === "caseNo") {
+      row[column.key] = `#${year}-${String(nextSequence).padStart(4, "0")}`;
+    } else if (column.key === "invoiceNo") {
+      row[column.key] = `INV-${year}-${String(nextSequence).padStart(3, "0")}`;
+    } else if (column.key === "ref") {
+      row[column.key] = `${getReferencePrefix(slug, rows)}-${String(nextSequence).padStart(3, "0")}`;
+    } else if (column.key === "jobId") {
+      row[column.key] = `AI-${String(nextSequence).padStart(3, "0")}`;
+    } else if (column.type === "number" || column.type === "currency") {
+      row[column.key] = "0";
+    }
+  });
+
+  return row;
+}
+
 export function ModuleShell({
   slug,
   config,
@@ -48,8 +97,10 @@ export function ModuleShell({
   config: ModuleConfig | null;
   moduleTitle?: string;
 }) {
-  const { user, ready } = useSession(true);
+  const { user, ready, sessionVerified } = useSession(true);
   const toastTimers = useRef<number[]>([]);
+  const viewDialogRef = useRef<HTMLDivElement>(null);
+  const reportDialogRef = useRef<HTMLDivElement>(null);
 
   const [rows, setRows] = useState<ModuleRow[]>(() => (config ? normalizeRows(slug, config.data) : []));
   const [modalOpen, setModalOpen] = useState(false);
@@ -66,25 +117,6 @@ export function ModuleShell({
     };
   }, []);
 
-  useEffect(() => {
-    if (!viewTarget && !reportOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (reportOpen) setReportOpen(false);
-      else setViewTarget(null);
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [reportOpen, viewTarget]);
-
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
@@ -94,6 +126,12 @@ export function ModuleShell({
     }, 3500);
     toastTimers.current.push(timer);
   }, []);
+
+  const closeViewDialog = useCallback(() => setViewTarget(null), []);
+  const closeReportDialog = useCallback(() => setReportOpen(false), []);
+
+  useDialogAccessibility({ open: !!viewTarget, containerRef: viewDialogRef, onClose: closeViewDialog });
+  useDialogAccessibility({ open: reportOpen, containerRef: reportDialogRef, onClose: closeReportDialog });
 
   if (!ready || !user) {
     return (
@@ -142,7 +180,7 @@ export function ModuleShell({
       setRows((prev) => prev.map((row) => (row._id === editTarget._id ? { ...row, ...data } : row)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
-      const newRow = { ...data, _id: `${slug}-${Date.now()}` };
+      const newRow = buildDisplayRow(config, slug, rows, data);
       setRows((prev) => [newRow, ...prev]);
       pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
     }
@@ -163,6 +201,7 @@ export function ModuleShell({
   const modalKey = editTarget
     ? `edit-${slug}-${editTarget._id}`
     : `add-${slug}`;
+  const canManageRows = sessionVerified && user.role === "admin";
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -170,7 +209,7 @@ export function ModuleShell({
     return (
       <div
         style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
-        onClick={() => setViewTarget(null)}
+        onClick={closeViewDialog}
       >
         <div
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
@@ -178,11 +217,13 @@ export function ModuleShell({
           role="dialog"
           aria-modal="true"
           aria-label={`تفاصيل ${config.entityName}`}
+          tabIndex={-1}
+          ref={viewDialogRef}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
-              onClick={() => setViewTarget(null)}
+              onClick={closeViewDialog}
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
@@ -201,7 +242,7 @@ export function ModuleShell({
               style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
             >✏️ تعديل</button>
             <button
-              onClick={() => setViewTarget(null)}
+              onClick={closeViewDialog}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
           </div>
@@ -246,7 +287,7 @@ export function ModuleShell({
               >
                 📊 تقارير
               </button>
-              {user.role === "admin" && (
+              {canManageRows && (
                 <button
                   onClick={openAdd}
                   className="btn-primary"
@@ -268,8 +309,8 @@ export function ModuleShell({
             columns={config.columns}
             data={rows}
             onView={(row) => setViewTarget(row as ModuleRow)}
-            onEdit={user.role === "admin" ? openEdit : undefined}
-            onDelete={user.role === "admin" ? (row) => setDeleteTarget(row as ModuleRow) : undefined}
+            onEdit={canManageRows ? openEdit : undefined}
+            onDelete={canManageRows ? (row) => setDeleteTarget(row as ModuleRow) : undefined}
             searchPlaceholder={`بحث في ${config.entityName}ات...`}
           />
         </div>
@@ -302,7 +343,7 @@ export function ModuleShell({
       {reportOpen && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
-          onClick={() => setReportOpen(false)}
+          onClick={closeReportDialog}
         >
           <div
             className="report-modal-panel"
@@ -311,10 +352,12 @@ export function ModuleShell({
             role="dialog"
             aria-modal="true"
             aria-label="تصدير التقارير"
+            tabIndex={-1}
+            ref={reportDialogRef}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <button onClick={closeReportDialog} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
@@ -327,7 +370,7 @@ export function ModuleShell({
               ].map((opt) => (
                 <button
                   key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
+                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); closeReportDialog(); }}
                   style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}

@@ -6,18 +6,20 @@ import { sessionKey } from "@/data/auth";
 import { normalizeSessionUser, parseSessionUser, type SessionUser } from "@/lib/session-types";
 
 const sessionChangeEvent = "naiosh-law-session-change";
-const initialSnapshot: SessionSnapshot = { user: null, ready: false };
+const initialSnapshot: SessionSnapshot = { user: null, ready: false, verified: false };
 const listeners = new Set<() => void>();
 
 type SessionSnapshot = {
   user: SessionUser | null;
   ready: boolean;
+  verified: boolean;
 };
 
 let sessionSnapshot = initialSnapshot;
 let hydratedFromStorage = false;
+let verificationRequest: Promise<SessionFetchResult> | null = null;
 
-export { parseSessionUser, type SessionUser };
+export type { SessionUser };
 
 export function readStoredSession(): SessionUser | null {
   if (typeof window === "undefined") return null;
@@ -37,7 +39,13 @@ function emitSessionChange() {
 }
 
 function updateSessionSnapshot(next: SessionSnapshot) {
-  if (sessionSnapshot.user === next.user && sessionSnapshot.ready === next.ready) return;
+  if (
+    sessionSnapshot.user === next.user &&
+    sessionSnapshot.ready === next.ready &&
+    sessionSnapshot.verified === next.verified
+  ) {
+    return;
+  }
   sessionSnapshot = next;
   emitSessionChange();
 }
@@ -45,7 +53,7 @@ function updateSessionSnapshot(next: SessionSnapshot) {
 export function writeStoredSession(user: SessionUser, notify = true): boolean {
   try {
     window.localStorage.setItem(sessionKey, JSON.stringify(user));
-    sessionSnapshot = { user, ready: true };
+    sessionSnapshot = { user, ready: true, verified: true };
     if (notify) {
       window.dispatchEvent(new Event(sessionChangeEvent));
       emitSessionChange();
@@ -63,7 +71,7 @@ export function clearStoredSession(notify = true) {
     } catch {
       // Private browsing or storage policy failures should not block logout.
     }
-    sessionSnapshot = { user: null, ready: true };
+    sessionSnapshot = { user: null, ready: true, verified: false };
     if (notify) {
       window.dispatchEvent(new Event(sessionChangeEvent));
       emitSessionChange();
@@ -82,7 +90,14 @@ export function getSafeAppPath(value: string | null | undefined) {
 function subscribeToSession(callback: () => void) {
   listeners.add(callback);
   const handleExternalChange = () => {
-    updateSessionSnapshot({ user: readStoredSession(), ready: true });
+    const storedUser = readStoredSession();
+    const isSameVerifiedUser =
+      !!storedUser &&
+      !!sessionSnapshot.user &&
+      sessionSnapshot.verified &&
+      storedUser.email === sessionSnapshot.user.email &&
+      storedUser.role === sessionSnapshot.user.role;
+    updateSessionSnapshot({ user: storedUser, ready: true, verified: isSameVerifiedUser });
   };
   window.addEventListener("storage", handleExternalChange);
   window.addEventListener(sessionChangeEvent, handleExternalChange);
@@ -100,26 +115,44 @@ function getServerSessionSnapshot() {
 function getClientSessionSnapshot() {
   if (!hydratedFromStorage && typeof window !== "undefined") {
     hydratedFromStorage = true;
-    sessionSnapshot = { user: readStoredSession(), ready: false };
+    sessionSnapshot = { user: readStoredSession(), ready: false, verified: false };
   }
   return sessionSnapshot;
 }
 
-async function fetchCurrentSession(): Promise<SessionUser | null> {
-  const response = await fetch("/api/auth/session", {
-    cache: "no-store",
-    credentials: "same-origin",
+type SessionFetchResult =
+  | { status: "authenticated"; user: SessionUser }
+  | { status: "unauthenticated" }
+  | { status: "failed" };
+
+async function fetchCurrentSession(): Promise<SessionFetchResult> {
+  try {
+    const response = await fetch("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+
+    if (response.status === 401) return { status: "unauthenticated" };
+    if (!response.ok) return { status: "failed" };
+
+    const body = (await response.json()) as { user?: unknown };
+    const user = normalizeSessionUser(body.user);
+    return user ? { status: "authenticated", user } : { status: "failed" };
+  } catch {
+    return { status: "failed" };
+  }
+}
+
+function verifyCurrentSession() {
+  verificationRequest ??= fetchCurrentSession().finally(() => {
+    verificationRequest = null;
   });
-
-  if (!response.ok) return null;
-
-  const body = (await response.json()) as { user?: unknown };
-  return normalizeSessionUser(body.user);
+  return verificationRequest;
 }
 
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const { user, ready } = useSyncExternalStore(
+  const { user, ready, verified } = useSyncExternalStore(
     subscribeToSession,
     getClientSessionSnapshot,
     getServerSessionSnapshot
@@ -128,23 +161,39 @@ export function useSession(redirectIfMissing = false) {
   useEffect(() => {
     let cancelled = false;
     const optimisticUser = readStoredSession();
-    updateSessionSnapshot({ user: optimisticUser, ready: false });
 
-    fetchCurrentSession()
-      .then((verifiedUser) => {
+    if (!sessionSnapshot.ready) {
+      updateSessionSnapshot({ user: optimisticUser, ready: false, verified: false });
+    }
+
+    if (sessionSnapshot.ready && sessionSnapshot.verified) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    verifyCurrentSession()
+      .then((result) => {
         if (cancelled) return;
-        if (verifiedUser) {
-          writeStoredSession(verifiedUser, false);
-          updateSessionSnapshot({ user: verifiedUser, ready: true });
+        if (result.status === "authenticated") {
+          writeStoredSession(result.user, false);
+          updateSessionSnapshot({ user: result.user, ready: true, verified: true });
           return;
         }
-        clearStoredSession(false);
-        updateSessionSnapshot({ user: null, ready: true });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        clearStoredSession(false);
-        updateSessionSnapshot({ user: null, ready: true });
+
+        if (result.status === "unauthenticated") {
+          clearStoredSession(false);
+          updateSessionSnapshot({ user: null, ready: true, verified: false });
+          return;
+        }
+
+        // Keep a cookie-trusted or locally mirrored user through transient
+        // network failures; middleware still guards protected server routes.
+        updateSessionSnapshot({
+          user: sessionSnapshot.user ?? optimisticUser,
+          ready: true,
+          verified: false,
+        });
       });
 
     return () => {
@@ -163,6 +212,7 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
+      sessionVerified: verified,
       logout: () => {
         clearStoredSession();
         fetch("/api/auth/logout", {

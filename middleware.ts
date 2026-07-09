@@ -13,7 +13,7 @@ function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", safeAppPath(request.nextUrl.pathname, request.nextUrl.search));
   const response = NextResponse.redirect(loginUrl);
-  response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(), maxAge: 0 });
+  response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(request), maxAge: 0 });
   return response;
 }
 
@@ -36,7 +36,9 @@ export async function middleware(request: NextRequest) {
       if (!user) return NextResponse.next();
       const redirectTarget = request.nextUrl.searchParams.get("next");
       const url = new URL(
-        redirectTarget?.startsWith("/app") && !redirectTarget.includes("://") ? redirectTarget : "/app/dashboard",
+        redirectTarget?.startsWith("/app") && !redirectTarget.startsWith("//") && !redirectTarget.includes("://")
+          ? redirectTarget
+          : "/app/dashboard",
         request.url
       );
       return NextResponse.redirect(url);

@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import type { FormField } from "@/data/module-configs";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   open: boolean;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<Record<string, unknown>>(() => {
     const defaults: Record<string, unknown> = {};
     fields.forEach((field) => {
@@ -23,22 +25,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [onClose, open]);
+  useDialogAccessibility({ open, containerRef: dialogRef, onClose });
 
   if (!open) return null;
 
@@ -85,6 +72,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
+        ref={dialogRef}
       >
         {/* Header */}
         <div
@@ -156,14 +145,29 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                     placeholder={f.placeholder}
                   />
                 ) : (
-                  <input
-                    type={f.type === "number" || f.type === "date" || f.type === "email" || f.type === "tel" ? f.type : "text"}
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    className="input-field"
-                    placeholder={f.placeholder}
-                  />
+                  (() => {
+                    const value = String(form[f.key] ?? "");
+                    const nativeDateValue = /^\d{4}-\d{2}-\d{2}$/.test(value);
+                    const inputType =
+                      f.type === "date"
+                        ? value === "" || nativeDateValue
+                          ? "date"
+                          : "text"
+                        : f.type === "number" || f.type === "email" || f.type === "tel"
+                          ? f.type
+                          : "text";
+
+                    return (
+                      <input
+                        type={inputType}
+                        value={value}
+                        onChange={(e) => set(f.key, e.target.value)}
+                        required={f.required}
+                        className="input-field"
+                        placeholder={f.placeholder ?? (f.type === "date" ? "مثال: 15 يوليو 2026" : undefined)}
+                      />
+                    );
+                  })()
                 )}
               </div>
             ))}
