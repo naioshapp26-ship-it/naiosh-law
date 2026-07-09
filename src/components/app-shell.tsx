@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { modules } from "@/data/modules";
-import { sessionKey } from "@/data/auth";
+import { clearStoredSession } from "@/lib/session";
+import { getVisibleOperationalModules } from "@/lib/module-routing";
 
 type Props = {
   role: "admin" | "client";
@@ -36,6 +36,7 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
   const sidebarText = "#ffffff";
@@ -44,13 +45,22 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = () => {
-    window.localStorage.removeItem(sessionKey);
+    clearStoredSession();
     router.replace("/login");
   };
 
   const isActive = (href: string) => pathname === href;
 
-  const SidebarContent = () => (
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [drawerOpen]);
+
+  const sidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Logo inside drawer (mobile) */}
       <div
@@ -127,7 +137,7 @@ export function AppShell({ role, name, children }: Props) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {modules.map((item) => {
+        {visibleModules.map((item) => {
           const href   = `/app/modules/${item.slug}`;
           const active = pathname === href;
           return (
@@ -310,7 +320,7 @@ export function AppShell({ role, name, children }: Props) {
             }}>الوحدات التشغيلية</p>
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {modules.map((item) => {
+              {visibleModules.map((item) => {
                 const href   = `/app/modules/${item.slug}`;
                 const active = pathname === href;
                 return (
@@ -367,10 +377,10 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent />
+              {sidebarContent}
             </div>
           </div>
         )}
