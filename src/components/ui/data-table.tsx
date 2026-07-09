@@ -15,6 +15,27 @@ type Props = {
 
 const PAGE_SIZE = 10;
 const rowIdKey = "_rowId";
+const arabicCollator = new Intl.Collator("ar", { numeric: true, sensitivity: "base" });
+
+function toSortableNumber(value: unknown) {
+  const normalized = String(value ?? "").replace(/[,\s]/g, "");
+  const numberValue = Number(normalized);
+
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function compareValues(column: Column | undefined, left: unknown, right: unknown) {
+  if (column?.type === "number" || column?.type === "currency") {
+    const leftNumber = toSortableNumber(left);
+    const rightNumber = toSortableNumber(right);
+
+    if (leftNumber !== null && rightNumber !== null) {
+      return leftNumber - rightNumber;
+    }
+  }
+
+  return arabicCollator.compare(String(left ?? ""), String(right ?? ""));
+}
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
@@ -39,15 +60,19 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     );
   }, [columns, data, search]);
 
-  const sorted = useMemo(() => (
-    sortKey
-      ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
-      })
-      : filtered
-  ), [filtered, sortAsc, sortKey]);
+  const sorted = useMemo(() => {
+    if (!sortKey) {
+      return filtered;
+    }
+
+    const column = columns.find((item) => item.key === sortKey);
+
+    return [...filtered].sort((a, b) => {
+      const comparison = compareValues(column, a[sortKey], b[sortKey]);
+
+      return sortAsc ? comparison : -comparison;
+    });
+  }, [columns, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);

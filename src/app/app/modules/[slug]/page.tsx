@@ -9,12 +9,13 @@ type Props = {
 
 export default async function ModulePage({ params }: Props) {
   const { slug } = await params;
+  const config = moduleConfigMap[slug];
 
-  if (!moduleConfigMap[slug]) {
+  if (!config) {
     notFound();
   }
 
-  return <ModuleShell key={slug} slug={slug} />;
+  return <ModuleShell key={slug} slug={slug} config={config} />;
 }
 
 export function generateStaticParams() {

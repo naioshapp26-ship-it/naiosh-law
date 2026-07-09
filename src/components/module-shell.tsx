@@ -7,9 +7,10 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
+import type { ModuleConfig } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
 import { moduleMap } from "@/data/modules";
+import { readBrowserStorage, removeBrowserStorage, writeBrowserStorage } from "@/lib/browser-storage";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
@@ -65,7 +66,7 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
   }
 
   const storageKey = getRowsStorageKey(slug);
-  const rawRows = window.localStorage.getItem(storageKey);
+  const rawRows = readBrowserStorage(storageKey);
 
   if (!rawRows) {
     return seededFallback;
@@ -77,26 +78,26 @@ function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
       return seedRows(slug, parsed);
     }
   } catch {
-    window.localStorage.removeItem(storageKey);
+    removeBrowserStorage(storageKey);
   }
 
   return seededFallback;
 }
 
 function persistRows(slug: string, rows: Record<string, unknown>[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(getRowsStorageKey(slug), JSON.stringify(rows));
+  writeBrowserStorage(getRowsStorageKey(slug), JSON.stringify(rows));
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
+type ModuleShellProps = {
+  slug: string;
+  config: ModuleConfig;
+};
+
+export function ModuleShell({ slug, config }: ModuleShellProps) {
   const { user, ready } = useSession(true);
-  const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config?.data ?? []));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config.data));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -111,27 +112,27 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, []);
 
   useEffect(() => {
-    if (!config) {
+    persistRows(slug, rows);
+  }, [rows, slug]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
       return;
     }
 
-    persistRows(slug, rows);
-  }, [config, rows, slug]);
+    const storageKey = getRowsStorageKey(slug);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === storageKey) {
+        setRows(loadRows(slug, config.data));
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [config.data, slug]);
 
   if (!ready || !user) {
     return <LoadingScreen />;
-  }
-
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
-    );
   }
 
   /* ── Handlers ── */
@@ -182,7 +183,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
-  const entityPlural = config ? getEntityPlural(config.entityName) : "";
+  const entityPlural = getEntityPlural(config.entityName);
 
   /* ── View modal content ── */
   const renderViewModal = () => {

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
+import { readBrowserStorage, removeBrowserStorage, writeBrowserStorage } from "@/lib/browser-storage";
 import type { SessionUser } from "@/lib/auth-session";
 
 const sessionChangeEvent = "naiosh-law-session-change";
@@ -14,7 +15,7 @@ function getClientSessionSnapshot(): SessionSnapshot {
     return undefined;
   }
 
-  return window.localStorage.getItem(sessionKey);
+  return readBrowserStorage(sessionKey);
 }
 
 function getServerSessionSnapshot(): SessionSnapshot {
@@ -44,12 +45,12 @@ function notifySessionChange() {
 }
 
 export function saveSession(user: SessionUser) {
-  window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  writeBrowserStorage(sessionKey, JSON.stringify(user));
   notifySessionChange();
 }
 
 export function clearStoredSession() {
-  window.localStorage.removeItem(sessionKey);
+  removeBrowserStorage(sessionKey);
   notifySessionChange();
 }
 
