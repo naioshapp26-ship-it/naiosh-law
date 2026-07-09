@@ -3,6 +3,7 @@ import { demoUsers, toSessionUser } from "@/lib/demo-auth";
 import { readJsonObject } from "@/lib/api-request";
 import {
   createSessionToken,
+  isDemoLoginEnabled,
   isSecureRequest,
   sessionCookieName,
   sessionMaxAgeSeconds,
@@ -24,6 +25,13 @@ export async function POST(request: Request) {
   const body = parsedBody.data as LoginBody;
   const demoRole = body.demoRole;
   const isDemoRole = demoRole === "admin" || demoRole === "client";
+
+  if (isDemoRole && !isDemoLoginEnabled()) {
+    return NextResponse.json(
+      { ok: false, error: "Demo login is disabled in this environment" },
+      { status: 403 }
+    );
+  }
 
   if (!isDemoRole && (typeof body.email !== "string" || typeof body.password !== "string")) {
     return NextResponse.json(

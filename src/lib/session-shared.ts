@@ -18,6 +18,10 @@ const fallbackSessionSecret = "naiosh-law-demo-session-secret";
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
+function isProductionRuntime() {
+  return process.env.NODE_ENV === "production";
+}
+
 function getSessionSecret() {
   const configuredSecret =
     process.env.NAIOSH_SESSION_SECRET ??
@@ -28,7 +32,17 @@ function getSessionSecret() {
     return configuredSecret;
   }
 
+  if (isProductionRuntime() && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
+    throw new Error(
+      "NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be set in production"
+    );
+  }
+
   return fallbackSessionSecret;
+}
+
+export function isDemoLoginEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
 }
 
 export function isSecureRequest(request: Request) {

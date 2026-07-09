@@ -34,6 +34,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
   overflow-x: hidden;
+  min-height: 100dvh;
 }
 
 .skip-link {
@@ -96,9 +97,11 @@ textarea {
   transition: box-shadow 0.25s, transform 0.25s;
 }
 
-.card-white:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07), 0 20px 50px rgba(0, 0, 0, 0.07);
-  transform: translateY(-3px);
+@media (hover: hover) and (pointer: fine) {
+  .card-white:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07), 0 20px 50px rgba(0, 0, 0, 0.07);
+    transform: translateY(-3px);
+  }
 }
 
 .glass-dark {
@@ -130,6 +133,17 @@ textarea {
   background: var(--primary-dark);
   box-shadow: 0 8px 32px rgba(195, 21, 42, 0.45);
   transform: translateY(-2px);
+}
+
+.btn-primary:focus-visible,
+.btn-ghost-dark:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(195, 21, 42, 0.25);
+  outline-offset: 2px;
 }
 
 .btn-ghost-dark {

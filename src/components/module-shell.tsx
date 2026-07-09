@@ -208,12 +208,16 @@ export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: M
       return;
     }
 
-    try {
-      writeStorageItem(storageKey, JSON.stringify(rows));
-    } catch {
-      // Ignore localStorage quota/privacy failures; the in-memory demo table remains usable.
-    }
-  }, [config, rows, rowsHydrated, storageKey]);
+    const timer = window.setTimeout(() => {
+      try {
+        writeStorageItem(storageKey, JSON.stringify(rows));
+      } catch {
+        // Ignore localStorage quota/privacy failures; the in-memory demo table remains usable.
+      }
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [rows, rowsHydrated, storageKey]);
 
   if (!ready || !user) {
     return (

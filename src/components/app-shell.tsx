@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { clearSessionUser } from "@/lib/session";
@@ -19,14 +19,18 @@ export function AppShell({ role, name, children }: Props) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerRef = useDialogAccessibility<HTMLDivElement>(drawerOpen, () => setDrawerOpen(false));
-  const visibleModules = getVisibleOperationalModules(role);
+  const visibleModules = useMemo(() => getVisibleOperationalModules(role), [role]);
   const roleLabel = role === "admin" ? "مدير النظام" : "عميل";
-  const bottomNavItems = [
-    { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية", slug: "dashboard" },
-    { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا", slug: "case-management" },
-    { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات", slug: "court-sessions" },
-    { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية", slug: "legal-accounting" },
-  ].filter((item) => item.slug === "dashboard" || visibleModules.some((module) => module.slug === item.slug));
+  const bottomNavItems = useMemo(
+    () =>
+      [
+        { href: "/app/dashboard", icon: "⊞", label: "الرئيسية", slug: "dashboard" },
+        { href: "/app/modules/case-management", icon: "⚖️", label: "القضايا", slug: "case-management" },
+        { href: "/app/modules/court-sessions", icon: "🏛️", label: "الجلسات", slug: "court-sessions" },
+        { href: "/app/modules/legal-accounting", icon: "💰", label: "المالية", slug: "legal-accounting" },
+      ].filter((item) => item.slug === "dashboard" || visibleModules.some((module) => module.slug === item.slug)),
+    [visibleModules]
+  );
 
   const logout = async () => {
     await clearSessionUser();
@@ -155,7 +159,7 @@ export function AppShell({ role, name, children }: Props) {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
 
       {/* ── Top Header ── */}
       <header style={{
@@ -364,8 +368,8 @@ export function AppShell({ role, name, children }: Props) {
               tabIndex={-1}
               style={{
               position: "relative", zIndex: 1,
-              width: 280, background: "#ffffff",
-              height: "100%", overflowY: "auto",
+              width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
+              height: "100dvh", overflowY: "auto",
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>

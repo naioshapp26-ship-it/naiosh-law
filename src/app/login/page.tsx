@@ -2,19 +2,9 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
 import { demoAccounts } from "@/data/auth";
 import { saveSessionUser, type SessionUser } from "@/lib/session";
 import { getSafeAppPath, type Role } from "@/lib/session-shared";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  },
-};
 
 const perks = [
   "إدارة شاملة للقضايا والموكلين",
@@ -23,6 +13,9 @@ const perks = [
   "ذكاء اصطناعي قانوني متكامل",
   "تقارير تنفيذية فورية",
 ];
+const demoLoginEnabled =
+  process.env.NODE_ENV !== "production" ||
+  process.env.NEXT_PUBLIC_NAIOSH_ENABLE_DEMO_LOGIN === "true";
 
 type LoginResponse = {
   ok: boolean;
@@ -40,7 +33,6 @@ function getRedirectTarget() {
 
 export default function LoginPage() {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
   const [email, setEmail] = useState("admin@naioshlaw.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -115,7 +107,7 @@ export default function LoginPage() {
   return (
     <main
       id="main-content"
-      style={{ minHeight: "100vh", display: "flex", background: "#0a0a12" }}
+      style={{ minHeight: "100dvh", display: "flex", background: "#0a0a12" }}
       className="login-wrap"
     >
       {/* ── Left: Branding panel ── */}
@@ -303,17 +295,14 @@ export default function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           padding: "3rem 2rem",
-          minHeight: "100vh",
+          minHeight: "100dvh",
         }}
       >
-        <motion.div
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
-          initial={false}
-          animate="show"
+        <div
           style={{ width: "100%", maxWidth: "420px" }}
         >
           {/* Heading */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "2.5rem" }}>
+          <div className="login-fade login-fade-1" style={{ marginBottom: "2.5rem" }}>
             <h1
               style={{
                 fontSize: "2rem",
@@ -328,76 +317,79 @@ export default function LoginPage() {
             <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
               سجّل دخولك للوصول إلى لوحة التحكم الكاملة
             </p>
-          </motion.div>
+          </div>
 
-          {/* Quick demo buttons */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "2rem" }}>
-            <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
-              دخول سريع تجريبي:
-            </p>
-            <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
-              <button
-                onClick={() => loginDemo("admin")}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: "0.65rem",
-                  borderRadius: "10px",
-                  border: "1.5px solid #e2e8f0",
-                  background: "#f8f9fb",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-cairo)",
-                  transition: "all 0.2s",
-                  textAlign: "center",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
-                  (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
-                }}
-              >
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  ⚙️ Admin
-                </span>
-                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
-              </button>
-              <button
-                onClick={() => loginDemo("client")}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: "0.65rem",
-                  borderRadius: "10px",
-                  border: "1.5px solid #e2e8f0",
-                  background: "#f8f9fb",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-cairo)",
-                  transition: "all 0.2s",
-                  textAlign: "center",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
-                  (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
-                }}
-              >
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  👤 Client
-                </span>
-                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>عميل تجريبي</span>
-              </button>
+          {demoLoginEnabled && (
+            <div className="login-fade login-fade-2" style={{ marginBottom: "2rem" }}>
+              <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
+                دخول سريع تجريبي:
+              </p>
+              <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
+                <button
+                  type="button"
+                  onClick={() => loginDemo("admin")}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: "0.65rem",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e2e8f0",
+                    background: "#f8f9fb",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-cairo)",
+                    transition: "all 0.2s",
+                    textAlign: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
+                    (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
+                    ⚙️ Admin
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loginDemo("client")}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: "0.65rem",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e2e8f0",
+                    background: "#f8f9fb",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-cairo)",
+                    transition: "all 0.2s",
+                    textAlign: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
+                    (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
+                    👤 Client
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#64748b" }}>عميل تجريبي</span>
+                </button>
+              </div>
             </div>
-          </motion.div>
+          )}
 
           {/* Divider */}
-          <motion.div
-            variants={fadeUp}
+          <div
+            className="login-fade login-fade-3"
             style={{
               display: "flex",
               alignItems: "center",
@@ -406,13 +398,15 @@ export default function LoginPage() {
             }}
           >
             <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
-            <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 500 }}>أو ادخل يدويًا</span>
+            <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 500 }}>
+              {demoLoginEnabled ? "أو ادخل يدويًا" : "تسجيل الدخول"}
+            </span>
             <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
-          </motion.div>
+          </div>
 
           {/* Form */}
           <form onSubmit={onSubmit}>
-            <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
+            <div className="login-fade login-fade-4" style={{ marginBottom: "1.25rem" }}>
               <label className="input-label" htmlFor="login-email">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
@@ -438,9 +432,9 @@ export default function LoginPage() {
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
+            <div className="login-fade login-fade-5" style={{ marginBottom: "1.5rem" }}>
               <label className="input-label" htmlFor="login-password">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
@@ -474,15 +468,13 @@ export default function LoginPage() {
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
-            </motion.div>
+            </div>
 
             {error && (
-              <motion.div
+              <div
                 role="alert"
                 aria-live="assertive"
-                initial={shouldReduceMotion ? false : { opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+                className="login-error"
                 style={{
                   background: "rgba(195,21,42,0.06)",
                   border: "1px solid rgba(195,21,42,0.2)",
@@ -495,11 +487,10 @@ export default function LoginPage() {
                 }}
               >
                 ⚠️ {error}
-              </motion.div>
+              </div>
             )}
 
-            <motion.button
-              variants={fadeUp}
+            <button
               type="submit"
               disabled={loading}
               className="btn-primary"
@@ -542,12 +533,12 @@ export default function LoginPage() {
               ) : (
                 <>دخول النظام →</>
               )}
-            </motion.button>
+            </button>
           </form>
 
           {/* Hint */}
-          <motion.p
-            variants={fadeUp}
+          <p
+            className="login-fade login-fade-6"
             style={{
               textAlign: "center",
               color: "#94a3b8",
@@ -556,12 +547,27 @@ export default function LoginPage() {
               lineHeight: 1.6,
             }}
           >
-            هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري بدون كشف كلمات المرور في المتصفح
-          </motion.p>
-        </motion.div>
+            {demoLoginEnabled
+              ? "هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري بدون كشف كلمات المرور في المتصفح"
+              : "الدخول التجريبي السريع غير مفعّل في هذه البيئة. استخدم بيانات الدخول المصرح بها."}
+          </p>
+        </div>
       </div>
 
       <style>{`
+        @keyframes login-fade-in {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .login-fade, .login-error {
+          animation: login-fade-in 0.35s ease both;
+        }
+        .login-fade-1 { animation-delay: 0.04s; }
+        .login-fade-2 { animation-delay: 0.08s; }
+        .login-fade-3 { animation-delay: 0.12s; }
+        .login-fade-4 { animation-delay: 0.16s; }
+        .login-fade-5 { animation-delay: 0.20s; }
+        .login-fade-6 { animation-delay: 0.24s; }
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }

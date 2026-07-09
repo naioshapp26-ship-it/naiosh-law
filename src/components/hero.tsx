@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { modules } from "@/data/modules";
 
 const moduleCount = modules.length;
@@ -12,16 +9,12 @@ const stats = [
   { value: "99.9%", label: "وقت التشغيل" },
 ];
 
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
-};
-
 export function HeroSection() {
   return (
     <section
+      className="hero-section"
       style={{
-        minHeight: "100vh",
+        minHeight: "100svh",
         background: "#0a0a12",
         position: "relative",
         overflow: "hidden",
@@ -115,10 +108,7 @@ export function HeroSection() {
           className="hero-grid"
         >
           {/* ── Text column ── */}
-          <motion.div
-            variants={container}
-            initial="show"
-            animate="show"
+          <div
             style={{
               width: "100%",
               maxWidth: "720px",
@@ -254,13 +244,10 @@ export function HeroSection() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* ── Visual column ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+          <div
             className="float-anim hero-card-col"
           >
             {/* Main case card */}
@@ -401,10 +388,7 @@ export function HeroSection() {
             </div>
 
             {/* Alert mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -452,13 +436,10 @@ export function HeroSection() {
               >
                 عاجل
               </span>
-            </motion.div>
+            </div>
 
             {/* Stats mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -483,16 +464,13 @@ export function HeroSection() {
                   </p>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
+      <div
         style={{
           position: "absolute",
           bottom: "2rem",
@@ -523,7 +501,7 @@ export function HeroSection() {
             strokeLinejoin="round"
           />
         </svg>
-      </motion.div>
+      </div>
 
       <style>{`
         @media (max-width: 1200px) {
@@ -532,6 +510,9 @@ export function HeroSection() {
           }
         }
         @media (max-width: 900px) {
+          .hero-section {
+            min-height: auto !important;
+          }
           .hero-grid {
             grid-template-columns: 1fr !important;
           }

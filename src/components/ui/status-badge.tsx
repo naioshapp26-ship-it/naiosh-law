@@ -1,4 +1,4 @@
-export type BadgeColor = "green" | "red" | "yellow" | "blue" | "gray" | "purple" | "orange" | "teal";
+export type BadgeColor = "green" | "red" | "yellow" | "blue" | "gray" | "purple" | "orange";
 
 const colorMap: Record<BadgeColor, { bg: string; color: string; border: string }> = {
   green:  { bg: "rgba(34,197,94,0.1)",  color: "#16a34a", border: "rgba(34,197,94,0.22)"  },
@@ -8,7 +8,6 @@ const colorMap: Record<BadgeColor, { bg: string; color: string; border: string }
   gray:   { bg: "rgba(100,116,139,0.1)",color: "#475569", border: "rgba(100,116,139,0.2)" },
   purple: { bg: "rgba(139,92,246,0.1)", color: "#6d28d9", border: "rgba(139,92,246,0.22)" },
   orange: { bg: "rgba(249,115,22,0.1)", color: "#c2410c", border: "rgba(249,115,22,0.22)" },
-  teal:   { bg: "rgba(20,184,166,0.1)", color: "#0f766e", border: "rgba(20,184,166,0.22)" },
 };
 
 type Props = {

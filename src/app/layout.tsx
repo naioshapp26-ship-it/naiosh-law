@@ -4,7 +4,7 @@ import "./globals.css";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
   variable: "--font-cairo",
   display: "swap",
 });
@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <body style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <a href="#main-content" className="skip-link">
           تخطي إلى المحتوى
         </a>

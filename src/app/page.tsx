@@ -38,6 +38,8 @@ const features = [
 ];
 
 const moduleCount = modules.length;
+const showDemoCredentials =
+  process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
 const statItems = [
   { value: String(moduleCount), label: "وحدة ومنطقة عمل" },
   { value: "128+", label: "قضية نشطة" },
@@ -264,39 +266,40 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Demo credentials */}
-          <div
-            style={{
-              display: "flex",
-              gap: "1.25rem",
-              justifyContent: "center",
-              marginTop: "2.5rem",
-              flexWrap: "wrap",
-            }}
-          >
-            {[
-              { label: "مدير النظام", email: "admin@naioshlaw.com" },
-              { label: "عميل تجريبي", email: "client@naioshlaw.com" },
-            ].map((u) => (
-              <div
-                key={u.email}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "12px",
-                  padding: "0.85rem 1.25rem",
-                  textAlign: "start",
-                }}
-              >
-                <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 700 }}>
-                  {u.label}
-                </p>
-                <p style={{ color: "#cbd5e1", fontSize: "0.75rem", marginTop: "0.15rem" }}>
-                  {u.email}
-                </p>
-              </div>
-            ))}
-          </div>
+          {showDemoCredentials && (
+            <div
+              style={{
+                display: "flex",
+                gap: "1.25rem",
+                justifyContent: "center",
+                marginTop: "2.5rem",
+                flexWrap: "wrap",
+              }}
+            >
+              {[
+                { label: "مدير النظام", email: "admin@naioshlaw.com" },
+                { label: "عميل تجريبي", email: "client@naioshlaw.com" },
+              ].map((u) => (
+                <div
+                  key={u.email}
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "12px",
+                    padding: "0.85rem 1.25rem",
+                    textAlign: "start",
+                  }}
+                >
+                  <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 700 }}>
+                    {u.label}
+                  </p>
+                  <p style={{ color: "#cbd5e1", fontSize: "0.75rem", marginTop: "0.15rem" }}>
+                    {u.email}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         </section>
       </main>
@@ -345,6 +348,7 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: 1fr !important; }
         }
         @media (min-width: 769px) and (max-width: 1100px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .modules-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }

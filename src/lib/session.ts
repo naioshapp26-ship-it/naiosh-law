@@ -98,10 +98,8 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
           setUser(null);
         }
       } catch {
-        if (active) {
-          removeStorageItem(sessionStorageKey);
-          setUser(null);
-        }
+        // Keep the optimistic UI cache on transient network/server failures.
+        // Explicit 401/invalid responses above remain authoritative and clear it.
       } finally {
         if (active) {
           setReady(true);
@@ -123,7 +121,15 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {
-      router.replace("/login");
+      const currentPath =
+        typeof window === "undefined"
+          ? "/app/dashboard"
+          : `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const loginPath = currentPath.startsWith("/app")
+        ? `/login?next=${encodeURIComponent(currentPath)}`
+        : "/login";
+
+      router.replace(loginPath);
     }
   }, [ready, user, redirectIfMissing, router]);
 
