@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   if (!parsed.ok) return parsed.response;
   const body = parsed.data;
   const count = await prisma.case.count();
-  const caseNo = body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
+  const caseNo = String(body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`);
 
   const created = await prisma.case.create({
     data: {

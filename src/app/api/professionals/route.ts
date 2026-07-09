@@ -1,5 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { jsonResponse, readJsonBody, requireAuth, requireWrite } from "@/lib/api-helpers";
+import type { ProfessionalType } from "@/generated/prisma/client";
+
+const professionalTypes = new Set<ProfessionalType>(["lawyer", "consultant", "judge"]);
+
+function parseProfessionalType(value: unknown): ProfessionalType {
+  return typeof value === "string" && professionalTypes.has(value as ProfessionalType)
+    ? (value as ProfessionalType)
+    : "lawyer";
+}
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -38,7 +47,7 @@ export async function POST(request: Request) {
   const created = await prisma.professional.create({
     data: {
       name: String(body.name),
-      type: body.type ?? "lawyer",
+      type: parseProfessionalType(body.type),
       licenseNo: body.licenseNo ? String(body.licenseNo) : null,
       phone: body.phone ? String(body.phone) : null,
       email: body.email ? String(body.email) : null,

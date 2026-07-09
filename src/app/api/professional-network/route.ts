@@ -1,5 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { jsonResponse, readJsonBody, requireAuth, requireWrite } from "@/lib/api-helpers";
+import type { NetworkRequestType } from "@/generated/prisma/client";
+
+const networkRequestTypes = new Set<NetworkRequestType>(["collaboration", "case_referral", "opinion_request"]);
+
+function parseNetworkRequestType(value: unknown): NetworkRequestType {
+  return typeof value === "string" && networkRequestTypes.has(value as NetworkRequestType)
+    ? (value as NetworkRequestType)
+    : "collaboration";
+}
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -38,7 +47,7 @@ export async function POST(request: Request) {
     data: {
       requesterId: session!.sub,
       receiverId: String(body.receiverId),
-      type: body.type ?? "collaboration",
+      type: parseNetworkRequestType(body.type),
       caseRef: body.caseRef ? String(body.caseRef) : null,
       message: body.message ? String(body.message) : null,
     },
