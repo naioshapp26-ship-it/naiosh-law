@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -14,16 +14,12 @@ type Props = {
 };
 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
+  const [form, setForm] = useState<Record<string, unknown>>(() => {
+    const defaults: Record<string, unknown> = {};
+    fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
+    return defaults;
+  });
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
-    }
-  }, [open, initial, fields]);
 
   if (!open) return null;
 

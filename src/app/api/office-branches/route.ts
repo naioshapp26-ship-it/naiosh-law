@@ -6,21 +6,24 @@ export async function GET() {
   const { error } = await requireAuth();
   if (error) return error;
 
-  const entities = await prisma.officialEntity.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { officials: true } } },
+  const branches = await prisma.officeBranch.findMany({
+    orderBy: [{ isMain: "desc" }, { name: "asc" }],
+    include: { _count: { select: { users: true, integrations: true } } },
   });
 
   return NextResponse.json(
-    entities.map((e) => ({
-      id: e.id,
-      name: e.name,
-      type: e.type,
-      city: e.city ?? "—",
-      phone: e.phone ?? "—",
-      email: e.email ?? "—",
-      officials: e._count.officials,
-      status: e.status,
+    branches.map((b) => ({
+      id: b.id,
+      name: b.name,
+      code: b.code,
+      city: b.city ?? "—",
+      phone: b.phone ?? "—",
+      email: b.email ?? "—",
+      manager: b.managerName ?? "—",
+      status: b.status,
+      isMain: b.isMain ? "رئيسي" : "فرع",
+      users: b._count.users,
+      integrations: b._count.integrations,
     }))
   );
 }
@@ -32,14 +35,17 @@ export async function POST(request: Request) {
   if (parsed.error) return parsed.error;
   const body = parsed.body;
 
-  const created = await prisma.officialEntity.create({
+  const created = await prisma.officeBranch.create({
     data: {
-      name: String(body.name),
-      type: String(body.type ?? "جهة حكومية"),
+      name: String(body.name ?? ""),
+      code: String(body.code ?? "").toUpperCase(),
       city: body.city ? String(body.city) : null,
       address: body.address ? String(body.address) : null,
       phone: body.phone ? String(body.phone) : null,
       email: body.email ? String(body.email) : null,
+      managerName: body.manager ? String(body.manager) : null,
+      status: String(body.status ?? "نشط"),
+      isMain: Boolean(body.isMain),
     },
   });
   return NextResponse.json(created, { status: 201 });

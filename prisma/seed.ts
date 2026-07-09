@@ -72,6 +72,10 @@ async function main() {
   console.log("🌱 Seeding Naiosh Law database...");
 
   await prisma.auditLog.deleteMany();
+  await prisma.integrationLog.deleteMany();
+  await prisma.integration.deleteMany();
+  await prisma.notificationLog.deleteMany();
+  await prisma.notificationRule.deleteMany();
   await prisma.professionalNetwork.deleteMany();
   await prisma.caseSubject.deleteMany();
   await prisma.specializationSubject.deleteMany();
@@ -86,6 +90,7 @@ async function main() {
   await prisma.legalSubject.deleteMany();
   await prisma.legalBranch.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.officeBranch.deleteMany();
 
   const hash = await bcrypt.hash("Admin@123", 10);
 
@@ -105,6 +110,55 @@ async function main() {
       name: "أحمد المحامي",
       role: "lawyer",
     },
+  });
+
+  // Phase 5 — Office branches (must be created before assigning users)
+  const mainBranch = await prisma.officeBranch.create({
+    data: {
+      name: "المقر الرئيسي — القاهرة",
+      code: "CAI",
+      city: "القاهرة",
+      address: "وسط البلد، شارع رمسيس",
+      phone: "0223910000",
+      email: "cairo@naioshlaw.com",
+      managerName: "مدير النظام",
+      status: "نشط",
+      isMain: true,
+    },
+  });
+
+  const alexBranch = await prisma.officeBranch.create({
+    data: {
+      name: "فرع الإسكندرية",
+      code: "ALX",
+      city: "الإسكندرية",
+      address: "سموحة",
+      phone: "0331234567",
+      email: "alex@naioshlaw.com",
+      managerName: "محمد الفرع",
+      status: "نشط",
+    },
+  });
+
+  await prisma.officeBranch.create({
+    data: {
+      name: "فرع الجيزة",
+      code: "GIZ",
+      city: "الجيزة",
+      phone: "0235678901",
+      email: "giza@naioshlaw.com",
+      status: "نشط",
+    },
+  });
+
+  await prisma.user.update({
+    where: { id: admin.id },
+    data: { officeBranchId: mainBranch.id },
+  });
+
+  await prisma.user.update({
+    where: { id: lawyer.id },
+    data: { officeBranchId: mainBranch.id },
   });
 
   await prisma.user.create({
@@ -252,6 +306,132 @@ async function main() {
       { caseNo: "#2024-0547", client: "أحمد محمد الصاوي", court: "محكمة الاستئناف القاهرة", room: "7", date: "15 يوليو 2026", time: "10:00", status: "مجدولة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0548", client: "شركة النيل للتجارة", court: "المحكمة الابتدائية الجيزة", room: "3", date: "16 يوليو 2026", time: "11:30", status: "قريبة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0280", client: "خالد عبد الرحمن عمر", court: "محكمة الجنايات القاهرة", room: "12", date: "18 يوليو 2026", time: "09:00", status: "مجدولة", lawyer: "أحمد المحامي" },
+    ],
+  });
+
+  // Phase 5 — Notifications & Integrations
+  const rule1 = await prisma.notificationRule.create({
+    data: {
+      title: "تذكير جلسة قادمة",
+      trigger: "قبل الجلسة بـ 24 ساعة",
+      channel: "email",
+      audience: "المسؤول + الموكل",
+      status: "نشط",
+      sentCount: 892,
+      officeBranchId: mainBranch.id,
+      templateBody: "تذكير: لديك جلسة غداً في {{court}} الساعة {{time}}",
+    },
+  });
+
+  await prisma.notificationRule.createMany({
+    data: [
+      {
+        title: "فاتورة غير مسددة",
+        trigger: "تجاوز تاريخ الاستحقاق",
+        channel: "email",
+        audience: "الموكل",
+        status: "نشط",
+        sentCount: 234,
+        officeBranchId: mainBranch.id,
+      },
+      {
+        title: "تذكير دفع رسوم",
+        trigger: "قبل الاستحقاق بـ 7 أيام",
+        channel: "sms",
+        audience: "الموكل",
+        status: "نشط",
+        sentCount: 89,
+        officeBranchId: alexBranch.id,
+      },
+      {
+        title: "تحديث حالة القضية",
+        trigger: "تغيير حالة القضية",
+        channel: "whatsapp",
+        audience: "الموكل",
+        status: "نشط",
+        sentCount: 312,
+      },
+    ],
+  });
+
+  const resendIntegration = await prisma.integration.create({
+    data: {
+      name: "Resend Email",
+      type: "email",
+      provider: "resend",
+      endpoint: "https://api.resend.com/emails",
+      apiKeyMasked: "re_••••••••",
+      callsToday: 218,
+      successRate: 99.9,
+      lastChecked: "منذ 2 دقائق",
+      status: "متصل",
+      officeBranchId: mainBranch.id,
+    },
+  });
+
+  const twilioIntegration = await prisma.integration.create({
+    data: {
+      name: "Twilio SMS & WhatsApp",
+      type: "sms",
+      provider: "twilio",
+      endpoint: "https://api.twilio.com/2010-04-01",
+      apiKeyMasked: "AC••••••••",
+      callsToday: 342,
+      successRate: 99.7,
+      lastChecked: "منذ 5 دقائق",
+      status: "متصل",
+    },
+  });
+
+  await prisma.integration.create({
+    data: {
+      name: "Payment Webhook",
+      type: "webhook",
+      provider: "custom",
+      endpoint: "/api/webhooks/payments",
+      callsToday: 45,
+      successRate: 100,
+      lastChecked: "منذ 10 دقائق",
+      status: "متصل",
+    },
+  });
+
+  await prisma.notificationLog.createMany({
+    data: [
+      {
+        ruleId: rule1.id,
+        channel: "email",
+        provider: "resend",
+        recipient: "client@naioshlaw.com",
+        subject: "تذكير جلسة",
+        body: "لديك جلسة غداً في محكمة الاستئناف",
+        status: "مرسل",
+        officeBranchId: mainBranch.id,
+        sentAt: "2026-07-08 10:30",
+      },
+      {
+        channel: "sms",
+        provider: "twilio",
+        recipient: "+201001234567",
+        body: "تذكير: موعد تقديم مذكرة غداً",
+        status: "مرسل",
+        sentAt: "2026-07-08 14:15",
+      },
+      {
+        channel: "whatsapp",
+        provider: "internal",
+        recipient: "+201009876543",
+        body: "تحديث حالة قضيتك #2024-0547",
+        status: "محاكاة — أضف TWILIO_* للإرسال الحقيقي",
+        sentAt: "2026-07-09 09:00",
+      },
+    ],
+  });
+
+  await prisma.integrationLog.createMany({
+    data: [
+      { integrationId: resendIntegration.id, method: "POST", path: "/emails", statusCode: 200, durationMs: 142, success: true },
+      { integrationId: twilioIntegration.id, method: "POST", path: "/Messages.json", statusCode: 200, durationMs: 198, success: true },
     ],
   });
 

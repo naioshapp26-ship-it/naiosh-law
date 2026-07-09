@@ -17,6 +17,13 @@ type Branch = {
   _count?: { cases: number; consultations: number };
 };
 
+async function fetchBranches(): Promise<Branch[]> {
+  const res = await fetch("/api/legal-branches", { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 export default function LegalKnowledgePage() {
   const { user, ready } = useSession(true);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -24,9 +31,8 @@ export default function LegalKnowledgePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/legal-branches", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setBranches(data))
+    fetchBranches()
+      .then(setBranches)
       .finally(() => setLoading(false));
   }, []);
 

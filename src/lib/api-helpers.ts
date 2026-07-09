@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies, canWrite } from "@/lib/auth";
+import { Prisma } from "@/generated/prisma/client";
 import type { UserRole } from "@/generated/prisma/client";
+
+type JsonBodyResult =
+  | { body: Record<string, unknown>; error: null }
+  | { body: null; error: NextResponse };
 
 export async function requireAuth(roles?: UserRole[]) {
   const session = await getSessionFromCookies();
@@ -24,4 +29,48 @@ export async function requireWrite() {
 
 export function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
+}
+
+export async function parseJsonBody(
+  request: Request,
+  options: { allowEmpty?: boolean } = {}
+): Promise<JsonBodyResult> {
+  const rawBody = await request.text();
+
+  if (!rawBody.trim()) {
+    if (options.allowEmpty) {
+      return { body: {} as Record<string, unknown>, error: null };
+    }
+    return { body: null, error: jsonError("محتوى الطلب مطلوب", 400) };
+  }
+
+  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/json")) {
+    return { body: null, error: jsonError("نوع المحتوى يجب أن يكون application/json", 415) };
+  }
+
+  try {
+    const body: unknown = JSON.parse(rawBody);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return { body: null, error: jsonError("صيغة JSON غير صالحة", 400) };
+    }
+    return { body: body as Record<string, unknown>, error: null };
+  } catch {
+    return { body: null, error: jsonError("صيغة JSON غير صالحة", 400) };
+  }
+}
+
+export function prismaErrorResponse(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2025") {
+      return jsonError("السجل غير موجود", 404);
+    }
+    if (error.code === "P2002") {
+      return jsonError("يوجد سجل آخر بنفس القيمة الفريدة", 409);
+    }
+    if (error.code === "P2003") {
+      return jsonError("لا يمكن تنفيذ العملية بسبب ارتباطات قاعدة البيانات", 409);
+    }
+  }
+  return null;
 }
