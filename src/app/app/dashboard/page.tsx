@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
 import { useSession } from "@/lib/session";
@@ -29,9 +29,36 @@ const recentTasks = [
   { id: "fees-invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
+const completedTasksStorageKey = "naiosh-law-dashboard-completed-tasks";
+
+function readCompletedTasks() {
+  if (typeof window === "undefined") return new Set<string>();
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(completedTasksStorageKey) ?? "[]");
+    if (!Array.isArray(parsed)) return new Set<string>();
+    return new Set(parsed.filter((item): item is string => typeof item === "string"));
+  } catch {
+    try {
+      window.localStorage.removeItem(completedTasksStorageKey);
+    } catch {
+      // Ignore storage-policy failures; task state can remain in memory.
+    }
+    return new Set<string>();
+  }
+}
+
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
-  const [completedTasks, setCompletedTasks] = useState<Set<string>>(() => new Set());
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(readCompletedTasks);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(completedTasksStorageKey, JSON.stringify([...completedTasks]));
+    } catch {
+      // Dashboard task checks are demo state; storage failures should not block interaction.
+    }
+  }, [completedTasks]);
 
   if (!ready || !user) {
     return (

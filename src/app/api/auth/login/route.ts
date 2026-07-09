@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isRecord, readJsonBody } from "@/lib/api-request";
 import { createSessionToken, getSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
-import { getDemoUserByCredentials, getDemoUserByRole } from "@/data/server-auth";
+import { getDemoUserByCredentials, getDemoUserByRole, isDemoAuthEnabled } from "@/data/server-auth";
 import type { SessionUser } from "@/lib/session-types";
 
 type LoginBody = {
@@ -26,6 +26,17 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = body.data as LoginBody;
+
+  if (!isDemoAuthEnabled()) {
+    return NextResponse.json(
+      {
+        error: "demo_login_disabled",
+        message: "Demo authentication is disabled in production.",
+      },
+      { status: 403 }
+    );
+  }
+
   const user = isRole(payload.demoRole)
     ? getDemoUserByRole(payload.demoRole)
     : typeof payload.email === "string" && typeof payload.password === "string"

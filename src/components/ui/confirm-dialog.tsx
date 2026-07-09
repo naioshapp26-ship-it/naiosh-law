@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useScrollLock } from "@/lib/use-scroll-lock";
 
 type Props = {
   open: boolean;
@@ -12,22 +12,7 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
-  useEffect(() => {
-    if (!open) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [onCancel, open]);
+  useScrollLock(open, onCancel);
 
   if (!open) return null;
   return (

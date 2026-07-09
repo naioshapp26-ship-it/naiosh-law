@@ -1,33 +1,14 @@
 import Link from "next/link";
 import type { LegalModule } from "@/data/modules";
+import { getModuleIcon } from "@/lib/module-icons";
 import { getModuleHref } from "@/lib/module-routing";
-
-const iconMap: Record<string, string> = {
-  "dashboard": "⊞",
-  "case-management": "⚖️",
-  "clients-management": "👥",
-  "court-sessions": "🏛️",
-  "follow-up-center": "📋",
-  "legal-accounting": "💰",
-  "legal-services": "📝",
-  "legal-consultations": "💬",
-  "internal-requests": "📤",
-  "complaints-management": "🔔",
-  "smart-templates": "🤖",
-  "reports-center": "📊",
-  "administration": "⚙️",
-  "notifications-center": "🛎️",
-  "integrations": "🔗",
-  "ai-center": "🧠",
-  "general-tools": "🛠️",
-};
 
 type Props = {
   item: LegalModule;
 };
 
 export function ModuleCard({ item }: Props) {
-  const icon = iconMap[item.slug] ?? "📌";
+  const icon = getModuleIcon(item.slug);
 
   return (
     <Link

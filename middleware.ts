@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSafeAppPath } from "@/lib/app-path";
 import { canAccessModule } from "@/lib/module-routing";
 import { decodeSessionToken, getSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
 
 const protectedPrefix = "/app";
 
-function safeAppPath(pathname: string, search: string) {
-  const path = `${pathname}${search}`;
-  return path.startsWith("/app") && !path.startsWith("//") && !path.includes("://") ? path : "/app/dashboard";
-}
-
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
-  loginUrl.searchParams.set("next", safeAppPath(request.nextUrl.pathname, request.nextUrl.search));
+  loginUrl.searchParams.set("next", getSafeAppPath(`${request.nextUrl.pathname}${request.nextUrl.search}`));
   const response = NextResponse.redirect(loginUrl);
   response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(), maxAge: 0 });
   return response;
@@ -35,10 +31,7 @@ export async function middleware(request: NextRequest) {
     if (pathname === "/login") {
       if (!user) return NextResponse.next();
       const redirectTarget = request.nextUrl.searchParams.get("next");
-      const url = new URL(
-        redirectTarget?.startsWith("/app") && !redirectTarget.includes("://") ? redirectTarget : "/app/dashboard",
-        request.url
-      );
+      const url = new URL(getSafeAppPath(redirectTarget), request.url);
       return NextResponse.redirect(url);
     }
 
@@ -54,7 +47,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/app/dashboard", request.url));
     }
 
-    const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)$/);
+    const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)(?:\/|$)/);
     if (moduleMatch) {
       const slug = decodeModuleSlug(moduleMatch[1]);
       if (!slug || !/^[a-z0-9-]+$/.test(slug) || !canAccessModule(user.role, slug)) {

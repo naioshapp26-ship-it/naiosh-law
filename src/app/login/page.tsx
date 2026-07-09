@@ -58,6 +58,8 @@ export default function LoginPage() {
         setError(
           result.error === "session_configuration_error"
             ? "إعدادات الجلسة غير مكتملة على الخادم."
+            : result.error === "demo_login_disabled"
+              ? "الدخول التجريبي غير مفعّل في بيئة الإنتاج."
             : result.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة."
         );
         return;

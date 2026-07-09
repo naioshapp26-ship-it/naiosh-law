@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useScrollLock } from "@/lib/use-scroll-lock";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -38,14 +39,7 @@ export function Navbar() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [menuOpen]);
+  useScrollLock(menuOpen);
 
   const navStyle: React.CSSProperties = {
     position: "fixed",

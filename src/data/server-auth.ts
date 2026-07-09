@@ -19,6 +19,10 @@ export const demoCredentials: DemoCredential[] = [
   },
 ];
 
+export function isDemoAuthEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
+}
+
 export function getDemoUserByCredentials(email: string, password: string): SessionUser | null {
   const match = demoCredentials.find((user) => user.email === email && user.password === password);
   if (!match) return null;

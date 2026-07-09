@@ -10,11 +10,26 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleConfig } from "@/data/module-configs";
 import { useSession } from "@/lib/session";
 import { canAccessModule } from "@/lib/module-routing";
+import { useScrollLock } from "@/lib/use-scroll-lock";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 type ModuleRow = Record<string, unknown> & { _id: string };
 
 let toastCounter = 0;
+
+const reportOptions = [
+  { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
+  { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
+  { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getModuleRowsStorageKey(slug: string) {
+  return `naiosh-law-module-rows:${slug}`;
+}
 
 function getSeedRowId(slug: string, row: Record<string, unknown>, index: number) {
   const stableValue =
@@ -39,6 +54,42 @@ function normalizeRows(slug: string, rows: Record<string, unknown>[]): ModuleRow
   }));
 }
 
+function normalizeStoredRows(value: unknown): ModuleRow[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows = value.filter(isRecord);
+  if (rows.length !== value.length) return null;
+  return rows.map((row, index) => ({
+    ...row,
+    _id: typeof row._id === "string" && row._id ? row._id : `stored-${index}`,
+  }));
+}
+
+function readInitialRows(slug: string, rows: Record<string, unknown>[]) {
+  const seedRows = normalizeRows(slug, rows);
+  if (typeof window === "undefined") return seedRows;
+
+  try {
+    const storedRows = normalizeStoredRows(JSON.parse(window.localStorage.getItem(getModuleRowsStorageKey(slug)) ?? "null"));
+    return storedRows ?? seedRows;
+  } catch {
+    try {
+      window.localStorage.removeItem(getModuleRowsStorageKey(slug));
+    } catch {
+      // Storage can be unavailable in strict browser modes.
+    }
+    return seedRows;
+  }
+}
+
+function createRowId(slug: string) {
+  const cryptoApi = typeof crypto !== "undefined" ? crypto : null;
+  const suffix =
+    cryptoApi && "randomUUID" in cryptoApi
+      ? cryptoApi.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `${slug}-${suffix}`;
+}
+
 export function ModuleShell({
   slug,
   config,
@@ -51,7 +102,7 @@ export function ModuleShell({
   const { user, ready } = useSession(true);
   const toastTimers = useRef<number[]>([]);
 
-  const [rows, setRows] = useState<ModuleRow[]>(() => (config ? normalizeRows(slug, config.data) : []));
+  const [rows, setRows] = useState<ModuleRow[]>(() => (config ? readInitialRows(slug, config.data) : []));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ModuleRow | null>(null);
   const [viewTarget, setViewTarget] = useState<ModuleRow | null>(null);
@@ -67,23 +118,18 @@ export function ModuleShell({
   }, []);
 
   useEffect(() => {
-    if (!viewTarget && !reportOpen) return;
+    if (!config) return;
+    try {
+      window.localStorage.setItem(getModuleRowsStorageKey(slug), JSON.stringify(rows));
+    } catch {
+      // Demo persistence is best-effort; mutations should still work in memory.
+    }
+  }, [config, rows, slug]);
 
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (reportOpen) setReportOpen(false);
-      else setViewTarget(null);
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [reportOpen, viewTarget]);
+  useScrollLock(Boolean(viewTarget) || reportOpen, () => {
+    if (reportOpen) setReportOpen(false);
+    else setViewTarget(null);
+  });
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -142,7 +188,7 @@ export function ModuleShell({
       setRows((prev) => prev.map((row) => (row._id === editTarget._id ? { ...row, ...data } : row)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
-      const newRow = { ...data, _id: `${slug}-${Date.now()}` };
+      const newRow = { ...data, _id: createRowId(slug) };
       setRows((prev) => [newRow, ...prev]);
       pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
     }
@@ -173,6 +219,7 @@ export function ModuleShell({
         onClick={() => setViewTarget(null)}
       >
         <div
+          className="module-detail-panel"
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
@@ -194,7 +241,7 @@ export function ModuleShell({
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div className="module-detail-actions" style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             <button
               onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
               className="btn-primary"
@@ -320,11 +367,7 @@ export function ModuleShell({
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
-              ].map((opt) => (
+              {reportOptions.map((opt) => (
                 <button
                   key={opt.label}
                   onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
@@ -362,6 +405,16 @@ export function ModuleShell({
         @media (max-width: 560px) {
           .module-detail-grid {
             grid-template-columns: 1fr !important;
+          }
+          .module-detail-panel {
+            padding: 1.25rem !important;
+            max-height: 86vh;
+          }
+          .module-detail-actions {
+            flex-direction: column-reverse;
+          }
+          .module-detail-actions button {
+            width: 100%;
           }
           .report-modal-panel {
             padding: 1.25rem !important;

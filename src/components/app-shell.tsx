@@ -1,35 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
+import { getModuleIcon } from "@/lib/module-icons";
 import { getVisibleOperationalModules } from "@/lib/module-routing";
+import { useScrollLock } from "@/lib/use-scroll-lock";
 
 type Props = {
   role: "admin" | "client";
   name: string;
   children: React.ReactNode;
-};
-
-const iconMap: Record<string, string> = {
-  "dashboard":             "⊞",
-  "case-management":       "⚖️",
-  "clients-management":    "👥",
-  "court-sessions":        "🏛️",
-  "follow-up-center":      "📋",
-  "legal-accounting":      "💰",
-  "legal-services":        "📝",
-  "legal-consultations":   "💬",
-  "internal-requests":     "📤",
-  "complaints-management": "🔔",
-  "smart-templates":       "🤖",
-  "reports-center":        "📊",
-  "administration":        "⚙️",
-  "notifications-center":  "🛎️",
-  "integrations":          "🔗",
-  "ai-center":             "🧠",
-  "general-tools":         "🛠️",
 };
 
 export function AppShell({ role, name, children }: Props) {
@@ -55,20 +37,7 @@ export function AppShell({ role, name, children }: Props) {
 
   const isActive = (href: string) => pathname === href;
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawerOpen(false);
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [drawerOpen]);
+  useScrollLock(drawerOpen, () => setDrawerOpen(false));
 
   const sidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -165,7 +134,7 @@ export function AppShell({ role, name, children }: Props) {
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}
             >
-              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
+              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{getModuleIcon(item.slug)}</span>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</span>
             </Link>
           );
@@ -349,7 +318,7 @@ export function AppShell({ role, name, children }: Props) {
                       textDecoration: "none", transition: "all 0.15s",
                     }}
                   >
-                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
+                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{getModuleIcon(item.slug)}</span>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
                   </Link>
                 );
@@ -423,7 +392,7 @@ export function AppShell({ role, name, children }: Props) {
           { href: "/app/dashboard", icon: "⊞", label: "الرئيسية" },
           ...bottomNavModules.map((item) => ({
             href: `/app/modules/${item.slug}`,
-            icon: iconMap[item.slug] ?? "📌",
+            icon: getModuleIcon(item.slug),
             label: item.title.replace(/^إدارة\s+/, "").split(" ")[0] || item.title,
           })),
         ].map((item) => {

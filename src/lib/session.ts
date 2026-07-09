@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
+import { getSafeAppPath } from "@/lib/app-path";
 import { normalizeSessionUser, parseSessionUser, type SessionUser } from "@/lib/session-types";
 
 const sessionChangeEvent = "naiosh-law-session-change";
@@ -71,13 +72,7 @@ export function clearStoredSession(notify = true) {
   }
 }
 
-export function getSafeAppPath(value: string | null | undefined) {
-  if (!value) return "/app/dashboard";
-  if (!value.startsWith("/app") || value.startsWith("//") || value.includes("://")) {
-    return "/app/dashboard";
-  }
-  return value;
-}
+export { getSafeAppPath };
 
 function subscribeToSession(callback: () => void) {
   listeners.add(callback);
