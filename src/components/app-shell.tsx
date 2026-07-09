@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
@@ -64,6 +64,7 @@ function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
         <button
           onClick={onClose}
           className="drawer-close-btn"
+          aria-label="إغلاق القائمة"
           style={{
             width: 32, height: 32, border: "1px solid #e2e8f0",
             borderRadius: "8px", background: "#f8f9fb", cursor: "pointer",
@@ -156,6 +157,8 @@ export function AppShell({ role, name, children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [logoutPending, setLogoutPending] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const lastDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const drawerWasOpenRef = useRef(false);
   const bottomModuleItems = getVisibleOperationalModules(role)
     .filter((item) => preferredBottomModuleSlugs.includes(item.slug))
     .slice(0, 3);
@@ -167,6 +170,13 @@ export function AppShell({ role, name, children }: Props) {
       label: item.title,
     })),
   ];
+
+  const openDrawer = (trigger: HTMLButtonElement) => {
+    lastDrawerTriggerRef.current = trigger;
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => setDrawerOpen(false);
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -188,6 +198,18 @@ export function AppShell({ role, name, children }: Props) {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
     };
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      drawerWasOpenRef.current = true;
+      return;
+    }
+
+    if (drawerWasOpenRef.current) {
+      lastDrawerTriggerRef.current?.focus();
+      drawerWasOpenRef.current = false;
+    }
   }, [drawerOpen]);
 
   const handleLogout = async () => {
@@ -226,7 +248,7 @@ export function AppShell({ role, name, children }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
             {/* Hamburger — mobile only */}
             <button
-              onClick={() => setDrawerOpen(true)}
+              onClick={(event) => openDrawer(event.currentTarget)}
               className="hamburger-btn"
               style={{
                 width: 38, height: 38, border: "1px solid #e2e8f0",
@@ -236,6 +258,8 @@ export function AppShell({ role, name, children }: Props) {
                 fontSize: "1.1rem", color: "#475569", flexShrink: 0,
               }}
               aria-label="القائمة"
+              aria-expanded={drawerOpen}
+              aria-controls="app-mobile-drawer"
             >
               ☰
             </button>
@@ -355,22 +379,25 @@ export function AppShell({ role, name, children }: Props) {
               display: "flex",
               justifyContent: "flex-start",
             }}
-            role="presentation"
+            role="dialog"
+            aria-modal="true"
+            aria-label="قائمة التنقل"
           >
             {/* Backdrop */}
             <div
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeDrawer}
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
+              aria-hidden="true"
             />
             {/* Drawer panel */}
-            <div style={{
+            <div id="app-mobile-drawer" style={{
               position: "relative", zIndex: 1,
               width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent pathname={pathname} role={role} onClose={() => setDrawerOpen(false)} />
+              <SidebarContent pathname={pathname} role={role} onClose={closeDrawer} />
             </div>
           </div>
         )}
@@ -412,13 +439,16 @@ export function AppShell({ role, name, children }: Props) {
         })}
         {/* All modules button */}
         <button
-          onClick={() => setDrawerOpen(true)}
+          onClick={(event) => openDrawer(event.currentTarget)}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
             background: "none", border: "none", cursor: "pointer",
             fontFamily: "var(--font)", flex: 1, minWidth: 0,
           }}
+          aria-label="عرض كل الوحدات"
+          aria-expanded={drawerOpen}
+          aria-controls="app-mobile-drawer"
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>
           <span style={{ fontSize: "0.6rem", fontWeight: 500, color: "#94a3b8" }}>الكل</span>

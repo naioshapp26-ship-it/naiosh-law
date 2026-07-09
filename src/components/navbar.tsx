@@ -8,9 +8,28 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
+    let frameId = 0;
+    const updateScrolledState = () => {
+      frameId = 0;
+      setScrolled((current) => {
+        const next = window.scrollY > 50;
+        return current === next ? current : next;
+      });
+    };
+    const handler = () => {
+      if (frameId === 0) {
+        frameId = window.requestAnimationFrame(updateScrolledState);
+      }
+    };
+
+    updateScrolledState();
     window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
+    return () => {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener("scroll", handler);
+    };
   }, []);
 
   useEffect(() => {
@@ -21,8 +40,17 @@ export function Navbar() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [menuOpen]);
 
@@ -141,6 +169,8 @@ export function Navbar() {
           }}
           className="mobile-menu-btn"
           aria-label="قائمة"
+          aria-expanded={menuOpen}
+          aria-controls="public-mobile-menu"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             {menuOpen ? (
@@ -162,6 +192,7 @@ export function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
+          id="public-mobile-menu"
           style={{
             background: "rgba(10,10,18,0.97)",
             borderTop: "1px solid rgba(255,255,255,0.07)",

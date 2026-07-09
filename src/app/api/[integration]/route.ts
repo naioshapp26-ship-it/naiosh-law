@@ -20,7 +20,9 @@ type RouteContext = {
 
 async function getIntegration(context: RouteContext) {
   const { integration } = await context.params;
-  return { slug: integration, config: integrationCatalog[integration] };
+  const slug = integration.toLowerCase();
+
+  return { slug, config: integrationCatalog[slug] };
 }
 
 async function requireSession(request: Request) {
@@ -101,10 +103,13 @@ export async function POST(request: Request, context: RouteContext) {
     return parsedBody.response;
   }
 
-  return NextResponse.json({
-    ...healthPayload(slug, config),
-    accepted: true,
-    requestId: `${slug}-${Date.now()}`,
-    receivedFields: Object.keys(parsedBody.data).slice(0, 20),
-  });
+  return NextResponse.json(
+    {
+      ...healthPayload(slug, config),
+      accepted: true,
+      requestId: `${slug}-${Date.now()}`,
+      receivedFields: Object.keys(parsedBody.data).slice(0, 20),
+    },
+    { status: 202 }
+  );
 }

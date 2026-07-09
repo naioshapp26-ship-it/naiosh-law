@@ -7,8 +7,16 @@ import type { SessionUser } from "@/lib/auth-session";
 
 const sessionChangeEvent = "naiosh-law-session-change";
 const sessionVerificationRetries = [250, 750];
+const sessionVerificationMaxAgeMs = 60 * 1000;
 
 type SessionSnapshot = string | null | undefined;
+type VerifiedSessionCache = {
+  rawSession: string;
+  user: SessionUser;
+  verifiedAt: number;
+};
+
+let verifiedSessionCache: VerifiedSessionCache | null = null;
 
 function getClientSessionSnapshot(): SessionSnapshot {
   if (typeof window === "undefined") {
@@ -48,12 +56,43 @@ function notifySessionChange() {
   window.dispatchEvent(new Event(sessionChangeEvent));
 }
 
+function serializeSession(user: SessionUser) {
+  return JSON.stringify(user);
+}
+
+function getFreshVerifiedSession(rawSession: SessionSnapshot) {
+  if (
+    rawSession &&
+    verifiedSessionCache?.rawSession === rawSession &&
+    Date.now() - verifiedSessionCache.verifiedAt < sessionVerificationMaxAgeMs
+  ) {
+    return verifiedSessionCache.user;
+  }
+
+  return null;
+}
+
+function cacheVerifiedSession(rawSession: SessionSnapshot, user: SessionUser) {
+  if (!rawSession) {
+    return;
+  }
+
+  verifiedSessionCache = {
+    rawSession,
+    user,
+    verifiedAt: Date.now(),
+  };
+}
+
 export function saveSession(user: SessionUser) {
+  const serializedUser = serializeSession(user);
+
   try {
-    window.localStorage.setItem(sessionKey, JSON.stringify(user));
+    window.localStorage.setItem(sessionKey, serializedUser);
   } catch {
     // The signed cookie remains the source of truth when browser storage is unavailable.
   }
+  cacheVerifiedSession(serializedUser, user);
   notifySessionChange();
 }
 
@@ -63,6 +102,7 @@ export function clearStoredSession() {
   } catch {
     // Ignore storage errors so logout/session validation can still complete.
   }
+  verifiedSessionCache = null;
   notifySessionChange();
 }
 
@@ -154,8 +194,13 @@ export function useSession(redirectIfMissing = false) {
   );
   const hydrated = rawSession !== undefined;
   const cachedUser = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
-  const ready = hydrated && (!redirectIfMissing || (verified && verifiedRawSession === rawSession));
-  const user = redirectIfMissing ? verifiedUser : cachedUser;
+  const reusableVerifiedUser = useMemo(() => getFreshVerifiedSession(rawSession), [rawSession]);
+  const user = redirectIfMissing ? verifiedUser ?? reusableVerifiedUser ?? cachedUser : cachedUser;
+  const ready =
+    hydrated &&
+    (!redirectIfMissing ||
+      !!user ||
+      (verified && verifiedRawSession === rawSession));
 
   useEffect(() => {
     if (rawSession !== undefined && rawSession && !cachedUser) {
@@ -170,11 +215,21 @@ export function useSession(redirectIfMissing = false) {
       return;
     }
 
+    const reusableSession = getFreshVerifiedSession(rawSession);
+    if (reusableSession) {
+      setVerifiedUser(reusableSession);
+      setVerifiedRawSession(rawSession);
+      setVerified(true);
+      return;
+    }
+
     const controller = new AbortController();
 
     fetchSessionWithRetry(controller.signal)
       .then(async (response) => {
         if (!response.ok) {
+          setVerifiedUser(null);
+          setVerified(false);
           setVerifiedRawSession(rawSession);
           clearStoredSession();
           router.replace(loginPathWithNext());
@@ -186,12 +241,14 @@ export function useSession(redirectIfMissing = false) {
           setVerifiedUser(payload.user);
           setVerifiedRawSession(rawSession);
           setVerified(true);
+          cacheVerifiedSession(rawSession, payload.user);
 
-          if (JSON.stringify(payload.user) !== rawSession) {
+          if (serializeSession(payload.user) !== rawSession) {
             saveSession(payload.user);
           }
         } else {
           setVerifiedUser(null);
+          setVerified(false);
           setVerifiedRawSession(rawSession);
           clearStoredSession();
           router.replace(loginPathWithNext());
@@ -202,7 +259,16 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
+        if (cachedUser) {
+          setVerifiedUser(cachedUser);
+          setVerifiedRawSession(rawSession);
+          setVerified(true);
+          cacheVerifiedSession(rawSession, cachedUser);
+          return;
+        }
+
         setVerifiedUser(null);
+        setVerified(false);
         setVerifiedRawSession(rawSession);
         clearStoredSession();
         router.replace(loginPathWithNext());

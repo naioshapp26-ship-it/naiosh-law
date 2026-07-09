@@ -58,18 +58,13 @@ function getRowsStorageKey(slug: string, scope: string) {
   return `naiosh-law-module-rows:${scope}:${slug}`;
 }
 
-function getLegacyRowsStorageKey(slug: string) {
-  return `naiosh-law-module-rows:${slug}`;
-}
-
 function getRowsSnapshot(slug: string, scope: string): RowsSnapshot {
   if (typeof window === "undefined") {
     return undefined;
   }
 
   try {
-    const scopedRows = window.localStorage.getItem(getRowsStorageKey(slug, scope));
-    return scopedRows ?? window.localStorage.getItem(getLegacyRowsStorageKey(slug));
+    return window.localStorage.getItem(getRowsStorageKey(slug, scope));
   } catch {
     return null;
   }
@@ -177,6 +172,15 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
     toastTimers.current.set(id, timeoutId);
   }, []);
 
+  useEffect(() => {
+    setMemoryRows(null);
+    setModalOpen(false);
+    setEditTarget(null);
+    setViewTarget(null);
+    setDeleteTarget(null);
+    setReportOpen(false);
+  }, [rowsStorageScope, slug]);
+
   const updateRows = useCallback(
     (updater: (currentRows: Record<string, unknown>[]) => Record<string, unknown>[]) => {
       const nextRows = updater(rows);
@@ -209,8 +213,18 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setViewTarget(null);
+        setReportOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [reportOpen, viewTarget]);
 
@@ -292,6 +306,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
               onClick={() => setViewTarget(null)}
+              aria-label="إغلاق تفاصيل السجل"
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
@@ -420,7 +435,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <button onClick={() => setReportOpen(false)} aria-label="إغلاق تصدير التقارير" style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {entityPlural}

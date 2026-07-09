@@ -18,7 +18,7 @@ function jsonError(message: string, status: number) {
 }
 
 function hasJsonContentType(request: Request) {
-  return request.headers.get("content-type")?.toLocaleLowerCase().includes(jsonContentType) ?? false;
+  return request.headers.get("content-type")?.toLowerCase().includes(jsonContentType) ?? false;
 }
 
 export async function readJsonBody<T>(
