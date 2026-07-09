@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -73,10 +73,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const paged = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const hasActions = !!(onEdit || onDelete || onView);
-
-  useEffect(() => {
-    setPage((currentPage) => Math.min(currentPage, totalPages));
-  }, [totalPages]);
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];

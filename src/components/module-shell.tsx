@@ -101,14 +101,18 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
       return;
     }
 
-    try {
-      const storageKey = getModuleStorageKey(slug, user.email);
-      setRows(loadStoredRows(storageKey, config.data));
-      setRowsHydrated(true);
-    } catch {
-      setRows(config.data);
-      setRowsHydrated(true);
-    }
+    const hydrateTimer = window.setTimeout(() => {
+      try {
+        const storageKey = getModuleStorageKey(slug, user.email);
+        setRows(loadStoredRows(storageKey, config.data));
+      } catch {
+        setRows(config.data);
+      } finally {
+        setRowsHydrated(true);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(hydrateTimer);
   }, [config.data, slug, user]);
 
   useEffect(() => {
