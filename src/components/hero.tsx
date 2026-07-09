@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { modules } from "@/data/modules";
 
+const moduleCount = modules.length;
 const stats = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: String(moduleCount), label: "وحدة ومنطقة عمل" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -192,7 +194,7 @@ export function HeroSection() {
                 marginBottom: "2.75rem",
               }}
             >
-              منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من
+              منصة احترافية لمكاتب المحاماة تضم {moduleCount} وحدة مترابطة — من
               إدارة القضايا والجلسات وحتى المحاسبة القانونية والذكاء الاصطناعي.
             </p>
 

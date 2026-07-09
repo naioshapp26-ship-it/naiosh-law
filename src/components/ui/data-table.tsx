@@ -14,10 +14,32 @@ type Props = {
 };
 
 const PAGE_SIZE = 10;
+const textCollator = new Intl.Collator("ar", {
+  numeric: true,
+  sensitivity: "base",
+});
 
 function getRowKey(row: Record<string, unknown>, index: number) {
   const stableId = row._id ?? row.id ?? row.caseNo ?? row.jobId ?? row.requestId ?? row.invoiceNo ?? row.code;
   return stableId ? String(stableId) : `row-${index}`;
+}
+
+function parseNumericValue(value: unknown) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.replace(/,/g, "").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : null;
 }
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
@@ -48,12 +70,25 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     () =>
       sortKey
         ? [...filtered].sort((a, b) => {
-            const va = String(a[sortKey] ?? "");
-            const vb = String(b[sortKey] ?? "");
-            return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+            const column = columns.find((item) => item.key === sortKey);
+            const valueA = a[sortKey];
+            const valueB = b[sortKey];
+
+            if (column?.type === "number" || column?.type === "currency") {
+              const numberA = parseNumericValue(valueA);
+              const numberB = parseNumericValue(valueB);
+
+              if (numberA !== null && numberB !== null) {
+                return sortAsc ? numberA - numberB : numberB - numberA;
+              }
+            }
+
+            const va = String(valueA ?? "");
+            const vb = String(valueB ?? "");
+            return sortAsc ? textCollator.compare(va, vb) : textCollator.compare(vb, va);
           })
         : filtered,
-    [filtered, sortAsc, sortKey]
+    [columns, filtered, sortAsc, sortKey]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
@@ -222,6 +257,19 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   <th
                     key={col.key}
                     onClick={() => col.sortable !== false && handleSort(col.key)}
+                    onKeyDown={(event) => {
+                      if (col.sortable === false || (event.key !== "Enter" && event.key !== " ")) {
+                        return;
+                      }
+
+                      event.preventDefault();
+                      handleSort(col.key);
+                    }}
+                    tabIndex={col.sortable !== false ? 0 : undefined}
+                    role={col.sortable !== false ? "button" : undefined}
+                    aria-sort={
+                      sortKey === col.key ? (sortAsc ? "ascending" : "descending") : "none"
+                    }
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",

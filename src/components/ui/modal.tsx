@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -22,21 +22,39 @@ function buildInitialForm(fields: FormField[], initial?: Record<string, unknown>
 }
 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const titleId = useId();
   const [form, setForm] = useState<Record<string, unknown>>(() =>
     buildInitialForm(fields, initial)
   );
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, open]);
+
   if (!open) return null;
 
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    onSave(form);
+    try {
+      onSave(form);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -55,6 +73,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -77,9 +98,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id={titleId} style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
             onClick={onClose}
+            type="button"
+            aria-label="إغلاق النافذة"
             style={{
               width: 34,
               height: 34,

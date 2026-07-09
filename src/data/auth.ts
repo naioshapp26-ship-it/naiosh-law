@@ -1,8 +1,4 @@
-import {
-  sessionCookieName,
-  sessionStorageKey,
-  type Role,
-} from "@/lib/session-shared";
+import type { Role } from "@/lib/session-shared";
 
 export type DemoAccount = {
   role: Role;
@@ -22,6 +18,3 @@ export const demoAccounts: DemoAccount[] = [
     email: "client@naioshlaw.com",
   },
 ];
-
-export const sessionKey = sessionStorageKey;
-export { sessionCookieName };

@@ -147,7 +147,15 @@ export function getCookieValue(cookieHeader: string | null | undefined, name: st
     .map((part) => part.trim())
     .find((part) => part.startsWith(prefix));
 
-  return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+  if (!match) {
+    return null;
+  }
+
+  try {
+    return decodeURIComponent(match.slice(prefix.length));
+  } catch {
+    return null;
+  }
 }
 
 export function getSafeAppPath(value: string | null | undefined, fallback = "/app/dashboard") {

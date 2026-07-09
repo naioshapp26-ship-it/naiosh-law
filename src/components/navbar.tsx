@@ -8,9 +8,26 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
+    let animationFrame = 0;
+    const updateScrolled = () => {
+      animationFrame = 0;
+      const nextScrolled = window.scrollY > 50;
+      setScrolled((current) => (current === nextScrolled ? current : nextScrolled));
+    };
+    const handler = () => {
+      if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(updateScrolled);
+      }
+    };
+
+    updateScrolled();
     window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
+    return () => {
+      window.removeEventListener("scroll", handler);
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
   }, []);
 
   const navStyle: React.CSSProperties = {

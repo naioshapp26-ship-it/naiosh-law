@@ -75,7 +75,6 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await new Promise((r) => setTimeout(r, 350));
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

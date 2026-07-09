@@ -37,8 +37,9 @@ const features = [
   },
 ];
 
+const moduleCount = modules.length;
 const statItems = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: String(moduleCount), label: "وحدة ومنطقة عمل" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -189,7 +190,7 @@ export default function HomePage() {
                 marginBottom: "1rem",
               }}
             >
-              17 وحدة مترابطة وكاملة
+              {moduleCount} وحدة مترابطة وكاملة
             </h2>
             <p style={{ color: "#64748b", fontSize: "1.05rem", maxWidth: "500px", margin: "0 auto", lineHeight: 1.8 }}>
               كل وحدة مستقلة بشاشاتها ووظائفها وعلاقاتها وصلاحياتها الخاصة

@@ -6,15 +6,21 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
+import { moduleConfigMap, type Column } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { canAccessModule } from "@/lib/module-routing";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
+type ReportFormat = "pdf" | "excel" | "csv";
 
 let toastCounter = 0;
 const rowIdentityKeys = ["_id", "id", "caseNo", "jobId", "requestId", "invoiceNo", "ref", "code", "name", "title"];
+const reportOptions: { format: ReportFormat; icon: string; label: string; desc: string }[] = [
+  { format: "pdf", icon: "📕", label: "تصدير PDF", desc: "يفتح تقريرًا جاهزًا للطباعة أو الحفظ كـ PDF" },
+  { format: "excel", icon: "📗", label: "تصدير Excel", desc: "ملف XLS قابل للفتح والتحليل في Excel" },
+  { format: "csv", icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+];
 
 function createRowId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -41,6 +47,89 @@ function normalizeRows(rows: unknown[], slug: string) {
       ...row,
       _id: row._id ?? `${slug}:${index}:${getRowIdentity(row)}`,
     }));
+}
+
+function formatReportValue(value: unknown) {
+  if (value === null || value === undefined || String(value).trim() === "") {
+    return "—";
+  }
+
+  return String(value);
+}
+
+function escapeCsvValue(value: unknown) {
+  const text = formatReportValue(value).replace(/\r?\n/g, " ");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function escapeHtml(value: unknown) {
+  return formatReportValue(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildCsv(columns: Column[], rows: Record<string, unknown>[]) {
+  const header = columns.map((column) => escapeCsvValue(column.label)).join(",");
+  const body = rows.map((row) => columns.map((column) => escapeCsvValue(row[column.key])).join(","));
+  return ["\uFEFF" + header, ...body].join("\n");
+}
+
+function buildTableHtml(title: string, columns: Column[], rows: Record<string, unknown>[]) {
+  const header = columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join("");
+  const body = rows
+    .map(
+      (row) =>
+        `<tr>${columns.map((column) => `<td>${escapeHtml(row[column.key])}</td>`).join("")}</tr>`
+    )
+    .join("");
+
+  return `<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body { font-family: Arial, Tahoma, sans-serif; color: #0a0a12; direction: rtl; }
+    h1 { font-size: 20px; margin: 0 0 16px; }
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid #d8dee8; padding: 8px; text-align: right; }
+    th { background: #f1f5f9; font-weight: 700; }
+    tr:nth-child(even) td { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>
+</body>
+</html>`;
+}
+
+function downloadTextFile(fileName: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function openPrintableReport(title: string, columns: Column[], rows: Record<string, unknown>[]) {
+  const reportWindow = window.open("", "_blank", "noopener,noreferrer");
+  if (!reportWindow) {
+    return false;
+  }
+
+  reportWindow.document.write(buildTableHtml(title, columns, rows));
+  reportWindow.document.close();
+  reportWindow.focus();
+  reportWindow.print();
+  return true;
 }
 
 export function ModuleShell({ slug }: { slug: string }) {
@@ -184,6 +273,34 @@ export function ModuleShell({ slug }: { slug: string }) {
     setDeleteTarget(null);
   };
 
+  const handleReportExport = (format: ReportFormat, label: string) => {
+    const reportTitle = `${moduleMap[slug]?.title ?? config.entityName} — ${rows.length} سجل`;
+    const fileBase = `naiosh-law-${slug}-${new Date().toISOString().slice(0, 10)}`;
+
+    if (format === "pdf") {
+      if (openPrintableReport(reportTitle, config.columns, rows)) {
+        pushToast("success", "✅ تم فتح التقرير للطباعة أو الحفظ كـ PDF");
+      } else {
+        pushToast("error", "تعذر فتح نافذة التقرير. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.");
+      }
+      setReportOpen(false);
+      return;
+    }
+
+    if (format === "excel") {
+      downloadTextFile(
+        `${fileBase}.xls`,
+        buildTableHtml(reportTitle, config.columns, rows),
+        "application/vnd.ms-excel;charset=utf-8"
+      );
+    } else {
+      downloadTextFile(`${fileBase}.csv`, buildCsv(config.columns, rows), "text/csv;charset=utf-8");
+    }
+
+    pushToast("success", `✅ تم تجهيز ${label} وتحميله`);
+    setReportOpen(false);
+  };
+
   const firstCol = config.columns[0]?.key;
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
@@ -198,12 +315,17 @@ export function ModuleShell({ slug }: { slug: string }) {
         onClick={() => setViewTarget(null)}
       >
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`تفاصيل ${config.entityName}`}
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
+              type="button"
+              aria-label="إغلاق التفاصيل"
               onClick={() => setViewTarget(null)}
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
@@ -338,25 +460,25 @@ export function ModuleShell({ slug }: { slug: string }) {
           onClick={() => setReportOpen(false)}
         >
           <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="تصدير التقارير"
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <button type="button" aria-label="إغلاق التصدير" onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
-              ].map((opt) => (
+              {reportOptions.map((opt) => (
                 <button
+                  type="button"
                   key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
+                  onClick={() => handleReportExport(opt.format, opt.label)}
                   style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}

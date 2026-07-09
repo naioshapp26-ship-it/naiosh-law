@@ -49,10 +49,15 @@ export function saveSessionUser(user: SessionUser) {
   window.dispatchEvent(new Event(sessionChangedEvent));
 }
 
-export function clearSessionUser() {
+export async function clearSessionUser() {
   window.localStorage.removeItem(sessionStorageKey);
   window.dispatchEvent(new Event(sessionChangedEvent));
-  void fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => undefined);
+
+  try {
+    await fetch("/api/auth/logout", { method: "POST", cache: "no-store" });
+  } catch {
+    // Local UI state is already cleared; navigation should still continue if the network drops.
+  }
 }
 
 export function useSession(redirectIfMissing = false) {
@@ -119,8 +124,8 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
-      logout: () => {
-        clearSessionUser();
+      logout: async () => {
+        await clearSessionUser();
         setUser(null);
         router.replace("/login");
       },

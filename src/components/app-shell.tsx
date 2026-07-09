@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearSessionUser } from "@/lib/session";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/lib/module-routing";
@@ -25,8 +25,28 @@ export function AppShell({ role, name, children }: Props) {
     { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية", slug: "legal-accounting" },
   ].filter((item) => item.slug === "dashboard" || visibleModules.some((module) => module.slug === item.slug));
 
-  const logout = () => {
-    clearSessionUser();
+  useEffect(() => {
+    if (!drawerOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [drawerOpen]);
+
+  const logout = async () => {
+    await clearSessionUser();
     router.replace("/login");
   };
 
@@ -181,6 +201,7 @@ export function AppShell({ role, name, children }: Props) {
                 fontSize: "1.1rem", color: "#475569", flexShrink: 0,
               }}
               aria-label="القائمة"
+              aria-expanded={drawerOpen}
             >
               ☰
             </button>
@@ -240,7 +261,9 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={() => {
+                void logout();
+              }}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
@@ -345,7 +368,11 @@ export function AppShell({ role, name, children }: Props) {
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
             {/* Drawer panel */}
-            <div style={{
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة الوحدات"
+              style={{
               position: "relative", zIndex: 1,
               width: 280, background: "#ffffff",
               height: "100%", overflowY: "auto",
@@ -394,7 +421,10 @@ export function AppShell({ role, name, children }: Props) {
         })}
         {/* All modules button */}
         <button
+          type="button"
           onClick={() => setDrawerOpen(true)}
+          aria-label="عرض كل الوحدات"
+          aria-expanded={drawerOpen}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
