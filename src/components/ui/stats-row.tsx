@@ -12,7 +12,7 @@ export type KpiCard = {
 type Props = { cards: KpiCard[] };
 
 export function StatsRow({ cards }: Props) {
-  const cols = Math.min(cards.length, 4);
+  const cols = Math.max(1, Math.min(cards.length, 4));
   return (
     <>
       <div

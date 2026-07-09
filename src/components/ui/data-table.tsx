@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -72,6 +72,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const deferredSearch = useDeferredValue(search);
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc((a) => !a);
@@ -80,7 +81,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   };
 
   const filtered = useMemo(() => {
-    const normalizedSearch = search.trim().toLocaleLowerCase("ar-EG");
+    const normalizedSearch = deferredSearch.trim().toLocaleLowerCase("ar-EG");
     if (!normalizedSearch) return data;
 
     return data.filter((row) =>
@@ -88,17 +89,21 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         String(row[column.key] ?? "").toLocaleLowerCase("ar-EG").includes(normalizedSearch)
       )
     );
-  }, [columns, data, search]);
+  }, [columns, data, deferredSearch]);
+
+  const sortColumn = useMemo(
+    () => (sortKey ? columns.find((item) => item.key === sortKey) ?? null : null),
+    [columns, sortKey]
+  );
 
   const sorted = useMemo(() => (
-    sortKey
+    sortKey && sortColumn
       ? [...filtered].sort((a, b) => {
-        const column = columns.find((item) => item.key === sortKey);
-        const result = column ? compareValues(a[sortKey], b[sortKey], column) : 0;
+        const result = compareValues(a[sortKey], b[sortKey], sortColumn);
         return sortAsc ? result : -result;
       })
       : filtered
-  ), [columns, filtered, sortAsc, sortKey]);
+  ), [filtered, sortAsc, sortColumn, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -197,7 +202,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    onClick={() => col.sortable !== false && handleSort(col.key)}
+                    aria-sort={
+                      col.sortable !== false && sortKey === col.key
+                        ? sortAsc
+                          ? "ascending"
+                          : "descending"
+                        : undefined
+                    }
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",
@@ -205,15 +216,34 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                       color: "#475569",
                       fontSize: "0.75rem",
                       whiteSpace: "nowrap",
-                      cursor: col.sortable !== false ? "pointer" : "default",
-                      userSelect: "none",
                     }}
                   >
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
-                        {sortAsc ? " ↑" : " ↓"}
-                      </span>
+                    {col.sortable !== false ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSort(col.key)}
+                        style={{
+                          appearance: "none",
+                          background: "transparent",
+                          border: 0,
+                          color: "inherit",
+                          cursor: "pointer",
+                          font: "inherit",
+                          fontWeight: 700,
+                          padding: 0,
+                          textAlign: "start",
+                          userSelect: "none",
+                        }}
+                      >
+                        {col.label}
+                        {sortKey === col.key && (
+                          <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
+                            {sortAsc ? " ↑" : " ↓"}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      col.label
                     )}
                   </th>
                 ))}

@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const mobileMenuRef = useDialogAccessibility<HTMLDivElement>({
+    active: menuOpen,
+    onClose: closeMenu,
+    lockScroll: false,
+  });
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
@@ -116,7 +123,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() => setMenuOpen((open) => !open)}
           style={{
             display: "none",
             background: "rgba(255,255,255,0.07)",
@@ -128,6 +135,8 @@ export function Navbar() {
           }}
           className="mobile-menu-btn"
           aria-label="قائمة"
+          aria-expanded={menuOpen}
+          aria-controls="marketing-mobile-menu"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             {menuOpen ? (
@@ -149,6 +158,11 @@ export function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
+          id="marketing-mobile-menu"
+          ref={mobileMenuRef}
+          role="navigation"
+          aria-label="قائمة الموقع"
+          tabIndex={-1}
           style={{
             background: "rgba(10,10,18,0.97)",
             borderTop: "1px solid rgba(255,255,255,0.07)",
@@ -159,7 +173,7 @@ export function Navbar() {
             <Link
               key={l.href}
               href={l.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={closeMenu}
               style={{
                 display: "block",
                 padding: "0.75rem 0.5rem",
@@ -174,7 +188,7 @@ export function Navbar() {
           ))}
           <Link
             href="/login"
-            onClick={() => setMenuOpen(false)}
+            onClick={closeMenu}
             className="btn-primary"
             style={{ display: "block", textAlign: "center", marginTop: "1rem" }}
           >
