@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
@@ -30,6 +30,7 @@ function inputType(type: FormField["type"]) {
 }
 
 function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Omit<Props, "open">) {
+  const formId = useId();
   const [form, setForm] = useState<Record<string, unknown>>(() => buildInitialForm(fields, initial));
   const [saving, setSaving] = useState(false);
   const dialogRef = useDialogAccessibility<HTMLDivElement>({ active: true, onClose });
@@ -121,47 +122,57 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
             }}
             className="modal-form-grid"
           >
-            {fields.map((f) => (
-              <div
-                key={f.key}
-                style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
-              >
-                <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
-                {f.type === "select" ? (
-                  <select
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    className="input-field"
-                    style={{ cursor: "pointer" }}
-                  >
-                    <option value="">اختر...</option>
-                    {f.options?.map((o) => (
-                      <option key={o} value={o}>{o}</option>
-                    ))}
-                  </select>
-                ) : f.type === "textarea" ? (
-                  <textarea
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    rows={3}
-                    className="input-field"
-                    style={{ resize: "vertical", minHeight: 80 }}
-                    placeholder={f.placeholder}
-                  />
-                ) : (
-                  <input
-                    type={inputType(f.type)}
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    className="input-field"
-                    placeholder={f.placeholder}
-                  />
-                )}
-              </div>
-            ))}
+            {fields.map((f) => {
+              const fieldId = `${formId}-${f.key}`;
+
+              return (
+                <div
+                  key={f.key}
+                  style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
+                >
+                  <label htmlFor={fieldId} className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
+                  {f.type === "select" ? (
+                    <select
+                      id={fieldId}
+                      name={f.key}
+                      value={String(form[f.key] ?? "")}
+                      onChange={(e) => set(f.key, e.target.value)}
+                      required={f.required}
+                      className="input-field"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <option value="">اختر...</option>
+                      {f.options?.map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  ) : f.type === "textarea" ? (
+                    <textarea
+                      id={fieldId}
+                      name={f.key}
+                      value={String(form[f.key] ?? "")}
+                      onChange={(e) => set(f.key, e.target.value)}
+                      required={f.required}
+                      rows={3}
+                      className="input-field"
+                      style={{ resize: "vertical", minHeight: 80 }}
+                      placeholder={f.placeholder}
+                    />
+                  ) : (
+                    <input
+                      id={fieldId}
+                      name={f.key}
+                      type={inputType(f.type)}
+                      value={String(form[f.key] ?? "")}
+                      onChange={(e) => set(f.key, e.target.value)}
+                      required={f.required}
+                      className="input-field"
+                      placeholder={f.placeholder}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Actions */}

@@ -247,6 +247,7 @@ export default function DashboardPage() {
                 >
                   <input
                     type="checkbox"
+                    name={`dashboard-task-${i}`}
                     checked={completed}
                     onChange={() => toggleTask(i)}
                     style={{

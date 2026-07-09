@@ -378,7 +378,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
-              <label className="input-label">البريد الإلكتروني</label>
+              <label htmlFor="login-email" className="input-label">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -393,10 +393,13 @@ export default function LoginPage() {
                   ✉️
                 </span>
                 <input
+                  id="login-email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                   className="input-field"
                   placeholder="example@naioshlaw.com"
                   style={{ paddingInlineEnd: "2.75rem" }}
@@ -405,7 +408,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label htmlFor="login-password" className="input-label">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -427,10 +430,13 @@ export default function LoginPage() {
                   {showPass ? "🙈" : "👁️"}
                 </button>
                 <input
+                  id="login-password"
+                  name="password"
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   className="input-field"
                   placeholder="••••••••"
                   style={{ paddingInlineEnd: "2.75rem" }}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useId, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -68,6 +68,7 @@ function compareValues(left: unknown, right: unknown, column: Column) {
 }
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
+  const searchId = useId();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -149,6 +150,22 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       {/* Search + count */}
       <div className="data-table-toolbar" style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1 }}>
+          <label
+            htmlFor={searchId}
+            style={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: "hidden",
+              clip: "rect(0, 0, 0, 0)",
+              whiteSpace: "nowrap",
+              border: 0,
+            }}
+          >
+            {searchPlaceholder}
+          </label>
           <span
             style={{
               position: "absolute",
@@ -163,6 +180,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             🔍
           </span>
           <input
+            id={searchId}
+            name="data-table-search"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={searchPlaceholder}
