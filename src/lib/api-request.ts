@@ -45,7 +45,8 @@ export async function readJsonObject(
   }
 
   const contentType = request.headers.get("content-type");
-  if (!isJsonContentType(contentType) && !(allowEmpty && contentLength === 0)) {
+  const hasJsonContentType = isJsonContentType(contentType);
+  if (!hasJsonContentType && !allowEmpty) {
     return { ok: false, response: jsonError("Content-Type must be application/json", 415) };
   }
 
@@ -68,7 +69,7 @@ export async function readJsonObject(
     return { ok: false, response: jsonError("JSON payload is required", 400) };
   }
 
-  if (!isJsonContentType(contentType)) {
+  if (!hasJsonContentType) {
     return { ok: false, response: jsonError("Content-Type must be application/json", 415) };
   }
 
