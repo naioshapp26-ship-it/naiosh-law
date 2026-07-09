@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
-import { modules } from "@/data/modules";
+import { operationalModules } from "@/data/modules";
 import { useSession } from "@/lib/session";
 
 const kpis = [
@@ -30,6 +31,18 @@ const recentTasks = [
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const [todayLabel, setTodayLabel] = useState("");
+
+  useEffect(() => {
+    setTodayLabel(
+      new Intl.DateTimeFormat("ar-EG", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date())
+    );
+  }, []);
 
   if (!ready || !user) {
     return (
@@ -69,7 +82,7 @@ export default function DashboardPage() {
             لوحة التحكم
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            الأربعاء، 8 يوليو 2026 — مرحبًا {user.name}
+            {todayLabel ? `${todayLabel} — ` : ""}مرحبًا {user.name}
           </p>
         </div>
 
@@ -153,9 +166,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {upcomingSessions.map((s, i) => (
+              {upcomingSessions.map((s) => (
                 <div
-                  key={i}
+                  key={`${s.case}-${s.date}`}
                   style={{
                     padding: "0.9rem",
                     background: "#f8f9fb",
@@ -228,9 +241,9 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => (
+              {recentTasks.map((t) => (
                 <div
-                  key={i}
+                  key={`${t.task}-${t.due}`}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
@@ -304,14 +317,14 @@ export default function DashboardPage() {
               الوحدات التشغيلية
             </h2>
             <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-              {modules.length} وحدة متاحة
+              {operationalModules.length} وحدة متاحة
             </span>
           </div>
           <div
             style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}
             className="mod-grid"
           >
-            {modules.map((item) => (
+            {operationalModules.map((item) => (
               <ModuleCard key={item.slug} item={item} />
             ))}
           </div>
@@ -322,10 +335,11 @@ export default function DashboardPage() {
         @media (max-width: 900px) {
           .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .two-col { grid-template-columns: 1fr !important; }
-          .mod-grid { grid-template-columns: 1fr !important; }
+          .mod-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 600px) {
           .kpi-grid { grid-template-columns: 1fr !important; }
+          .mod-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </AppShell>

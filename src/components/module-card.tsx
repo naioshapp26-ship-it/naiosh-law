@@ -27,10 +27,11 @@ type Props = {
 
 export function ModuleCard({ item }: Props) {
   const icon = iconMap[item.slug] ?? "📌";
+  const href = item.slug === "dashboard" ? "/app/dashboard" : `/app/modules/${item.slug}`;
 
   return (
     <Link
-      href={`/app/modules/${item.slug}`}
+      href={href}
       className="card-white"
       style={{
         display: "block",

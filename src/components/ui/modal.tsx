@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -22,10 +22,31 @@ function buildInitialForm(fields: FormField[], initial?: Record<string, unknown>
 }
 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const titleId = useId();
+  const firstFieldRef = useRef<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null>(null);
   const [form, setForm] = useState<Record<string, unknown>>(() =>
     buildInitialForm(fields, initial)
   );
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setForm(buildInitialForm(fields, initial));
+    setSaving(false);
+    window.setTimeout(() => firstFieldRef.current?.focus(), 0);
+  }, [fields, initial, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -53,8 +74,12 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
         padding: "1rem",
       }}
       onClick={onClose}
+      role="presentation"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -77,7 +102,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id={titleId} style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
             onClick={onClose}
             style={{
@@ -108,7 +133,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             }}
             className="modal-form-grid"
           >
-            {fields.map((f) => (
+            {fields.map((f, index) => (
               <div
                 key={f.key}
                 style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
@@ -116,6 +141,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                 <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
                 {f.type === "select" ? (
                   <select
+                    ref={(node) => {
+                      if (index === 0) firstFieldRef.current = node;
+                    }}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -129,6 +157,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
+                    ref={(node) => {
+                      if (index === 0) firstFieldRef.current = node;
+                    }}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -139,6 +170,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
+                    ref={(node) => {
+                      if (index === 0) firstFieldRef.current = node;
+                    }}
                     type={f.type}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}

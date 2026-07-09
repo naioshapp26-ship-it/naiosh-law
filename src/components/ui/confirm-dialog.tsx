@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useId, useRef } from "react";
+
 type Props = {
   open: boolean;
   title?: string;
@@ -10,6 +12,22 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+  const titleId = useId();
+  const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    window.setTimeout(() => confirmButtonRef.current?.focus(), 0);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel, open]);
+
   if (!open) return null;
   return (
     <div
@@ -24,8 +42,12 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         backdropFilter: "blur(4px)",
       }}
       onClick={onCancel}
+      role="presentation"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="card-white"
         style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
@@ -46,7 +68,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         >
           🗑️
         </div>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
+        <h3 id={titleId} style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
           {title}
         </h3>
         <p style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
@@ -71,7 +93,10 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
             إلغاء
           </button>
           <button
-            onClick={onConfirm}
+            ref={confirmButtonRef}
+            onClick={() => {
+              if (!loading) onConfirm();
+            }}
             disabled={loading}
             style={{
               flex: 1,

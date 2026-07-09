@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -27,25 +27,61 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     setPage(1);
   };
 
-  const filtered = data.filter((row) => {
-    if (!search) return true;
-    return columns.some((c) =>
-      String(row[c.key] ?? "").toLowerCase().includes(search.toLowerCase())
-    );
-  });
+  const columnByKey = useMemo(
+    () => new Map(columns.map((column) => [column.key, column])),
+    [columns]
+  );
 
-  const sorted = sortKey
-    ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
-      })
-    : filtered;
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return data;
+
+    return data.filter((row) =>
+      columns.some((c) => String(row[c.key] ?? "").toLowerCase().includes(term))
+    );
+  }, [columns, data, search]);
+
+  const sorted = useMemo(() => {
+    if (!sortKey) return filtered;
+
+    const sortColumn = columnByKey.get(sortKey);
+    const compare = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+      const va = a[sortKey];
+      const vb = b[sortKey];
+
+      if (sortColumn?.type === "currency" || sortColumn?.type === "number") {
+        const na = Number(String(va ?? "0").replace(/[,%]/g, ""));
+        const nb = Number(String(vb ?? "0").replace(/[,%]/g, ""));
+        return na - nb;
+      }
+
+      return String(va ?? "").localeCompare(String(vb ?? ""), "ar", {
+        numeric: true,
+        sensitivity: "base",
+      });
+    };
+
+    return [...filtered].sort((a, b) => (sortAsc ? compare(a, b) : compare(b, a)));
+  }, [columnByKey, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const hasActions = !!(onEdit || onDelete || onView);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  const getRowKey = (row: Record<string, unknown>, index: number) => {
+    const primaryKey = row._id ?? row.id ?? row.caseNo ?? row.name ?? row.title ?? row.email;
+    if (primaryKey != null) return String(primaryKey);
+
+    const firstColumn = columns[0]?.key;
+    if (firstColumn && row[firstColumn] != null) return `${firstColumn}-${String(row[firstColumn])}`;
+
+    return `row-${page}-${index}`;
+  };
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
@@ -70,7 +106,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   return (
     <div>
       {/* Search + count */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+      <div
+        style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}
+      >
         <div style={{ position: "relative", flex: 1 }}>
           <span
             style={{
@@ -173,7 +211,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               ) : (
                 paged.map((row, i) => (
                   <tr
-                    key={i}
+                    key={getRowKey(row, i)}
                     style={{
                       borderBottom: "1px solid #f1f5f9",
                       transition: "background 0.15s",
@@ -290,6 +328,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             <button
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
+              aria-label="الصفحة السابقة"
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
@@ -327,6 +366,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             <button
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
+              aria-label="الصفحة التالية"
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",

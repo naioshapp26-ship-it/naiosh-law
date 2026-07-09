@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoUsers } from "@/data/auth";
+import { writeStoredUser } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -43,10 +44,7 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
+    writeStoredUser({ role: user.role, name: user.name, email: user.email });
     router.push("/app/dashboard");
   };
 

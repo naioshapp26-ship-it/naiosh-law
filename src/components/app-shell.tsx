@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { modules } from "@/data/modules";
-import { sessionKey } from "@/data/auth";
+import { operationalModules } from "@/data/modules";
+import { clearStoredUser } from "@/lib/session";
 
 type Props = {
   role: "admin" | "client";
@@ -38,7 +38,7 @@ export function AppShell({ role, name, children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const logout = () => {
-    window.localStorage.removeItem(sessionKey);
+    clearStoredUser();
     router.replace("/login");
   };
 
@@ -121,7 +121,7 @@ export function AppShell({ role, name, children }: Props) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {modules.map((item) => {
+        {operationalModules.map((item) => {
           const href   = `/app/modules/${item.slug}`;
           const active = pathname === href;
           return (
@@ -304,7 +304,7 @@ export function AppShell({ role, name, children }: Props) {
             }}>الوحدات التشغيلية</p>
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {modules.map((item) => {
+              {operationalModules.map((item) => {
                 const href   = `/app/modules/${item.slug}`;
                 const active = pathname === href;
                 return (

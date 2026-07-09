@@ -39,6 +39,23 @@ a {
   text-decoration: none;
 }
 
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(195, 21, 42, 0.32);
+  outline-offset: 2px;
+}
+
 .container-max {
   width: min(1220px, calc(100% - 3rem));
   margin-inline: auto;
@@ -231,6 +248,28 @@ a {
   }
   .input-field {
     font-size: 16px; /* prevent iOS zoom */
+  }
+}
+
+@media (max-width: 480px) {
+  .container-max {
+    width: calc(100% - 1rem);
+  }
+  .card-white:hover,
+  .btn-primary:hover,
+  .btn-ghost-dark:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
