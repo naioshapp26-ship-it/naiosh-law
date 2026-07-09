@@ -139,13 +139,13 @@ export function HeroSection() {
             <div
               className="hero-badge"
               style={{
-                marginBottom: "0.6rem",
+                marginBottom: "0.2rem",
                 width: "fit-content",
                 maxWidth: "100%",
                 display: "flex",
                 justifyContent: "flex-end",
                 marginLeft: "auto",
-                transform: "translateY(-2px)",
+                transform: "translateY(-12px)",
               }}
             >
               <span
@@ -153,13 +153,13 @@ export function HeroSection() {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.7rem",
+                  gap: "0.78rem",
                   background: "rgba(195,21,42,0.1)",
                   border: "1px solid rgba(195,21,42,0.28)",
                   borderRadius: "100px",
-                  padding: "0.62rem 1.6rem",
+                  padding: "0.74rem 1.95rem",
                   color: "#fca5a5",
-                  fontSize: "0.94rem",
+                  fontSize: "1.04rem",
                   fontWeight: 700,
                   letterSpacing: "0.02em",
                 }}
@@ -167,8 +167,8 @@ export function HeroSection() {
                 <span
                   className="pulse-dot"
                   style={{
-                    width: 9,
-                    height: 9,
+                    width: 10,
+                    height: 10,
                     borderRadius: "50%",
                     background: "#c3152a",
                     flexShrink: 0,
@@ -602,8 +602,8 @@ export function HeroSection() {
             width: 100%;
           }
           .hero-badge-pill {
-            font-size: 0.86rem !important;
-            padding: 0.52rem 1.25rem !important;
+            font-size: 0.92rem !important;
+            padding: 0.58rem 1.4rem !important;
           }
         }
         @media (max-width: 900px) {
