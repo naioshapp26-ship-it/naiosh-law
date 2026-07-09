@@ -1,6 +1,6 @@
 import type { SessionUser } from "@/lib/auth-session";
 
-export type DemoLoginProfile = SessionUser & {
+type DemoLoginProfile = SessionUser & {
   label: string;
 };
 

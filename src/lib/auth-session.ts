@@ -22,7 +22,7 @@ const baseSessionCookieOptions = {
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-export class SessionConfigurationError extends Error {
+class SessionConfigurationError extends Error {
   constructor() {
     super("NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be configured in production.");
     this.name = "SessionConfigurationError";

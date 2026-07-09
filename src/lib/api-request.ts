@@ -12,13 +12,15 @@ type ReadJsonOptions<T> = {
 
 const defaultMaxJsonBytes = 64 * 1024;
 const jsonContentType = "application/json";
+const textEncoder = new TextEncoder();
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
 }
 
 function hasJsonContentType(request: Request) {
-  return request.headers.get("content-type")?.toLocaleLowerCase().includes(jsonContentType) ?? false;
+  const mediaType = request.headers.get("content-type")?.split(";")[0]?.trim().toLocaleLowerCase();
+  return mediaType === jsonContentType;
 }
 
 export async function readJsonBody<T>(
@@ -39,9 +41,15 @@ export async function readJsonBody<T>(
     return { ok: false, response: jsonError("Content-Type must be application/json.", 415) };
   }
 
-  const rawBody = await request.text();
+  let rawBody: string;
 
-  if (new TextEncoder().encode(rawBody).byteLength > maxBytes) {
+  try {
+    rawBody = await request.text();
+  } catch {
+    return { ok: false, response: jsonError("Invalid JSON payload.", 400) };
+  }
+
+  if (textEncoder.encode(rawBody).byteLength > maxBytes) {
     return { ok: false, response: jsonError("JSON payload is too large.", 413) };
   }
 
