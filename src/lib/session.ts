@@ -87,6 +87,7 @@ export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(null);
   const [verified, setVerified] = useState(!redirectIfMissing);
+  const [verifiedRawSession, setVerifiedRawSession] = useState<string | null | undefined>(undefined);
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
@@ -94,7 +95,7 @@ export function useSession(redirectIfMissing = false) {
   );
   const hydrated = rawSession !== undefined;
   const cachedUser = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
-  const ready = hydrated && (!redirectIfMissing || verified);
+  const ready = hydrated && (!redirectIfMissing || (verified && verifiedRawSession === rawSession));
   const user = redirectIfMissing ? verifiedUser : cachedUser;
 
   useEffect(() => {
@@ -111,7 +112,6 @@ export function useSession(redirectIfMissing = false) {
     }
 
     const controller = new AbortController();
-    setVerified(false);
 
     fetch("/api/auth/session", {
       cache: "no-store",
@@ -119,6 +119,7 @@ export function useSession(redirectIfMissing = false) {
     })
       .then(async (response) => {
         if (!response.ok) {
+          setVerifiedRawSession(rawSession);
           clearStoredSession();
           router.replace(loginPathWithNext());
           return;
@@ -127,6 +128,7 @@ export function useSession(redirectIfMissing = false) {
         const payload = (await response.json()) as { user?: SessionUser };
         if (payload.user) {
           setVerifiedUser(payload.user);
+          setVerifiedRawSession(rawSession);
           setVerified(true);
 
           if (JSON.stringify(payload.user) !== rawSession) {
@@ -134,6 +136,7 @@ export function useSession(redirectIfMissing = false) {
           }
         } else {
           setVerifiedUser(null);
+          setVerifiedRawSession(rawSession);
           clearStoredSession();
           router.replace(loginPathWithNext());
         }
@@ -143,6 +146,7 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
         setVerifiedUser(null);
+        setVerifiedRawSession(rawSession);
         clearStoredSession();
         router.replace(loginPathWithNext());
       });
