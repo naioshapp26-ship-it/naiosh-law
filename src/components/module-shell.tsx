@@ -133,8 +133,10 @@ export function ModuleShell({ slug, config, moduleTitle, moduleIcon }: ModuleShe
   }, []);
 
   useEffect(() => {
-    persistRows(slug, rows);
-  }, [config, rows, slug]);
+    const timeoutId = window.setTimeout(() => persistRows(slug, rows), 150);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [rows, slug]);
 
   useEffect(() => {
     if (ready && user && !hasModuleAccess) {

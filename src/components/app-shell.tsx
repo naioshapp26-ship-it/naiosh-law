@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
@@ -152,10 +152,29 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [logoutPending, setLogoutPending] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
   const visibleModules = getVisibleOperationalModules(role);
   const bottomNavModules = ["case-management", "court-sessions", "legal-accounting"]
     .map((slug) => visibleModules.find((item) => item.slug === slug))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  const handleLogout = useCallback(async () => {
+    if (logoutPending) {
+      return;
+    }
+
+    setLogoutPending(true);
+    setLogoutError("");
+
+    try {
+      await logout();
+    } catch {
+      setLogoutError("تعذر تسجيل الخروج. تحقق من الاتصال وحاول مرة أخرى.");
+    } finally {
+      setLogoutPending(false);
+    }
+  }, [logout, logoutPending]);
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -267,21 +286,41 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={handleLogout}
+              disabled={logoutPending}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
                 cursor: "pointer", fontFamily: "var(--font)",
                 transition: "all 0.2s", whiteSpace: "nowrap",
+                opacity: logoutPending ? 0.7 : 1,
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
-              خروج
+              {logoutPending ? "جاري الخروج..." : "خروج"}
             </button>
           </div>
         </div>
+        {logoutError && (
+          <div
+            role="alert"
+            className="shell-alert"
+            style={{
+              margin: "0 1rem 0.75rem",
+              border: "1px solid rgba(195,21,42,0.18)",
+              borderRadius: "10px",
+              background: "rgba(195,21,42,0.07)",
+              color: "#c3152a",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              padding: "0.6rem 0.85rem",
+            }}
+          >
+            {logoutError}
+          </div>
+        )}
       </header>
 
       {/* ── Body ── */}
@@ -302,7 +341,7 @@ export function AppShell({ role, name, children }: Props) {
             style={{
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex",
-              justifyContent: "flex-start",
+              justifyContent: "flex-end",
             }}
           >
             {/* Backdrop */}
@@ -354,12 +393,22 @@ export function AppShell({ role, name, children }: Props) {
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
-                textDecoration: "none", flex: 1,
+                textDecoration: "none", flex: 1, minWidth: 0,
                 background: active ? "rgba(195,21,42,0.08)" : "transparent",
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
-              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8" }}>
+              <span
+                style={{
+                  fontSize: "0.6rem",
+                  fontWeight: active ? 700 : 500,
+                  color: active ? "#c3152a" : "#94a3b8",
+                  maxWidth: "100%",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {item.label}
               </span>
             </Link>
@@ -372,7 +421,7 @@ export function AppShell({ role, name, children }: Props) {
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
             background: "none", border: "none", cursor: "pointer",
-            fontFamily: "var(--font)", flex: 1,
+            fontFamily: "var(--font)", flex: 1, minWidth: 0,
           }}
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>
