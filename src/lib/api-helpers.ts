@@ -25,3 +25,11 @@ export async function requireWrite() {
 export function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
+
+export async function requireApprover() {
+  return requireAuth(["admin", "industrial_agent"]);
+}
+
+export async function requireAdmin() {
+  return requireAuth(["admin"]);
+}

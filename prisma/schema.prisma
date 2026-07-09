@@ -37,6 +37,9 @@ model User {
   auditLogs          AuditLog[]
   officeBranchId     String?
   officeBranch       OfficeBranch? @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  approvalRequests   ApprovalRequest[] @relation("ApprovalRequester")
+  approvalsResolved  ApprovalRequest[] @relation("ApprovalApprover")
+  eSignatures        ESignature[]
 }
 
 // ─── Core ERP (Phase 0) ─────────────────────────────────────
@@ -286,6 +289,8 @@ model AuditLog {
   entity    String
   entityId  String?
   details   String?
+  severity  String   @default("info")
+  ipAddress String?
   createdAt DateTime @default(now())
 }
 
@@ -569,4 +574,79 @@ model IntegrationLog {
   success       Boolean     @default(true)
   errorMessage  String?
   createdAt     DateTime    @default(now())
+
+// ─── Governance & E-Signing (Phase 6) ─────────────────────
+
+enum ApprovalType {
+  case_opening
+  fee_waiver
+  document_release
+  user_access
+  contract_signing
+  other
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+model ApprovalRequest {
+  id          String         @id @default(cuid())
+  refNo       String         @unique
+  type        ApprovalType   @default(other)
+  title       String
+  description String?
+  requesterId String
+  requester   User           @relation("ApprovalRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  approverId  String?
+  approver    User?          @relation("ApprovalApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  entity      String?
+  entityId    String?
+  status      ApprovalStatus @default(pending)
+  priority    String         @default("متوسط")
+  notes       String?
+  requestedAt String
+  resolvedAt  String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model GovernancePolicy {
+  id            String   @id @default(cuid())
+  title         String
+  category      String
+  description   String?
+  version       String   @default("1.0")
+  status        String   @default("ساري")
+  effectiveDate String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum SignatureStatus {
+  pending
+  signed
+  rejected
+  expired
+}
+
+model ESignature {
+  id            String          @id @default(cuid())
+  refNo         String          @unique
+  documentTitle String
+  documentRef   String?
+  signerName    String
+  signerEmail   String?
+  signerRole    String?
+  userId        String?
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status        SignatureStatus @default(pending)
+  signatureHash String?
+  signedAt      String?
+  expiresAt     String?
+  ipAddress     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
