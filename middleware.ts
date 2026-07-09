@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { canAccessModule } from "@/lib/module-routing";
+import { getSafeAppPath } from "@/lib/session-client";
 import {
-  getSafeAppPath,
   readSessionToken,
   sessionCookieName,
 } from "@/lib/session-server";

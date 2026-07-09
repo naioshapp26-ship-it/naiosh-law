@@ -28,10 +28,21 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (!open) {
+      return;
+    }
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (controller.signal.aborted) {
+        return;
+      }
+
       setForm(buildInitialForm(fields, initial));
       setSaving(false);
-    }
+    });
+
+    return () => controller.abort();
   }, [fields, initial, open]);
 
   if (!open) return null;
