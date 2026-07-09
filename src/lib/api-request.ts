@@ -18,7 +18,7 @@ function jsonError(message: string, status: number) {
 
 async function readCappedBody(request: Request, maxBytes: number) {
   if (!request.body) {
-    return "";
+    return { ok: true as const, body: "" };
   }
 
   const reader = request.body.getReader();
