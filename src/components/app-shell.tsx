@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/data/modules";
-import { sessionStorageKey } from "@/data/auth";
+import { clearSessionMirror } from "@/lib/session";
 
 type Props = {
   role: "admin" | "client";
@@ -25,11 +25,7 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = () => {
-    try {
-      window.localStorage.removeItem(sessionStorageKey);
-    } catch {
-      // The server cookie is cleared below; storage is only a UI mirror.
-    }
+    clearSessionMirror();
     void fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
   };
@@ -353,7 +349,7 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
               {renderSidebarContent()}
@@ -432,7 +428,7 @@ export function AppShell({ role, name, children }: Props) {
           .drawer-header     { display: none; }
         }
         @keyframes slide-drawer {
-          from { transform: translateX(-100%); opacity: 0; }
+          from { transform: translateX(100%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
         }
       `}</style>

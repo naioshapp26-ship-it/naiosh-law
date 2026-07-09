@@ -52,7 +52,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         <p style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
           {message}
         </p>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div className="confirm-actions" style={{ display: "flex", gap: "0.75rem" }}>
           <button
             onClick={onCancel}
             style={{
@@ -90,6 +90,13 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
             {loading ? "جاري الحذف..." : "تأكيد الحذف"}
           </button>
         </div>
+        <style>{`
+          @media (max-width: 420px) {
+            .confirm-actions {
+              flex-direction: column-reverse;
+            }
+          }
+        `}</style>
       </div>
     </div>
   );

@@ -98,7 +98,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   return (
     <div>
       {/* Search + count */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+      <div className="table-toolbar" style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1 }}>
           <span
             style={{
@@ -355,6 +355,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       {/* Pagination */}
       {totalPages > 1 && (
         <div
+          className="table-pagination"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -367,7 +368,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           <span>
             صفحة {safePage} من {totalPages} — {sorted.length} سجل إجمالاً
           </span>
-          <div style={{ display: "flex", gap: "0.3rem" }}>
+          <div className="table-pagination-controls" style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
             <button
               aria-label="الصفحة السابقة"
               disabled={safePage === 1}
@@ -394,11 +395,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     padding: "0.4rem 0.65rem",
                     borderRadius: "8px",
                     border: "1px solid",
-                    borderColor: p === page ? "#c3152a" : "#e2e8f0",
-                    background: p === page ? "#c3152a" : "#fff",
-                    color: p === page ? "#fff" : "#475569",
+                    borderColor: p === safePage ? "#c3152a" : "#e2e8f0",
+                    background: p === safePage ? "#c3152a" : "#fff",
+                    color: p === safePage ? "#fff" : "#475569",
                     cursor: "pointer",
-                    fontWeight: p === page ? 800 : 400,
+                    fontWeight: p === safePage ? 800 : 400,
                     minWidth: 32,
                   }}
                 >
@@ -439,9 +440,22 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .table-action-neutral { background: #f1f5f9; color: #475569; }
         .table-action-primary { background: rgba(195,21,42,0.07); color: #c3152a; }
         .table-action-danger { background: rgba(239,68,68,0.08); color: #dc2626; }
+        @media (max-width: 720px) {
+          .table-pagination {
+            align-items: flex-start !important;
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+        }
         @media (max-width: 640px) {
+          .table-toolbar {
+            align-items: stretch !important;
+            flex-direction: column;
+          }
           .desktop-table-wrap { display: none; }
           .mobile-card-list { display: block !important; }
+          .table-pagination-controls { width: 100%; }
+          .table-pagination-controls button { flex: 1; }
         }
       `}</style>
     </div>

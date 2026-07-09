@@ -4,6 +4,18 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { sessionStorageKey, type SessionUser } from "@/data/auth";
 
+export function clearSessionMirror() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(sessionStorageKey);
+  } catch {
+    // Browser storage can be unavailable in private or locked-down contexts.
+  }
+}
+
 function readSessionMirror() {
   if (typeof window === "undefined") {
     return null;
@@ -13,7 +25,7 @@ function readSessionMirror() {
     const raw = window.localStorage.getItem(sessionStorageKey);
     return raw ? (JSON.parse(raw) as SessionUser) : null;
   } catch {
-    window.localStorage.removeItem(sessionStorageKey);
+    clearSessionMirror();
     return null;
   }
 }
@@ -27,7 +39,7 @@ function writeSessionMirror(user: SessionUser | null) {
     if (user) {
       window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
     } else {
-      window.localStorage.removeItem(sessionStorageKey);
+      clearSessionMirror();
     }
   } catch {
     // Browser storage can be unavailable in private or locked-down contexts.
@@ -42,10 +54,13 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     let cancelled = false;
+    const mirroredUser = readSessionMirror();
 
     async function validateSession() {
+      let receivedResponse = false;
       try {
         const response = await fetch("/api/auth/session", { cache: "no-store" });
+        receivedResponse = true;
         if (!response.ok) {
           throw new Error("Session is missing or expired.");
         }
@@ -62,11 +77,18 @@ export function useSession(redirectIfMissing = false) {
         }
       } catch {
         if (!cancelled) {
-          setUser(null);
-          writeSessionMirror(null);
+          const canPreserveMirror = !!mirroredUser && !receivedResponse;
+          if (!canPreserveMirror) {
+            setUser(null);
+            writeSessionMirror(null);
+          }
           setReady(true);
-          if (redirectIfMissing) {
-            router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+          if (redirectIfMissing && !canPreserveMirror) {
+            const nextPath =
+              typeof window === "undefined" || !window.location.search
+                ? pathname
+                : `${pathname}${window.location.search}`;
+            router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
           }
         }
       }
@@ -84,7 +106,7 @@ export function useSession(redirectIfMissing = false) {
       user,
       ready,
       logout: () => {
-        writeSessionMirror(null);
+        clearSessionMirror();
         void fetch("/api/auth/logout", { method: "POST" });
         router.replace("/login");
       },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sessionCookieName, type SessionUser } from "@/data/auth";
 import { findDemoCredential, findDemoCredentialByRole } from "@/data/server-auth";
+import { parseJsonRequest } from "@/lib/api-request";
 import { createSessionToken, sessionMaxAgeSeconds } from "@/lib/session-token";
 
 type LoginBody = {
@@ -19,17 +20,11 @@ function jsonError(message: string, status: number) {
 }
 
 export async function POST(request: Request) {
-  const contentType = request.headers.get("content-type") || "";
-  if (!contentType.toLowerCase().includes("application/json")) {
-    return jsonError("Content-Type must be application/json.", 415);
+  const parsedBody = await parseJsonRequest<LoginBody>(request, { maxBytes: 8 * 1024 });
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
-
-  let body: LoginBody;
-  try {
-    body = (await request.json()) as LoginBody;
-  } catch {
-    return jsonError("Invalid JSON body.", 400);
-  }
+  const body = parsedBody.data;
 
   const user =
     body.demo === true && isRole(body.role)

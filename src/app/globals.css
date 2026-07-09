@@ -6,8 +6,6 @@
   --primary-glow: rgba(195, 21, 42, 0.35);
   --primary-soft: rgba(195, 21, 42, 0.08);
   --dark: #0a0a12;
-  --dark-2: #12121e;
-  --dark-border: rgba(255, 255, 255, 0.08);
   --light: #ffffff;
   --light-soft: #f8f9fb;
   --border: #e2e8f0;
@@ -58,12 +56,6 @@ a {
 .card-white:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07), 0 20px 50px rgba(0, 0, 0, 0.07);
   transform: translateY(-3px);
-}
-
-.card-dark {
-  background: var(--dark-2);
-  border: 1px solid var(--dark-border);
-  border-radius: 20px;
 }
 
 .glass-dark {
@@ -123,12 +115,6 @@ a {
   50%       { transform: translateY(-14px); }
 }
 
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33%       { transform: translateY(-8px) rotate(1deg); }
-  66%       { transform: translateY(-16px) rotate(-1deg); }
-}
-
 @keyframes pulse-dot {
   0%   { box-shadow: 0 0 0 0 rgba(195, 21, 42, 0.8); }
   70%  { box-shadow: 0 0 0 8px rgba(195, 21, 42, 0); }
@@ -140,18 +126,12 @@ a {
   50%       { opacity: 1; }
 }
 
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
 .float-anim { animation: float 5s ease-in-out infinite; }
-.float-slow-anim { animation: float-slow 7s ease-in-out infinite; }
 .pulse-dot { animation: pulse-dot 2s infinite; }
 .glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
 .spin-slow { animation: spin-slow 20s linear infinite; }
@@ -181,30 +161,6 @@ a {
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;
-}
-
-/* ── Sidebar nav ───────────────────────────── */
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #94a3b8;
-  transition: all 0.18s;
-}
-
-.sidebar-link:hover {
-  background: rgba(195, 21, 42, 0.08);
-  color: var(--primary);
-}
-
-.sidebar-link.active {
-  background: rgba(195, 21, 42, 0.12);
-  color: var(--primary);
-  font-weight: 700;
 }
 
 /* ── Hero CSS entrance animations ─────────── */

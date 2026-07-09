@@ -1,5 +1,6 @@
-import { ModulePageClient } from "@/components/module-page-client";
+import { ModuleShell } from "@/components/module-shell";
 import { moduleConfigMap } from "@/data/module-configs";
+import { moduleMap } from "@/data/modules";
 import { notFound, redirect } from "next/navigation";
 
 type Props = {
@@ -13,9 +14,10 @@ export default async function ModulePage({ params }: Props) {
     redirect("/app/dashboard");
   }
 
-  if (!moduleConfigMap[slug]) {
+  const config = moduleConfigMap[slug];
+  if (!config) {
     notFound();
   }
 
-  return <ModulePageClient slug={slug} />;
+  return <ModuleShell key={slug} slug={slug} title={moduleMap[slug]?.title ?? config.entityName} config={config} />;
 }

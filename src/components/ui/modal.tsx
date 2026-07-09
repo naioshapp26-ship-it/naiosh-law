@@ -59,6 +59,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        className="modal-panel"
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -188,6 +189,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
 
       <style>{`
         @media (max-width: 600px) {
+          .modal-panel {
+            border-radius: 16px !important;
+            max-height: calc(100vh - 2rem) !important;
+            padding: 1.25rem !important;
+          }
           .modal-form-grid { grid-template-columns: 1fr !important; }
           .modal-actions { flex-direction: column-reverse; }
           .modal-actions button { width: 100%; }

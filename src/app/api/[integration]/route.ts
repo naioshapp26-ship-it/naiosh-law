@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sessionCookieName } from "@/data/auth";
+import { parseJsonRequest } from "@/lib/api-request";
 import { verifySessionToken } from "@/lib/session-token";
 
 const integrations = new Set(["sms", "email", "payments", "sign", "courts", "tax", "ocr", "analytics"]);
@@ -48,24 +49,16 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "Integration not found." }, { status: 404 });
   }
 
-  let payload: unknown = {};
-  const contentType = request.headers.get("content-type") || "";
-  if (contentType) {
-    if (!contentType.toLowerCase().includes("application/json")) {
-      return NextResponse.json({ error: "Content-Type must be application/json." }, { status: 415 });
-    }
-    try {
-      payload = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-    }
+  const parsedBody = await parseJsonRequest(request, { required: false });
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
 
   return NextResponse.json(
     {
       integration,
       accepted: true,
-      payload,
+      payload: parsedBody.data,
       queuedAt: new Date().toISOString(),
     },
     { status: 202 }
