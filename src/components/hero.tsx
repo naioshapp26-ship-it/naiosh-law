@@ -139,11 +139,13 @@ export function HeroSection() {
             <div
               className="hero-badge"
               style={{
-                marginBottom: "1.35rem",
-                width: "100%",
+                marginBottom: "0.6rem",
+                width: "fit-content",
+                maxWidth: "100%",
                 display: "flex",
                 justifyContent: "flex-end",
-                transform: "translateY(-10px)",
+                marginLeft: "auto",
+                transform: "translateY(-2px)",
               }}
             >
               <span
@@ -621,6 +623,8 @@ export function HeroSection() {
           .hero-badge {
             justify-content: center !important;
             transform: none !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
           }
           .hero-cta, .hero-stats {
             justify-content: center !important;
