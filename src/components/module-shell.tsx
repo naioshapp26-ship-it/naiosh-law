@@ -1,34 +1,79 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import Link from "next/link";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
-import { moduleMap } from "@/data/modules";
+import type { ModuleConfig } from "@/data/module-configs";
 import { useSession } from "@/lib/session";
+import { canAccessModule } from "@/lib/module-routing";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
+type ModuleRow = Record<string, unknown> & { _id: string };
 
 let toastCounter = 0;
 
-export function ModuleShell({ slug }: { slug: string }) {
-  const { user, ready } = useSession(true);
-  const config = moduleConfigMap[slug];
+function getSeedRowId(slug: string, row: Record<string, unknown>, index: number) {
+  const stableValue =
+    row._id ??
+    row.id ??
+    row.caseNo ??
+    row.ref ??
+    row.invoiceNo ??
+    row.jobId ??
+    row.email ??
+    row.name ??
+    row.title ??
+    index;
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  return `${slug}-${String(stableValue)}`;
+}
+
+function normalizeRows(slug: string, rows: Record<string, unknown>[]): ModuleRow[] {
+  return rows.map((row, index) => ({
+    ...row,
+    _id: getSeedRowId(slug, row, index),
+  }));
+}
+
+export function ModuleShell({
+  slug,
+  config,
+  moduleTitle,
+}: {
+  slug: string;
+  config: ModuleConfig | null;
+  moduleTitle?: string;
+}) {
+  const { user, ready } = useSession(true);
+  const toastTimers = useRef<number[]>([]);
+
+  const [rows, setRows] = useState<ModuleRow[]>(() => (config ? normalizeRows(slug, config.data) : []));
   const [modalOpen, setModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
-  const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
+  const [editTarget, setEditTarget] = useState<ModuleRow | null>(null);
+  const [viewTarget, setViewTarget] = useState<ModuleRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ModuleRow | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      toastTimers.current.forEach(window.clearTimeout);
+      toastTimers.current = [];
+    };
+  }, []);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timer = window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+      toastTimers.current = toastTimers.current.filter((item) => item !== timer);
+    }, 3500);
+    toastTimers.current.push(timer);
   }, []);
 
   if (!ready || !user) {
@@ -54,16 +99,31 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   }
 
+  if (!canAccessModule(user.role, slug)) {
+    return (
+      <AppShell role={user.role} name={user.name}>
+        <div style={{ textAlign: "center", padding: "5rem 1rem", color: "#64748b" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔒</div>
+          <h2 style={{ fontWeight: 800, marginBottom: "0.5rem", color: "#0a0a12" }}>لا تملك صلاحية الوصول</h2>
+          <p style={{ marginBottom: "1.5rem" }}>هذه الوحدة متاحة لحسابات الإدارة فقط.</p>
+          <Link href="/app/dashboard" className="btn-primary">
+            العودة إلى لوحة التحكم
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
+
   /* ── Handlers ── */
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
-  const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
+  const openEdit = (row: Record<string, unknown>) => { setEditTarget(row as ModuleRow); setModalOpen(true); };
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
-      setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
+      setRows((prev) => prev.map((row) => (row._id === editTarget._id ? { ...row, ...data } : row)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
-      const newRow = { ...data, _id: Date.now() };
+      const newRow = { ...data, _id: `${slug}-${Date.now()}` };
       setRows((prev) => [newRow, ...prev]);
       pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
     }
@@ -72,7 +132,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   };
 
   const handleDeleteConfirm = () => {
-    setRows((prev) => prev.filter((r) => r !== deleteTarget));
+    setRows((prev) => prev.filter((row) => row._id !== deleteTarget?._id));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
   };
@@ -81,6 +141,9 @@ export function ModuleShell({ slug }: { slug: string }) {
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
+  const modalKey = editTarget
+    ? `edit-${slug}-${editTarget._id}`
+    : `add-${slug}`;
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -101,7 +164,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="module-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
@@ -125,13 +188,10 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   };
 
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
-
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="module-toasts" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}
@@ -149,7 +209,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                  config.entityName === "موكل" ? "👥" :
                  config.entityName === "جلسة" ? "🏛️" :
                  config.entityName === "متابعة" ? "📋" :
-                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleTitle ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
@@ -185,9 +245,9 @@ export function ModuleShell({ slug }: { slug: string }) {
           <DataTable
             columns={config.columns}
             data={rows}
-            onView={setViewTarget}
+            onView={(row) => setViewTarget(row as ModuleRow)}
             onEdit={user.role === "admin" ? openEdit : undefined}
-            onDelete={user.role === "admin" ? setDeleteTarget : undefined}
+            onDelete={user.role === "admin" ? (row) => setDeleteTarget(row as ModuleRow) : undefined}
             searchPlaceholder={`بحث في ${config.entityName}ات...`}
           />
         </div>
@@ -195,6 +255,7 @@ export function ModuleShell({ slug }: { slug: string }) {
 
       {/* Add/Edit Modal */}
       <Modal
+        key={modalKey}
         open={modalOpen}
         title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
         fields={config.formFields}
@@ -222,6 +283,7 @@ export function ModuleShell({ slug }: { slug: string }) {
           onClick={() => setReportOpen(false)}
         >
           <div
+            className="report-modal-panel"
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -262,6 +324,25 @@ export function ModuleShell({ slug }: { slug: string }) {
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+          .module-toasts {
+            inset-inline: 1rem !important;
+            bottom: 5.75rem !important;
+          }
+          .module-toasts > div {
+            max-width: none !important;
+          }
+        }
+        @media (max-width: 560px) {
+          .module-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .report-modal-panel {
+            padding: 1.25rem !important;
+            max-height: 86vh;
+            overflow-y: auto;
+          }
         }
       `}</style>
     </AppShell>

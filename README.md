@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naiosh Law
+
+واجهة عربية تجريبية لنظام إدارة قانوني مبنية باستخدام Next.js App Router وReact.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies, then run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use these checks before shipping changes:
 
-## Learn More
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm audit --audit-level=moderate
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Demo runtime notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Authentication is demo-only but uses a signed httpOnly cookie plus a browser `localStorage` mirror for UI state.
+- Set `NAIOSH_SESSION_SECRET` (or `AUTH_SECRET` / `NEXTAUTH_SECRET`) in production. To intentionally allow the local demo fallback secret in production, set `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true`.
+- Demo account metadata is defined in `src/data/auth.ts`; password-bearing demo credentials are only used by server auth routes.
+- There is no database, ORM, or migration layer in this repository.
+- Module CRUD changes are in-memory demo interactions; reloading a page restores seeded data.
+- Demo integration endpoints are implemented under `src/app/api/[integration]/route.ts` and require an authenticated admin session.
+- Auth endpoints are implemented under `src/app/api/auth/*`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Main routes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/` public landing page.
+- `/login` demo login.
+- `/app/dashboard` protected client dashboard.
+- `/app/modules/[slug]` operational module pages.

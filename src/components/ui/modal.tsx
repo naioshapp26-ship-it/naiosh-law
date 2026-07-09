@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -14,16 +14,14 @@ type Props = {
 };
 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
+  const [form, setForm] = useState<Record<string, unknown>>(() => {
+    const defaults: Record<string, unknown> = {};
+    fields.forEach((field) => {
+      defaults[field.key] = initial?.[field.key] ?? "";
+    });
+    return defaults;
+  });
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
-    }
-  }, [open, initial, fields]);
 
   if (!open) return null;
 
@@ -32,9 +30,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    onSave(form);
-    setSaving(false);
+    try {
+      onSave(form);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -137,7 +137,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
-                    type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                    type={f.type === "number" || f.type === "date" || f.type === "email" || f.type === "tel" ? f.type : "text"}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -150,7 +150,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div className="modal-actions" style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={onClose}
@@ -182,6 +182,10 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
 
       <style>{`
         @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 480px) {
+          .modal-actions { flex-direction: column-reverse; }
+          .modal-actions button { width: 100%; }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }

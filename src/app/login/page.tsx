@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { getSafeAppPath, writeStoredSession } from "@/lib/session";
+import type { SessionUser } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,37 +25,59 @@ const perks = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@naioshlaw.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    setLoading(true);
-    setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
-      setLoading(false);
-      return;
-    }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
-    router.push("/app/dashboard");
+  const finishLogin = (user: SessionUser) => {
+    writeStoredSession(user);
+    const next = getSafeAppPath(new URLSearchParams(window.location.search).get("next"));
+    router.push(next);
   };
 
-  const fillDemo = (role: "admin" | "client") => {
-    const user = demoUsers.find((u) => u.role === role)!;
-    setEmail(user.email);
-    setPassword(user.password);
+  const submitLogin = async (payload: Record<string, unknown>) => {
+    setLoading(true);
     setError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+      const result = (await response.json().catch(() => ({}))) as {
+        user?: SessionUser;
+        message?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.user) {
+        setError(
+          result.error === "session_configuration_error"
+            ? "إعدادات الجلسة غير مكتملة على الخادم."
+            : result.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+        );
+        return;
+      }
+
+      finishLogin(result.user);
+    } catch {
+      setError("تعذر الاتصال بالخادم. تحقق من الشبكة وحاول مرة أخرى.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    await submitLogin({ email, password });
+  };
+
+  const quickDemoLogin = async (role: SessionUser["role"]) => {
+    await submitLogin({ demoRole: role });
   };
 
   return (
@@ -281,7 +304,9 @@ export default function LoginPage() {
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
-                onClick={() => fillDemo("admin")}
+                type="button"
+                onClick={() => quickDemoLogin("admin")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -308,7 +333,9 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
-                onClick={() => fillDemo("client")}
+                type="button"
+                onClick={() => quickDemoLogin("client")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",

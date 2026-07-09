@@ -26,6 +26,27 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSolutionsOpen(false);
+        setMobileSolutionsOpen(false);
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
   const navStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
@@ -45,14 +66,14 @@ export function Navbar() {
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
     { href: "/#modules", label: "الوحدات" },
-    { href: "/app/dashboard", label: "عرض تجريبي" },
+    { href: `/login?next=${encodeURIComponent("/app/dashboard")}`, label: "عرض تجريبي" },
   ];
 
   const solutionItems = [
-    { href: "/app/modules/case-management", label: "حل إدارة القضايا" },
-    { href: "/app/modules/clients-management", label: "حل إدارة الموكلين" },
-    { href: "/app/modules/court-sessions", label: "حل الجلسات والمتابعات" },
-    { href: "/app/modules/legal-accounting", label: "حل المحاسبة القانونية" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/case-management")}`, label: "حل إدارة القضايا" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/clients-management")}`, label: "حل إدارة الموكلين" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/court-sessions")}`, label: "حل الجلسات والمتابعات" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/legal-accounting")}`, label: "حل المحاسبة القانونية" },
   ];
 
   return (
@@ -108,6 +129,8 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setSolutionsOpen((prev) => !prev)}
+              aria-expanded={solutionsOpen}
+              aria-haspopup="menu"
               style={{
                 color: "#94a3b8",
                 fontSize: "0.875rem",
@@ -141,12 +164,14 @@ export function Navbar() {
                   boxShadow: "0 18px 45px rgba(0,0,0,0.45)",
                   backdropFilter: "blur(10px)",
                 }}
+                role="menu"
               >
                 {solutionItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setSolutionsOpen(false)}
+                    role="menuitem"
                     style={{
                       display: "block",
                       padding: "0.55rem 0.65rem",
@@ -253,6 +278,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setMobileSolutionsOpen((prev) => !prev)}
+            aria-expanded={mobileSolutionsOpen}
             style={{
               width: "100%",
               textAlign: "right",
