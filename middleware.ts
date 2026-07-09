@@ -5,8 +5,14 @@ import { decodeSession, sessionCookieName } from "@/lib/auth-session";
 export async function middleware(request: NextRequest) {
   const user = await decodeSession(request.cookies.get(sessionCookieName)?.value);
   const isLoginPage = request.nextUrl.pathname === "/login";
+  const isDashboardModule = request.nextUrl.pathname === "/app/modules/dashboard";
 
   if (user && isLoginPage) {
+    const redirectUrl = new URL("/app/dashboard", request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && isDashboardModule) {
     const redirectUrl = new URL("/app/dashboard", request.url);
     return NextResponse.redirect(redirectUrl);
   }
