@@ -17,6 +17,7 @@ const extraNav = [
   { href: "/app/professional-network", label: "الشبكة المهنية", icon: "🤝" },
   { href: "/app/official-entities", label: "الجهات الرسمية", icon: "🏢" },
   { href: "/app/legal-finance", label: "المالية المتقدمة", icon: "💰" },
+  { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
 ];
 
 const iconMap: Record<string, string> = {

@@ -1,4 +1,4 @@
-// Naiosh Law ERP — PostgreSQL Schema (Phases 0–2)
+// Naiosh Law ERP — PostgreSQL Schema (Phases 0–7)
 
 generator client {
   provider = "prisma-client"
@@ -128,6 +128,9 @@ model LegalBranch {
   specializations LegalSpecialization[]
   cases           Case[]
   consultations   Consultation[]
+  documents       LegalDocument[]
+  articles        LegalArticle[]
+  circulars       CircularInstruction[]
 }
 
 model LegalSpecialization {
@@ -145,6 +148,8 @@ model LegalSpecialization {
   consultations Consultation[]
   subjects      SpecializationSubject[]
   feeRules      FeeRule[]
+  documents     LegalDocument[]
+  articles      LegalArticle[]
 }
 
 model LegalSubject {
@@ -388,4 +393,69 @@ model OfficialNotification {
   notes           String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+}
+
+// ─── Legal Library (Phase 4) ──────────────────────────────
+
+enum LibraryDocumentType {
+  law
+  regulation
+  contract_template
+  court_form
+  memo_template
+  other
+}
+
+model LegalDocument {
+  id               String              @id @default(cuid())
+  title            String
+  type             LibraryDocumentType @default(other)
+  category         String?
+  branchId         String?
+  branch           LegalBranch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  summary          String?
+  content          String?
+  fileUrl          String?
+  tags             String?
+  status           String              @default("منشور")
+  publishedAt      String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model LegalArticle {
+  id               String              @id @default(cuid())
+  title            String
+  author           String?
+  branchId         String?
+  branch           LegalBranch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  summary          String?
+  content          String?
+  tags             String?
+  readMinutes      Int?
+  status           String              @default("منشور")
+  publishedAt      String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model CircularInstruction {
+  id            String       @id @default(cuid())
+  circularNo    String       @unique
+  title         String
+  issuer        String
+  branchId      String?
+  branch        LegalBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  issueDate     String
+  effectiveDate String?
+  summary       String?
+  content       String?
+  status        String       @default("ساري")
+  tags          String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
