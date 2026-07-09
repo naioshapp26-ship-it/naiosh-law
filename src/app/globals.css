@@ -23,6 +23,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -32,6 +33,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 a {
@@ -42,6 +44,14 @@ a {
 .container-max {
   width: min(1220px, calc(100% - 3rem));
   margin-inline: auto;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Cards ─────────────────────────────────── */
@@ -231,6 +241,23 @@ a {
   }
   .input-field {
     font-size: 16px; /* prevent iOS zoom */
+  }
+}
+
+@media (max-width: 480px) {
+  .container-max {
+    width: calc(100% - 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

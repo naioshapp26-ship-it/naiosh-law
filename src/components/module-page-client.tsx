@@ -7,5 +7,5 @@ type Props = {
 };
 
 export function ModulePageClient({ slug }: Props) {
-  return <ModuleShell slug={slug} />;
+  return <ModuleShell key={slug} slug={slug} />;
 }

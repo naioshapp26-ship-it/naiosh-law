@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -13,17 +13,19 @@ type Props = {
   saveLabel?: string;
 };
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
-  const [saving, setSaving] = useState(false);
+function buildInitialForm(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    defaults[field.key] = initial?.[field.key] ?? "";
+  });
+  return defaults;
+}
 
-  useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
-    }
-  }, [open, initial, fields]);
+export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const [form, setForm] = useState<Record<string, unknown>>(() =>
+    buildInitialForm(fields, initial)
+  );
+  const [saving, setSaving] = useState(false);
 
   if (!open) return null;
 
@@ -33,8 +35,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     e.preventDefault();
     setSaving(true);
     await new Promise((r) => setTimeout(r, 400));
-    onSave(form);
     setSaving(false);
+    onSave(form);
   };
 
   return (
@@ -137,7 +139,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
-                    type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                    type={f.type}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
