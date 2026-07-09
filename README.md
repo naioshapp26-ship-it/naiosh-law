@@ -27,7 +27,7 @@ npm audit --audit-level=moderate
 ## Demo runtime notes
 
 - Authentication is demo-only but uses a signed httpOnly cookie plus a browser `localStorage` mirror for UI state.
-- Set `NAIOSH_SESSION_SECRET` (or `AUTH_SECRET` / `NEXTAUTH_SECRET`) in production. To intentionally allow the local demo fallback secret in production, set `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true`.
+- Set `NAIOSH_SESSION_SECRET` (or `AUTH_SECRET` / `NEXTAUTH_SECRET`) in production. If none is provided, the demo fallback secret keeps previews usable but should not be used for real deployments.
 - Demo account metadata is defined in `src/data/auth.ts`; password-bearing demo credentials are only used by server auth routes.
 - There is no database, ORM, or migration layer in this repository.
 - Module CRUD changes are in-memory demo interactions; reloading a page restores seeded data.

@@ -1,4 +1,4 @@
-import { ModulePageClient } from "@/components/module-page-client";
+import { ModuleShell } from "@/components/module-shell";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { redirect } from "next/navigation";
@@ -13,7 +13,8 @@ export default async function ModulePage({ params }: Props) {
     redirect("/app/dashboard");
   }
   return (
-    <ModulePageClient
+    <ModuleShell
+      key={slug}
       slug={slug}
       config={moduleConfigMap[slug] ?? null}
       moduleTitle={moduleMap[slug]?.title}

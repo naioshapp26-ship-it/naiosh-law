@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { canAccessModule } from "@/lib/module-routing";
-import { decodeSessionToken, getExpiredSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
+import { decodeSessionToken, getExpiredSessionCookieOptions, sessionCookieName } from "@/lib/session-token";
 
 const protectedPrefix = "/app";
 
@@ -21,49 +21,39 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get(sessionCookieName)?.value;
 
-  try {
-    const user = await decodeSessionToken(sessionCookie);
+  const user = await decodeSessionToken(sessionCookie);
 
-    if (pathname === "/login") {
-      if (!user) return NextResponse.next();
-      const redirectTarget = request.nextUrl.searchParams.get("next");
-      const url = new URL(
-        redirectTarget?.startsWith("/app") && !redirectTarget.includes("://") ? redirectTarget : "/app/dashboard",
-        request.url
-      );
-      return NextResponse.redirect(url);
-    }
+  if (pathname === "/login") {
+    if (!user) return NextResponse.next();
+    const redirectTarget = request.nextUrl.searchParams.get("next");
+    const url = new URL(
+      redirectTarget?.startsWith("/app") && !redirectTarget.includes("://") ? redirectTarget : "/app/dashboard",
+      request.url
+    );
+    return NextResponse.redirect(url);
+  }
 
-    if (!pathname.startsWith(protectedPrefix)) {
-      return NextResponse.next();
-    }
+  if (!pathname.startsWith(protectedPrefix)) {
+    return NextResponse.next();
+  }
 
-    if (!user) {
-      return redirectToLogin(request);
-    }
+  if (!user) {
+    return redirectToLogin(request);
+  }
 
-    if (pathname === "/app/modules/dashboard") {
+  if (pathname === "/app/modules/dashboard") {
+    return NextResponse.redirect(new URL("/app/dashboard", request.url));
+  }
+
+  const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)$/);
+  if (moduleMatch) {
+    const slug = decodeURIComponent(moduleMatch[1]);
+    if (!/^[a-z0-9-]+$/.test(slug) || !canAccessModule(user.role, slug)) {
       return NextResponse.redirect(new URL("/app/dashboard", request.url));
     }
-
-    const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)$/);
-    if (moduleMatch) {
-      const slug = decodeURIComponent(moduleMatch[1]);
-      if (!/^[a-z0-9-]+$/.test(slug) || !canAccessModule(user.role, slug)) {
-        return NextResponse.redirect(new URL("/app/dashboard", request.url));
-      }
-    }
-
-    return NextResponse.next();
-  } catch (error) {
-    if (error instanceof SessionConfigError) {
-      return NextResponse.json(
-        { error: "session_configuration_error", message: error.message },
-        { status: 503 }
-      );
-    }
-    throw error;
   }
+
+  return NextResponse.next();
 }
 
 export const config = {

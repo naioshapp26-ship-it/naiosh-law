@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isRecord, readJsonBody } from "@/lib/api-request";
-import { createSessionToken, getSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
+import { createSessionToken, getSessionCookieOptions, sessionCookieName } from "@/lib/session-token";
 import { getDemoUserByCredentials, getDemoUserByRole } from "@/data/server-auth";
 import type { SessionUser } from "@/lib/session";
 
@@ -39,17 +39,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const response = NextResponse.json({ user });
-    response.cookies.set(sessionCookieName, await createSessionToken(user), getSessionCookieOptions(request));
-    return response;
-  } catch (error) {
-    if (error instanceof SessionConfigError) {
-      return NextResponse.json(
-        { error: "session_configuration_error", message: error.message },
-        { status: 503 }
-      );
-    }
-    throw error;
-  }
+  const response = NextResponse.json({ user });
+  response.cookies.set(sessionCookieName, await createSessionToken(user), getSessionCookieOptions(request));
+  return response;
 }

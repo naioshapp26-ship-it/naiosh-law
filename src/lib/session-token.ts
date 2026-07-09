@@ -10,13 +10,6 @@ type SessionPayload = {
   exp: number;
 };
 
-export class SessionConfigError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "SessionConfigError";
-  }
-}
-
 function getSessionSecret() {
   const configured =
     process.env.NAIOSH_SESSION_SECRET ||

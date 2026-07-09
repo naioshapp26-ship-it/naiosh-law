@@ -3,7 +3,6 @@ import { isRecord, readJsonBody } from "@/lib/api-request";
 import {
   decodeSessionToken,
   getExpiredSessionCookieOptions,
-  SessionConfigError,
   sessionCookieName,
 } from "@/lib/session-token";
 
@@ -34,41 +33,28 @@ function normalizeIntegrationSlug(integration: string) {
 }
 
 async function requireAdminSession(request: NextRequest) {
-  try {
-    const user = await decodeSessionToken(request.cookies.get(sessionCookieName)?.value);
-    if (!user) {
-      const response = NextResponse.json(
-        { error: "unauthorized", message: "A valid session is required." },
-        { status: 401 }
-      );
-      response.cookies.set(sessionCookieName, "", getExpiredSessionCookieOptions(request));
-      return {
-        ok: false as const,
-        response,
-      };
-    }
-    if (user.role !== "admin") {
-      return {
-        ok: false as const,
-        response: NextResponse.json(
-          { error: "forbidden", message: "Admin access is required for integrations." },
-          { status: 403 }
-        ),
-      };
-    }
-    return { ok: true as const };
-  } catch (error) {
-    if (error instanceof SessionConfigError) {
-      return {
-        ok: false as const,
-        response: NextResponse.json(
-          { error: "session_configuration_error", message: error.message },
-          { status: 503 }
-        ),
-      };
-    }
-    throw error;
+  const user = await decodeSessionToken(request.cookies.get(sessionCookieName)?.value);
+  if (!user) {
+    const response = NextResponse.json(
+      { error: "unauthorized", message: "A valid session is required." },
+      { status: 401 }
+    );
+    response.cookies.set(sessionCookieName, "", getExpiredSessionCookieOptions(request));
+    return {
+      ok: false as const,
+      response,
+    };
   }
+  if (user.role !== "admin") {
+    return {
+      ok: false as const,
+      response: NextResponse.json(
+        { error: "forbidden", message: "Admin access is required for integrations." },
+        { status: 403 }
+      ),
+    };
+  }
+  return { ok: true as const };
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {

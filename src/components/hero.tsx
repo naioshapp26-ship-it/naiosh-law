@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { operationalModules } from "@/lib/module-routing";
 
 const stats = [
@@ -10,20 +7,6 @@ const stats = [
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
 ];
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
-};
-
-const itemAnim = {
-  hidden: { opacity: 0, y: 18 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  },
-};
 
 const headlineText = "إدارة القضايا والموكلين بذكاء";
 
@@ -125,11 +108,8 @@ export function HeroSection() {
           className="hero-grid"
         >
           {/* ── Text column ── */}
-          <motion.div
+          <div
             className="hero-content-col"
-            variants={container}
-            initial="hidden"
-            animate="show"
             style={{
               width: "100%",
               maxWidth: "min(820px, 72vw)",
@@ -182,7 +162,7 @@ export function HeroSection() {
             </div>
 
             {/* Heading */}
-            <motion.h1
+            <h1
               className="hero-heading"
               style={{
                 fontSize: "clamp(2rem, 4.2vw, 3.8rem)",
@@ -197,11 +177,9 @@ export function HeroSection() {
                 alignItems: "baseline",
                 gap: "0.75rem",
               }}
-              variants={container}
             >
-              <motion.span
+              <span
                 className="hero-heading-main"
-                variants={itemAnim}
                 style={{
                   display: "inline-block",
                   textAlign: "right",
@@ -210,10 +188,9 @@ export function HeroSection() {
                 }}
               >
                 {headlineText}
-              </motion.span>
-              <motion.span
+              </span>
+              <span
                 className="hero-heading-accent"
-                variants={itemAnim}
                 style={{
                   color: "#c3152a",
                   textShadow: "0 0 40px rgba(195,21,42,0.5)",
@@ -223,8 +200,8 @@ export function HeroSection() {
                 }}
               >
                 لا مثيل له
-              </motion.span>
-            </motion.h1>
+              </span>
+            </h1>
 
             {/* Subtext */}
             <p
@@ -298,13 +275,10 @@ export function HeroSection() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* ── Visual column ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+          <div
             className="float-anim hero-card-col"
             style={{
               position: "absolute",
@@ -452,10 +426,7 @@ export function HeroSection() {
             </div>
 
             {/* Alert mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -503,13 +474,10 @@ export function HeroSection() {
               >
                 عاجل
               </span>
-            </motion.div>
+            </div>
 
             {/* Stats mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -534,16 +502,13 @@ export function HeroSection() {
                   </p>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
+      <div
         style={{
           position: "absolute",
           bottom: "2rem",
@@ -574,7 +539,7 @@ export function HeroSection() {
             strokeLinejoin="round"
           />
         </svg>
-      </motion.div>
+      </div>
 
       <style>{`
         @keyframes hero-badge-drift {
