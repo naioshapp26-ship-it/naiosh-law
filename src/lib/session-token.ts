@@ -25,7 +25,7 @@ function getSessionSecret() {
 
   if (configured) return configured;
 
-  if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
+  if (process.env.NAIOSH_REQUIRE_SESSION_SECRET === "true") {
     throw new SessionConfigError("NAIOSH_SESSION_SECRET is required in production.");
   }
 
