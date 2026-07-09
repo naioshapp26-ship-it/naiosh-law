@@ -128,8 +128,20 @@ export function ModuleShell({ slug, config, title }: Props) {
   const reportDialogRef = useDialogAccessibility<HTMLDivElement>({ active: reportOpen, onClose: closeReport });
 
   useEffect(() => {
-    setRows(loadRows(slug, config.data));
-    setRowsLoaded(true);
+    let cancelled = false;
+
+    window.setTimeout(() => {
+      if (cancelled) {
+        return;
+      }
+
+      setRows(loadRows(slug, config.data));
+      setRowsLoaded(true);
+    }, 0);
+
+    return () => {
+      cancelled = true;
+    };
   }, [config.data, slug]);
 
   useEffect(() => {
