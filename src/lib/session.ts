@@ -51,6 +51,7 @@ export function saveSessionUser(user: SessionUser) {
 export function clearSessionUser() {
   window.localStorage.removeItem(sessionKey);
   window.dispatchEvent(new Event(sessionChangedEvent));
+  void fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => undefined);
 }
 
 export function useSession(redirectIfMissing = false) {

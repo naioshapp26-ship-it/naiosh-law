@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sessionCookieName } from "@/data/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,14 @@ function getIntegration(slug: string) {
     return integrations[slug as IntegrationSlug];
   }
   return null;
+}
+
+function hasSessionCookie(request: Request) {
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  return cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .some((part) => part.startsWith(`${sessionCookieName}=`));
 }
 
 export async function GET(_request: Request, { params }: RouteContext) {
@@ -57,11 +66,28 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
+  if (!hasSessionCookie(request)) {
+    return NextResponse.json(
+      { ok: false, error: "Authentication required" },
+      { status: 401 }
+    );
+  }
+
   let payload: unknown = null;
   try {
     payload = await request.json();
   } catch {
-    payload = null;
+    return NextResponse.json(
+      { ok: false, error: "Invalid JSON payload" },
+      { status: 400 }
+    );
+  }
+
+  if (payload !== null && (typeof payload !== "object" || Array.isArray(payload))) {
+    return NextResponse.json(
+      { ok: false, error: "Payload must be a JSON object" },
+      { status: 400 }
+    );
   }
 
   return NextResponse.json(

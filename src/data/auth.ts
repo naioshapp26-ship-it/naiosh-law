@@ -21,3 +21,4 @@ export const demoUsers: DemoUser[] = [
 ];
 
 export const sessionKey = "naiosh-law-session";
+export const sessionCookieName = "naiosh-law-session";

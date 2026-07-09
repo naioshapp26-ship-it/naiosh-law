@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { demoUsers } from "@/data/auth";
-import { saveSessionUser } from "@/lib/session";
+import { saveSessionUser, type SessionUser } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -23,6 +23,12 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+type LoginResponse = {
+  ok: boolean;
+  user?: SessionUser;
+  error?: string;
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
@@ -35,17 +41,30 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+
+    try {
+      await new Promise((r) => setTimeout(r, 350));
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = (await response.json()) as LoginResponse;
+
+      if (!response.ok || !result.ok || !result.user) {
+        setError(result.error ?? "البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+        setLoading(false);
+        return;
+      }
+
+      saveSessionUser(result.user);
       setLoading(false);
-      return;
+      router.replace("/app/dashboard");
+      router.refresh();
+    } catch {
+      setError("تعذر الاتصال بخدمة الدخول. حاول مرة أخرى.");
+      setLoading(false);
     }
-    saveSessionUser({ role: user.role, name: user.name, email: user.email });
-    router.push("/app/dashboard");
   };
 
   const fillDemo = (role: "admin" | "client") => {

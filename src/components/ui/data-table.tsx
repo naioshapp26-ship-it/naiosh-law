@@ -140,7 +140,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         }}
       >
         <div className="data-table-scroll" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (
@@ -311,6 +311,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           </span>
           <div className="pagination-buttons" style={{ display: "flex", gap: "0.3rem" }}>
             <button
+              aria-label="الصفحة السابقة"
               disabled={safePage === 1}
               onClick={() => setPage(Math.max(1, safePage - 1))}
               style={{
@@ -322,7 +323,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 opacity: safePage === 1 ? 0.5 : 1,
               }}
             >
-              ›
+              السابق
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
               const p = Math.max(1, Math.min(safePage - 2, totalPages - 4)) + i;
@@ -348,6 +349,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               );
             })}
             <button
+              aria-label="الصفحة التالية"
               disabled={safePage === totalPages}
               onClick={() => setPage(Math.min(totalPages, safePage + 1))}
               style={{
@@ -359,7 +361,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 opacity: safePage === totalPages ? 0.5 : 1,
               }}
             >
-              ‹
+              التالي
             </button>
           </div>
         </div>
@@ -384,6 +386,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           }
           .row-actions {
             min-width: 160px;
+          }
+          .data-table-scroll table {
+            min-width: 680px !important;
           }
         }
       `}</style>

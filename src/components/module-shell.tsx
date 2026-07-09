@@ -13,6 +13,7 @@ import { useSession } from "@/lib/session";
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
 let toastCounter = 0;
+const rowIdentityKeys = ["_id", "id", "caseNo", "jobId", "requestId", "invoiceNo", "ref", "code", "name", "title"];
 
 function createRowId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -21,12 +22,32 @@ function createRowId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function getRowIdentity(row: Record<string, unknown>) {
+  for (const key of rowIdentityKeys) {
+    const value = row[key];
+    if (value !== null && value !== undefined && String(value).trim() !== "") {
+      return String(value);
+    }
+  }
+
+  return JSON.stringify(row);
+}
+
+function normalizeRows(rows: unknown[], slug: string) {
+  return rows
+    .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === "object" && !Array.isArray(row))
+    .map((row, index) => ({
+      ...row,
+      _id: row._id ?? `${slug}:${index}:${getRowIdentity(row)}`,
+    }));
+}
+
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const storageKey = useMemo(() => `naiosh-law:module:${slug}:rows`, [slug]);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [rowsHydrated, setRowsHydrated] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
@@ -60,7 +81,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         if (storedRows) {
           const parsed = JSON.parse(storedRows);
           if (Array.isArray(parsed)) {
-            setRows(parsed.filter((row) => row && typeof row === "object"));
+            setRows(normalizeRows(parsed, slug));
             setRowsHydrated(true);
             return;
           }
@@ -69,7 +90,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         window.localStorage.removeItem(storageKey);
       }
 
-      setRows(config.data);
+      setRows(normalizeRows(config.data, slug));
       setRowsHydrated(true);
     };
 
@@ -79,15 +100,19 @@ export function ModuleShell({ slug }: { slug: string }) {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [config, storageKey]);
+  }, [config, slug, storageKey]);
 
   useEffect(() => {
     if (!config || !rowsHydrated) {
       return;
     }
 
-    window.localStorage.setItem(storageKey, JSON.stringify(rows));
-  }, [config, rows, rowsHydrated, storageKey]);
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(rows));
+    } catch {
+      pushToast("error", "تعذر حفظ بيانات الوحدة محليًا. تحقق من مساحة المتصفح.");
+    }
+  }, [config, pushToast, rows, rowsHydrated, storageKey]);
 
   if (!ready || !user) {
     return (
@@ -118,7 +143,12 @@ export function ModuleShell({ slug }: { slug: string }) {
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
-      setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
+      const targetId = getRowIdentity(editTarget);
+      setRows((prev) =>
+        prev.map((row) =>
+          getRowIdentity(row) === targetId ? { ...row, ...data, _id: row._id } : row
+        )
+      );
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
       const newRow = { ...data, _id: createRowId() };
@@ -133,7 +163,8 @@ export function ModuleShell({ slug }: { slug: string }) {
     if (!deleteTarget) {
       return;
     }
-    setRows((prev) => prev.filter((r) => r !== deleteTarget));
+    const targetId = getRowIdentity(deleteTarget);
+    setRows((prev) => prev.filter((row) => getRowIdentity(row) !== targetId));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
   };
@@ -191,7 +222,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="module-toasts" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}
@@ -212,7 +243,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                  config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
+                إجمالي {rowsHydrated ? rows.length : "..."} {config.entityName} — جميع البيانات محدثة
               </p>
             </div>
             <div className="module-page-actions" style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
@@ -242,14 +273,21 @@ export function ModuleShell({ slug }: { slug: string }) {
 
         {/* Data Table */}
         <div className="card-white module-table-card" style={{ padding: "1.5rem" }}>
-          <DataTable
-            columns={config.columns}
-            data={rows}
-            onView={setViewTarget}
-            onEdit={user.role === "admin" ? openEdit : undefined}
-            onDelete={user.role === "admin" ? setDeleteTarget : undefined}
-            searchPlaceholder={`بحث في ${config.entityName}ات...`}
-          />
+          {rowsHydrated ? (
+            <DataTable
+              columns={config.columns}
+              data={rows}
+              onView={setViewTarget}
+              onEdit={user.role === "admin" ? openEdit : undefined}
+              onDelete={user.role === "admin" ? setDeleteTarget : undefined}
+              searchPlaceholder={`بحث في ${config.entityName}ات...`}
+            />
+          ) : (
+            <div style={{ padding: "3rem", textAlign: "center", color: "#64748b" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#c3152a", animation: "spin-slow 0.9s linear infinite", margin: "0 auto 1rem" }} />
+              <p>جاري تحميل بيانات الوحدة...</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -331,6 +369,13 @@ export function ModuleShell({ slug }: { slug: string }) {
           .module-page-actions > button { flex: 1 1 140px; justify-content: center; }
           .module-table-card { padding: 1rem !important; }
           .details-grid { grid-template-columns: 1fr !important; }
+          .module-toasts {
+            bottom: 5.75rem !important;
+            inset-inline: 1rem !important;
+          }
+          .module-toasts > div {
+            max-width: none !important;
+          }
         }
       `}</style>
     </AppShell>
