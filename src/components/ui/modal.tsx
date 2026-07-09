@@ -45,6 +45,15 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -69,6 +78,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
         padding: "1rem",
       }}
       onClick={onClose}
+      role="presentation"
     >
       <div
         style={{
@@ -77,7 +87,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
           padding: "2rem",
           width: "100%",
           maxWidth: 560,
-          maxHeight: "90vh",
+          maxHeight: "min(90vh, calc(100vh - 2rem))",
           overflowY: "auto",
           boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
           animation: "fade-in-up 0.22s ease",

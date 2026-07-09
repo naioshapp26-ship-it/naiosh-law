@@ -27,6 +27,19 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onCancel]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -40,12 +53,14 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         justifyContent: "center",
         background: "rgba(10,10,18,0.55)",
         backdropFilter: "blur(4px)",
+        padding: "1rem",
       }}
       onClick={onCancel}
+      role="presentation"
     >
       <div
         className="card-white"
-        style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
+        style={{ maxWidth: 400, width: "100%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
         role="alertdialog"
         aria-modal="true"

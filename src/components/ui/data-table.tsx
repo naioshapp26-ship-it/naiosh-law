@@ -307,7 +307,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 700, marginBottom: "0.25rem" }}>
                     {columns[0]?.label ?? "السجل"}
                   </p>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflow: "hidden", textOverflow: "ellipsis", overflowWrap: "anywhere" }}>
                     {primaryColumn ? renderCell(primaryColumn, row) : "—"}
                   </div>
                 </div>
@@ -321,8 +321,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
                 {mobileDetailColumns.map((col) => (
                   <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
-                    <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700 }}>{col.label}</span>
-                    <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0 }}>{renderCell(col, row)}</span>
+                    <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700, flexShrink: 0 }}>{col.label}</span>
+                    <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0, overflowWrap: "anywhere" }}>{renderCell(col, row)}</span>
                   </div>
                 ))}
               </div>

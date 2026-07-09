@@ -40,6 +40,20 @@ async function requireSession(request: Request) {
   return response;
 }
 
+async function requireAdminSession(request: Request) {
+  const session = await requireSession(request);
+
+  if (session instanceof NextResponse) {
+    return session;
+  }
+
+  if (session.role !== "admin") {
+    return NextResponse.json({ message: "Admin access required." }, { status: 403 });
+  }
+
+  return session;
+}
+
 async function parseOptionalJson(request: Request) {
   const contentType = request.headers.get("content-type");
 
@@ -70,7 +84,7 @@ function healthPayload(slug: string, config: { name: string; latencyMs: number }
 }
 
 export async function GET(request: Request, context: RouteContext) {
-  const session = await requireSession(request);
+  const session = await requireAdminSession(request);
   if (session instanceof NextResponse) {
     return session;
   }
@@ -85,7 +99,7 @@ export async function GET(request: Request, context: RouteContext) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
-  const session = await requireSession(request);
+  const session = await requireAdminSession(request);
   if (session instanceof NextResponse) {
     return session;
   }

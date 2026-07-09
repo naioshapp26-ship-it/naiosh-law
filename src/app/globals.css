@@ -181,18 +181,6 @@ a {
   color: #374151;
 }
 
-/* ── Hero CSS entrance animations ─────────── */
-@keyframes hero-fade-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.hero-badge    { animation: hero-fade-in 0.5s ease 0.1s both; }
-.hero-heading  { animation: hero-fade-in 0.55s ease 0.18s both; }
-.hero-sub      { animation: hero-fade-in 0.55s ease 0.26s both; }
-.hero-cta      { animation: hero-fade-in 0.55s ease 0.34s both; }
-.hero-stats    { animation: hero-fade-in 0.55s ease 0.42s both; }
-
 /* ── Mobile responsive helpers ─────────────── */
 @media (max-width: 768px) {
   .container-max {

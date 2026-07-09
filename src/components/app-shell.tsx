@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
@@ -153,6 +153,32 @@ export function AppShell({ role, name, children }: Props) {
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!drawerOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [drawerOpen]);
+
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
 
@@ -279,6 +305,7 @@ export function AppShell({ role, name, children }: Props) {
               display: "flex",
               justifyContent: "flex-start",
             }}
+            role="presentation"
           >
             {/* Backdrop */}
             <div
@@ -288,7 +315,7 @@ export function AppShell({ role, name, children }: Props) {
             {/* Drawer panel */}
             <div style={{
               position: "relative", zIndex: 1,
-              width: 280, background: "#ffffff",
+              width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
               height: "100%", overflowY: "auto",
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",

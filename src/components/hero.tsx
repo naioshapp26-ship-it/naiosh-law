@@ -256,7 +256,7 @@ export function HeroSection() {
                   <div
                     style={{
                       fontSize: "0.75rem",
-                      color: "#475569",
+                      color: "#cbd5e1",
                       marginTop: "0.3rem",
                       fontWeight: 500,
                     }}
@@ -291,7 +291,7 @@ export function HeroSection() {
                   marginBottom: "1.25rem",
                 }}
               >
-                <span style={{ fontSize: "0.7rem", color: "#475569", fontWeight: 600, letterSpacing: "0.05em" }}>
+                <span style={{ fontSize: "0.7rem", color: "#cbd5e1", fontWeight: 600, letterSpacing: "0.05em" }}>
                   ← إدارة القضايا
                 </span>
                 <span
@@ -490,7 +490,7 @@ export function HeroSection() {
                   <p style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 900, lineHeight: 1 }}>
                     {s.val}
                   </p>
-                  <p style={{ color: "#475569", fontSize: "0.65rem", marginTop: "0.2rem" }}>
+                  <p style={{ color: "#cbd5e1", fontSize: "0.65rem", marginTop: "0.2rem" }}>
                     {s.label}
                   </p>
                 </div>
@@ -514,7 +514,7 @@ export function HeroSection() {
           flexDirection: "column",
           alignItems: "center",
           gap: "0.4rem",
-          color: "#334155",
+          color: "#94a3b8",
           fontSize: "0.7rem",
           fontWeight: 500,
         }}

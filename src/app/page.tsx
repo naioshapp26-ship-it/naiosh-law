@@ -240,7 +240,7 @@ export default function HomePage() {
           >
             جاهز لتحويل مكتبك القانوني؟
           </h2>
-          <p style={{ color: "#475569", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
+          <p style={{ color: "#cbd5e1", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
             ادخل بحساب تجريبي مباشرة وشوف النظام شغّال بالكامل
           </p>
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
@@ -287,7 +287,7 @@ export default function HomePage() {
                 <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 700 }}>
                   {u.label}
                 </p>
-                <p style={{ color: "#475569", fontSize: "0.75rem", marginTop: "0.15rem" }}>
+                <p style={{ color: "#cbd5e1", fontSize: "0.75rem", marginTop: "0.15rem" }}>
                   {u.hint}
                 </p>
               </div>
@@ -314,7 +314,7 @@ export default function HomePage() {
             gap: "1rem",
           }}
         >
-          <div style={{ color: "#334155", fontSize: "0.85rem" }}>
+          <div style={{ color: "#94a3b8", fontSize: "0.85rem" }}>
             © 2026 Naiosh Law. جميع الحقوق محفوظة.
           </div>
           <div

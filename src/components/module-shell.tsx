@@ -142,6 +142,19 @@ export function ModuleShell({ slug }: { slug: string }) {
     }
   }, [hasModuleAccess, ready, router, user]);
 
+  useEffect(() => {
+    if (!viewTarget && !reportOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [reportOpen, viewTarget]);
+
   if (!ready || !user) {
     return <LoadingScreen />;
   }
@@ -219,10 +232,14 @@ export function ModuleShell({ slug }: { slug: string }) {
       <div
         style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
         onClick={() => setViewTarget(null)}
+        role="presentation"
       >
         <div
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`تفاصيل ${config.entityName}`}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
@@ -345,10 +362,14 @@ export function ModuleShell({ slug }: { slug: string }) {
         <div
           style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
           onClick={() => setReportOpen(false)}
+          role="presentation"
         >
           <div
-            style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
+            style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, maxHeight: "min(90vh, calc(100vh - 2rem))", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="تصدير التقارير"
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
@@ -388,6 +409,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         }
         @media (max-width: 600px) {
           .view-modal-grid { grid-template-columns: 1fr !important; }
+          .card-white { padding-inline: 1rem !important; }
           .toast-stack {
             inset-inline: 1rem !important;
             bottom: 5.5rem !important;
