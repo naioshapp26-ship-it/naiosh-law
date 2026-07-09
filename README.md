@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naiosh Law
 
-## Getting Started
+Arabic RTL demo platform for legal-office operations, built with Next.js App Router.
 
-First, run the development server:
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The login page supports one-click demo access for admin and client roles. Passwords are validated only on the server and sessions are stored in an httpOnly signed cookie.
 
-## Learn More
+One-click demo login is available automatically in local development. In production, enable it only for demo environments:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+NAIOSH_ENABLE_DEMO_LOGIN=true
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Set one of these secrets outside local development:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+NAIOSH_SESSION_SECRET=replace-with-a-long-random-secret
+# or AUTH_SECRET / NEXTAUTH_SECRET
+```
 
-## Deploy on Vercel
+For local development, a demo fallback secret is used. In production, missing secrets cause login to fail closed unless `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true` is set intentionally.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Available scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## Demo APIs
+
+The app includes mock integration route handlers for:
+
+- `/api/sms`
+- `/api/email`
+- `/api/payments`
+- `/api/sign`
+- `/api/courts`
+- `/api/tax`
+- `/api/ocr`
+- `/api/analytics`
+
+These endpoints require an authenticated admin session. Unknown integrations return `404`; invalid JSON returns `400`; unsupported content types return `415`.
+
+## Data persistence
+
+Operational module edits are demo data persisted in browser `localStorage` per module. No external database is configured in this repository.

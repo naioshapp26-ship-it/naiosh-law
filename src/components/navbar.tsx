@@ -44,8 +44,6 @@ export function Navbar() {
     { href: "/#footer-support", label: "الدعم الفني" },
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
-    { href: "/#modules", label: "الوحدات" },
-    { href: "/app/dashboard", label: "عرض تجريبي" },
   ];
 
   const solutionItems = [

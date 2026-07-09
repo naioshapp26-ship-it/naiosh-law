@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700", "800", "900"],
   variable: "--font-cairo",
   display: "swap",
 });
@@ -12,6 +12,12 @@ const cairo = Cairo({
 export const metadata: Metadata = {
   title: "Naiosh Law — النظام القانوني المتكامل",
   description: "منصة احترافية لإدارة القضايا والموكلين والجلسات والمحاسبة القانونية",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

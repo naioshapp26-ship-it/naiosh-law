@@ -64,7 +64,7 @@ const activeMap: Record<string, { label: string; color: BadgeColor }> = {
 };
 
 /* ─── CONFIGS ───────────────────────────────────────────── */
-export const moduleConfigs: ModuleConfig[] = [
+const moduleConfigs: ModuleConfig[] = [
 
   /* 1. CASE MANAGEMENT */
   {
@@ -735,6 +735,6 @@ export const moduleConfigs: ModuleConfig[] = [
   },
 ];
 
-export const moduleConfigMap = Object.fromEntries(
+export const moduleConfigMap: Record<string, ModuleConfig> = Object.fromEntries(
   moduleConfigs.map((c) => [c.slug, c])
 );

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -13,17 +13,24 @@ type Props = {
   saveLabel?: string;
 };
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
-  const [saving, setSaving] = useState(false);
+function inputTypeFor(field: FormField) {
+  if (field.type === "number" || field.type === "date" || field.type === "email" || field.type === "tel") {
+    return field.type;
+  }
+  return "text";
+}
 
-  useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
-    }
-  }, [open, initial, fields]);
+function createDefaults(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    defaults[field.key] = initial?.[field.key] ?? "";
+  });
+  return defaults;
+}
+
+export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const [form, setForm] = useState<Record<string, unknown>>(() => createDefaults(fields, initial));
+  const [saving, setSaving] = useState(false);
 
   if (!open) return null;
 
@@ -32,7 +39,6 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
     onSave(form);
     setSaving(false);
   };
@@ -53,6 +59,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        className="modal-panel"
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -137,7 +144,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
-                    type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                    type={inputTypeFor(f)}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -150,7 +157,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div className="modal-actions" style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={onClose}
@@ -181,7 +188,16 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       </div>
 
       <style>{`
-        @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) {
+          .modal-panel {
+            border-radius: 16px !important;
+            max-height: calc(100vh - 2rem) !important;
+            padding: 1.25rem !important;
+          }
+          .modal-form-grid { grid-template-columns: 1fr !important; }
+          .modal-actions { flex-direction: column-reverse; }
+          .modal-actions button { width: 100%; }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
