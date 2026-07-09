@@ -12,7 +12,9 @@ export type AuthPayload = {
 };
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET ?? "naiosh-law-dev-secret-change-in-production";
+  const secret =
+    process.env.JWT_SECRET?.trim() ||
+    "naiosh-law-dev-secret-change-in-production";
   return new TextEncoder().encode(secret);
 }
 

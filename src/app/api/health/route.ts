@@ -3,7 +3,7 @@ import { prisma, checkDatabaseConnection } from "@/lib/prisma";
 
 export async function GET() {
   const dbUrl = Boolean(process.env.DATABASE_URL);
-  const jwt = Boolean(process.env.JWT_SECRET);
+  const jwt = Boolean(process.env.JWT_SECRET?.trim());
 
   if (!dbUrl) {
     return NextResponse.json(

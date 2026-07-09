@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 import { AUTH_COOKIE } from "@/lib/auth";
 
 const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "naiosh-law-dev-secret-change-in-production"
+  process.env.JWT_SECRET?.trim() || "naiosh-law-dev-secret-change-in-production"
 );
 
 export async function middleware(request: NextRequest) {
