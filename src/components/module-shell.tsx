@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -115,11 +115,13 @@ export function ModuleShell({ slug, config, title }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const toastTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timer = window.setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    toastTimers.current.push(timer);
   }, []);
 
   const closeView = useCallback(() => setViewTarget(null), []);
@@ -130,7 +132,7 @@ export function ModuleShell({ slug, config, title }: Props) {
   useEffect(() => {
     let cancelled = false;
 
-    window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       if (cancelled) {
         return;
       }
@@ -141,6 +143,7 @@ export function ModuleShell({ slug, config, title }: Props) {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [config.data, slug]);
 
@@ -155,6 +158,11 @@ export function ModuleShell({ slug, config, title }: Props) {
       router.replace("/app/dashboard");
     }
   }, [hasModuleAccess, ready, router, user]);
+
+  useEffect(() => () => {
+    toastTimers.current.forEach((timer) => window.clearTimeout(timer));
+    toastTimers.current = [];
+  }, []);
 
   if (!ready || !user) {
     return <LoadingScreen />;

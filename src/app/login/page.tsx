@@ -2,19 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { demoLoginProfiles } from "@/data/auth";
 import { saveSession } from "@/lib/session";
 import type { SessionUser } from "@/lib/auth-session";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  },
-};
 
 const perks = [
   "إدارة شاملة للقضايا والموكلين",
@@ -292,14 +282,9 @@ export default function LoginPage() {
           minHeight: "100vh",
         }}
       >
-        <motion.div
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
-          initial="hidden"
-          animate="show"
-          style={{ width: "100%", maxWidth: "420px" }}
-        >
+        <div style={{ width: "100%", maxWidth: "420px" }}>
           {/* Heading */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "2.5rem" }}>
+          <div style={{ marginBottom: "2.5rem" }}>
             <h1
               style={{
                 fontSize: "2rem",
@@ -314,55 +299,54 @@ export default function LoginPage() {
             <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
               سجّل دخولك للوصول إلى لوحة التحكم الكاملة
             </p>
-          </motion.div>
+          </div>
 
           {/* Quick demo buttons */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "2rem" }}>
+          <div style={{ marginBottom: "2rem" }}>
             <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
               دخول سريع تجريبي:
             </p>
             <div className="quick-demo-actions" style={{ display: "flex", gap: "0.75rem" }}>
               {demoLoginProfiles.map((profile) => (
-              <button
-                key={profile.role}
-                type="button"
-                onClick={() => loginDemo(profile.role)}
-                disabled={!!demoLoading || loading}
-                style={{
-                  flex: 1,
-                  padding: "0.65rem",
-                  borderRadius: "10px",
-                  border: "1.5px solid #e2e8f0",
-                  background: "#f8f9fb",
-                  cursor: "pointer",
-                  fontFamily: "var(--font)",
-                  transition: "all 0.2s",
-                  textAlign: "center",
-                  opacity: demoLoading && demoLoading !== profile.role ? 0.55 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
-                  (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
-                }}
-              >
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  {profile.role === "admin" ? "⚙️ مدير النظام" : "👤 عميل"}
-                </span>
-                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
-                  {demoLoading === profile.role ? "جاري الدخول..." : profile.label}
-                </span>
-              </button>
+                <button
+                  key={profile.role}
+                  type="button"
+                  onClick={() => loginDemo(profile.role)}
+                  disabled={!!demoLoading || loading}
+                  style={{
+                    flex: 1,
+                    padding: "0.65rem",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e2e8f0",
+                    background: "#f8f9fb",
+                    cursor: "pointer",
+                    fontFamily: "var(--font)",
+                    transition: "all 0.2s",
+                    textAlign: "center",
+                    opacity: demoLoading && demoLoading !== profile.role ? 0.55 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
+                    (e.currentTarget as HTMLElement).style.background = "#f8f9fb";
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
+                    {profile.role === "admin" ? "⚙️ مدير النظام" : "👤 عميل"}
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
+                    {demoLoading === profile.role ? "جاري الدخول..." : profile.label}
+                  </span>
+                </button>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Divider */}
-          <motion.div
-            variants={fadeUp}
+          <div
             style={{
               display: "flex",
               alignItems: "center",
@@ -373,11 +357,11 @@ export default function LoginPage() {
             <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
             <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 500 }}>أو ادخل يدويًا</span>
             <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
-          </motion.div>
+          </div>
 
           {/* Form */}
           <form onSubmit={onSubmit}>
-            <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
+            <div style={{ marginBottom: "1.25rem" }}>
               <label className="input-label">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
@@ -402,9 +386,9 @@ export default function LoginPage() {
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
+            <div style={{ marginBottom: "1.5rem" }}>
               <label className="input-label">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
@@ -436,12 +420,10 @@ export default function LoginPage() {
                   style={{ paddingInlineEnd: "2.75rem" }}
                 />
               </div>
-            </motion.div>
+            </div>
 
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
+              <div
                 style={{
                   background: "rgba(195,21,42,0.06)",
                   border: "1px solid rgba(195,21,42,0.2)",
@@ -454,11 +436,10 @@ export default function LoginPage() {
                 }}
               >
                 ⚠️ {error}
-              </motion.div>
+              </div>
             )}
 
-            <motion.button
-              variants={fadeUp}
+            <button
               type="submit"
               disabled={loading || !!demoLoading}
               className="btn-primary"
@@ -501,12 +482,11 @@ export default function LoginPage() {
               ) : (
                 <>دخول النظام →</>
               )}
-            </motion.button>
+            </button>
           </form>
 
           {/* Hint */}
-          <motion.p
-            variants={fadeUp}
+          <p
             style={{
               textAlign: "center",
               color: "#94a3b8",
@@ -516,8 +496,8 @@ export default function LoginPage() {
             }}
           >
             هذا نظام تجريبي للعرض — استخدم الدخول السريع أو بيانات الحساب التجريبي اليدوية عند الحاجة
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
       </div>
 
       <style>{`

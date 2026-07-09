@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
-import { encodeSession, getSessionCookieOptions, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
+import {
+  encodeSession,
+  getSessionCookieOptions,
+  isSessionConfigurationError,
+  sessionCookieName,
+  sessionMaxAgeSeconds,
+} from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
+import { readJsonRequest } from "@/lib/api-request";
 
 type LoginRequest = {
   email?: unknown;
@@ -10,24 +17,16 @@ type LoginRequest = {
   demo?: unknown;
 };
 
-function acceptsJson(request: Request) {
-  return request.headers.get("content-type")?.toLowerCase().includes("application/json") ?? false;
-}
-
 function isSessionRole(role: unknown): role is SessionRole {
   return role === "admin" || role === "client";
 }
 
 export async function POST(request: Request) {
-  let body: LoginRequest;
-
-  if (!acceptsJson(request)) {
-    return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
+  const body = await readJsonRequest<LoginRequest>(request, { limitBytes: 16 * 1024 });
+  if (body instanceof NextResponse) {
+    return body;
   }
-
-  try {
-    body = (await request.json()) as LoginRequest;
-  } catch {
+  if (!body) {
     return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
   }
 
@@ -44,7 +43,16 @@ export async function POST(request: Request) {
 
   const user = toSessionUser(demoUser);
   const response = NextResponse.json({ user });
-  const token = await encodeSession(user);
+  let token: string;
+
+  try {
+    token = await encodeSession(user);
+  } catch (error) {
+    if (isSessionConfigurationError(error)) {
+      return NextResponse.json({ message: "Session service is not configured." }, { status: 503 });
+    }
+    throw error;
+  }
 
   response.cookies.set(sessionCookieName, token, {
     ...getSessionCookieOptions(request),

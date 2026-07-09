@@ -1,22 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { marketingStats } from "@/data/marketing";
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
-};
-
-const itemAnim = {
-  hidden: { opacity: 0, y: 18 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  },
-};
 
 export function HeroSection() {
   return (
@@ -123,10 +106,7 @@ export function HeroSection() {
           className="hero-grid"
         >
           {/* ── Text column ── */}
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
+          <div
             style={{
               width: "100%",
               maxWidth: "720px",
@@ -135,7 +115,7 @@ export function HeroSection() {
             }}
           >
             {/* Badge */}
-            <motion.div variants={itemAnim} className="hero-badge" style={{ marginBottom: "1.75rem" }}>
+            <div className="hero-badge" style={{ marginBottom: "1.75rem" }}>
               <span
                 style={{
                   display: "inline-flex",
@@ -163,11 +143,10 @@ export function HeroSection() {
                 />
                 Naiosh Law Platform — نظام قانوني من الجيل القادم
               </span>
-            </motion.div>
+            </div>
 
             {/* Heading */}
-            <motion.h1
-              variants={itemAnim}
+            <h1
               className="hero-heading"
               style={{
                 fontSize: "clamp(2.6rem, 4.5vw, 4.75rem)",
@@ -190,11 +169,10 @@ export function HeroSection() {
               >
                 لا مثيل له
               </span>
-            </motion.h1>
+            </h1>
 
             {/* Subtext */}
-            <motion.p
-              variants={itemAnim}
+            <p
               className="hero-sub"
               style={{
                 color: "#94a3b8",
@@ -206,11 +184,10 @@ export function HeroSection() {
             >
               منصة احترافية لمكاتب المحاماة تضم 16 وحدة تشغيلية مترابطة — من
               إدارة القضايا والجلسات وحتى المحاسبة القانونية والذكاء الاصطناعي.
-            </motion.p>
+            </p>
 
             {/* CTAs */}
-            <motion.div
-              variants={itemAnim}
+            <div
               className="hero-cta"
               style={{
                 display: "flex",
@@ -226,11 +203,10 @@ export function HeroSection() {
               <Link href="/login" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 دخول تجريبي سريع
               </Link>
-            </motion.div>
+            </div>
 
             {/* Stats */}
-            <motion.div
-              variants={itemAnim}
+            <div
               className="hero-stats"
               style={{
                 display: "flex",
@@ -265,16 +241,11 @@ export function HeroSection() {
                   </div>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* ── Visual column ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-            className="float-anim hero-card-col"
-          >
+          <div className="float-anim hero-card-col">
             {/* Main case card */}
             <div
               className="glass-dark"
@@ -413,10 +384,7 @@ export function HeroSection() {
             </div>
 
             {/* Alert mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -464,13 +432,10 @@ export function HeroSection() {
               >
                 عاجل
               </span>
-            </motion.div>
+            </div>
 
             {/* Stats mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3, duration: 0.5 }}
+            <div
               className="glass-dark"
               style={{
                 padding: "1rem 1.25rem",
@@ -495,16 +460,13 @@ export function HeroSection() {
                   </p>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
+      <div
         style={{
           position: "absolute",
           bottom: "2rem",
@@ -535,7 +497,7 @@ export function HeroSection() {
             strokeLinejoin="round"
           />
         </svg>
-      </motion.div>
+      </div>
 
       <style>{`
         @media (max-width: 1200px) {

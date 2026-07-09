@@ -1,6 +1,6 @@
 # Naiosh Law
 
-Arabic RTL legal-operations dashboard built with Next.js App Router, React, Tailwind CSS, and Framer Motion.
+Arabic RTL legal-operations dashboard built with Next.js App Router, React, and Tailwind CSS.
 
 ## Getting Started
 
@@ -12,7 +12,8 @@ npm ci
 ```
 
 Use a long random `NAIOSH_SESSION_SECRET` value outside local demos. The app also recognizes `AUTH_SECRET` and
-`NEXTAUTH_SECRET` as fallback secret names.
+`NEXTAUTH_SECRET` as fallback secret names. Production logins return a service error if no explicit secret is
+configured; only local demos should opt into `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true`.
 
 Run the development server:
 
@@ -30,13 +31,15 @@ The login page includes demo admin and client profiles. Manual demo credentials 
 - `client@naioshlaw.com` / `Client@123`
 
 Session state is signed in an httpOnly cookie. Client storage is only used as a UI cache for the demo experience.
+API JSON requests are content-type checked and bounded to protect auth and integration endpoints from malformed or
+oversized payloads.
 
 ## Verification
 
 ```bash
 npm run lint
 npm run typecheck
-npm run build
+NAIOSH_SESSION_SECRET=verification-secret npm run build
 ```
 
 ## Data model
