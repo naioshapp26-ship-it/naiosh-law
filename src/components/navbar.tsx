@@ -55,7 +55,6 @@ export function Navbar() {
   };
 
   const links = [
-    { href: "/#modules", label: "المنتجات" },
     { href: "/#footer-support", label: "الدعم الفني" },
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
@@ -349,7 +348,7 @@ export function Navbar() {
       )}
 
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: flex !important; }
         }

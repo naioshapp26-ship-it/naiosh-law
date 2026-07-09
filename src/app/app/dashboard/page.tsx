@@ -49,7 +49,7 @@ function readCompletedTasks() {
 }
 
 export default function DashboardPage() {
-  const { user, ready } = useSession(true);
+  const { user, ready, logout } = useSession(true);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(readCompletedTasks);
   const [tasksHydrated, setTasksHydrated] = useState(false);
 
@@ -106,7 +106,7 @@ export default function DashboardPage() {
   const visibleModules = getVisibleOperationalModules(user.role);
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell role={user.role} name={user.name} onLogout={logout}>
       <div style={{ maxWidth: 1200 }}>
         {/* Page header */}
         <div style={{ marginBottom: "2rem" }}>

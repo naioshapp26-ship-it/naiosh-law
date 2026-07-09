@@ -99,12 +99,13 @@ export function ModuleShell({
   config: ModuleConfig | null;
   moduleTitle?: string;
 }) {
-  const { user, ready } = useSession(true);
+  const { user, ready, logout } = useSession(true);
   const toastTimers = useRef<number[]>([]);
 
   const [rows, setRows] = useState<ModuleRow[]>(() => (config ? readInitialRows(slug, config.data) : []));
   const [hydratedRowsKey, setHydratedRowsKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalNonce, setModalNonce] = useState(0);
   const [editTarget, setEditTarget] = useState<ModuleRow | null>(null);
   const [viewTarget, setViewTarget] = useState<ModuleRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ModuleRow | null>(null);
@@ -168,7 +169,7 @@ export function ModuleShell({
 
   if (!config) {
     return (
-      <AppShell role={user.role} name={user.name}>
+      <AppShell role={user.role} name={user.name} onLogout={logout}>
         <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
           <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
@@ -180,7 +181,7 @@ export function ModuleShell({
 
   if (!canAccessModule(user.role, slug)) {
     return (
-      <AppShell role={user.role} name={user.name}>
+      <AppShell role={user.role} name={user.name} onLogout={logout}>
         <div style={{ textAlign: "center", padding: "5rem 1rem", color: "#64748b" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔒</div>
           <h2 style={{ fontWeight: 800, marginBottom: "0.5rem", color: "#0a0a12" }}>لا تملك صلاحية الوصول</h2>
@@ -194,8 +195,8 @@ export function ModuleShell({
   }
 
   /* ── Handlers ── */
-  const openAdd = () => { setEditTarget(null); setModalOpen(true); };
-  const openEdit = (row: Record<string, unknown>) => { setEditTarget(row as ModuleRow); setModalOpen(true); };
+  const openAdd = () => { setModalNonce((value) => value + 1); setEditTarget(null); setModalOpen(true); };
+  const openEdit = (row: Record<string, unknown>) => { setModalNonce((value) => value + 1); setEditTarget(row as ModuleRow); setModalOpen(true); };
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
@@ -221,8 +222,8 @@ export function ModuleShell({
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
   const modalKey = editTarget
-    ? `edit-${slug}-${editTarget._id}`
-    : `add-${slug}`;
+    ? `edit-${slug}-${editTarget._id}-${modalNonce}`
+    : `add-${slug}-${modalNonce}`;
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -272,7 +273,7 @@ export function ModuleShell({
   };
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell role={user.role} name={user.name} onLogout={logout}>
       {/* Toasts */}
       <div className="module-toasts" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (

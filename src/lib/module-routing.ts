@@ -1,6 +1,4 @@
-import { modules, type LegalModule, type Role } from "@/data/modules";
-
-const adminOnlySlugs = new Set(["administration", "integrations", "ai-center"]);
+import { moduleMap, modules, type LegalModule, type Role } from "@/data/modules";
 
 export const operationalModules = modules.filter((item) => item.slug !== "dashboard");
 
@@ -9,7 +7,8 @@ export function getModuleHref(slug: string) {
 }
 
 export function canAccessModule(role: Role, slug: string) {
-  return role === "admin" || !adminOnlySlugs.has(slug);
+  const module = moduleMap[slug];
+  return Boolean(module?.permissions[role]?.length);
 }
 
 export function getVisibleOperationalModules(role: Role): LegalModule[] {

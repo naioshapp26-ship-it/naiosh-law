@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "@/lib/session";
 import { getModuleIcon } from "@/lib/module-icons";
 import { getVisibleOperationalModules } from "@/lib/module-routing";
 import { useScrollLock } from "@/lib/use-scroll-lock";
@@ -11,12 +10,12 @@ import { useScrollLock } from "@/lib/use-scroll-lock";
 type Props = {
   role: "admin" | "client";
   name: string;
+  onLogout: () => void;
   children: React.ReactNode;
 };
 
-export function AppShell({ role, name, children }: Props) {
+export function AppShell({ role, name, onLogout, children }: Props) {
   const pathname = usePathname();
-  const { logout: endSession } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const visibleModules = getVisibleOperationalModules(role);
   const preferredBottomSlugs = ["case-management", "court-sessions", "legal-accounting"];
@@ -32,7 +31,7 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = () => {
-    endSession();
+    onLogout();
   };
 
   const isActive = (href: string) => pathname === href;

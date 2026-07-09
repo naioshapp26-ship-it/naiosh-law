@@ -14,14 +14,49 @@ type Props = {
   saveLabel?: string;
 };
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>(() => {
-    const defaults: Record<string, unknown> = {};
-    fields.forEach((field) => {
-      defaults[field.key] = initial?.[field.key] ?? "";
-    });
-    return defaults;
+const arabicMonthNumbers: Record<string, string> = {
+  يناير: "01",
+  فبراير: "02",
+  مارس: "03",
+  أبريل: "04",
+  ابريل: "04",
+  مايو: "05",
+  يونيو: "06",
+  يوليو: "07",
+  أغسطس: "08",
+  اغسطس: "08",
+  سبتمبر: "09",
+  أكتوبر: "10",
+  اكتوبر: "10",
+  نوفمبر: "11",
+  ديسمبر: "12",
+};
+
+function toDateInputValue(value: unknown) {
+  if (typeof value !== "string") return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const match = value.trim().match(/^(\d{1,2})\s+(\S+)\s+(\d{4})$/);
+  if (!match) return "";
+
+  const [, day, monthName, year] = match;
+  const month = arabicMonthNumbers[monthName];
+  if (!month) return "";
+
+  return `${year}-${month}-${day.padStart(2, "0")}`;
+}
+
+function buildInitialForm(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    const value = initial?.[field.key];
+    defaults[field.key] = field.type === "date" ? toDateInputValue(value) : value ?? "";
   });
+  return defaults;
+}
+
+export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+  const [form, setForm] = useState<Record<string, unknown>>(() => buildInitialForm(fields, initial));
   const [saving, setSaving] = useState(false);
 
   useScrollLock(open, onClose);
