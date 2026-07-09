@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearSessionUser } from "@/lib/session";
-import { getModuleHref, moduleIcons, operationalModules } from "@/lib/module-routing";
+import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/lib/module-routing";
+import type { Role } from "@/lib/session-shared";
 
 type Props = {
-  role: "admin" | "client";
+  role: Role;
   name: string;
   children: React.ReactNode;
 };
@@ -16,6 +17,13 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const visibleModules = getVisibleOperationalModules(role);
+  const bottomNavItems = [
+    { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية", slug: "dashboard" },
+    { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا", slug: "case-management" },
+    { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات", slug: "court-sessions" },
+    { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية", slug: "legal-accounting" },
+  ].filter((item) => item.slug === "dashboard" || visibleModules.some((module) => module.slug === item.slug));
 
   const logout = () => {
     clearSessionUser();
@@ -101,7 +109,7 @@ export function AppShell({ role, name, children }: Props) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {operationalModules.map((item) => {
+        {visibleModules.map((item) => {
           const href = getModuleHref(item.slug);
           const active = pathname === href;
           return (
@@ -284,7 +292,7 @@ export function AppShell({ role, name, children }: Props) {
             }}>الوحدات التشغيلية</p>
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {operationalModules.map((item) => {
+              {visibleModules.map((item) => {
                 const href = getModuleHref(item.slug);
                 const active = pathname === href;
                 return (
@@ -364,12 +372,7 @@ export function AppShell({ role, name, children }: Props) {
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
       }}>
-        {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
-        ].map((item) => {
+        {bottomNavItems.map((item) => {
           const active = pathname === item.href;
           return (
             <Link

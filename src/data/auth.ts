@@ -1,24 +1,27 @@
-export type DemoUser = {
-  role: "admin" | "client";
+import {
+  sessionCookieName,
+  sessionStorageKey,
+  type Role,
+} from "@/lib/session-shared";
+
+export type DemoAccount = {
+  role: Role;
   name: string;
   email: string;
-  password: string;
 };
 
-export const demoUsers: DemoUser[] = [
+export const demoAccounts: DemoAccount[] = [
   {
     role: "admin",
     name: "مدير النظام",
     email: "admin@naioshlaw.com",
-    password: "Admin@123",
   },
   {
     role: "client",
     name: "عميل تجريبي",
     email: "client@naioshlaw.com",
-    password: "Client@123",
   },
 ];
 
-export const sessionKey = "naiosh-law-session";
-export const sessionCookieName = "naiosh-law-session";
+export const sessionKey = sessionStorageKey;
+export { sessionCookieName };

@@ -62,6 +62,80 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
   const hasActions = !!(onEdit || onDelete || onView);
 
+  const renderActions = (row: Record<string, unknown>) => {
+    if (!hasActions) {
+      return null;
+    }
+
+    return (
+      <div className="row-actions" style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+        {onView && (
+          <button
+            onClick={() => onView(row)}
+            style={{
+              background: "#f1f5f9",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.35rem 0.7rem",
+              cursor: "pointer",
+              fontSize: "0.73rem",
+              fontWeight: 600,
+              color: "#475569",
+              fontFamily: "var(--font-cairo)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
+          >
+            👁 عرض
+          </button>
+        )}
+        {onEdit && (
+          <button
+            onClick={() => onEdit(row)}
+            style={{
+              background: "rgba(195,21,42,0.07)",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.35rem 0.7rem",
+              cursor: "pointer",
+              fontSize: "0.73rem",
+              fontWeight: 600,
+              color: "#c3152a",
+              fontFamily: "var(--font-cairo)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
+          >
+            ✏️ تعديل
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(row)}
+            style={{
+              background: "rgba(239,68,68,0.08)",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.35rem 0.7rem",
+              cursor: "pointer",
+              fontSize: "0.73rem",
+              fontWeight: 600,
+              color: "#dc2626",
+              fontFamily: "var(--font-cairo)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
+          >
+            🗑 حذف
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
     if (col.type === "badge" && col.badgeMap) {
@@ -132,6 +206,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
       {/* Table */}
       <div
+        className="data-table-frame"
         style={{
           borderRadius: "16px",
           border: "1px solid #e2e8f0",
@@ -218,71 +293,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     ))}
                     {hasActions && (
                       <td style={{ padding: "0.85rem 1rem" }}>
-                        <div className="row-actions" style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                          {onView && (
-                            <button
-                              onClick={() => onView(row)}
-                              style={{
-                                background: "#f1f5f9",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#475569",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
-                            >
-                              👁 عرض
-                            </button>
-                          )}
-                          {onEdit && (
-                            <button
-                              onClick={() => onEdit(row)}
-                              style={{
-                                background: "rgba(195,21,42,0.07)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#c3152a",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
-                            >
-                              ✏️ تعديل
-                            </button>
-                          )}
-                          {onDelete && (
-                            <button
-                              onClick={() => onDelete(row)}
-                              style={{
-                                background: "rgba(239,68,68,0.08)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#dc2626",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
-                            >
-                              🗑 حذف
-                            </button>
-                          )}
-                        </div>
+                        {renderActions(row)}
                       </td>
                     )}
                   </tr>
@@ -291,6 +302,52 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="data-table-cards" style={{ display: "none" }}>
+        {paged.length === 0 ? (
+          <div className="card-white" style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+            <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
+          </div>
+        ) : (
+          paged.map((row, index) => (
+            <article
+              key={getRowKey(row, (safePage - 1) * PAGE_SIZE + index)}
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: "14px",
+                padding: "1rem",
+                background: "#ffffff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              }}
+            >
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                {columns.map((col) => (
+                  <div
+                    key={col.key}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(90px, 0.42fr) minmax(0, 1fr)",
+                      gap: "0.75rem",
+                      alignItems: "start",
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8", fontSize: "0.72rem", fontWeight: 700 }}>
+                      {col.label}
+                    </span>
+                    <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{renderCell(col, row)}</span>
+                  </div>
+                ))}
+              </div>
+              {hasActions && (
+                <div style={{ marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f1f5f9" }}>
+                  {renderActions(row)}
+                </div>
+              )}
+            </article>
+          ))
+        )}
       </div>
 
       {/* Pagination */}
@@ -387,8 +444,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .row-actions {
             min-width: 160px;
           }
-          .data-table-scroll table {
-            min-width: 680px !important;
+          .data-table-frame {
+            display: none;
+          }
+          .data-table-cards {
+            display: grid !important;
+            gap: 0.85rem;
           }
         }
       `}</style>

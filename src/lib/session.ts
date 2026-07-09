@@ -2,33 +2,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { sessionKey } from "@/data/auth";
+import {
+  isSessionUser,
+  sessionStorageKey,
+  type SessionUser,
+} from "@/lib/session-shared";
 
-export type SessionUser = {
-  role: "admin" | "client";
-  name: string;
-  email: string;
-};
+export type { SessionUser } from "@/lib/session-shared";
 
 const sessionChangedEvent = "naiosh-law:session-changed";
+
+type SessionResponse = {
+  ok: boolean;
+  user?: SessionUser;
+};
 
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const raw = window.localStorage.getItem(sessionKey);
+  const raw = window.localStorage.getItem(sessionStorageKey);
   if (!raw) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<SessionUser>;
-    if (
-      (parsed.role === "admin" || parsed.role === "client") &&
-      typeof parsed.name === "string" &&
-      typeof parsed.email === "string"
-    ) {
+    const parsed = JSON.parse(raw) as unknown;
+    if (isSessionUser(parsed)) {
       return {
         role: parsed.role,
         name: parsed.name,
@@ -39,17 +40,17 @@ export function readStoredUser(): SessionUser | null {
     // Clear invalid demo sessions so a corrupt localStorage value cannot break the app.
   }
 
-  window.localStorage.removeItem(sessionKey);
+  window.localStorage.removeItem(sessionStorageKey);
   return null;
 }
 
 export function saveSessionUser(user: SessionUser) {
-  window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
   window.dispatchEvent(new Event(sessionChangedEvent));
 }
 
 export function clearSessionUser() {
-  window.localStorage.removeItem(sessionKey);
+  window.localStorage.removeItem(sessionStorageKey);
   window.dispatchEvent(new Event(sessionChangedEvent));
   void fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => undefined);
 }
@@ -60,16 +61,49 @@ export function useSession(redirectIfMissing = false) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let active = true;
+
     const syncSession = () => {
+      if (!active) {
+        return;
+      }
       setUser(readStoredUser());
-      setReady(true);
+    };
+
+    const validateCookieSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const result = (await response.json()) as SessionResponse;
+
+        if (!active) {
+          return;
+        }
+
+        if (response.ok && result.ok && result.user) {
+          window.localStorage.setItem(sessionStorageKey, JSON.stringify(result.user));
+          setUser(result.user);
+        } else {
+          window.localStorage.removeItem(sessionStorageKey);
+          setUser(null);
+        }
+      } catch {
+        if (active) {
+          setUser(readStoredUser());
+        }
+      } finally {
+        if (active) {
+          setReady(true);
+        }
+      }
     };
 
     syncSession();
+    void validateCookieSession();
     window.addEventListener("storage", syncSession);
     window.addEventListener(sessionChangedEvent, syncSession);
 
     return () => {
+      active = false;
       window.removeEventListener("storage", syncSession);
       window.removeEventListener(sessionChangedEvent, syncSession);
     };

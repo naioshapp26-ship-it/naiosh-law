@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers } from "@/data/auth";
+import { demoAccounts } from "@/data/auth";
 import { saveSessionUser, type SessionUser } from "@/lib/session";
+import { getSafeAppPath, type Role } from "@/lib/session-shared";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -29,16 +30,47 @@ type LoginResponse = {
   error?: string;
 };
 
+function getRedirectTarget() {
+  if (typeof window === "undefined") {
+    return "/app/dashboard";
+  }
+
+  return getSafeAppPath(new URLSearchParams(window.location.search).get("next"));
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  useEffect(() => {
+    let active = true;
+
+    const redirectAuthenticatedUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const result = (await response.json()) as LoginResponse;
+
+        if (active && response.ok && result.ok && result.user) {
+          saveSessionUser(result.user);
+          router.replace(getRedirectTarget());
+        }
+      } catch {
+        // Stay on the login form if the session check cannot complete.
+      }
+    };
+
+    void redirectAuthenticatedUser();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  const submitLogin = async (body: Record<string, unknown>) => {
     setLoading(true);
     setError("");
 
@@ -47,7 +79,7 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
       const result = (await response.json()) as LoginResponse;
 
@@ -59,7 +91,7 @@ export default function LoginPage() {
 
       saveSessionUser(result.user);
       setLoading(false);
-      router.replace("/app/dashboard");
+      router.replace(getRedirectTarget());
       router.refresh();
     } catch {
       setError("تعذر الاتصال بخدمة الدخول. حاول مرة أخرى.");
@@ -67,11 +99,17 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemo = (role: "admin" | "client") => {
-    const user = demoUsers.find((u) => u.role === role)!;
-    setEmail(user.email);
-    setPassword(user.password);
-    setError("");
+  const onSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void submitLogin({ email, password });
+  };
+
+  const loginDemo = (role: Role) => {
+    const user = demoAccounts.find((account) => account.role === role);
+    if (user) {
+      setEmail(user.email);
+    }
+    void submitLogin({ demoRole: role });
   };
 
   return (
@@ -298,7 +336,8 @@ export default function LoginPage() {
             </p>
             <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
               <button
-                onClick={() => fillDemo("admin")}
+                onClick={() => loginDemo("admin")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -325,7 +364,8 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
-                onClick={() => fillDemo("client")}
+                onClick={() => loginDemo("client")}
+                disabled={loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
@@ -509,7 +549,7 @@ export default function LoginPage() {
               lineHeight: 1.6,
             }}
           >
-            هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري
+            هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري بدون كشف كلمات المرور في المتصفح
           </motion.p>
         </motion.div>
       </div>

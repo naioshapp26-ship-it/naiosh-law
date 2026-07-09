@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { sessionCookieName } from "@/data/auth";
+import {
+  getCookieValue,
+  readSessionToken,
+  sessionCookieName,
+} from "@/lib/session-shared";
 
 export const dynamic = "force-dynamic";
 
@@ -24,15 +28,26 @@ function getIntegration(slug: string) {
   return null;
 }
 
-function hasSessionCookie(request: Request) {
-  const cookieHeader = request.headers.get("cookie") ?? "";
-  return cookieHeader
-    .split(";")
-    .map((part) => part.trim())
-    .some((part) => part.startsWith(`${sessionCookieName}=`));
+async function requireSession(request: Request) {
+  const token = getCookieValue(request.headers.get("cookie"), sessionCookieName);
+  const user = await readSessionToken(token);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, error: "Authentication required" },
+      { status: 401 }
+    );
+  }
+
+  return null;
 }
 
-export async function GET(_request: Request, { params }: RouteContext) {
+export async function GET(request: Request, { params }: RouteContext) {
+  const authError = await requireSession(request);
+  if (authError) {
+    return authError;
+  }
+
   const { integration } = await params;
   const config = getIntegration(integration);
 
@@ -56,6 +71,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
+  const authError = await requireSession(request);
+  if (authError) {
+    return authError;
+  }
+
   const { integration } = await params;
   const config = getIntegration(integration);
 
@@ -63,13 +83,6 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json(
       { ok: false, error: "Unknown integration endpoint" },
       { status: 404 }
-    );
-  }
-
-  if (!hasSessionCookie(request)) {
-    return NextResponse.json(
-      { ok: false, error: "Authentication required" },
-      { status: 401 }
     );
   }
 

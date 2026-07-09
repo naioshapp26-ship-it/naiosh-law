@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
+import { canAccessModule } from "@/lib/module-routing";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
@@ -137,7 +138,21 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   }
 
+  if (!canAccessModule(slug, user.role)) {
+    return (
+      <AppShell role={user.role} name={user.name}>
+        <div className="card-white" style={{ padding: "2rem", color: "#64748b" }}>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.5rem" }}>
+            لا تملك صلاحية الوصول إلى هذه الوحدة
+          </h1>
+          <p>تم تقييد هذه الوحدة على حسابات الإدارة فقط حفاظًا على صلاحيات النظام.</p>
+        </div>
+      </AppShell>
+    );
+  }
+
   /* ── Handlers ── */
+  const canManageRows = user.role === "admin";
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
@@ -202,7 +217,7 @@ export function ModuleShell({ slug }: { slug: string }) {
             ))}
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            {user.role === "admin" && (
+            {canManageRows && (
               <button
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
                 className="btn-primary"
@@ -255,7 +270,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               >
                 📊 تقارير
               </button>
-              {user.role === "admin" && (
+              {canManageRows && (
                 <button
                   onClick={openAdd}
                   className="btn-primary"
@@ -278,8 +293,8 @@ export function ModuleShell({ slug }: { slug: string }) {
               columns={config.columns}
               data={rows}
               onView={setViewTarget}
-              onEdit={user.role === "admin" ? openEdit : undefined}
-              onDelete={user.role === "admin" ? setDeleteTarget : undefined}
+              onEdit={canManageRows ? openEdit : undefined}
+              onDelete={canManageRows ? setDeleteTarget : undefined}
               searchPlaceholder={`بحث في ${config.entityName}ات...`}
             />
           ) : (

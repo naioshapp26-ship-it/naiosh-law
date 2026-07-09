@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naiosh Law
+
+Arabic RTL demo application for a legal practice management platform. The app is built with Next.js App Router and includes protected dashboard/module routes, demo authentication, and local browser persistence for module records.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Use the quick demo buttons on `/login` for admin or client access.
+- Manual demo credentials are validated only on the server.
+- Protected `/app/*` routes require a signed httpOnly session cookie.
+- Client session state is mirrored in `localStorage` only for UI hydration and is revalidated against `/api/auth/session`.
 
-## Learn More
+## Data model
 
-To learn more about Next.js, take a look at the following resources:
+This repository does not include a production database or migrations. Module tables are seeded from `src/data/module-configs.tsx` and persisted per browser in `localStorage` for demo workflows.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Verification
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+npm run build
+npm run typecheck
+npm audit --audit-level=moderate
+```
 
-## Deploy on Vercel
+## Key paths
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/api/auth/*` - login, logout, and session validation.
+- `src/app/api/[integration]/route.ts` - authenticated demo integration endpoints.
+- `src/lib/session-shared.ts` - shared signed session token helpers.
+- `src/lib/module-routing.ts` - module URLs and role visibility.
+- `src/components/module-shell.tsx` - module CRUD demo shell.

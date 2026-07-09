@@ -1,21 +1,17 @@
 import { NextResponse } from "next/server";
-import { demoUsers, sessionCookieName, type DemoUser } from "@/data/auth";
-import type { SessionUser } from "@/lib/session";
+import { demoUsers, toSessionUser } from "@/lib/demo-auth";
+import {
+  createSessionToken,
+  sessionCookieName,
+  sessionMaxAgeSeconds,
+  type Role,
+} from "@/lib/session-shared";
 
 type LoginBody = {
   email?: unknown;
   password?: unknown;
+  demoRole?: unknown;
 };
-
-const sessionMaxAge = 60 * 60 * 8;
-
-function toSessionUser(user: DemoUser): SessionUser {
-  return {
-    role: user.role,
-    name: user.name,
-    email: user.email,
-  };
-}
 
 export async function POST(request: Request) {
   let body: LoginBody;
@@ -29,17 +25,23 @@ export async function POST(request: Request) {
     );
   }
 
-  if (typeof body.email !== "string" || typeof body.password !== "string") {
+  const demoRole = body.demoRole;
+  const isDemoRole = demoRole === "admin" || demoRole === "client";
+
+  if (!isDemoRole && (typeof body.email !== "string" || typeof body.password !== "string")) {
     return NextResponse.json(
       { ok: false, error: "Email and password are required" },
       { status: 400 }
     );
   }
 
-  const normalizedEmail = body.email.trim().toLowerCase();
-  const user = demoUsers.find(
-    (item) => item.email.toLowerCase() === normalizedEmail && item.password === body.password
-  );
+  const normalizedEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const password = typeof body.password === "string" ? body.password : "";
+  const user = isDemoRole
+    ? demoUsers.find((item) => item.role === (demoRole as Role))
+    : demoUsers.find(
+        (item) => item.email.toLowerCase() === normalizedEmail && item.password === password
+      );
 
   if (!user) {
     return NextResponse.json(
@@ -49,16 +51,17 @@ export async function POST(request: Request) {
   }
 
   const sessionUser = toSessionUser(user);
+  const token = await createSessionToken(sessionUser);
   const response = NextResponse.json({ ok: true, user: sessionUser });
 
   response.cookies.set({
     name: sessionCookieName,
-    value: encodeURIComponent(JSON.stringify(sessionUser)),
+    value: token,
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: sessionMaxAge,
+    maxAge: sessionMaxAgeSeconds,
   });
 
   return response;

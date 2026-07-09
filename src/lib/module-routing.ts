@@ -1,4 +1,5 @@
 import { modules } from "@/data/modules";
+import type { Role } from "@/lib/session-shared";
 
 export const moduleIcons: Record<string, string> = {
   dashboard: "⊞",
@@ -22,6 +23,24 @@ export const moduleIcons: Record<string, string> = {
 
 export const operationalModules = modules.filter((item) => item.slug !== "dashboard");
 
+const adminOnlyModules = new Set(["administration", "integrations", "ai-center"]);
+
 export function getModuleHref(slug: string) {
   return slug === "dashboard" ? "/app/dashboard" : `/app/modules/${slug}`;
+}
+
+export function canAccessModule(slug: string, role: Role) {
+  if (slug === "dashboard" || role === "admin") {
+    return true;
+  }
+
+  return !adminOnlyModules.has(slug);
+}
+
+export function getVisibleOperationalModules(role?: Role) {
+  if (!role) {
+    return operationalModules;
+  }
+
+  return operationalModules.filter((item) => canAccessModule(item.slug, role));
 }
