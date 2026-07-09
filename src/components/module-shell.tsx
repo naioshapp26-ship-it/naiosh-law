@@ -14,6 +14,7 @@ import { useSession } from "@/lib/session";
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
 let toastCounter = 0;
+const storageErrorEvent = "naiosh-law:module-storage-error";
 
 function createRowId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -96,6 +97,19 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, []);
 
   useEffect(() => {
+    const handleStorageError = (event: Event) => {
+      const message =
+        event instanceof CustomEvent && typeof event.detail === "string"
+          ? event.detail
+          : "تعذر حفظ التغييرات محليًا.";
+      pushToast("error", message);
+    };
+
+    window.addEventListener(storageErrorEvent, handleStorageError);
+    return () => window.removeEventListener(storageErrorEvent, handleStorageError);
+  }, [pushToast]);
+
+  useEffect(() => {
     let active = true;
 
     const hydrateRows = () => {
@@ -152,9 +166,13 @@ export function ModuleShell({ slug }: { slug: string }) {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(rows));
     } catch {
-      pushToast("error", "تعذر حفظ التغييرات محليًا. قد تكون مساحة التخزين ممتلئة.");
+      window.dispatchEvent(
+        new CustomEvent(storageErrorEvent, {
+          detail: "تعذر حفظ التغييرات محليًا. قد تكون مساحة التخزين ممتلئة.",
+        })
+      );
     }
-  }, [config, pushToast, rows, rowsHydrated, storageKey]);
+  }, [config, rows, rowsHydrated, storageKey]);
 
   useEffect(() => {
     const syncRowsFromStorage = (event: StorageEvent) => {
