@@ -24,7 +24,7 @@ const itemAnim = {
   },
 };
 
-const headlineRows = [["إدارة القضايا", "والموكلين بذكاء"]];
+const headlineLines = ["إدارة القضايا والموكلين بذكاء"];
 
 export function HeroSection() {
   return (
@@ -117,7 +117,7 @@ export function HeroSection() {
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-end",
           }}
           className="hero-grid"
         >
@@ -129,9 +129,9 @@ export function HeroSection() {
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "1000px",
-              marginInline: "auto",
-              paddingInlineStart: "min(430px, 36vw)",
+              maxWidth: "min(700px, 62vw)",
+              marginInlineStart: "auto",
+              marginInlineEnd: 0,
               textAlign: "right",
             }}
           >
@@ -170,44 +170,32 @@ export function HeroSection() {
             <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(2.6rem, 4.5vw, 4.75rem)",
+                fontSize: "clamp(3rem, 6vw, 5.6rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.12,
-                marginBottom: "1.75rem",
+                lineHeight: 1.05,
+                marginBottom: "1.9rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                gap: "0.35rem",
+                alignItems: "flex-end",
+                gap: "0.2rem",
               }}
               variants={container}
             >
-              {headlineRows.map((row, rowIndex) => (
-                <span
-                  key={rowIndex}
+              {headlineLines.map((line) => (
+                <motion.span
+                  key={line}
+                  variants={itemAnim}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    gap: "0.85rem",
-                    flexWrap: "wrap",
+                    display: "block",
                     width: "100%",
+                    textAlign: "right",
+                    textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   }}
                 >
-                  {row.map((part) => (
-                    <motion.span
-                      key={part}
-                      variants={itemAnim}
-                      style={{
-                        display: "inline-block",
-                        color: "#ffffff",
-                      }}
-                    >
-                      {part}
-                    </motion.span>
-                  ))}
-                </span>
+                  {line}
+                </motion.span>
               ))}
               <motion.span
                 variants={itemAnim}
@@ -217,6 +205,7 @@ export function HeroSection() {
                   display: "inline-block",
                   width: "100%",
                   textAlign: "right",
+                  marginTop: "0.15rem",
                 }}
               >
                 لا مثيل له
@@ -580,12 +569,13 @@ export function HeroSection() {
             opacity: 0.8;
           }
           .hero-content-col {
-            padding-inline-start: 300px !important;
+            max-width: min(640px, 64vw) !important;
           }
         }
         @media (max-width: 980px) {
           .hero-heading {
-            line-height: 1.2 !important;
+            line-height: 1.12 !important;
+            font-size: clamp(2.5rem, 7.5vw, 4.2rem) !important;
           }
         }
         @media (max-width: 900px) {
@@ -594,7 +584,6 @@ export function HeroSection() {
           }
           .hero-content-col {
             max-width: 760px !important;
-            padding-inline-start: 0 !important;
             text-align: center !important;
           }
           .hero-heading {
