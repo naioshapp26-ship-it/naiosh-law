@@ -129,7 +129,7 @@ export function HeroSection() {
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "min(760px, 66vw)",
+              maxWidth: "min(820px, 72vw)",
               marginLeft: "auto",
               marginRight: 0,
               textAlign: "right",
@@ -139,10 +139,11 @@ export function HeroSection() {
             <div
               className="hero-badge"
               style={{
-                marginBottom: "1.1rem",
+                marginBottom: "1.35rem",
                 width: "100%",
                 display: "flex",
-                justifyContent: "center",
+                justifyContent: "flex-end",
+                transform: "translateY(-10px)",
               }}
             >
               <span
@@ -179,36 +180,41 @@ export function HeroSection() {
             <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(2.4rem, 4.8vw, 4.2rem)",
+                fontSize: "clamp(2rem, 4.2vw, 3.8rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.15,
-                marginBottom: "1.7rem",
+                lineHeight: 1.1,
+                marginBottom: "1.55rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
-                flexWrap: "wrap",
+                flexWrap: "nowrap",
                 justifyContent: "flex-end",
                 alignItems: "baseline",
-                gap: "0.65rem",
+                gap: "0.75rem",
               }}
               variants={container}
             >
               <motion.span
+                className="hero-heading-main"
                 variants={itemAnim}
                 style={{
                   display: "inline-block",
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {headlineText}
               </motion.span>
               <motion.span
+                className="hero-heading-accent"
                 variants={itemAnim}
                 style={{
                   color: "#c3152a",
                   textShadow: "0 0 40px rgba(195,21,42,0.5)",
                   display: "inline-block",
+                  whiteSpace: "nowrap",
+                  fontSize: "0.96em",
                 }}
               >
                 لا مثيل له
@@ -579,13 +585,19 @@ export function HeroSection() {
             opacity: 0.8;
           }
           .hero-content-col {
-            max-width: min(640px, 64vw) !important;
+            max-width: min(720px, 70vw) !important;
           }
         }
         @media (max-width: 980px) {
           .hero-heading {
             line-height: 1.12 !important;
-            font-size: clamp(2rem, 6.6vw, 3.5rem) !important;
+            font-size: clamp(1.8rem, 5vw, 3rem) !important;
+            flex-wrap: wrap !important;
+            row-gap: 0.25rem !important;
+          }
+          .hero-heading-main {
+            white-space: normal !important;
+            width: 100%;
           }
           .hero-badge-pill {
             font-size: 0.86rem !important;
@@ -602,6 +614,13 @@ export function HeroSection() {
           }
           .hero-heading {
             justify-content: center !important;
+          }
+          .hero-heading-main, .hero-heading-accent {
+            text-align: center !important;
+          }
+          .hero-badge {
+            justify-content: center !important;
+            transform: none !important;
           }
           .hero-cta, .hero-stats {
             justify-content: center !important;
