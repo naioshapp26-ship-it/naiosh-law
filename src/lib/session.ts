@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  getSafeAppPath,
   isSessionUser,
   sessionStorageKey,
   type SessionUser,
@@ -17,12 +18,46 @@ type SessionResponse = {
   user?: SessionUser;
 };
 
+function safeGetStoredSession() {
+  try {
+    return window.localStorage.getItem(sessionStorageKey);
+  } catch {
+    return null;
+  }
+}
+
+function safeSaveStoredSession(user: SessionUser) {
+  try {
+    window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+  } catch {
+    // Browser privacy modes can block localStorage; the signed cookie remains authoritative.
+  }
+}
+
+function safeRemoveStoredSession() {
+  try {
+    window.localStorage.removeItem(sessionStorageKey);
+  } catch {
+    // Ignore storage failures so logout/auth recovery cannot crash the UI.
+  }
+}
+
+function getLoginRedirectPath() {
+  if (typeof window === "undefined") {
+    return "/login";
+  }
+
+  const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const next = encodeURIComponent(getSafeAppPath(currentPath));
+  return `/login?next=${next}`;
+}
+
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const raw = window.localStorage.getItem(sessionStorageKey);
+  const raw = safeGetStoredSession();
   if (!raw) {
     return null;
   }
@@ -40,17 +75,17 @@ export function readStoredUser(): SessionUser | null {
     // Clear invalid demo sessions so a corrupt localStorage value cannot break the app.
   }
 
-  window.localStorage.removeItem(sessionStorageKey);
+  safeRemoveStoredSession();
   return null;
 }
 
 export function saveSessionUser(user: SessionUser) {
-  window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+  safeSaveStoredSession(user);
   window.dispatchEvent(new Event(sessionChangedEvent));
 }
 
 export function clearSessionUser() {
-  window.localStorage.removeItem(sessionStorageKey);
+  safeRemoveStoredSession();
   window.dispatchEvent(new Event(sessionChangedEvent));
   void fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => undefined);
 }
@@ -80,15 +115,15 @@ export function useSession(redirectIfMissing = false) {
         }
 
         if (response.ok && result.ok && result.user) {
-          window.localStorage.setItem(sessionStorageKey, JSON.stringify(result.user));
+          safeSaveStoredSession(result.user);
           setUser(result.user);
         } else {
-          window.localStorage.removeItem(sessionStorageKey);
+          safeRemoveStoredSession();
           setUser(null);
         }
       } catch {
         if (active) {
-          window.localStorage.removeItem(sessionStorageKey);
+          safeRemoveStoredSession();
           setUser(null);
         }
       } finally {
@@ -112,7 +147,7 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {
-      router.replace("/login");
+      router.replace(getLoginRedirectPath());
     }
   }, [ready, user, redirectIfMissing, router]);
 

@@ -49,12 +49,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
 
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
     onSave(form);
+    setSaving(false);
   };
 
   return (
