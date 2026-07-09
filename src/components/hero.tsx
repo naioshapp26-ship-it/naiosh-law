@@ -113,9 +113,7 @@ export function HeroSection() {
       >
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 460px)",
-            gap: "clamp(2rem, 4vw, 4rem)",
+            display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -267,6 +265,13 @@ export function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="float-anim hero-card-col"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "calc(50% - 180px)",
+              width: "min(420px, 35vw)",
+              zIndex: 5,
+            }}
           >
             {/* Main case card */}
             <div
@@ -532,13 +537,14 @@ export function HeroSection() {
 
       <style>{`
         @media (max-width: 1200px) {
-          .hero-grid {
-            grid-template-columns: minmax(0, 1fr) 360px !important;
+          .hero-card-col {
+            width: 320px !important;
+            opacity: 0.8;
           }
         }
         @media (max-width: 900px) {
           .hero-grid {
-            grid-template-columns: 1fr !important;
+            display: block !important;
           }
           .hero-card-col {
             display: none;
