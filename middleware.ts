@@ -58,10 +58,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     if (error instanceof SessionConfigError) {
-      return NextResponse.json(
-        { error: "session_configuration_error", message: error.message },
-        { status: 503 }
-      );
+      const response =
+        pathname === "/login"
+          ? NextResponse.next()
+          : NextResponse.redirect(new URL("/login?error=session_configuration_error", request.url));
+      response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(), maxAge: 0 });
+      return response;
     }
     throw error;
   }

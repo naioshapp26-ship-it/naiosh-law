@@ -15,6 +15,10 @@ type SessionSnapshot = {
   ready: boolean;
 };
 
+type SessionFetchResult =
+  | { status: "authenticated"; user: SessionUser }
+  | { status: "unauthenticated" };
+
 let sessionSnapshot = initialSnapshot;
 let hydratedFromStorage = false;
 
@@ -100,16 +104,20 @@ function getClientSessionSnapshot() {
   return sessionSnapshot;
 }
 
-async function fetchCurrentSession(): Promise<SessionUser | null> {
+async function fetchCurrentSession(): Promise<SessionFetchResult> {
   const response = await fetch("/api/auth/session", {
     cache: "no-store",
     credentials: "same-origin",
   });
 
-  if (!response.ok) return null;
+  if (response.status === 401) return { status: "unauthenticated" };
+  if (!response.ok) {
+    throw new Error(`Session verification failed with status ${response.status}`);
+  }
 
   const body = (await response.json()) as { user?: unknown };
-  return normalizeSessionUser(body.user);
+  const user = normalizeSessionUser(body.user);
+  return user ? { status: "authenticated", user } : { status: "unauthenticated" };
 }
 
 export function useSession(redirectIfMissing = false) {
@@ -126,11 +134,11 @@ export function useSession(redirectIfMissing = false) {
     updateSessionSnapshot({ user: optimisticUser, ready: false });
 
     fetchCurrentSession()
-      .then((verifiedUser) => {
+      .then((result) => {
         if (cancelled) return;
-        if (verifiedUser) {
-          writeStoredSession(verifiedUser, false);
-          updateSessionSnapshot({ user: verifiedUser, ready: true });
+        if (result.status === "authenticated") {
+          writeStoredSession(result.user, false);
+          updateSessionSnapshot({ user: result.user, ready: true });
           return;
         }
         clearStoredSession(false);
@@ -138,8 +146,7 @@ export function useSession(redirectIfMissing = false) {
       })
       .catch(() => {
         if (cancelled) return;
-        clearStoredSession(false);
-        updateSessionSnapshot({ user: null, ready: true });
+        updateSessionSnapshot({ user: optimisticUser, ready: true });
       });
 
     return () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -20,26 +20,11 @@ const toComparableNumber = (value: unknown) => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const media = window.matchMedia(query);
-    const sync = () => setMatches(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, [query]);
-
-  return matches;
-}
-
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
-  const useCardLayout = useMediaQuery("(max-width: 900px)");
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc((a) => !a);
@@ -72,8 +57,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const showDesktopTable = useCardLayout !== true;
-  const showMobileCards = useCardLayout !== false;
 
   const hasActions = !!(onEdit || onDelete || onView);
   const firstColumnKey = columns[0]?.key;
@@ -155,7 +138,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}
       >
-        {showDesktopTable && (
         <div className="desktop-table-wrap" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
@@ -306,8 +288,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             </tbody>
           </table>
         </div>
-        )}
-        {showMobileCards && (
         <div className="mobile-card-list" style={{ display: "none", padding: "0.75rem", background: "#f8f9fb" }}>
           {paged.length === 0 ? (
             <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#94a3b8" }}>
@@ -370,7 +350,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             ))
           )}
         </div>
-        )}
       </div>
 
       {/* Pagination */}

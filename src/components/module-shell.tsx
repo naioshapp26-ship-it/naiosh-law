@@ -103,6 +103,7 @@ export function ModuleShell({
   const toastTimers = useRef<number[]>([]);
 
   const [rows, setRows] = useState<ModuleRow[]>(() => (config ? readInitialRows(slug, config.data) : []));
+  const [hydratedRowsKey, setHydratedRowsKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ModuleRow | null>(null);
   const [viewTarget, setViewTarget] = useState<ModuleRow | null>(null);
@@ -119,12 +120,18 @@ export function ModuleShell({
 
   useEffect(() => {
     if (!config) return;
+    setRows(readInitialRows(slug, config.data));
+    setHydratedRowsKey(slug);
+  }, [config, slug]);
+
+  useEffect(() => {
+    if (!config || hydratedRowsKey !== slug) return;
     try {
       window.localStorage.setItem(getModuleRowsStorageKey(slug), JSON.stringify(rows));
     } catch {
       // Demo persistence is best-effort; mutations should still work in memory.
     }
-  }, [config, rows, slug]);
+  }, [config, hydratedRowsKey, rows, slug]);
 
   useScrollLock(Boolean(viewTarget) || reportOpen, () => {
     if (reportOpen) setReportOpen(false);

@@ -51,14 +51,21 @@ function readCompletedTasks() {
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(readCompletedTasks);
+  const [tasksHydrated, setTasksHydrated] = useState(false);
 
   useEffect(() => {
+    setCompletedTasks(readCompletedTasks());
+    setTasksHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!tasksHydrated) return;
     try {
       window.localStorage.setItem(completedTasksStorageKey, JSON.stringify([...completedTasks]));
     } catch {
       // Dashboard task checks are demo state; storage failures should not block interaction.
     }
-  }, [completedTasks]);
+  }, [completedTasks, tasksHydrated]);
 
   if (!ready || !user) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { getSafeAppPath, writeStoredSession } from "@/lib/session";
@@ -30,6 +30,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+
+  useEffect(() => {
+    const errorCode = new URLSearchParams(window.location.search).get("error");
+    if (errorCode === "session_configuration_error") {
+      setError("إعدادات الجلسة غير مكتملة على الخادم.");
+    }
+  }, []);
 
   const finishLogin = (user: SessionUser) => {
     writeStoredSession(user);
