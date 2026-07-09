@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useId, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Column, ModuleConfig } from "@/data/module-configs";
+import { readStorageItem, removeStorageItem, writeStorageItem } from "@/lib/browser-storage";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { canAccessModule } from "@/lib/module-routing";
-import { useSession } from "@/lib/session";
+import { useSession, type SessionUser } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 type ReportFormat = "pdf" | "excel" | "csv";
@@ -135,13 +137,16 @@ type ModuleShellProps = {
   slug: string;
   config: ModuleConfig;
   moduleTitle: string;
+  initialUser?: SessionUser | null;
 };
 
-export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
-  const { user, ready } = useSession(true);
+export function ModuleShell({ slug, config, moduleTitle, initialUser = null }: ModuleShellProps) {
+  const { user, ready } = useSession(true, initialUser);
   const storageKey = useMemo(() => `naiosh-law:module:${slug}:rows`, [slug]);
+  const viewTitleId = useId();
+  const reportTitleId = useId();
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => normalizeRows(config.data, slug));
   const [rowsHydrated, setRowsHydrated] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
@@ -149,6 +154,14 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const viewDialogRef = useDialogAccessibility<HTMLDivElement>(
+    Boolean(viewTarget),
+    () => setViewTarget(null)
+  );
+  const reportDialogRef = useDialogAccessibility<HTMLDivElement>(
+    reportOpen,
+    () => setReportOpen(false)
+  );
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -165,7 +178,7 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
       }
 
       try {
-        const storedRows = window.localStorage.getItem(storageKey);
+        const storedRows = readStorageItem(storageKey);
         if (storedRows) {
           const parsed = JSON.parse(storedRows);
           if (Array.isArray(parsed)) {
@@ -175,7 +188,7 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
           }
         }
       } catch {
-        window.localStorage.removeItem(storageKey);
+        removeStorageItem(storageKey);
       }
 
       setRows(normalizeRows(config.data, slug));
@@ -196,7 +209,7 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
     }
 
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify(rows));
+      writeStorageItem(storageKey, JSON.stringify(rows));
     } catch {
       // Ignore localStorage quota/privacy failures; the in-memory demo table remains usable.
     }
@@ -301,14 +314,16 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
         onClick={() => setViewTarget(null)}
       >
         <div
+          ref={viewDialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label={`تفاصيل ${config.entityName}`}
+          aria-labelledby={viewTitleId}
+          tabIndex={-1}
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
+            <h2 id={viewTitleId} style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
               type="button"
               aria-label="إغلاق التفاصيل"
@@ -345,7 +360,13 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div className="module-toasts" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div
+        className="module-toasts"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}
+      >
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}
@@ -366,7 +387,7 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
                  config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleTitle}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rowsHydrated ? rows.length : "..."} {config.entityName} — جميع البيانات محدثة
+                إجمالي {rows.length} {config.entityName} — {rowsHydrated ? "جميع البيانات محدثة" : "جاري مزامنة البيانات المحلية"}
               </p>
             </div>
             <div className="module-page-actions" style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
@@ -396,7 +417,7 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
 
         {/* Data Table */}
         <div className="card-white module-table-card" style={{ padding: "1.5rem" }}>
-          {rowsHydrated ? (
+          <div aria-busy={!rowsHydrated}>
             <DataTable
               columns={config.columns}
               data={rows}
@@ -405,12 +426,7 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
               onDelete={canManageRows ? setDeleteTarget : undefined}
               searchPlaceholder={`بحث في ${config.entityName}ات...`}
             />
-          ) : (
-            <div style={{ padding: "3rem", textAlign: "center", color: "#64748b" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#c3152a", animation: "spin-slow 0.9s linear infinite", margin: "0 auto 1rem" }} />
-              <p>جاري تحميل بيانات الوحدة...</p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -446,14 +462,16 @@ export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
           onClick={() => setReportOpen(false)}
         >
           <div
+          ref={reportDialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label="تصدير التقارير"
+          aria-labelledby={reportTitleId}
+          tabIndex={-1}
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
+              <h2 id={reportTitleId} style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
               <button type="button" aria-label="إغلاق التصدير" onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>

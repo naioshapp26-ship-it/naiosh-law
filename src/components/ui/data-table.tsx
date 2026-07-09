@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -42,11 +42,28 @@ function parseNumericValue(value: unknown) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+function useCardLayout() {
+  const [isCardLayout, setIsCardLayout] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 700px)");
+    const update = () => setIsCardLayout(media.matches);
+
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  return isCardLayout;
+}
+
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
+  const searchId = useId();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const isCardLayout = useCardLayout();
   const normalizedSearch = search.trim().toLowerCase();
 
   const handleSort = (key: string) => {
@@ -96,6 +113,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const paged = useMemo(() => sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [safePage, sorted]);
 
   const hasActions = !!(onEdit || onDelete || onView);
+  const getActionLabel = (action: string, row: Record<string, unknown>) => {
+    const primaryValue = columns.map((column) => row[column.key]).find((value) => value);
+    return `${action} ${String(primaryValue ?? "السجل")}`;
+  };
 
   const renderActions = (row: Record<string, unknown>) => {
     if (!hasActions) {
@@ -106,18 +127,21 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       <div className="row-actions" style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
         {onView && (
           <button
+            type="button"
             onClick={() => onView(row)}
+            aria-label={getActionLabel("عرض", row)}
             style={{
               background: "#f1f5f9",
               border: "none",
               borderRadius: "8px",
-              padding: "0.35rem 0.7rem",
+              padding: "0.5rem 0.8rem",
               cursor: "pointer",
               fontSize: "0.73rem",
               fontWeight: 600,
               color: "#475569",
               fontFamily: "var(--font-cairo)",
               transition: "all 0.15s",
+              minHeight: 40,
             }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
@@ -127,18 +151,21 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         )}
         {onEdit && (
           <button
+            type="button"
             onClick={() => onEdit(row)}
+            aria-label={getActionLabel("تعديل", row)}
             style={{
               background: "rgba(195,21,42,0.07)",
               border: "none",
               borderRadius: "8px",
-              padding: "0.35rem 0.7rem",
+              padding: "0.5rem 0.8rem",
               cursor: "pointer",
               fontSize: "0.73rem",
               fontWeight: 600,
               color: "#c3152a",
               fontFamily: "var(--font-cairo)",
               transition: "all 0.15s",
+              minHeight: 40,
             }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
@@ -148,18 +175,21 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         )}
         {onDelete && (
           <button
+            type="button"
             onClick={() => onDelete(row)}
+            aria-label={getActionLabel("حذف", row)}
             style={{
               background: "rgba(239,68,68,0.08)",
               border: "none",
               borderRadius: "8px",
-              padding: "0.35rem 0.7rem",
+              padding: "0.5rem 0.8rem",
               cursor: "pointer",
               fontSize: "0.73rem",
               fontWeight: 600,
               color: "#dc2626",
               fontFamily: "var(--font-cairo)",
               transition: "all 0.15s",
+              minHeight: 40,
             }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
@@ -203,6 +233,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       {/* Search + count */}
       <div className="data-table-toolbar" style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1 }}>
+          <label className="sr-only" htmlFor={searchId}>
+            {searchPlaceholder}
+          </label>
           <span
             style={{
               position: "absolute",
@@ -217,9 +250,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             🔍
           </span>
           <input
+            id={searchId}
+            type="search"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
             className="input-field"
             style={{ paddingInlineStart: "2.6rem" }}
           />
@@ -239,120 +275,120 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       </div>
 
-      {/* Table */}
-      <div
-        className="data-table-frame"
-        style={{
-          borderRadius: "16px",
-          border: "1px solid #e2e8f0",
-          overflow: "hidden",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        }}
-      >
-        <div className="data-table-scroll" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
-            <thead>
-              <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
-                {columns.map((col) => (
-                  <th
-                    key={col.key}
-                    onClick={() => col.sortable !== false && handleSort(col.key)}
-                    onKeyDown={(event) => {
-                      if (col.sortable === false || (event.key !== "Enter" && event.key !== " ")) {
-                        return;
+      {!isCardLayout ? (
+        <div
+          className="data-table-frame"
+          style={{
+            borderRadius: "16px",
+            border: "1px solid #e2e8f0",
+            overflow: "hidden",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div className="data-table-scroll" style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
+              <thead>
+                <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
+                  {columns.map((col) => (
+                    <th
+                      key={col.key}
+                      onClick={() => col.sortable !== false && handleSort(col.key)}
+                      onKeyDown={(event) => {
+                        if (col.sortable === false || (event.key !== "Enter" && event.key !== " ")) {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        handleSort(col.key);
+                      }}
+                      tabIndex={col.sortable !== false ? 0 : undefined}
+                      role={col.sortable !== false ? "button" : undefined}
+                      aria-sort={
+                        sortKey === col.key ? (sortAsc ? "ascending" : "descending") : "none"
                       }
-
-                      event.preventDefault();
-                      handleSort(col.key);
-                    }}
-                    tabIndex={col.sortable !== false ? 0 : undefined}
-                    role={col.sortable !== false ? "button" : undefined}
-                    aria-sort={
-                      sortKey === col.key ? (sortAsc ? "ascending" : "descending") : "none"
-                    }
-                    style={{
-                      padding: "0.9rem 1rem",
-                      textAlign: "start",
-                      fontWeight: 700,
-                      color: "#475569",
-                      fontSize: "0.75rem",
-                      whiteSpace: "nowrap",
-                      cursor: col.sortable !== false ? "pointer" : "default",
-                      userSelect: "none",
-                    }}
-                  >
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
-                        {sortAsc ? " ↑" : " ↓"}
-                      </span>
-                    )}
-                  </th>
-                ))}
-                {hasActions && (
-                  <th
-                    style={{
-                      padding: "0.9rem 1rem",
-                      textAlign: "start",
-                      fontWeight: 700,
-                      color: "#475569",
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    الإجراءات
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {paged.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length + (hasActions ? 1 : 0)}
-                    style={{ padding: "3.5rem", textAlign: "center", color: "#94a3b8" }}
-                  >
-                    <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
-                    <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
-                  </td>
+                      style={{
+                        padding: "0.9rem 1rem",
+                        textAlign: "start",
+                        fontWeight: 700,
+                        color: "#475569",
+                        fontSize: "0.75rem",
+                        whiteSpace: "nowrap",
+                        cursor: col.sortable !== false ? "pointer" : "default",
+                        userSelect: "none",
+                      }}
+                    >
+                      {col.label}
+                      {sortKey === col.key && (
+                        <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
+                          {sortAsc ? " ↑" : " ↓"}
+                        </span>
+                      )}
+                    </th>
+                  ))}
+                  {hasActions && (
+                    <th
+                      style={{
+                        padding: "0.9rem 1rem",
+                        textAlign: "start",
+                        fontWeight: 700,
+                        color: "#475569",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      الإجراءات
+                    </th>
+                  )}
                 </tr>
-              ) : (
-                paged.map((row, i) => (
-                  <tr
-                    key={getRowKey(row, (safePage - 1) * PAGE_SIZE + i)}
-                    style={{
-                      borderBottom: "1px solid #f1f5f9",
-                      transition: "background 0.15s",
-                      background: "transparent",
-                    }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "#fafbfc")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "transparent")
-                    }
-                  >
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
-                      >
-                        {renderCell(col, row)}
-                      </td>
-                    ))}
-                    {hasActions && (
-                      <td style={{ padding: "0.85rem 1rem" }}>
-                        {renderActions(row)}
-                      </td>
-                    )}
+              </thead>
+              <tbody>
+                {paged.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={columns.length + (hasActions ? 1 : 0)}
+                      style={{ padding: "3.5rem", textAlign: "center", color: "#94a3b8" }}
+                    >
+                      <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+                      <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  paged.map((row, i) => (
+                    <tr
+                      key={getRowKey(row, (safePage - 1) * PAGE_SIZE + i)}
+                      style={{
+                        borderBottom: "1px solid #f1f5f9",
+                        transition: "background 0.15s",
+                        background: "transparent",
+                      }}
+                      onMouseEnter={(e) =>
+                        ((e.currentTarget as HTMLElement).style.background = "#fafbfc")
+                      }
+                      onMouseLeave={(e) =>
+                        ((e.currentTarget as HTMLElement).style.background = "transparent")
+                      }
+                    >
+                      {columns.map((col) => (
+                        <td
+                          key={col.key}
+                          style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
+                        >
+                          {renderCell(col, row)}
+                        </td>
+                      ))}
+                      {hasActions && (
+                        <td style={{ padding: "0.85rem 1rem" }}>
+                          {renderActions(row)}
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-
-      <div className="data-table-cards" style={{ display: "none" }}>
+      ) : (
+      <div className="data-table-cards">
         {paged.length === 0 ? (
           <div className="card-white" style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
@@ -397,6 +433,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           ))
         )}
       </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -416,11 +453,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           </span>
           <div className="pagination-buttons" style={{ display: "flex", gap: "0.3rem" }}>
             <button
+              type="button"
               aria-label="الصفحة السابقة"
               disabled={safePage === 1}
               onClick={() => setPage(Math.max(1, safePage - 1))}
               style={{
-                padding: "0.4rem 0.8rem",
+                padding: "0.5rem 0.9rem",
                 borderRadius: "8px",
                 border: "1px solid #e2e8f0",
                 background: safePage === 1 ? "#f8f9fb" : "#fff",
@@ -435,10 +473,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               if (p < 1 || p > totalPages) return null;
               return (
                 <button
+                  type="button"
                   key={p}
                   onClick={() => setPage(p)}
+                  aria-label={`الانتقال إلى الصفحة ${p}`}
+                  aria-current={p === safePage ? "page" : undefined}
                   style={{
-                    padding: "0.4rem 0.65rem",
+                    padding: "0.5rem 0.7rem",
                     borderRadius: "8px",
                     border: "1px solid",
                     borderColor: p === safePage ? "#c3152a" : "#e2e8f0",
@@ -446,7 +487,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     color: p === safePage ? "#fff" : "#475569",
                     cursor: "pointer",
                     fontWeight: p === safePage ? 800 : 400,
-                    minWidth: 32,
+                    minWidth: 40,
                   }}
                 >
                   {p}
@@ -454,11 +495,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               );
             })}
             <button
+              type="button"
               aria-label="الصفحة التالية"
               disabled={safePage === totalPages}
               onClick={() => setPage(Math.min(totalPages, safePage + 1))}
               style={{
-                padding: "0.4rem 0.8rem",
+                padding: "0.5rem 0.9rem",
                 borderRadius: "8px",
                 border: "1px solid #e2e8f0",
                 background: safePage === totalPages ? "#f8f9fb" : "#fff",
@@ -489,14 +531,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             justify-content: center;
             flex-wrap: wrap;
           }
-          .row-actions {
-            min-width: 160px;
-          }
-          .data-table-frame {
-            display: none;
-          }
           .data-table-cards {
-            display: grid !important;
+            display: grid;
             gap: 0.85rem;
           }
         }

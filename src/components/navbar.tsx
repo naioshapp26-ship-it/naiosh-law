@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const mobileMenuRef = useDialogAccessibility<HTMLDivElement>(
+    menuOpen,
+    () => setMenuOpen(false),
+    { lockScroll: false }
+  );
 
   useEffect(() => {
     let animationFrame = 0;
@@ -145,6 +151,8 @@ export function Navbar() {
           }}
           className="mobile-menu-btn"
           aria-label="قائمة"
+          aria-expanded={menuOpen}
+          aria-controls="landing-mobile-menu"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             {menuOpen ? (
@@ -166,6 +174,12 @@ export function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
+          id="landing-mobile-menu"
+          ref={mobileMenuRef}
+          role="dialog"
+          aria-modal="false"
+          aria-label="روابط التنقل"
+          tabIndex={-1}
           style={{
             background: "rgba(10,10,18,0.97)",
             borderTop: "1px solid rgba(255,255,255,0.07)",

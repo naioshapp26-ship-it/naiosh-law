@@ -38,6 +38,7 @@ export default async function ModulePage({ params }: Props) {
       slug={slug}
       config={config}
       moduleTitle={moduleMap[slug]?.title ?? config.entityName}
+      initialUser={user}
     />
   );
 }

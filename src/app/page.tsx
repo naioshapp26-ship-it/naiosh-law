@@ -49,16 +49,17 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <HeroSection />
+      <main id="main-content">
+        <HeroSection />
 
-      {/* ── Stats Bar ── */}
-      <section
+        {/* ── Stats Bar ── */}
+        <section
         style={{
           background: "#ffffff",
           borderBottom: "1px solid #e2e8f0",
           padding: "2.75rem 0",
         }}
-      >
+        >
         <div className="container-max">
           <div
             style={{
@@ -85,10 +86,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
 
-      {/* ── Features ── */}
-      <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
+        {/* ── Features ── */}
+        <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -163,10 +164,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
 
-      {/* ── Modules ── */}
-      <section id="modules" style={{ background: "#ffffff", padding: "6rem 0" }}>
+        {/* ── Modules ── */}
+        <section id="modules" style={{ background: "#ffffff", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -206,10 +207,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
 
-      {/* ── CTA ── */}
-      <section
+        {/* ── CTA ── */}
+        <section
         style={{
           background: "#0a0a12",
           padding: "6rem 0",
@@ -217,7 +218,7 @@ export default function HomePage() {
           position: "relative",
           overflow: "hidden",
         }}
-      >
+        >
         <div
           style={{
             position: "absolute",
@@ -243,7 +244,7 @@ export default function HomePage() {
           >
             جاهز لتحويل مكتبك القانوني؟
           </h2>
-          <p style={{ color: "#475569", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
+          <p style={{ color: "#cbd5e1", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
             ادخل بحساب تجريبي مباشرة وشوف النظام شغّال بالكامل
           </p>
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
@@ -290,14 +291,15 @@ export default function HomePage() {
                 <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 700 }}>
                   {u.label}
                 </p>
-                <p style={{ color: "#475569", fontSize: "0.75rem", marginTop: "0.15rem" }}>
+                <p style={{ color: "#cbd5e1", fontSize: "0.75rem", marginTop: "0.15rem" }}>
                   {u.email}
                 </p>
               </div>
             ))}
           </div>
         </div>
-      </section>
+        </section>
+      </main>
 
       {/* ── Footer ── */}
       <footer
@@ -317,7 +319,7 @@ export default function HomePage() {
             gap: "1rem",
           }}
         >
-          <div style={{ color: "#334155", fontSize: "0.85rem" }}>
+          <div style={{ color: "#cbd5e1", fontSize: "0.85rem" }}>
             © 2026 Naiosh Law. جميع الحقوق محفوظة.
           </div>
           <div
@@ -338,6 +340,9 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .modules-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 420px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
         }
         @media (min-width: 769px) and (max-width: 1100px) {
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }

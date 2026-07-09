@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId } from "react";
+import { useId } from "react";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   open: boolean;
@@ -14,21 +15,7 @@ type Props = {
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
   const titleId = useId();
   const messageId = useId();
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onCancel();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel, open]);
+  const dialogRef = useDialogAccessibility<HTMLDivElement>(open, onCancel);
 
   if (!open) return null;
   return (
@@ -46,10 +33,12 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
       onClick={onCancel}
     >
       <div
+        ref={dialogRef}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={messageId}
+        tabIndex={-1}
         className="card-white"
         style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}

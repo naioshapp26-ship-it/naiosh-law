@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { clearSessionUser } from "@/lib/session";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/lib/module-routing";
 import type { Role } from "@/lib/session-shared";
@@ -17,6 +18,7 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useDialogAccessibility<HTMLDivElement>(drawerOpen, () => setDrawerOpen(false));
   const visibleModules = getVisibleOperationalModules(role);
   const bottomNavItems = [
     { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية", slug: "dashboard" },
@@ -24,26 +26,6 @@ export function AppShell({ role, name, children }: Props) {
     { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات", slug: "court-sessions" },
     { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية", slug: "legal-accounting" },
   ].filter((item) => item.slug === "dashboard" || visibleModules.some((module) => module.slug === item.slug));
-
-  useEffect(() => {
-    if (!drawerOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setDrawerOpen(false);
-      }
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [drawerOpen]);
 
   const logout = async () => {
     await clearSessionUser();
@@ -202,6 +184,7 @@ export function AppShell({ role, name, children }: Props) {
               }}
               aria-label="القائمة"
               aria-expanded={drawerOpen}
+              aria-controls="app-mobile-drawer"
             >
               ☰
             </button>
@@ -225,7 +208,7 @@ export function AppShell({ role, name, children }: Props) {
           {/* Right: Notifications + User + Logout */}
           <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Notification bell */}
-            <button style={{
+            <Link href="/app/modules/notifications-center" style={{
               width: 36, height: 36, borderRadius: "10px",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               cursor: "pointer", display: "flex", alignItems: "center",
@@ -238,7 +221,7 @@ export function AppShell({ role, name, children }: Props) {
                 width: 7, height: 7, borderRadius: "50%",
                 background: "#c3152a", border: "1.5px solid #fff",
               }} />
-            </button>
+            </Link>
 
             {/* User chip */}
             <div className="user-chip" style={{
@@ -364,15 +347,20 @@ export function AppShell({ role, name, children }: Props) {
             }}
           >
             {/* Backdrop */}
-            <div
+            <button
+              type="button"
+              aria-label="إغلاق قائمة الوحدات"
               onClick={() => setDrawerOpen(false)}
-              style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
+              style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)", border: 0, padding: 0, cursor: "pointer" }}
             />
             {/* Drawer panel */}
             <div
+              id="app-mobile-drawer"
+              ref={drawerRef}
               role="dialog"
               aria-modal="true"
               aria-label="قائمة الوحدات"
+              tabIndex={-1}
               style={{
               position: "relative", zIndex: 1,
               width: 280, background: "#ffffff",
@@ -386,7 +374,7 @@ export function AppShell({ role, name, children }: Props) {
         )}
 
         {/* ── Main Content ── */}
-        <main className="app-main" style={{ flex: 1, padding: "1.25rem", minWidth: 0, overflowX: "hidden" }}>
+        <main id="main-content" className="app-main" style={{ flex: 1, padding: "1.25rem", minWidth: 0, overflowX: "hidden" }}>
           {children}
         </main>
       </div>
@@ -408,9 +396,10 @@ export function AppShell({ role, name, children }: Props) {
               href={item.href}
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
+                gap: "0.2rem", padding: "0.45rem 0.6rem", borderRadius: "10px",
                 textDecoration: "none", flex: 1,
                 background: active ? "rgba(195,21,42,0.08)" : "transparent",
+                minHeight: 48,
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
@@ -428,9 +417,10 @@ export function AppShell({ role, name, children }: Props) {
           aria-expanded={drawerOpen}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
-            gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
+            gap: "0.2rem", padding: "0.45rem 0.6rem", borderRadius: "10px",
             background: "none", border: "none", cursor: "pointer",
             fontFamily: "var(--font-cairo)", flex: 1,
+            minHeight: 48,
           }}
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>
@@ -456,7 +446,7 @@ export function AppShell({ role, name, children }: Props) {
           .app-main           { padding-inline: 0.85rem !important; }
         }
         @media (max-width: 390px) {
-          .app-header-actions > button[aria-label="التنبيهات"] { display: none !important; }
+          .app-header-actions > a[aria-label="التنبيهات"] { display: none !important; }
           .logout-btn { font-size: 0.7rem !important; }
         }
         @media (min-width: 769px) {

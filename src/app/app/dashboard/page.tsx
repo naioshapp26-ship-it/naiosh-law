@@ -257,27 +257,32 @@ export default function DashboardPage() {
                   }}
                 >
                   <input
+                    id={`dashboard-task-${i}`}
                     type="checkbox"
+                    aria-label={`تمييز المهمة كمكتملة: ${t.task}`}
                     style={{
-                      width: 16,
-                      height: 16,
+                      width: 22,
+                      height: 22,
                       accentColor: "#c3152a",
-                      marginTop: "0.2rem",
+                      marginTop: "0.15rem",
                       flexShrink: 0,
+                      cursor: "pointer",
                     }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
+                    <label
+                      htmlFor={`dashboard-task-${i}`}
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: 600,
                         color: "#0a0a12",
                         marginBottom: "0.25rem",
                         lineHeight: 1.4,
+                        cursor: "pointer",
                       }}
                     >
                       {t.task}
-                    </p>
+                    </label>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <span
                         style={{
@@ -337,10 +342,11 @@ export default function DashboardPage() {
         @media (max-width: 900px) {
           .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .two-col { grid-template-columns: 1fr !important; }
-          .mod-grid { grid-template-columns: 1fr !important; }
+          .mod-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 600px) {
           .kpi-grid { grid-template-columns: 1fr !important; }
+          .mod-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </AppShell>

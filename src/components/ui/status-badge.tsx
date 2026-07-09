@@ -32,7 +32,8 @@ export function StatusBadge({ label, color, dot = true }: Props) {
         padding: "0.22rem 0.7rem",
         fontSize: "0.72rem",
         fontWeight: 700,
-        whiteSpace: "nowrap",
+        whiteSpace: "normal",
+        overflowWrap: "anywhere",
         letterSpacing: "0.01em",
       }}
     >

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { demoAccounts } from "@/data/auth";
 import { saveSessionUser, type SessionUser } from "@/lib/session";
 import { getSafeAppPath, type Role } from "@/lib/session-shared";
@@ -40,6 +40,7 @@ function getRedirectTarget() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [email, setEmail] = useState("admin@naioshlaw.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -112,7 +113,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div
+    <main
+      id="main-content"
       style={{ minHeight: "100vh", display: "flex", background: "#0a0a12" }}
       className="login-wrap"
     >
@@ -306,7 +308,7 @@ export default function LoginPage() {
       >
         <motion.div
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
-          initial="hidden"
+          initial={false}
           animate="show"
           style={{ width: "100%", maxWidth: "420px" }}
         >
@@ -411,7 +413,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
-              <label className="input-label">البريد الإلكتروني</label>
+              <label className="input-label" htmlFor="login-email">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -426,6 +428,7 @@ export default function LoginPage() {
                   ✉️
                 </span>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -438,7 +441,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label className="input-label" htmlFor="login-password">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -456,10 +459,12 @@ export default function LoginPage() {
                     lineHeight: 1,
                   }}
                   aria-label="إظهار/إخفاء كلمة المرور"
+                  aria-pressed={showPass}
                 >
                   {showPass ? "🙈" : "👁️"}
                 </button>
                 <input
+                  id="login-password"
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -473,8 +478,11 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }}
+                role="alert"
+                aria-live="assertive"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
                 style={{
                   background: "rgba(195,21,42,0.06)",
                   border: "1px solid rgba(195,21,42,0.2)",
@@ -563,6 +571,6 @@ export default function LoginPage() {
           .login-wrap > div:last-child { padding: 2rem 1rem !important; }
         }
       `}</style>
-    </div>
+    </main>
   );
 }
