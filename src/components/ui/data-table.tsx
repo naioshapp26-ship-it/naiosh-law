@@ -102,10 +102,6 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
   };
 
-  useEffect(() => {
-    setPage((current) => Math.min(current, totalPages));
-  }, [totalPages]);
-
   return (
     <div>
       {/* Search + count */}
