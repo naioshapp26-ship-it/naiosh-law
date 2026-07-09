@@ -1,8 +1,6 @@
 import { canAccessModule } from "@/lib/module-access";
 import type { SessionRole } from "@/lib/auth-session";
 
-export type Role = "admin" | "client";
-
 export type LegalModule = {
   slug: string;
   title: string;
@@ -12,10 +10,10 @@ export type LegalModule = {
   workflow: string[];
   relations: string[];
   dbTables: string[];
-  permissions: Record<Role, string[]>;
+  permissions: Record<SessionRole, string[]>;
 };
 
-const basePermissions = {
+const basePermissions: Record<SessionRole, string[]> = {
   admin: ["عرض", "إضافة", "تعديل", "اعتماد", "تقارير"],
   client: ["عرض الحالة", "تحميل المستندات", "متابعة التنبيهات"],
 };

@@ -262,13 +262,6 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
-        if (cachedUser) {
-          setVerifiedUser(cachedUser);
-          setVerifiedRawSession(rawSession);
-          setVerified(true);
-          return;
-        }
-
         setVerifiedUser(null);
         setVerified(false);
         setVerifiedRawSession(rawSession);

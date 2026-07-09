@@ -146,7 +146,13 @@ export async function decodeSession(token?: string | null): Promise<SessionUser 
     return null;
   }
 
-  const [payloadPart, signaturePart] = token.split(".");
+  const tokenParts = token.split(".");
+
+  if (tokenParts.length !== 2) {
+    return null;
+  }
+
+  const [payloadPart, signaturePart] = tokenParts;
 
   if (!payloadPart || !signaturePart) {
     return null;

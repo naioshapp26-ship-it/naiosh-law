@@ -64,7 +64,7 @@ const activeMap: Record<string, { label: string; color: BadgeColor }> = {
 };
 
 /* ─── CONFIGS ───────────────────────────────────────────── */
-export const moduleConfigs: ModuleConfig[] = [
+const moduleConfigs: ModuleConfig[] = [
 
   /* 1. CASE MANAGEMENT */
   {
