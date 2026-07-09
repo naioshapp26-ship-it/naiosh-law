@@ -72,6 +72,9 @@ async function main() {
   console.log("🌱 Seeding Naiosh Law database...");
 
   await prisma.auditLog.deleteMany();
+  await prisma.eSignature.deleteMany();
+  await prisma.approvalRequest.deleteMany();
+  await prisma.governancePolicy.deleteMany();
   await prisma.professionalNetwork.deleteMany();
   await prisma.caseSubject.deleteMany();
   await prisma.specializationSubject.deleteMany();
@@ -122,6 +125,15 @@ async function main() {
       password: await bcrypt.hash("Consult@123", 10),
       name: "د. سارة المستشارة",
       role: "consultant",
+    },
+  });
+
+  const industrialAgent = await prisma.user.create({
+    data: {
+      email: "agent@naioshlaw.com",
+      password: await bcrypt.hash("Agent@123", 10),
+      name: "م. خالد الوكيل الصناعي",
+      role: "industrial_agent",
     },
   });
 
@@ -252,6 +264,133 @@ async function main() {
       { caseNo: "#2024-0547", client: "أحمد محمد الصاوي", court: "محكمة الاستئناف القاهرة", room: "7", date: "15 يوليو 2026", time: "10:00", status: "مجدولة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0548", client: "شركة النيل للتجارة", court: "المحكمة الابتدائية الجيزة", room: "3", date: "16 يوليو 2026", time: "11:30", status: "قريبة", lawyer: "أحمد المحامي" },
       { caseNo: "#2024-0280", client: "خالد عبد الرحمن عمر", court: "محكمة الجنايات القاهرة", room: "12", date: "18 يوليو 2026", time: "09:00", status: "مجدولة", lawyer: "أحمد المحامي" },
+    ],
+  });
+
+  // Phase 6 — Governance & E-Signing
+  await prisma.governancePolicy.createMany({
+    data: [
+      {
+        title: "سياسة حماية البيانات الشخصية للموكلين",
+        category: "خصوصية",
+        description: "تنظم جمع وتخزين ومعالجة بيانات الموكلين وفقاً للتشريعات المصرية.",
+        version: "2.1",
+        status: "ساري",
+        effectiveDate: "2025-01-01",
+      },
+      {
+        title: "سياسة الصلاحيات والأدوار",
+        category: "أمن معلومات",
+        description: "تحدد مستويات الوصول لكل دور: مدير، محامٍ، مستشار، وكيل صناعي، موكل.",
+        version: "1.3",
+        status: "ساري",
+        effectiveDate: "2025-06-15",
+      },
+      {
+        title: "سياسة الاحتفاظ بالمستندات القانونية",
+        category: "أرشفة",
+        description: "مدة الاحتفاظ بالقضايا المغلقة والمستندات والنسخ الاحتياطية.",
+        version: "1.0",
+        status: "ساري",
+        effectiveDate: "2024-09-01",
+      },
+    ],
+  });
+
+  await prisma.approvalRequest.createMany({
+    data: [
+      {
+        refNo: "APR-2026-0001",
+        type: "case_opening",
+        title: "اعتماد فتح قضية تجارية #2024-0548",
+        description: "طلب اعتماد فتح ملف قضية نزاع عقاري بقيمة 45000 ج.م",
+        requesterId: lawyer.id,
+        status: "pending",
+        priority: "عالٍ",
+        entity: "case",
+        entityId: "#2024-0548",
+        requestedAt: "2026-07-01",
+      },
+      {
+        refNo: "APR-2026-0002",
+        type: "fee_waiver",
+        title: "إعفاء جزئي من رسوم الاستشارة",
+        description: "طلب إعفاء 30% من رسوم استشارة لموكل متكرر",
+        requesterId: lawyer.id,
+        approverId: industrialAgent.id,
+        status: "approved",
+        priority: "متوسط",
+        requestedAt: "2026-06-28",
+        resolvedAt: "2026-06-29",
+      },
+      {
+        refNo: "APR-2026-0003",
+        type: "document_release",
+        title: "إصدار نسخة من حكم نهائي",
+        description: "طلب إصدار نسخة موثقة من حكم للموكل سارة إبراهيم",
+        requesterId: lawyer.id,
+        approverId: admin.id,
+        status: "approved",
+        priority: "عاجل",
+        requestedAt: "2026-07-05",
+        resolvedAt: "2026-07-06",
+      },
+      {
+        refNo: "APR-2026-0004",
+        type: "user_access",
+        title: "منح صلاحية محامٍ لموظف جديد",
+        description: "طلب تفعيل حساب محامٍ للانضمام لفريق القضايا الجنائية",
+        requesterId: admin.id,
+        status: "pending",
+        priority: "متوسط",
+        requestedAt: "2026-07-08",
+      },
+    ],
+  });
+
+  await prisma.eSignature.createMany({
+    data: [
+      {
+        refNo: "SIG-2026-0001",
+        documentTitle: "عقد وكالة قانونية — أحمد الصاوي",
+        documentRef: "DOC-2026-0547",
+        signerName: "أحمد محمد الصاوي",
+        signerEmail: "ahmed@example.com",
+        signerRole: "موكل",
+        status: "signed",
+        signatureHash: "a3f8c2d91e7b4f6058a2c1d9e0b3f7a2",
+        signedAt: "2026-06-20 14:30",
+      },
+      {
+        refNo: "SIG-2026-0002",
+        documentTitle: "اتفاقية سرية — شركة النيل للتجارة",
+        documentRef: "DOC-2026-0548",
+        signerName: "ممثل شركة النيل",
+        signerEmail: "legal@niletrade.com",
+        signerRole: "موكل",
+        status: "pending",
+        expiresAt: "2026-07-20",
+      },
+      {
+        refNo: "SIG-2026-0003",
+        documentTitle: "إقرار بالموافقة على الأتعاب",
+        documentRef: "DOC-2026-0280",
+        signerName: "خالد عبد الرحمن عمر",
+        signerRole: "موكل",
+        userId: lawyer.id,
+        status: "pending",
+        expiresAt: "2026-07-15",
+      },
+    ],
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      { userId: admin.id, action: "login", entity: "auth", details: "تسجيل دخول المدير", severity: "info" },
+      { userId: lawyer.id, action: "create_case", entity: "case", entityId: "#2024-0547", details: "إنشاء قضية جديدة", severity: "info" },
+      { userId: industrialAgent.id, action: "approve_request", entity: "approval", entityId: "APR-2026-0002", details: "اعتماد إعفاء رسوم", severity: "info" },
+      { userId: admin.id, action: "sign_document", entity: "e_signature", details: "توقيع عقد وكالة", severity: "info" },
+      { action: "system_backup", entity: "system", details: "نسخ احتياطي تلقائي", severity: "info" },
     ],
   });
 
