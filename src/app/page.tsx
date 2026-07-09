@@ -38,7 +38,7 @@ const features = [
 ];
 
 const statItems = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: String(operationalModules.length), label: "وحدة تشغيلية" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -335,10 +335,15 @@ export default function HomePage() {
       </footer>
 
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 768px) {
           .features-grid { grid-template-columns: 1fr !important; }
           .modules-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 420px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
         }
         @media (min-width: 769px) and (max-width: 1100px) {
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }

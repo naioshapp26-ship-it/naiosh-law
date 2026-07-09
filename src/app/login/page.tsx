@@ -295,6 +295,7 @@ export default function LoginPage() {
 
       {/* ── Right: Form panel ── */}
       <div
+        className="login-form-panel"
         style={{
           flex: 1,
           background: "#ffffff",
@@ -558,6 +559,11 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+        }
+        @media (max-width: 560px) {
+          .login-form-panel {
+            padding: 2rem 1.25rem !important;
+          }
         }
         @media (max-width: 420px) {
           .demo-login-grid { flex-direction: column; }

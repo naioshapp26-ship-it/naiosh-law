@@ -4,19 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { sessionStorageKey, type SessionUser } from "@/data/auth";
 
-function isSessionUser(value: unknown): value is SessionUser {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const user = value as Record<string, unknown>;
-  return (
-    (user.role === "admin" || user.role === "client") &&
-    typeof user.name === "string" &&
-    typeof user.email === "string"
-  );
-}
-
 export function clearSessionMirror() {
   if (typeof window === "undefined") {
     return;
@@ -26,21 +13,6 @@ export function clearSessionMirror() {
     window.localStorage.removeItem(sessionStorageKey);
   } catch {
     // Browser storage can be unavailable in private or locked-down contexts.
-  }
-}
-
-function readSessionMirror() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(sessionStorageKey);
-    const parsed = raw ? JSON.parse(raw) : null;
-    return isSessionUser(parsed) ? parsed : null;
-  } catch {
-    clearSessionMirror();
-    return null;
   }
 }
 
@@ -68,7 +40,6 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     let cancelled = false;
-    readSessionMirror();
 
     async function validateSession() {
       try {
@@ -114,10 +85,13 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
-      logout: () => {
+      logout: async () => {
         clearSessionMirror();
-        void fetch("/api/auth/logout", { method: "POST" });
-        router.replace("/login");
+        try {
+          await fetch("/api/auth/logout", { method: "POST", cache: "no-store", credentials: "same-origin" });
+        } finally {
+          router.replace("/login");
+        }
       },
     }),
     [user, ready, router]

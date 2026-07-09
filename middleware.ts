@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sessionCookieName } from "@/data/auth";
-import { adminOnlyModuleSlugs } from "@/data/modules";
+import { canAccessModule } from "@/data/modules";
 import { verifySessionToken } from "@/lib/session-token";
 
 function redirectToLogin(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
     const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)/);
     const slug = moduleMatch?.[1];
-    if (slug && adminOnlyModuleSlugs.includes(slug) && user.role !== "admin") {
+    if (slug && !canAccessModule(user.role, slug)) {
       return NextResponse.redirect(new URL("/app/dashboard", request.url));
     }
   }

@@ -332,7 +332,7 @@ export default function DashboardPage() {
       </div>
 
       <style>{`
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
           .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .two-col { grid-template-columns: 1fr !important; }
           .mod-grid { grid-template-columns: repeat(2, 1fr) !important; }

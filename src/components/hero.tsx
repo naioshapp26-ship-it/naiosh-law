@@ -632,12 +632,30 @@ export function HeroSection() {
           }
         }
         @media (max-width: 640px) {
+          .hero-badge-pill {
+            justify-content: center;
+            line-height: 1.6;
+            text-align: center;
+            white-space: normal;
+          }
           .hero-cta > a {
             width: 100%;
             text-align: center;
           }
           .hero-stats {
             gap: 1.25rem !important;
+          }
+          .hero-stats > div {
+            flex: 1 1 calc(50% - 1.25rem);
+            text-align: center !important;
+          }
+        }
+        @media (max-width: 420px) {
+          .hero-content-col {
+            max-width: 100% !important;
+          }
+          .hero-stats > div {
+            flex-basis: 100%;
           }
         }
       `}</style>

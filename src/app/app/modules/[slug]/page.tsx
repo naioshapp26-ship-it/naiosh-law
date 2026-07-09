@@ -1,6 +1,9 @@
 import { ModuleShell } from "@/components/module-shell";
+import { sessionCookieName } from "@/data/auth";
 import { moduleConfigMap } from "@/data/module-configs";
-import { moduleMap } from "@/data/modules";
+import { canAccessModule, moduleMap } from "@/data/modules";
+import { verifySessionToken } from "@/lib/session-token";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 type Props = {
@@ -11,6 +14,15 @@ export default async function ModulePage({ params }: Props) {
   const { slug } = await params;
 
   if (slug === "dashboard") {
+    redirect("/app/dashboard");
+  }
+
+  const cookieStore = await cookies();
+  const user = await verifySessionToken(cookieStore.get(sessionCookieName)?.value);
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(`/app/modules/${slug}`)}`);
+  }
+  if (!canAccessModule(user.role, slug)) {
     redirect("/app/dashboard");
   }
 

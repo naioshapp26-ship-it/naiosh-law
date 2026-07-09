@@ -79,6 +79,7 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const toastTimeouts = useRef<number[]>([]);
+  const skipNextPersist = useRef(true);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -100,6 +101,7 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setRows(loadStoredRows(slug, config.data));
+      skipNextPersist.current = true;
       setStorageReady(true);
     }, 0);
 
@@ -108,6 +110,10 @@ export function ModuleShell({ slug, title, config }: ModuleShellProps) {
 
   useEffect(() => {
     if (!storageReady || typeof window === "undefined") {
+      return;
+    }
+    if (skipNextPersist.current) {
+      skipNextPersist.current = false;
       return;
     }
 

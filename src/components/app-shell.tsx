@@ -16,6 +16,7 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
@@ -24,10 +25,18 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarSoftText = "rgba(255,255,255,0.64)";
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
-  const logout = () => {
+  const logout = async () => {
+    if (loggingOut) {
+      return;
+    }
+
+    setLoggingOut(true);
     clearSessionMirror();
-    void fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+    try {
+      await fetch("/api/auth/logout", { method: "POST", cache: "no-store", credentials: "same-origin" });
+    } finally {
+      router.replace("/login");
+    }
   };
 
   const isActive = (href: string) => pathname === href;
@@ -240,18 +249,27 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={() => void logout()}
+              disabled={loggingOut}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font-cairo)",
+                cursor: loggingOut ? "wait" : "pointer", fontFamily: "var(--font-cairo)",
                 transition: "all 0.2s", whiteSpace: "nowrap",
+                opacity: loggingOut ? 0.7 : 1,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
+              onMouseEnter={(e) => {
+                if (loggingOut) return;
+                (e.currentTarget as HTMLElement).style.background = "#c3152a";
+                (e.currentTarget as HTMLElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)";
+                (e.currentTarget as HTMLElement).style.color = "#c3152a";
+              }}
             >
-              خروج
+              {loggingOut ? "جار الخروج..." : "خروج"}
             </button>
           </div>
         </div>
@@ -414,6 +432,14 @@ export function AppShell({ role, name, children }: Props) {
 
       <style>{`
         /* Mobile breakpoint */
+        @media (max-width: 1024px) and (min-width: 769px) {
+          .desktop-sidebar {
+            width: 220px !important;
+          }
+          main {
+            padding: 1rem !important;
+          }
+        }
         @media (max-width: 768px) {
           .desktop-sidebar   { display: none !important; }
           .hamburger-btn     { display: flex !important; }
@@ -427,6 +453,16 @@ export function AppShell({ role, name, children }: Props) {
           .notification-button { display: none !important; }
           .app-header-actions  { gap: 0.35rem !important; }
           main                 { padding-inline: 0.85rem !important; }
+        }
+        @media (max-width: 360px) {
+          .mobile-bottom-nav {
+            padding-inline: 0.35rem !important;
+          }
+          .mobile-bottom-nav a,
+          .mobile-bottom-nav button {
+            padding-inline: 0.25rem !important;
+            min-width: 0;
+          }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

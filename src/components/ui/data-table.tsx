@@ -217,7 +217,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
+                        style={{ padding: "0.85rem 1rem", verticalAlign: "middle", overflowWrap: "anywhere" }}
                       >
                         {renderCell(col, row)}
                       </td>
@@ -447,7 +447,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             gap: 0.75rem;
           }
         }
-        @media (max-width: 640px) {
+        @media (max-width: 700px) {
           .table-toolbar {
             align-items: stretch !important;
             flex-direction: column;
@@ -456,6 +456,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .mobile-card-list { display: block !important; }
           .table-pagination-controls { width: 100%; }
           .table-pagination-controls button { flex: 1; }
+        }
+        @media (max-width: 420px) {
+          .mobile-card-list article > div:last-child button {
+            flex: 1 1 100%;
+          }
         }
       `}</style>
     </div>
