@@ -114,7 +114,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
   useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages);
+      const timer = window.setTimeout(() => setPage(totalPages), 0);
+      return () => window.clearTimeout(timer);
     }
   }, [page, totalPages]);
 
