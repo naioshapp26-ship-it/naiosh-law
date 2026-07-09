@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { decodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
+import { readJsonBody } from "@/lib/api-request";
+import { canAccessModule } from "@/lib/module-access";
 
 const integrationCatalog: Record<string, { name: string; latencyMs: number }> = {
   sms: { name: "SMS Gateway", latencyMs: 142 },
@@ -40,24 +42,6 @@ async function requireSession(request: Request) {
   return response;
 }
 
-async function parseOptionalJson(request: Request) {
-  const contentType = request.headers.get("content-type");
-
-  if (!contentType) {
-    return null;
-  }
-
-  if (!contentType.toLocaleLowerCase().includes("application/json")) {
-    return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
-  }
-
-  try {
-    return await request.json();
-  } catch {
-    return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
-  }
-}
-
 function healthPayload(slug: string, config: { name: string; latencyMs: number }) {
   return {
     ok: true,
@@ -81,6 +65,10 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "Unknown integration endpoint." }, { status: 404 });
   }
 
+  if (!canAccessModule(session.role, "integrations")) {
+    return NextResponse.json({ message: "Integration access requires an administrator session." }, { status: 403 });
+  }
+
   return NextResponse.json(healthPayload(slug, config));
 }
 
@@ -96,15 +84,19 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "Unknown integration endpoint." }, { status: 404 });
   }
 
-  const body = await parseOptionalJson(request);
-  if (body instanceof NextResponse) {
-    return body;
+  if (!canAccessModule(session.role, "integrations")) {
+    return NextResponse.json({ message: "Integration access requires an administrator session." }, { status: 403 });
+  }
+
+  const bodyResult = await readJsonBody(request, { required: false });
+  if (!bodyResult.ok) {
+    return bodyResult.response;
   }
 
   return NextResponse.json({
     ...healthPayload(slug, config),
     accepted: true,
     requestId: `${slug}-${Date.now()}`,
-    echo: body,
+    echo: bodyResult.data,
   });
 }

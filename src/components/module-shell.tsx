@@ -8,9 +8,7 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
-import { moduleIconMap } from "@/data/module-icons";
-import { moduleMap } from "@/data/modules";
+import type { ModuleConfig } from "@/data/module-configs";
 import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
 
@@ -107,14 +105,20 @@ function persistRows(slug: string, rows: Record<string, unknown>[]) {
   }
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
+type ModuleShellProps = {
+  slug: string;
+  config: ModuleConfig;
+  moduleTitle: string;
+  moduleIcon: string;
+};
+
+export function ModuleShell({ slug, config, moduleTitle, moduleIcon }: ModuleShellProps) {
   const { user, ready } = useSession(true);
   const router = useRouter();
-  const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config?.data ?? []));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config.data));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -129,10 +133,6 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, []);
 
   useEffect(() => {
-    if (!config) {
-      return;
-    }
-
     persistRows(slug, rows);
   }, [config, rows, slug]);
 
@@ -148,18 +148,6 @@ export function ModuleShell({ slug }: { slug: string }) {
 
   if (!hasModuleAccess) {
     return <LoadingScreen label="جاري تحويلك إلى لوحة التحكم..." />;
-  }
-
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
-    );
   }
 
   /* ── Handlers ── */
@@ -235,11 +223,11 @@ export function ModuleShell({ slug }: { slug: string }) {
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0a0a12" }}>{String(viewTarget[col.key] ?? "—")}</p>
+                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0a0a12", overflowWrap: "anywhere", wordBreak: "break-word" }}>{String(viewTarget[col.key] ?? "—")}</p>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div className="view-modal-actions" style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             {isAdmin && (
               <button
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
@@ -268,19 +256,19 @@ export function ModuleShell({ slug }: { slug: string }) {
         ))}
       </div>
 
-      <div style={{ maxWidth: 1300 }}>
+        <div style={{ maxWidth: 1300, minWidth: 0 }}>
         {/* Page Header */}
         <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {moduleIconMap[slug] ?? "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                {moduleIcon} {moduleTitle}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rows.length} {entityPlural} — جميع البيانات محدثة
               </p>
             </div>
-            <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
+            <div className="module-header-actions" style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
               <button
                 onClick={() => setReportOpen(true)}
                 style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font)", fontWeight: 600, fontSize: "0.85rem", color: "#475569", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.18s" }}
@@ -306,7 +294,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         <StatsRow cards={config.kpis} />
 
         {/* Data Table */}
-        <div className="card-white" style={{ padding: "1.5rem" }}>
+        <div className="card-white module-table-card" style={{ padding: "1.5rem" }}>
           <DataTable
             columns={config.columns}
             data={rows}
@@ -369,9 +357,9 @@ export function ModuleShell({ slug }: { slug: string }) {
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}
                 >
                   <span style={{ fontSize: "1.5rem" }}>{opt.icon}</span>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0a0a12" }}>{opt.label}</p>
-                    <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.1rem" }}>{opt.desc}</p>
+                    <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.1rem", overflowWrap: "anywhere" }}>{opt.desc}</p>
                   </div>
                   <span style={{ marginInlineStart: "auto", color: "#c3152a", fontSize: "1.1rem" }}>←</span>
                 </button>
@@ -391,6 +379,19 @@ export function ModuleShell({ slug }: { slug: string }) {
           .toast-stack {
             inset-inline: 1rem !important;
             bottom: 5.5rem !important;
+          }
+          .view-modal-actions,
+          .module-header-actions {
+            align-items: stretch !important;
+            flex-direction: column !important;
+          }
+          .view-modal-actions > button,
+          .module-header-actions > button {
+            justify-content: center !important;
+            width: 100%;
+          }
+          .module-table-card {
+            padding: 1rem !important;
           }
         }
       `}</style>

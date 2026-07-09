@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
@@ -152,6 +152,31 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const visibleModules = getVisibleOperationalModules(role);
+  const bottomNavModules = ["case-management", "court-sessions", "legal-accounting"]
+    .map((slug) => visibleModules.find((item) => item.slug === slug))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  useEffect(() => {
+    if (!drawerOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [drawerOpen]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
@@ -314,10 +339,12 @@ export function AppShell({ role, name, children }: Props) {
         justifyContent: "space-around",
       }}>
         {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
+          { href: "/app/dashboard", icon: moduleIconMap.dashboard, label: "الرئيسية" },
+          ...bottomNavModules.map((item) => ({
+            href: `/app/modules/${item.slug}`,
+            icon: moduleIconMap[item.slug] ?? "📌",
+            label: item.title,
+          })),
         ].map((item) => {
           const active = pathname === item.href;
           return (

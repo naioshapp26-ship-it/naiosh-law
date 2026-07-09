@@ -15,6 +15,19 @@ type Props = {
 
 const PAGE_SIZE = 10;
 const rowIdKey = "_rowId";
+const collator = new Intl.Collator("ar", { numeric: true, sensitivity: "base" });
+
+function toComparableValue(value: unknown, column?: Column) {
+  if (column?.type === "number" || column?.type === "currency") {
+    const numericValue = Number(String(value ?? "").replace(/,/g, ""));
+
+    if (Number.isFinite(numericValue)) {
+      return numericValue;
+    }
+  }
+
+  return String(value ?? "");
+}
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
@@ -42,12 +55,18 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const sorted = useMemo(() => (
     sortKey
       ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+        const sortColumn = columns.find((column) => column.key === sortKey);
+        const va = toComparableValue(a[sortKey], sortColumn);
+        const vb = toComparableValue(b[sortKey], sortColumn);
+        const result =
+          typeof va === "number" && typeof vb === "number"
+            ? va - vb
+            : collator.compare(String(va), String(vb));
+
+        return sortAsc ? result : -result;
       })
       : filtered
-  ), [filtered, sortAsc, sortKey]);
+  ), [columns, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -85,7 +104,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     if (col.type === "number") {
       return <span style={{ fontWeight: 600 }}>{String(val ?? "—")}</span>;
     }
-    return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
+    return <span style={{ color: "#334155", overflowWrap: "anywhere", wordBreak: "break-word" }}>{String(val ?? "—")}</span>;
   };
 
   return (
@@ -211,7 +230,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
+                        style={{ padding: "0.85rem 1rem", verticalAlign: "middle", maxWidth: 260 }}
                       >
                         {renderCell(col, row)}
                       </td>
@@ -307,7 +326,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 700, marginBottom: "0.25rem" }}>
                     {columns[0]?.label ?? "السجل"}
                   </p>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0a0a12", overflowWrap: "anywhere", wordBreak: "break-word" }}>
                     {primaryColumn ? renderCell(primaryColumn, row) : "—"}
                   </div>
                 </div>
@@ -320,9 +339,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.65rem" }}>
                 {mobileDetailColumns.map((col) => (
-                  <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem" }}>
-                    <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700 }}>{col.label}</span>
-                    <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0 }}>{renderCell(col, row)}</span>
+                  <div key={col.key} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", borderTop: "1px solid #f1f5f9", paddingTop: "0.65rem", minWidth: 0 }}>
+                    <span style={{ color: "#64748b", fontSize: "0.74rem", fontWeight: 700, flexShrink: 0 }}>{col.label}</span>
+                    <span style={{ textAlign: "end", fontSize: "0.8rem", minWidth: 0, overflowWrap: "anywhere", wordBreak: "break-word" }}>{renderCell(col, row)}</span>
                   </div>
                 ))}
               </div>
@@ -332,7 +351,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {onView && (
                     <button
                       onClick={() => onView(row)}
-                      style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font)", flex: 1 }}
+                      style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#475569", fontFamily: "var(--font)", flex: "1 1 90px" }}
                     >
                       👁 عرض
                     </button>
@@ -340,7 +359,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {onEdit && (
                     <button
                       onClick={() => onEdit(row)}
-                      style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font)", flex: 1 }}
+                      style={{ background: "rgba(195,21,42,0.07)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#c3152a", fontFamily: "var(--font)", flex: "1 1 90px" }}
                     >
                       ✏️ تعديل
                     </button>
@@ -348,7 +367,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   {onDelete && (
                     <button
                       onClick={() => onDelete(row)}
-                      style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font)", flex: 1 }}
+                      style={{ background: "rgba(239,68,68,0.08)", border: "none", borderRadius: "8px", padding: "0.5rem 0.8rem", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, color: "#dc2626", fontFamily: "var(--font)", flex: "1 1 90px" }}
                     >
                       🗑 حذف
                     </button>

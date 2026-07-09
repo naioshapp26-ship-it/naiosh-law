@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { encodeSession, getSessionCookieOptions, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
+import { readJsonBody } from "@/lib/api-request";
 
 type LoginRequest = {
   email?: unknown;
@@ -10,27 +11,18 @@ type LoginRequest = {
   demo?: unknown;
 };
 
-function acceptsJson(request: Request) {
-  return request.headers.get("content-type")?.toLocaleLowerCase().includes("application/json") ?? false;
-}
-
 function isSessionRole(role: unknown): role is SessionRole {
   return role === "admin" || role === "client";
 }
 
 export async function POST(request: Request) {
-  let body: LoginRequest;
+  const bodyResult = await readJsonBody<LoginRequest>(request, { maxBytes: 4096 });
 
-  if (!acceptsJson(request)) {
-    return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
+  if (!bodyResult.ok) {
+    return bodyResult.response;
   }
 
-  try {
-    body = (await request.json()) as LoginRequest;
-  } catch {
-    return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
-  }
-
+  const body = bodyResult.data ?? {};
   const demoUser =
     body.demo === true && isSessionRole(body.role)
       ? findDemoUserByRole(body.role)
