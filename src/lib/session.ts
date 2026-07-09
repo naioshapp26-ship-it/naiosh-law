@@ -14,6 +14,14 @@ function notifySessionChanged() {
   window.dispatchEvent(new Event(sessionChangedEvent));
 }
 
+function persistSessionUser(user: SessionUser) {
+  window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+}
+
+function removeSessionUser() {
+  window.localStorage.removeItem(sessionStorageKey);
+}
+
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
@@ -30,10 +38,10 @@ export function readStoredUser(): SessionUser | null {
       return parsed;
     }
 
-    window.localStorage.removeItem(sessionStorageKey);
+    removeSessionUser();
   } catch {
     try {
-      window.localStorage.removeItem(sessionStorageKey);
+      removeSessionUser();
     } catch {
       // Storage can be unavailable in private browsing or hardened environments.
     }
@@ -44,7 +52,7 @@ export function readStoredUser(): SessionUser | null {
 
 export function saveSessionUser(user: SessionUser) {
   try {
-    window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+    persistSessionUser(user);
   } catch {
     // The cookie remains the source of truth if localStorage is not writable.
   }
@@ -53,27 +61,27 @@ export function saveSessionUser(user: SessionUser) {
 
 export function clearSessionUser() {
   try {
-    window.localStorage.removeItem(sessionStorageKey);
+    removeSessionUser();
   } catch {
     // Ignore storage failures during logout; the server cookie is cleared separately.
   }
   notifySessionChanged();
 }
 
-async function fetchSessionUser(): Promise<SessionUser | null> {
+async function fetchSessionUser(): Promise<{ ok: true; user: SessionUser | null } | { ok: false }> {
   try {
     const response = await fetch("/api/auth/session", {
       cache: "no-store",
       credentials: "same-origin",
     });
     if (!response.ok) {
-      return null;
+      return { ok: false };
     }
 
     const payload = (await response.json()) as { user?: unknown };
-    return isSessionUser(payload.user) ? payload.user : null;
+    return { ok: true, user: isSessionUser(payload.user) ? payload.user : null };
   } catch {
-    return null;
+    return { ok: false };
   }
 }
 
@@ -129,26 +137,43 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     let active = true;
+    let syncVersion = 0;
 
     const syncSession = () => {
+      const currentSync = ++syncVersion;
       const storedUser = readStoredUser();
       if (storedUser) {
         setUser(storedUser);
         setReady(true);
-        return;
+      } else {
+        setReady(false);
       }
 
-      setReady(false);
-      void fetchSessionUser().then((serverUser) => {
-        if (!active) {
+      void fetchSessionUser().then((result) => {
+        if (!active || currentSync !== syncVersion) {
           return;
         }
 
-        if (serverUser) {
-          saveSessionUser(serverUser);
+        if (!result.ok) {
+          setReady(true);
+          return;
         }
 
-        setUser(serverUser);
+        if (result.user) {
+          try {
+            persistSessionUser(result.user);
+          } catch {
+            // The in-memory session still updates when storage is unavailable.
+          }
+        } else {
+          try {
+            removeSessionUser();
+          } catch {
+            // Ignore storage failures; the server session has already been checked.
+          }
+        }
+
+        setUser(result.user);
         setReady(true);
       });
     };

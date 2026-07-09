@@ -115,6 +115,80 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
   };
 
+  const renderActions = (row: Record<string, unknown>) => {
+    if (!hasActions) {
+      return null;
+    }
+
+    return (
+      <div className="row-actions" style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+        {onView && (
+          <button
+            onClick={() => onView(row)}
+            style={{
+              background: "#f1f5f9",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.35rem 0.7rem",
+              cursor: "pointer",
+              fontSize: "0.73rem",
+              fontWeight: 600,
+              color: "#475569",
+              fontFamily: "var(--font-cairo)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
+          >
+            👁 عرض
+          </button>
+        )}
+        {onEdit && (
+          <button
+            onClick={() => onEdit(row)}
+            style={{
+              background: "rgba(195,21,42,0.07)",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.35rem 0.7rem",
+              cursor: "pointer",
+              fontSize: "0.73rem",
+              fontWeight: 600,
+              color: "#c3152a",
+              fontFamily: "var(--font-cairo)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
+          >
+            ✏️ تعديل
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(row)}
+            style={{
+              background: "rgba(239,68,68,0.08)",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.35rem 0.7rem",
+              cursor: "pointer",
+              fontSize: "0.73rem",
+              fontWeight: 600,
+              color: "#dc2626",
+              fontFamily: "var(--font-cairo)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
+          >
+            🗑 حذف
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       {/* Search + count */}
@@ -244,71 +318,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     ))}
                     {hasActions && (
                       <td style={{ padding: "0.85rem 1rem" }}>
-                        <div className="row-actions" style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                          {onView && (
-                            <button
-                              onClick={() => onView(row)}
-                              style={{
-                                background: "#f1f5f9",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#475569",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
-                            >
-                              👁 عرض
-                            </button>
-                          )}
-                          {onEdit && (
-                            <button
-                              onClick={() => onEdit(row)}
-                              style={{
-                                background: "rgba(195,21,42,0.07)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#c3152a",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
-                            >
-                              ✏️ تعديل
-                            </button>
-                          )}
-                          {onDelete && (
-                            <button
-                              onClick={() => onDelete(row)}
-                              style={{
-                                background: "rgba(239,68,68,0.08)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#dc2626",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
-                            >
-                              🗑 حذف
-                            </button>
-                          )}
-                        </div>
+                        {renderActions(row)}
                       </td>
                     )}
                   </tr>
@@ -316,6 +326,55 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               )}
             </tbody>
           </table>
+        </div>
+        <div
+          className="data-table-cards"
+          aria-label="نتائج السجلات"
+          style={{ display: "none" }}
+        >
+          {paged.length === 0 ? (
+            <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
+              <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
+            </div>
+          ) : (
+            paged.map((row, i) => (
+              <article
+                key={`${getRowKey(row, (safePage - 1) * PAGE_SIZE + i)}-card`}
+                className="mobile-record-card"
+                style={{
+                  background: "#fff",
+                  borderBottom: "1px solid #e2e8f0",
+                  padding: "1rem",
+                }}
+              >
+                <div style={{ display: "grid", gap: "0.85rem" }}>
+                  {columns.map((col) => (
+                    <div
+                      key={col.key}
+                      className="mobile-record-field"
+                      style={{
+                        display: "grid",
+                        gap: "0.35rem",
+                        paddingBottom: "0.75rem",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <span style={{ color: "#64748b", fontSize: "0.72rem", fontWeight: 700 }}>
+                        {col.label}
+                      </span>
+                      <div style={{ fontSize: "0.9rem", minWidth: 0 }}>{renderCell(col, row)}</div>
+                    </div>
+                  ))}
+                </div>
+                {hasActions && (
+                  <div style={{ marginTop: "0.9rem" }}>
+                    {renderActions(row)}
+                  </div>
+                )}
+              </article>
+            ))
+          )}
         </div>
       </div>
 
@@ -394,6 +453,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .data-table-scroll {
           -webkit-overflow-scrolling: touch;
         }
+        .data-table-cards {
+          display: none;
+        }
         @media (max-width: 700px) {
           .data-table-toolbar {
             align-items: stretch !important;
@@ -417,6 +479,30 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           }
           .row-actions {
             min-width: 160px;
+          }
+        }
+        @media (max-width: 640px) {
+          .data-table-scroll {
+            display: none;
+          }
+          .data-table-cards {
+            display: flex !important;
+            flex-direction: column;
+          }
+          .mobile-record-card:last-child {
+            border-bottom: 0 !important;
+          }
+          .mobile-record-field:last-child {
+            border-bottom: 0 !important;
+            padding-bottom: 0 !important;
+          }
+          .data-table-cards .row-actions {
+            min-width: 0;
+            width: 100%;
+          }
+          .data-table-cards .row-actions > button {
+            flex: 1 1 92px;
+            min-height: 38px;
           }
         }
       `}</style>
