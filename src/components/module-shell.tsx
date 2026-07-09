@@ -14,6 +14,11 @@ import { getModuleApiEndpoint } from "@/lib/module-api";
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
 let toastCounter = 0;
+const reportOptions = [
+  { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
+  { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
+  { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+];
 
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
@@ -27,6 +32,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -39,10 +45,14 @@ export function ModuleShell({ slug }: { slug: string }) {
     setLoadingData(true);
     try {
       const res = await fetch(apiEndpoint, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setRows(data);
+      if (!res.ok) {
+        throw new Error("Failed to load rows");
       }
+      const data: unknown = await res.json();
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid rows payload");
+      }
+      setRows(data);
     } catch {
       pushToast("error", "تعذر تحميل البيانات من الخادم");
     } finally {
@@ -51,8 +61,12 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, [apiEndpoint, pushToast]);
 
   useEffect(() => {
-    loadRows();
-  }, [loadRows]);
+    if (!apiEndpoint) return;
+    const timer = window.setTimeout(() => {
+      void loadRows();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [apiEndpoint, loadRows]);
 
   const canWrite = user ? canWriteRole(user.role) : false;
 
@@ -190,9 +204,6 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   };
 
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
-
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
@@ -302,11 +313,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
-              ].map((opt) => (
+              {reportOptions.map((opt) => (
                 <button
                   key={opt.label}
                   onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}

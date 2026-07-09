@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { AUTH_COOKIE, AuthConfigurationError, signToken } from "@/lib/auth";
+import { readJsonObject } from "@/lib/api-helpers";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const { body, error } = await readJsonObject(request);
+    if (error) return error;
+
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
 
@@ -42,6 +45,9 @@ export async function POST(request: Request) {
     });
     return response;
   } catch (error) {
+    if (error instanceof AuthConfigurationError) {
+      return NextResponse.json({ error: "إعدادات المصادقة غير مكتملة" }, { status: 503 });
+    }
     console.error("Login error:", error);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }

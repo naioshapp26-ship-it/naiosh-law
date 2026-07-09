@@ -85,6 +85,7 @@ async function main() {
   await prisma.consultation.deleteMany();
   await prisma.client.deleteMany();
   await prisma.professional.deleteMany();
+  await prisma.officialEntity.deleteMany();
   await prisma.legalSpecialization.deleteMany();
   await prisma.legalSubject.deleteMany();
   await prisma.legalBranch.deleteMany();
@@ -240,21 +241,30 @@ async function main() {
     { caseNo: "#2024-0280", clientName: "خالد عبد الرحمن عمر", type: "جنائي", court: "محكمة الجنايات القاهرة", status: "نشطة", nextDate: "18 يوليو 2026", fees: "55000", clientId: clientRecords[4].id },
   ];
 
+  const caseRecords = [];
   for (const c of casesData) {
-    await prisma.case.create({
+    const caseRecord = await prisma.case.create({
       data: {
         ...c,
         branchId: branchRecords[3].id,
         specializationId: specRecords[0].id,
       },
     });
+    caseRecords.push(caseRecord);
   }
+
+  await Promise.all(
+    clientRecords.map(async (client) => {
+      const casesCount = await prisma.case.count({ where: { clientId: client.id } });
+      return prisma.client.update({ where: { id: client.id }, data: { casesCount } });
+    })
+  );
 
   await prisma.courtSession.createMany({
     data: [
-      { caseNo: "#2024-0547", client: "أحمد محمد الصاوي", court: "محكمة الاستئناف القاهرة", room: "7", date: "15 يوليو 2026", time: "10:00", status: "مجدولة", lawyer: "أحمد المحامي" },
-      { caseNo: "#2024-0548", client: "شركة النيل للتجارة", court: "المحكمة الابتدائية الجيزة", room: "3", date: "16 يوليو 2026", time: "11:30", status: "قريبة", lawyer: "أحمد المحامي" },
-      { caseNo: "#2024-0280", client: "خالد عبد الرحمن عمر", court: "محكمة الجنايات القاهرة", room: "12", date: "18 يوليو 2026", time: "09:00", status: "مجدولة", lawyer: "أحمد المحامي" },
+      { caseId: caseRecords[0].id, caseNo: "#2024-0547", client: "أحمد محمد الصاوي", court: "محكمة الاستئناف القاهرة", room: "7", date: "15 يوليو 2026", time: "10:00", status: "مجدولة", lawyer: "أحمد المحامي" },
+      { caseId: caseRecords[1].id, caseNo: "#2024-0548", client: "شركة النيل للتجارة", court: "المحكمة الابتدائية الجيزة", room: "3", date: "16 يوليو 2026", time: "11:30", status: "قريبة", lawyer: "أحمد المحامي" },
+      { caseId: caseRecords[3].id, caseNo: "#2024-0280", client: "خالد عبد الرحمن عمر", court: "محكمة الجنايات القاهرة", room: "12", date: "18 يوليو 2026", time: "09:00", status: "مجدولة", lawyer: "أحمد المحامي" },
     ],
   });
 

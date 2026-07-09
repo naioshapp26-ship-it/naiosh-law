@@ -3,6 +3,14 @@ import { cookies } from "next/headers";
 import type { UserRole } from "@/generated/prisma/client";
 
 export const AUTH_COOKIE = "naiosh-auth-token";
+const DEV_JWT_SECRET = "naiosh-law-dev-secret-change-in-production";
+
+export class AuthConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthConfigurationError";
+  }
+}
 
 export type AuthPayload = {
   sub: string;
@@ -12,8 +20,11 @@ export type AuthPayload = {
 };
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET ?? "naiosh-law-dev-secret-change-in-production";
-  return new TextEncoder().encode(secret);
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new AuthConfigurationError("JWT_SECRET is required in production");
+  }
+  return new TextEncoder().encode(secret ?? DEV_JWT_SECRET);
 }
 
 export async function signToken(payload: AuthPayload) {
@@ -51,8 +62,4 @@ export async function getSessionFromCookies(): Promise<AuthPayload | null> {
 
 export function canWrite(role: UserRole) {
   return ["admin", "lawyer", "consultant", "industrial_agent", "employee"].includes(role);
-}
-
-export function canManageUsers(role: UserRole) {
-  return role === "admin" || role === "industrial_agent";
 }

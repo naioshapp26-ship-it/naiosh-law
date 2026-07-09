@@ -51,11 +51,25 @@ const tabs: { key: Tab; label: string }[] = [
   { key: "circulars", label: "التعليمات الدائرية" },
 ];
 
+async function fetchArray<T>(url: string): Promise<T[]> {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) {
+    throw new Error(`Request failed: ${res.status}`);
+  }
+  const payload: unknown = await res.json();
+  if (!Array.isArray(payload)) {
+    throw new Error("Expected an array response");
+  }
+  return payload as T[];
+}
+
 export default function LegalLibraryPage() {
   const { user, ready } = useSession(true);
   const [tab, setTab] = useState<Tab>("documents");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -63,20 +77,52 @@ export default function LegalLibraryPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    const q = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : "";
-    Promise.all([
-      fetch(`/api/legal-documents${q}`, { credentials: "include" }).then((r) => r.json()),
-      fetch(`/api/legal-articles${q}`, { credentials: "include" }).then((r) => r.json()),
-      fetch(`/api/circular-instructions${q}`, { credentials: "include" }).then((r) => r.json()),
-    ])
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    if (!ready || !user) return;
+    let cancelled = false;
+    const q = debouncedSearch ? `?q=${encodeURIComponent(debouncedSearch)}` : "";
+
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) {
+          setLoading(true);
+          setError("");
+        }
+      })
+      .then(() =>
+        Promise.all([
+          fetchArray<Document>(`/api/legal-documents${q}`),
+          fetchArray<Article>(`/api/legal-articles${q}`),
+          fetchArray<Circular>(`/api/circular-instructions${q}`),
+        ])
+      )
       .then(([docs, arts, circs]) => {
+        if (cancelled) return;
         setDocuments(docs);
         setArticles(arts);
         setCirculars(circs);
       })
-      .finally(() => setLoading(false));
-  }, [search]);
+      .catch(() => {
+        if (cancelled) return;
+        setDocuments([]);
+        setArticles([]);
+        setCirculars([]);
+        setError("تعذر تحميل بيانات المكتبة القانونية");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, ready, user]);
 
   const stats = useMemo(
     () => ({
@@ -154,6 +200,10 @@ export default function LegalLibraryPage() {
 
         {loading ? (
           <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+        ) : error ? (
+          <div className="card-white" style={{ padding: "1.25rem", color: "#c3152a", fontWeight: 700 }}>
+            {error}
+          </div>
         ) : (
           <>
             {tab === "documents" && (
