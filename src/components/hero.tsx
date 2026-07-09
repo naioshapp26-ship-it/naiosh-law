@@ -24,9 +24,7 @@ const itemAnim = {
   },
 };
 
-const headlineRows = [
-  ["إدارة القضايا", "والموكلين بذكاء"],
-];
+const headlineRows = [["إدارة القضايا", "والموكلين بذكاء", "لا مثيل له"]];
 
 export function HeroSection() {
   return (
@@ -130,9 +128,10 @@ export function HeroSection() {
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "960px",
-              marginInline: "auto",
-              textAlign: "center",
+              maxWidth: "980px",
+              marginInlineStart: "auto",
+              marginInlineEnd: 0,
+              textAlign: "right",
             }}
           >
             {/* Badge */}
@@ -177,9 +176,11 @@ export function HeroSection() {
                 marginBottom: "1.75rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
-                flexDirection: "column",
+                flexDirection: "row",
                 alignItems: "center",
-                gap: "0.35rem",
+                justifyContent: "flex-end",
+                flexWrap: "wrap",
+                gap: "0.85rem",
               }}
               variants={container}
             >
@@ -189,27 +190,30 @@ export function HeroSection() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    justifyContent: "flex-end",
                     gap: "0.85rem",
                     flexWrap: "wrap",
+                    width: "100%",
                   }}
                 >
                   {row.map((part) => (
-                    <motion.span key={part} variants={itemAnim} style={{ display: "inline-block" }}>
+                    <motion.span
+                      key={part}
+                      variants={itemAnim}
+                      style={{
+                        display: "inline-block",
+                        color: part === "لا مثيل له" ? "#c3152a" : "#ffffff",
+                        textShadow:
+                          part === "لا مثيل له"
+                            ? "0 0 40px rgba(195,21,42,0.5)"
+                            : "none",
+                      }}
+                    >
                       {part}
                     </motion.span>
                   ))}
                 </span>
               ))}
-              <span
-                style={{
-                  color: "#c3152a",
-                  textShadow: "0 0 40px rgba(195,21,42,0.5)",
-                  display: "inline-block",
-                }}
-              >
-                لا مثيل له
-              </span>
             </motion.h1>
 
             {/* Subtext */}
@@ -235,7 +239,7 @@ export function HeroSection() {
                 gap: "1rem",
                 flexWrap: "wrap",
                 marginBottom: "3.75rem",
-                justifyContent: "center",
+                justifyContent: "flex-end",
               }}
             >
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
@@ -255,11 +259,11 @@ export function HeroSection() {
                 flexWrap: "wrap",
                 paddingTop: "2rem",
                 borderTop: "1px solid rgba(255,255,255,0.07)",
-                justifyContent: "center",
+                justifyContent: "flex-end",
               }}
             >
               {stats.map((s) => (
-                <div key={s.label}>
+                <div key={s.label} style={{ textAlign: "right" }}>
                   <div
                     style={{
                       fontSize: "1.85rem",
@@ -576,6 +580,9 @@ export function HeroSection() {
         @media (max-width: 900px) {
           .hero-grid {
             display: block !important;
+          }
+          .hero-heading {
+            justify-content: center !important;
           }
           .hero-card-col {
             display: none;
