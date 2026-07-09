@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readStorageItem, removeStorageItem, writeStorageItem } from "@/lib/browser-storage";
 import {
+  getSafeAppPath,
   isSessionUser,
   sessionStorageKey,
   type SessionUser,
@@ -17,6 +18,20 @@ type SessionResponse = {
   ok: boolean;
   user?: SessionUser;
 };
+
+function getLoginRedirect() {
+  if (typeof window === "undefined") {
+    return "/login";
+  }
+
+  const currentPath = `${window.location.pathname}${window.location.search}`;
+  const nextPath = getSafeAppPath(currentPath, "");
+  if (!nextPath) {
+    return "/login";
+  }
+
+  return `/login?next=${encodeURIComponent(nextPath)}`;
+}
 
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
@@ -126,7 +141,7 @@ export function useSession(redirectIfMissing = false, initialUser: SessionUser |
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {
-      router.replace("/login");
+      router.replace(getLoginRedirect());
     }
   }, [ready, user, redirectIfMissing, router]);
 

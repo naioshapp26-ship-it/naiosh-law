@@ -171,7 +171,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div className="modal-actions" style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={onClose}
@@ -203,6 +203,14 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
 
       <style>{`
         @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 480px) {
+          .modal-actions {
+            flex-direction: column-reverse;
+          }
+          .modal-actions > button {
+            width: 100%;
+          }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }

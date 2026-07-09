@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { ModulePageClient } from "@/components/module-page-client";
+import { ModuleShell } from "@/components/module-shell";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { canAccessModule } from "@/lib/module-routing";
@@ -34,7 +34,7 @@ export default async function ModulePage({ params }: Props) {
   }
 
   return (
-    <ModulePageClient
+    <ModuleShell
       slug={slug}
       config={config}
       moduleTitle={moduleMap[slug]?.title ?? config.entityName}

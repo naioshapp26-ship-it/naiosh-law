@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { clearSessionUser } from "@/lib/session";
@@ -19,13 +19,21 @@ export function AppShell({ role, name, children }: Props) {
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerRef = useDialogAccessibility<HTMLDivElement>(drawerOpen, () => setDrawerOpen(false));
-  const visibleModules = getVisibleOperationalModules(role);
-  const bottomNavItems = [
-    { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية", slug: "dashboard" },
-    { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا", slug: "case-management" },
-    { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات", slug: "court-sessions" },
-    { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية", slug: "legal-accounting" },
-  ].filter((item) => item.slug === "dashboard" || visibleModules.some((module) => module.slug === item.slug));
+  const visibleModules = useMemo(() => getVisibleOperationalModules(role), [role]);
+  const visibleModuleSlugs = useMemo(
+    () => new Set(visibleModules.map((module) => module.slug)),
+    [visibleModules]
+  );
+  const bottomNavItems = useMemo(
+    () =>
+      [
+        { href: "/app/dashboard", icon: "⊞", label: "الرئيسية", slug: "dashboard" },
+        { href: "/app/modules/case-management", icon: "⚖️", label: "القضايا", slug: "case-management" },
+        { href: "/app/modules/court-sessions", icon: "🏛️", label: "الجلسات", slug: "court-sessions" },
+        { href: "/app/modules/legal-accounting", icon: "💰", label: "المالية", slug: "legal-accounting" },
+      ].filter((item) => item.slug === "dashboard" || visibleModuleSlugs.has(item.slug)),
+    [visibleModuleSlugs]
+  );
 
   const logout = async () => {
     await clearSessionUser();

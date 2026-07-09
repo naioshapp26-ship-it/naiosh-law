@@ -28,6 +28,15 @@ function getSessionSecret() {
     return configuredSecret;
   }
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true"
+  ) {
+    throw new Error(
+      "Missing session secret. Set NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET in production."
+    );
+  }
+
   return fallbackSessionSecret;
 }
 
