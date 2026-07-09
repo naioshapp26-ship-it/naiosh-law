@@ -24,6 +24,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -124,9 +125,6 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
     );
   };
-
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <AppShell role={user.role} name={user.name}>

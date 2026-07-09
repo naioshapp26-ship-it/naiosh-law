@@ -38,3 +38,7 @@ export const modules: LegalModule[] = [
 ];
 
 export const moduleMap = Object.fromEntries(modules.map((item) => [item.slug, item]));
+
+export function getModuleHref(slug: string) {
+  return slug === "dashboard" ? "/app/dashboard" : `/app/modules/${slug}`;
+}

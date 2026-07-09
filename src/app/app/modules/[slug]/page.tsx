@@ -1,4 +1,4 @@
-import { ModulePageClient } from "@/components/module-page-client";
+import { ModuleShell } from "@/components/module-shell";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -6,5 +6,5 @@ type Props = {
 
 export default async function ModulePage({ params }: Props) {
   const { slug } = await params;
-  return <ModulePageClient slug={slug} />;
+  return <ModuleShell slug={slug} />;
 }

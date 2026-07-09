@@ -255,7 +255,7 @@ export default function HomePage() {
               ابدأ تجربتك المجانية →
             </Link>
             <Link
-              href="/app/dashboard"
+              href="/login?next=/app/dashboard"
               className="btn-ghost-dark"
               style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}
             >

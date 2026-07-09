@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -13,19 +13,28 @@ type Props = {
   saveLabel?: string;
 };
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
-  const [form, setForm] = useState<Record<string, unknown>>({});
-  const [saving, setSaving] = useState(false);
+function getInitialForm(fields: FormField[], initial?: Record<string, unknown>) {
+  const defaults: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    defaults[field.key] = initial?.[field.key] ?? "";
+  });
+  return defaults;
+}
 
-  useEffect(() => {
-    if (open) {
-      const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
-      setForm(defaults);
-    }
-  }, [open, initial, fields]);
+function getFormKey(fields: FormField[], initial?: Record<string, unknown>) {
+  return fields.map((field) => `${field.key}:${String(initial?.[field.key] ?? "")}`).join("|");
+}
 
+export function Modal(props: Props) {
+  const { open, fields, initial, title } = props;
   if (!open) return null;
+
+  return <ModalContent key={`${title}:${getFormKey(fields, initial)}`} {...props} />;
+}
+
+function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Omit<Props, "open">) {
+  const [form, setForm] = useState<Record<string, unknown>>(() => getInitialForm(fields, initial));
+  const [saving, setSaving] = useState(false);
 
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
