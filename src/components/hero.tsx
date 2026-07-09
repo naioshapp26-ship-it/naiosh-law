@@ -24,7 +24,7 @@ const itemAnim = {
   },
 };
 
-const headlineLines = ["إدارة القضايا والموكلين بذكاء"];
+const headlineText = "إدارة القضايا والموكلين بذكاء";
 
 export function HeroSection() {
   return (
@@ -129,7 +129,7 @@ export function HeroSection() {
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "min(700px, 62vw)",
+              maxWidth: "min(760px, 66vw)",
               marginLeft: "auto",
               marginRight: 0,
               textAlign: "right",
@@ -179,42 +179,36 @@ export function HeroSection() {
             <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(3rem, 6vw, 5.6rem)",
+                fontSize: "clamp(2.4rem, 4.8vw, 4.2rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.05,
-                marginBottom: "1.9rem",
+                lineHeight: 1.15,
+                marginBottom: "1.7rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                gap: "0.2rem",
+                flexWrap: "wrap",
+                justifyContent: "flex-end",
+                alignItems: "baseline",
+                gap: "0.65rem",
               }}
               variants={container}
             >
-              {headlineLines.map((line) => (
-                <motion.span
-                  key={line}
-                  variants={itemAnim}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "right",
-                    textShadow: "0 0 34px rgba(255,255,255,0.08)",
-                  }}
-                >
-                  {line}
-                </motion.span>
-              ))}
+              <motion.span
+                variants={itemAnim}
+                style={{
+                  display: "inline-block",
+                  textAlign: "right",
+                  textShadow: "0 0 34px rgba(255,255,255,0.08)",
+                }}
+              >
+                {headlineText}
+              </motion.span>
               <motion.span
                 variants={itemAnim}
                 style={{
                   color: "#c3152a",
                   textShadow: "0 0 40px rgba(195,21,42,0.5)",
                   display: "inline-block",
-                  width: "100%",
-                  textAlign: "right",
-                  marginTop: "0.15rem",
                 }}
               >
                 لا مثيل له
@@ -591,7 +585,7 @@ export function HeroSection() {
         @media (max-width: 980px) {
           .hero-heading {
             line-height: 1.12 !important;
-            font-size: clamp(2.5rem, 7.5vw, 4.2rem) !important;
+            font-size: clamp(2rem, 6.6vw, 3.5rem) !important;
           }
           .hero-badge-pill {
             font-size: 0.86rem !important;
