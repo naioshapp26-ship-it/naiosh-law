@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/data/modules";
-import { sessionStorageKey } from "@/data/auth";
+import { clearServerSession, writeSessionMirror } from "@/lib/session";
 
 type Props = {
   role: "admin" | "client";
@@ -16,6 +16,10 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const drawerButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerPanelRef = useRef<HTMLDivElement>(null);
   const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
@@ -24,14 +28,81 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarSoftText = "rgba(255,255,255,0.64)";
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
-  const logout = () => {
-    try {
-      window.localStorage.removeItem(sessionStorageKey);
-    } catch {
-      // The server cookie is cleared below; storage is only a UI mirror.
+  useEffect(() => {
+    if (!drawerOpen) {
+      return;
     }
-    void fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.body.style.overflow = "hidden";
+
+    const focusFirstDrawerControl = () => {
+      const firstFocusable = drawerPanelRef.current?.querySelector<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !drawerPanelRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(
+        drawerPanelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null);
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    focusFirstDrawerControl();
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      (previousFocus ?? drawerButtonRef.current)?.focus();
+    };
+  }, [drawerOpen]);
+
+  const logout = async () => {
+    if (loggingOut) {
+      return;
+    }
+
+    setLoggingOut(true);
+    setLogoutError("");
+    writeSessionMirror(null);
+
+    try {
+      await clearServerSession();
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setLogoutError("تعذر تسجيل الخروج. تحقق من الاتصال وحاول مرة أخرى.");
+      setLoggingOut(false);
+    }
   };
 
   const isActive = (href: string) => pathname === href;
@@ -69,6 +140,7 @@ export function AppShell({ role, name, children }: Props) {
         </div>
         <button
           onClick={() => setDrawerOpen(false)}
+          type="button"
           className="drawer-close-btn"
           style={{
             width: 32, height: 32, border: `1px solid ${sidebarBorder}`,
@@ -175,7 +247,9 @@ export function AppShell({ role, name, children }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             {/* Hamburger — mobile only */}
             <button
+              ref={drawerButtonRef}
               onClick={() => setDrawerOpen(true)}
+              type="button"
               className="hamburger-btn"
               style={{
                 width: 38, height: 38, border: "1px solid #e2e8f0",
@@ -185,6 +259,8 @@ export function AppShell({ role, name, children }: Props) {
                 fontSize: "1.1rem", color: "#475569", flexShrink: 0,
               }}
               aria-label="القائمة"
+              aria-controls="app-mobile-drawer"
+              aria-expanded={drawerOpen}
             >
               ☰
             </button>
@@ -208,10 +284,10 @@ export function AppShell({ role, name, children }: Props) {
           {/* Right: Notifications + User + Logout */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Notification bell */}
-            <button style={{
+            <button type="button" tabIndex={-1} aria-disabled="true" style={{
               width: 36, height: 36, borderRadius: "10px",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
-              cursor: "pointer", display: "flex", alignItems: "center",
+              cursor: "default", display: "flex", alignItems: "center",
               justifyContent: "center", fontSize: "0.9rem", position: "relative",
               flexShrink: 0,
             }} aria-label="التنبيهات">
@@ -244,19 +320,27 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={() => void logout()}
+              type="button"
+              disabled={loggingOut}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font-cairo)",
+                cursor: loggingOut ? "wait" : "pointer", fontFamily: "var(--font-cairo)",
                 transition: "all 0.2s", whiteSpace: "nowrap",
+                opacity: loggingOut ? 0.7 : 1,
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
-              خروج
+              {loggingOut ? "جار الخروج..." : "خروج"}
             </button>
+            {logoutError && (
+              <span style={{ color: "#c3152a", fontSize: "0.68rem", fontWeight: 700 }} role="alert">
+                {logoutError}
+              </span>
+            )}
           </div>
         </div>
       </header>
@@ -349,7 +433,14 @@ export function AppShell({ role, name, children }: Props) {
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
             {/* Drawer panel */}
-            <div style={{
+            <div
+              id="app-mobile-drawer"
+              ref={drawerPanelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة الوحدات"
+              tabIndex={-1}
+              style={{
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
@@ -404,6 +495,10 @@ export function AppShell({ role, name, children }: Props) {
         {/* All modules button */}
         <button
           onClick={() => setDrawerOpen(true)}
+          type="button"
+          aria-label="فتح قائمة كل الوحدات"
+          aria-controls="app-mobile-drawer"
+          aria-expanded={drawerOpen}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",

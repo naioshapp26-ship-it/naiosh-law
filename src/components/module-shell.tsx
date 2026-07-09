@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap } from "@/data/module-configs";
+import type { ModuleConfig } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { useSession } from "@/lib/session";
 
@@ -16,19 +16,40 @@ let toastCounter = 0;
 const moduleStoragePrefix = "naiosh-law-module-rows:";
 const identityKeys = ["_id", "id", "caseNo", "ref", "jobId", "email", "endpoint", "name", "title"];
 
-function loadStoredRows(slug: string, fallback: Record<string, unknown>[]) {
+type ModuleStorageKeys = {
+  scoped: string;
+  legacy: string;
+};
+
+function storageScope(value: string) {
+  return encodeURIComponent(value.trim().toLowerCase());
+}
+
+function getModuleStorageKeys(slug: string, email: string): ModuleStorageKeys {
+  const legacy = `${moduleStoragePrefix}${slug}`;
+  return {
+    scoped: `${legacy}:${storageScope(email)}`,
+    legacy,
+  };
+}
+
+function readStoredRows(storageKey: string) {
   if (typeof window === "undefined") {
-    return fallback;
+    return null;
   }
 
   try {
-    const raw = window.localStorage.getItem(`${moduleStoragePrefix}${slug}`);
+    const raw = window.localStorage.getItem(storageKey);
     const parsed = raw ? JSON.parse(raw) : null;
-    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : fallback;
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : null;
   } catch {
-    window.localStorage.removeItem(`${moduleStoragePrefix}${slug}`);
-    return fallback;
+    window.localStorage.removeItem(storageKey);
+    return null;
   }
+}
+
+function loadStoredRows(keys: ModuleStorageKeys) {
+  return readStoredRows(keys.scoped) ?? readStoredRows(keys.legacy);
 }
 
 function getRowIdentity(row: Record<string, unknown> | null) {
@@ -46,17 +67,28 @@ function getRowIdentity(row: Record<string, unknown> | null) {
   return JSON.stringify(row);
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
-  const { user, ready } = useSession(true);
-  const config = moduleConfigMap[slug];
+function escapeCsvCell(value: unknown) {
+  const text = String(value ?? "");
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadStoredRows(slug, config?.data ?? []));
+export function ModuleShell({ slug, config }: { slug: string; config: ModuleConfig }) {
+  const { user, ready } = useSession(true);
+
+  const [rows, setRows] = useState<Record<string, unknown>[]>(config.data);
+  const [rowsHydrated, setRowsHydrated] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const viewDialogRef = useRef<HTMLDivElement>(null);
+  const reportDialogRef = useRef<HTMLDivElement>(null);
+  const storageKeys = useMemo(
+    () => (user ? getModuleStorageKeys(slug, user.email) : null),
+    [slug, user?.email]
+  );
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -65,16 +97,82 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, []);
 
   useEffect(() => {
-    if (!config || typeof window === "undefined") {
+    setRows(config.data);
+    setRowsHydrated(false);
+  }, [config, slug]);
+
+  useEffect(() => {
+    if (!storageKeys) {
+      return;
+    }
+
+    setRows(loadStoredRows(storageKeys) ?? config.data);
+    setRowsHydrated(true);
+  }, [config, storageKeys]);
+
+  useEffect(() => {
+    if (!storageKeys || !rowsHydrated || typeof window === "undefined") {
       return;
     }
 
     try {
-      window.localStorage.setItem(`${moduleStoragePrefix}${slug}`, JSON.stringify(rows));
+      window.localStorage.setItem(storageKeys.scoped, JSON.stringify(rows));
     } catch {
       // Keep the in-memory table usable if browser storage quota is unavailable.
     }
-  }, [config, rows, slug]);
+  }, [rows, rowsHydrated, storageKeys]);
+
+  useEffect(() => {
+    const dialogRef = viewTarget ? viewDialogRef : reportOpen ? reportDialogRef : null;
+    if (!dialogRef) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.body.style.overflow = "hidden";
+
+    const focusableSelector = 'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+    const focusFirst = () => dialogRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setViewTarget(null);
+        setReportOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+        (element) => element.offsetParent !== null
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    focusFirst();
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [reportOpen, viewTarget]);
 
   if (!ready || !user) {
     return (
@@ -84,18 +182,6 @@ export function ModuleShell({ slug }: { slug: string }) {
           <p>جاري التحميل...</p>
         </div>
       </div>
-    );
-  }
-
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
     );
   }
 
@@ -124,6 +210,25 @@ export function ModuleShell({ slug }: { slug: string }) {
     setDeleteTarget(null);
   };
 
+  const exportRowsAsCsv = () => {
+    try {
+      const headers = config.columns.map((column) => column.label);
+      const csvRows = rows.map((row) => config.columns.map((column) => escapeCsvCell(row[column.key])).join(","));
+      const csv = [headers.map(escapeCsvCell).join(","), ...csvRows].join("\n");
+      const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${slug}-report.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      pushToast("success", "✅ تم تجهيز ملف CSV للتنزيل");
+    } catch {
+      pushToast("error", "تعذر تصدير التقرير الآن.");
+    }
+    setReportOpen(false);
+  };
+
   const firstCol = config.columns[0]?.key;
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
@@ -138,6 +243,11 @@ export function ModuleShell({ slug }: { slug: string }) {
         onClick={() => setViewTarget(null)}
       >
         <div
+          ref={viewDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`تفاصيل ${config.entityName}`}
+          tabIndex={-1}
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -145,6 +255,8 @@ export function ModuleShell({ slug }: { slug: string }) {
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
               onClick={() => setViewTarget(null)}
+              type="button"
+              aria-label="إغلاق التفاصيل"
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
@@ -157,13 +269,17 @@ export function ModuleShell({ slug }: { slug: string }) {
             ))}
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
-              className="btn-primary"
-              style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
-            >✏️ تعديل</button>
+            {user.role === "admin" && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                type="button"
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
+              >✏️ تعديل</button>
+            )}
             <button
               onClick={() => setViewTarget(null)}
+              type="button"
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
           </div>
@@ -269,12 +385,17 @@ export function ModuleShell({ slug }: { slug: string }) {
           onClick={() => setReportOpen(false)}
         >
           <div
+            ref={reportDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="تصدير التقارير"
+            tabIndex={-1}
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <button type="button" aria-label="إغلاق نافذة التقارير" onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
@@ -286,8 +407,16 @@ export function ModuleShell({ slug }: { slug: string }) {
                 { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
               ].map((opt) => (
                 <button
+                  type="button"
                   key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
+                  onClick={() => {
+                    if (opt.label.includes("CSV")) {
+                      exportRowsAsCsv();
+                      return;
+                    }
+                    pushToast("success", `✅ جاري تحضير ${opt.label}...`);
+                    setReportOpen(false);
+                  }}
                   style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}

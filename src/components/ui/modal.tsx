@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 };
 
 function inputTypeFor(field: FormField) {
-  if (field.type === "number" || field.type === "date" || field.type === "email" || field.type === "tel") {
+  if (field.type === "number" || field.type === "email" || field.type === "tel") {
     return field.type;
   }
   return "text";
@@ -31,6 +31,59 @@ function createDefaults(fields: FormField[], initial?: Record<string, unknown>) 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
   const [form, setForm] = useState<Record<string, unknown>>(() => createDefaults(fields, initial));
   const [saving, setSaving] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.body.style.overflow = "hidden";
+
+    const focusableSelector =
+      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusFirst = () => panelRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+        (element) => element.offsetParent !== null
+      );
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    focusFirst();
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -59,6 +112,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -84,6 +142,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
             onClick={onClose}
+            type="button"
+            aria-label="إغلاق النافذة"
             style={{
               width: 34,
               height: 34,
@@ -148,7 +208,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
                     className="input-field"
-                    placeholder={f.placeholder}
+                    placeholder={f.placeholder ?? (f.type === "date" ? "مثال: 15 يوليو 2026" : undefined)}
                   />
                 )}
               </div>

@@ -1,16 +1,8 @@
-import { NextResponse } from "next/server";
-import { sessionCookieName } from "@/data/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getExpiredSessionCookieOptions } from "@/lib/session-cookie";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const response = NextResponse.json({ ok: true });
-  response.cookies.set({
-    name: sessionCookieName,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+  response.cookies.set(getExpiredSessionCookieOptions(request));
   return response;
 }

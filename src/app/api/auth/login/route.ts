@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { sessionCookieName, type SessionUser } from "@/data/auth";
+import type { SessionUser } from "@/data/auth";
 import { findDemoCredential, findDemoCredentialByRole } from "@/data/server-auth";
-import { createSessionToken, sessionMaxAgeSeconds } from "@/lib/session-token";
+import { getSessionCookieOptions } from "@/lib/session-cookie";
+import { createSessionToken } from "@/lib/session-token";
 
 type LoginBody = {
   email?: unknown;
@@ -56,14 +57,6 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ user: sessionUser });
-  response.cookies.set({
-    name: sessionCookieName,
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: sessionMaxAgeSeconds,
-  });
+  response.cookies.set(getSessionCookieOptions(request, token));
   return response;
 }

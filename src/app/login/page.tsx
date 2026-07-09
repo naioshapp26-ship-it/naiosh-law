@@ -46,11 +46,18 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      setError("تعذر الاتصال بخدمة تسجيل الدخول الآن.");
+      setLoading(false);
+      return;
+    }
 
     if (!response.ok) {
       setError(response.status === 401 ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذر تسجيل الدخول الآن.");
@@ -70,11 +77,18 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ demo: true, role }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ demo: true, role }),
+      });
+    } catch {
+      setError("تعذر الاتصال بخدمة تسجيل الدخول الآن.");
+      setLoading(false);
+      return;
+    }
 
     if (!response.ok) {
       setError("تعذر بدء الحساب التجريبي الآن.");
@@ -310,6 +324,7 @@ export default function LoginPage() {
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
+                type="button"
                 onClick={() => void loginDemo("admin")}
                 disabled={loading}
                 style={{
@@ -338,6 +353,7 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
+                type="button"
                 onClick={() => void loginDemo("client")}
                 disabled={loading}
                 style={{

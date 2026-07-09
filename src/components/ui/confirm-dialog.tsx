@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 type Props = {
   open: boolean;
   title?: string;
@@ -10,6 +12,59 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.body.style.overflow = "hidden";
+
+    const focusableSelector = 'button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusFirst = () => panelRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCancel();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+        (element) => element.offsetParent !== null
+      );
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    focusFirst();
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [onCancel, open]);
+
   if (!open) return null;
   return (
     <div
@@ -26,6 +81,10 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
       onClick={onCancel}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className="card-white"
         style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
@@ -55,6 +114,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button
             onClick={onCancel}
+            type="button"
             style={{
               flex: 1,
               padding: "0.75rem",
@@ -72,6 +132,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
           </button>
           <button
             onClick={onConfirm}
+            type="button"
             disabled={loading}
             style={{
               flex: 1,

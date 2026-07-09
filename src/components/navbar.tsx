@@ -26,6 +26,23 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen && !solutionsOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSolutionsOpen(false);
+        setMobileSolutionsOpen(false);
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen, solutionsOpen]);
+
   const navStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
@@ -108,6 +125,8 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setSolutionsOpen((prev) => !prev)}
+              aria-expanded={solutionsOpen}
+              aria-haspopup="menu"
               style={{
                 color: "#94a3b8",
                 fontSize: "0.875rem",
@@ -129,6 +148,7 @@ export function Navbar() {
             </button>
             {solutionsOpen && (
               <div
+                role="menu"
                 style={{
                   position: "absolute",
                   top: "calc(100% + 0.45rem)",
@@ -147,6 +167,7 @@ export function Navbar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setSolutionsOpen(false)}
+                    role="menuitem"
                     style={{
                       display: "block",
                       padding: "0.55rem 0.65rem",
@@ -205,6 +226,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
+          type="button"
           onClick={() => {
             setMenuOpen((prev) => {
               const next = !prev;
@@ -223,6 +245,7 @@ export function Navbar() {
           }}
           className="mobile-menu-btn"
           aria-label="قائمة"
+          aria-expanded={menuOpen}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             {menuOpen ? (
@@ -253,6 +276,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setMobileSolutionsOpen((prev) => !prev)}
+            aria-expanded={mobileSolutionsOpen}
             style={{
               width: "100%",
               textAlign: "right",

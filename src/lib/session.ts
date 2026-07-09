@@ -1,24 +1,47 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { sessionStorageKey, type SessionUser } from "@/data/auth";
 
-function readSessionMirror() {
+function isSessionUser(value: unknown): value is SessionUser {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<SessionUser>;
+  return (
+    (candidate.role === "admin" || candidate.role === "client") &&
+    typeof candidate.name === "string" &&
+    typeof candidate.email === "string"
+  );
+}
+
+export function readSessionMirror() {
   if (typeof window === "undefined") {
     return null;
   }
 
   try {
     const raw = window.localStorage.getItem(sessionStorageKey);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (isSessionUser(parsed)) {
+      return parsed;
+    }
+
+    window.localStorage.removeItem(sessionStorageKey);
+    return null;
   } catch {
     window.localStorage.removeItem(sessionStorageKey);
     return null;
   }
 }
 
-function writeSessionMirror(user: SessionUser | null) {
+export function writeSessionMirror(user: SessionUser | null) {
   if (typeof window === "undefined") {
     return;
   }
@@ -34,18 +57,47 @@ function writeSessionMirror(user: SessionUser | null) {
   }
 }
 
+export async function clearServerSession() {
+  const response = await fetch("/api/auth/logout", {
+    method: "POST",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Logout request failed.");
+  }
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<SessionUser | null>(() => readSessionMirror());
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function validateSession() {
+      const mirroredUser = readSessionMirror();
+      if (mirroredUser && !cancelled) {
+        setUser(mirroredUser);
+        setReady(true);
+      }
+
       try {
         const response = await fetch("/api/auth/session", { cache: "no-store" });
+        if (response.status === 401) {
+          if (!cancelled) {
+            setUser(null);
+            writeSessionMirror(null);
+            setReady(true);
+            if (redirectIfMissing) {
+              router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+            }
+          }
+          return;
+        }
+
         if (!response.ok) {
           throw new Error("Session is missing or expired.");
         }
@@ -62,10 +114,10 @@ export function useSession(redirectIfMissing = false) {
         }
       } catch {
         if (!cancelled) {
-          setUser(null);
-          writeSessionMirror(null);
+          const latestMirror = readSessionMirror();
+          setUser(latestMirror);
           setReady(true);
-          if (redirectIfMissing) {
+          if (!latestMirror && redirectIfMissing) {
             router.replace(`/login?next=${encodeURIComponent(pathname)}`);
           }
         }
@@ -79,17 +131,23 @@ export function useSession(redirectIfMissing = false) {
     };
   }, [pathname, redirectIfMissing, router]);
 
+  const logout = useCallback(async () => {
+    writeSessionMirror(null);
+    try {
+      await clearServerSession();
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  }, [router]);
+
   const api = useMemo(
     () => ({
       user,
       ready,
-      logout: () => {
-        writeSessionMirror(null);
-        void fetch("/api/auth/logout", { method: "POST" });
-        router.replace("/login");
-      },
+      logout,
     }),
-    [user, ready, router]
+    [user, ready, logout]
   );
 
   return api;
