@@ -1,4 +1,6 @@
 import { ModulePageClient } from "@/components/module-page-client";
+import { moduleConfigMap } from "@/data/module-configs";
+import { moduleMap } from "@/data/modules";
 import { redirect } from "next/navigation";
 
 type Props = {
@@ -10,5 +12,11 @@ export default async function ModulePage({ params }: Props) {
   if (slug === "dashboard") {
     redirect("/app/dashboard");
   }
-  return <ModulePageClient slug={slug} />;
+  return (
+    <ModulePageClient
+      slug={slug}
+      config={moduleConfigMap[slug] ?? null}
+      moduleTitle={moduleMap[slug]?.title}
+    />
+  );
 }

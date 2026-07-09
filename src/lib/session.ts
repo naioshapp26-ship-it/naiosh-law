@@ -12,6 +12,16 @@ export type SessionUser = {
 
 const roles = new Set<SessionUser["role"]>(["admin", "client"]);
 const sessionChangeEvent = "naiosh-law-session-change";
+const initialSnapshot: SessionSnapshot = { user: null, ready: false };
+const listeners = new Set<() => void>();
+
+type SessionSnapshot = {
+  user: SessionUser | null;
+  ready: boolean;
+};
+
+let sessionSnapshot = initialSnapshot;
+let hydratedFromStorage = false;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -43,27 +53,53 @@ export function parseSessionUser(raw: string | null): SessionUser | null {
 
 export function readStoredSession(): SessionUser | null {
   if (typeof window === "undefined") return null;
-  const user = parseSessionUser(window.localStorage.getItem(sessionKey));
-  if (!user) {
-    window.localStorage.removeItem(sessionKey);
+  try {
+    const user = parseSessionUser(window.localStorage.getItem(sessionKey));
+    if (!user) {
+      window.localStorage.removeItem(sessionKey);
+    }
+    return user;
+  } catch {
+    return null;
   }
-  return user;
 }
 
-export function writeStoredSession(user: SessionUser): boolean {
+function emitSessionChange() {
+  listeners.forEach((listener) => listener());
+}
+
+function updateSessionSnapshot(next: SessionSnapshot) {
+  if (sessionSnapshot.user === next.user && sessionSnapshot.ready === next.ready) return;
+  sessionSnapshot = next;
+  emitSessionChange();
+}
+
+export function writeStoredSession(user: SessionUser, notify = true): boolean {
   try {
     window.localStorage.setItem(sessionKey, JSON.stringify(user));
-    window.dispatchEvent(new Event(sessionChangeEvent));
+    sessionSnapshot = { user, ready: true };
+    if (notify) {
+      window.dispatchEvent(new Event(sessionChangeEvent));
+      emitSessionChange();
+    }
     return true;
   } catch {
     return false;
   }
 }
 
-export function clearStoredSession() {
+export function clearStoredSession(notify = true) {
   if (typeof window !== "undefined") {
-    window.localStorage.removeItem(sessionKey);
-    window.dispatchEvent(new Event(sessionChangeEvent));
+    try {
+      window.localStorage.removeItem(sessionKey);
+    } catch {
+      // Private browsing or storage policy failures should not block logout.
+    }
+    sessionSnapshot = { user: null, ready: true };
+    if (notify) {
+      window.dispatchEvent(new Event(sessionChangeEvent));
+      emitSessionChange();
+    }
   }
 }
 
@@ -76,22 +112,77 @@ export function getSafeAppPath(value: string | null | undefined) {
 }
 
 function subscribeToSession(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener(sessionChangeEvent, callback);
+  listeners.add(callback);
+  const handleExternalChange = () => {
+    updateSessionSnapshot({ user: readStoredSession(), ready: true });
+  };
+  window.addEventListener("storage", handleExternalChange);
+  window.addEventListener(sessionChangeEvent, handleExternalChange);
   return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(sessionChangeEvent, callback);
+    listeners.delete(callback);
+    window.removeEventListener("storage", handleExternalChange);
+    window.removeEventListener(sessionChangeEvent, handleExternalChange);
   };
 }
 
 function getServerSessionSnapshot() {
-  return null;
+  return initialSnapshot;
+}
+
+function getClientSessionSnapshot() {
+  if (!hydratedFromStorage && typeof window !== "undefined") {
+    hydratedFromStorage = true;
+    sessionSnapshot = { user: readStoredSession(), ready: false };
+  }
+  return sessionSnapshot;
+}
+
+async function fetchCurrentSession(): Promise<SessionUser | null> {
+  const response = await fetch("/api/auth/session", {
+    cache: "no-store",
+    credentials: "same-origin",
+  });
+
+  if (!response.ok) return null;
+
+  const body = (await response.json()) as { user?: unknown };
+  if (!isRecord(body.user)) return null;
+  return parseSessionUser(JSON.stringify(body.user));
 }
 
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const user = useSyncExternalStore(subscribeToSession, readStoredSession, getServerSessionSnapshot);
-  const ready = true;
+  const { user, ready } = useSyncExternalStore(
+    subscribeToSession,
+    getClientSessionSnapshot,
+    getServerSessionSnapshot
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const optimisticUser = readStoredSession();
+    updateSessionSnapshot({ user: optimisticUser, ready: false });
+
+    fetchCurrentSession()
+      .then((verifiedUser) => {
+        if (cancelled) return;
+        if (verifiedUser) {
+          writeStoredSession(verifiedUser, false);
+          updateSessionSnapshot({ user: verifiedUser, ready: true });
+          return;
+        }
+        clearStoredSession(false);
+        updateSessionSnapshot({ user: null, ready: true });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        updateSessionSnapshot({ user: optimisticUser, ready: true });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {
@@ -106,7 +197,12 @@ export function useSession(redirectIfMissing = false) {
       ready,
       logout: () => {
         clearStoredSession();
-        router.replace("/login");
+        fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+        }).finally(() => {
+          router.replace("/login");
+        });
       },
     }),
     [user, ready, router]

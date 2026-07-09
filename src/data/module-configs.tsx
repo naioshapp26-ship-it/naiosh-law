@@ -735,6 +735,6 @@ export const moduleConfigs: ModuleConfig[] = [
   },
 ];
 
-export const moduleConfigMap = Object.fromEntries(
+export const moduleConfigMap: Record<string, ModuleConfig> = Object.fromEntries(
   moduleConfigs.map((c) => [c.slug, c])
 );

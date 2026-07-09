@@ -66,14 +66,14 @@ export function Navbar() {
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
     { href: "/#modules", label: "الوحدات" },
-    { href: "/app/dashboard", label: "عرض تجريبي" },
+    { href: `/login?next=${encodeURIComponent("/app/dashboard")}`, label: "عرض تجريبي" },
   ];
 
   const solutionItems = [
-    { href: "/app/modules/case-management", label: "حل إدارة القضايا" },
-    { href: "/app/modules/clients-management", label: "حل إدارة الموكلين" },
-    { href: "/app/modules/court-sessions", label: "حل الجلسات والمتابعات" },
-    { href: "/app/modules/legal-accounting", label: "حل المحاسبة القانونية" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/case-management")}`, label: "حل إدارة القضايا" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/clients-management")}`, label: "حل إدارة الموكلين" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/court-sessions")}`, label: "حل الجلسات والمتابعات" },
+    { href: `/login?next=${encodeURIComponent("/app/modules/legal-accounting")}`, label: "حل المحاسبة القانونية" },
   ];
 
   return (

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero";
 import { ModuleCard } from "@/components/module-card";
+import { demoUsers } from "@/data/auth";
 import { operationalModules } from "@/lib/module-routing";
 
 const features = [
@@ -243,7 +244,7 @@ export default function HomePage() {
           >
             جاهز لتحويل مكتبك القانوني؟
           </h2>
-          <p style={{ color: "#475569", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
+          <p style={{ color: "#cbd5e1", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
             ادخل بحساب تجريبي مباشرة وشوف النظام شغّال بالكامل
           </p>
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
@@ -255,11 +256,11 @@ export default function HomePage() {
               ابدأ تجربتك المجانية →
             </Link>
             <Link
-              href="/app/dashboard"
+              href={`/login?next=${encodeURIComponent("/app/dashboard")}`}
               className="btn-ghost-dark"
               style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}
             >
-              الدخول كزائر
+              دخول تجريبي مباشر
             </Link>
           </div>
 
@@ -273,10 +274,7 @@ export default function HomePage() {
               flexWrap: "wrap",
             }}
           >
-            {[
-              { label: "مدير النظام", email: "admin@naioshlaw.com" },
-              { label: "عميل تجريبي", email: "client@naioshlaw.com" },
-            ].map((u) => (
+            {demoUsers.map((u) => (
               <div
                 key={u.email}
                 style={{
@@ -288,9 +286,9 @@ export default function HomePage() {
                 }}
               >
                 <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 700 }}>
-                  {u.label}
+                  {u.name}
                 </p>
-                <p style={{ color: "#475569", fontSize: "0.75rem", marginTop: "0.15rem" }}>
+                <p style={{ color: "#cbd5e1", fontSize: "0.75rem", marginTop: "0.15rem" }}>
                   {u.email}
                 </p>
               </div>
@@ -318,7 +316,7 @@ export default function HomePage() {
             gap: "1rem",
           }}
         >
-          <div style={{ color: "#334155", fontSize: "0.85rem" }}>
+          <div style={{ color: "#94a3b8", fontSize: "0.85rem" }}>
             © 2026 Naiosh Law. جميع الحقوق محفوظة.
           </div>
           <div

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { clearStoredSession } from "@/lib/session";
+import { usePathname } from "next/navigation";
+import { useSession } from "@/lib/session";
 import { getVisibleOperationalModules } from "@/lib/module-routing";
 
 type Props = {
@@ -34,7 +34,7 @@ const iconMap: Record<string, string> = {
 
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
-  const router   = useRouter();
+  const { logout: endSession } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
@@ -45,8 +45,7 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = () => {
-    clearStoredSession();
-    router.replace("/login");
+    endSession();
   };
 
   const isActive = (href: string) => pathname === href;

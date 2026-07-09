@@ -26,11 +26,13 @@ npm audit --audit-level=moderate
 
 ## Demo runtime notes
 
-- Authentication is demo-only and stored in browser `localStorage`.
-- Demo users are defined in `src/data/auth.ts`.
+- Authentication is demo-only but uses a signed httpOnly cookie plus a browser `localStorage` mirror for UI state.
+- Set `NAIOSH_SESSION_SECRET` (or `AUTH_SECRET` / `NEXTAUTH_SECRET`) in production. To intentionally allow the local demo fallback secret in production, set `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true`.
+- Demo account metadata is defined in `src/data/auth.ts`; password-bearing demo credentials are only used by server auth routes.
 - There is no database, ORM, or migration layer in this repository.
 - Module CRUD changes are in-memory demo interactions; reloading a page restores seeded data.
-- Demo integration endpoints are implemented under `src/app/api/[integration]/route.ts`.
+- Demo integration endpoints are implemented under `src/app/api/[integration]/route.ts` and require an authenticated admin session.
+- Auth endpoints are implemented under `src/app/api/auth/*`.
 
 ## Main routes
 

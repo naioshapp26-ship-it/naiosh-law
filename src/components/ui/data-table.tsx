@@ -88,7 +88,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   return (
     <div>
       {/* Search + count */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+      <div
+        className="data-table-toolbar"
+        style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}
+      >
         <div style={{ position: "relative", flex: 1 }}>
           <span
             style={{
@@ -431,6 +434,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           }
         }
         @media (max-width: 600px) {
+          .data-table-toolbar {
+            flex-direction: column;
+            align-items: stretch !important;
+          }
           .data-table-pagination {
             flex-direction: column;
             align-items: stretch !important;

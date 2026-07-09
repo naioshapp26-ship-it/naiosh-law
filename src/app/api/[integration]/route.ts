@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const MAX_BODY_BYTES = 64 * 1024;
+import { isRecord, readJsonBody } from "@/lib/api-request";
+import { decodeSessionToken, SessionConfigError, sessionCookieName } from "@/lib/session-token";
 
 const integrations: Record<string, { name: string; type: string }> = {
   sms: { name: "SMS Gateway", type: "رسائل نصية" },
@@ -24,48 +24,46 @@ function integrationNotFound(integration: string) {
   );
 }
 
-async function readJsonBody(request: NextRequest) {
-  const contentType = request.headers.get("content-type");
-
-  if (contentType && !contentType.toLowerCase().includes("application/json")) {
-    return {
-      ok: false as const,
-      response: NextResponse.json(
-        { error: "unsupported_media_type", message: "Only application/json is supported." },
-        { status: 415 }
-      ),
-    };
-  }
-
-  const body = await request.text();
-  if (!body.trim()) {
-    return { ok: true as const, data: {} };
-  }
-
-  if (new TextEncoder().encode(body).byteLength > MAX_BODY_BYTES) {
-    return {
-      ok: false as const,
-      response: NextResponse.json(
-        { error: "payload_too_large", message: "Request body exceeds 64KB." },
-        { status: 413 }
-      ),
-    };
-  }
-
+async function requireAdminSession(request: NextRequest) {
   try {
-    return { ok: true as const, data: JSON.parse(body) as Record<string, unknown> };
-  } catch {
-    return {
-      ok: false as const,
-      response: NextResponse.json(
-        { error: "invalid_json", message: "Request body must be valid JSON." },
-        { status: 400 }
-      ),
-    };
+    const user = await decodeSessionToken(request.cookies.get(sessionCookieName)?.value);
+    if (!user) {
+      return {
+        ok: false as const,
+        response: NextResponse.json(
+          { error: "unauthorized", message: "A valid session is required." },
+          { status: 401 }
+        ),
+      };
+    }
+    if (user.role !== "admin") {
+      return {
+        ok: false as const,
+        response: NextResponse.json(
+          { error: "forbidden", message: "Admin access is required for integrations." },
+          { status: 403 }
+        ),
+      };
+    }
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof SessionConfigError) {
+      return {
+        ok: false as const,
+        response: NextResponse.json(
+          { error: "session_configuration_error", message: error.message },
+          { status: 503 }
+        ),
+      };
+    }
+    throw error;
   }
 }
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
+  const session = await requireAdminSession(request);
+  if (!session.ok) return session.response;
+
   const { integration } = await context.params;
   const meta = integrations[integration];
 
@@ -83,6 +81,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const session = await requireAdminSession(request);
+  if (!session.ok) return session.response;
+
   const { integration } = await context.params;
   const meta = integrations[integration];
 
@@ -93,6 +94,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const body = await readJsonBody(request);
   if (!body.ok) {
     return body.response;
+  }
+  if (!isRecord(body.data)) {
+    return NextResponse.json(
+      { error: "invalid_payload", message: "Request body must be a JSON object." },
+      { status: 400 }
+    );
   }
 
   return NextResponse.json(
