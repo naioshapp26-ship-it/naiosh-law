@@ -12,6 +12,7 @@ import type { ModuleConfig } from "@/data/module-configs";
 import { moduleIconMap } from "@/data/module-icons";
 import { readStorageValue, removeStorageValue, writeStorageValue } from "@/lib/browser-storage";
 import { canAccessModule } from "@/lib/module-access";
+import type { SessionUser } from "@/lib/auth-session";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
@@ -101,10 +102,11 @@ type Props = {
   slug: string;
   config: ModuleConfig;
   title?: string;
+  initialUser?: SessionUser | null;
 };
 
-export function ModuleShell({ slug, config, title }: Props) {
-  const { user, ready } = useSession(true);
+export function ModuleShell({ slug, config, title, initialUser = null }: Props) {
+  const { user, ready } = useSession(true, initialUser);
   const router = useRouter();
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);

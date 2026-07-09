@@ -30,7 +30,9 @@ type RouteContext = {
 
 async function getIntegration(context: RouteContext) {
   const { integration } = await context.params;
-  return { slug: integration, config: integrationCatalog[integration] };
+  const slug = integration.trim().toLowerCase();
+
+  return { slug, config: integrationCatalog[slug] };
 }
 
 async function requireSession(request: Request) {
@@ -128,19 +130,18 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  const body = await readJsonBody<Record<string, unknown>>(request, {
+  const parsedBody = await readJsonBody<Record<string, unknown>>(request, {
     allowEmptyBody: true,
     emptyBodyValue: {},
     limitBytes: 32 * 1024,
   });
-  if (!body.ok) {
-    return body.response;
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
 
   return NextResponse.json({
     ...healthPayload(slug, config),
     accepted: true,
     requestId: `${slug}-${Date.now()}`,
-    echo: body.data,
   }, { status: 202, headers: integrationResponseHeaders });
 }

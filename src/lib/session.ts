@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
 import { readStorageValue, removeStorageValue, writeStorageValue } from "@/lib/browser-storage";
@@ -84,11 +84,12 @@ function loginPathWithNext() {
   return next.startsWith("/app") ? `/login?next=${encodeURIComponent(next)}` : "/login";
 }
 
-export function useSession(redirectIfMissing = false) {
+export function useSession(redirectIfMissing = false, initialUser: SessionUser | null = null) {
   const router = useRouter();
-  const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(null);
-  const [verified, setVerified] = useState(!redirectIfMissing);
+  const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(initialUser);
+  const [verified, setVerified] = useState(!redirectIfMissing || !!initialUser);
   const [verifiedRawSession, setVerifiedRawSession] = useState<string | null | undefined>(undefined);
+  const trustedUserRef = useRef<SessionUser | null>(initialUser);
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
@@ -96,8 +97,15 @@ export function useSession(redirectIfMissing = false) {
   );
   const hydrated = rawSession !== undefined;
   const cachedUser = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
-  const ready = hydrated && (!redirectIfMissing || (verified && verifiedRawSession === rawSession));
-  const user = redirectIfMissing ? verifiedUser : cachedUser;
+  const ready =
+    redirectIfMissing
+      ? (!!initialUser && verified) || (hydrated && verified && verifiedRawSession === rawSession)
+      : hydrated;
+  const user = redirectIfMissing ? verifiedUser : cachedUser ?? initialUser;
+
+  useEffect(() => {
+    trustedUserRef.current = verifiedUser ?? cachedUser ?? initialUser;
+  }, [cachedUser, initialUser, verifiedUser]);
 
   useEffect(() => {
     if (rawSession !== undefined && rawSession && !cachedUser) {
@@ -119,10 +127,22 @@ export function useSession(redirectIfMissing = false) {
       signal: controller.signal,
     })
       .then(async (response) => {
-        if (!response.ok) {
+        if (response.status === 401) {
           setVerifiedRawSession(rawSession);
+          setVerifiedUser(null);
+          setVerified(true);
           clearStoredSession();
           router.replace(loginPathWithNext());
+          return;
+        }
+
+        if (!response.ok) {
+          const fallbackUser = trustedUserRef.current;
+          if (fallbackUser) {
+            setVerifiedUser(fallbackUser);
+            setVerifiedRawSession(rawSession);
+            setVerified(true);
+          }
           return;
         }
 
@@ -146,14 +166,23 @@ export function useSession(redirectIfMissing = false) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
+
+        const fallbackUser = trustedUserRef.current;
+        if (fallbackUser) {
+          setVerifiedUser(fallbackUser);
+          setVerifiedRawSession(rawSession);
+          setVerified(true);
+          return;
+        }
+
         setVerifiedUser(null);
         setVerifiedRawSession(rawSession);
-        clearStoredSession();
+        setVerified(true);
         router.replace(loginPathWithNext());
       });
 
     return () => controller.abort();
-  }, [cachedUser, rawSession, redirectIfMissing, router]);
+  }, [rawSession, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({

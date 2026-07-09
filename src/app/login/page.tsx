@@ -100,7 +100,7 @@ export default function LoginPage() {
 
   return (
     <div
-      style={{ minHeight: "100vh", display: "flex", background: "#0a0a12" }}
+      style={{ minHeight: "100dvh", display: "flex", background: "#0a0a12" }}
       className="login-wrap"
     >
       {/* ── Left: Branding panel ── */}
@@ -289,7 +289,7 @@ export default function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           padding: "3rem 2rem",
-          minHeight: "100vh",
+          minHeight: "100dvh",
         }}
       >
         <motion.div

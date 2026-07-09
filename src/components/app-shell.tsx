@@ -62,6 +62,7 @@ function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
           <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#0a0a12" }}>Naiosh Law</span>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="drawer-close-btn"
           style={{
@@ -69,6 +70,7 @@ function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
             borderRadius: "8px", background: "#f8f9fb", cursor: "pointer",
             fontSize: "0.9rem", color: "#64748b",
           }}
+          aria-label="إغلاق القائمة"
         >✕</button>
       </div>
 
@@ -354,13 +356,18 @@ export function AppShell({ role, name, children }: Props) {
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
             {/* Drawer panel */}
-            <div style={{
-              position: "relative", zIndex: 1,
-              width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
-              height: "100%", overflowY: "auto",
-              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
-              animation: "slide-drawer 0.25s ease",
-            }}>
+            <div
+              style={{
+                position: "relative", zIndex: 1,
+                width: "min(280px, calc(100vw - 2rem))", background: "#ffffff",
+                height: "100dvh", overflowY: "auto", overscrollBehavior: "contain",
+                boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
+                animation: "slide-drawer 0.25s ease",
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة وحدات النظام"
+            >
               <SidebarContent pathname={pathname} role={role} onClose={() => setDrawerOpen(false)} />
             </div>
           </div>
