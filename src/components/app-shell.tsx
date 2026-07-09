@@ -5,7 +5,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { operationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
-import { sessionKey } from "@/data/auth";
+import { clearSession } from "@/lib/session";
 
 type Props = {
   role: "admin" | "client";
@@ -148,7 +148,7 @@ export function AppShell({ role, name, children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const logout = () => {
-    window.localStorage.removeItem(sessionKey);
+    clearSession();
     router.replace("/login");
   };
 

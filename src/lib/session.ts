@@ -37,7 +37,9 @@ function subscribeToSessionChange(onStoreChange: () => void) {
 }
 
 function notifySessionChange() {
-  window.dispatchEvent(new Event(sessionChangeEvent));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(sessionChangeEvent));
+  }
 }
 
 function parseStoredSession(raw: string | null): SessionUser | null {
@@ -61,6 +63,16 @@ function parseStoredSession(raw: string | null): SessionUser | null {
   return null;
 }
 
+export function persistSession(user: SessionUser) {
+  window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  notifySessionChange();
+}
+
+export function clearSession() {
+  window.localStorage.removeItem(sessionKey);
+  notifySessionChange();
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const rawSession = useSyncExternalStore(
@@ -73,8 +85,7 @@ export function useSession(redirectIfMissing = false) {
 
   useEffect(() => {
     if (ready && rawSession && !user) {
-      window.localStorage.removeItem(sessionKey);
-      notifySessionChange();
+      clearSession();
       return;
     }
 
@@ -88,8 +99,7 @@ export function useSession(redirectIfMissing = false) {
       user,
       ready,
       logout: () => {
-        window.localStorage.removeItem(sessionKey);
-        notifySessionChange();
+        clearSession();
         router.replace("/login");
       },
     }),

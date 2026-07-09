@@ -36,10 +36,12 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+
     setSaving(true);
     await new Promise((r) => setTimeout(r, 400));
-    onSave(form);
     setSaving(false);
+    onSave(form);
   };
 
   return (
@@ -58,6 +60,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
       onClick={onClose}
     >
       <div
+        className="modal-panel"
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -155,7 +158,10 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div
+            className="modal-actions"
+            style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}
+          >
             <button
               type="button"
               onClick={onClose}
@@ -186,7 +192,22 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
       </div>
 
       <style>{`
-        @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) {
+          .modal-panel {
+            border-radius: 16px !important;
+            max-height: calc(100dvh - 1rem) !important;
+            padding: 1.25rem !important;
+          }
+          .modal-form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .modal-actions {
+            flex-direction: column-reverse;
+          }
+          .modal-actions button {
+            width: 100%;
+          }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }

@@ -55,6 +55,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
   const hasActions = !!(onEdit || onDelete || onView);
   const firstColumnKey = columns[0]?.key;
+  const tableMinWidth = Math.max(720, columns.length * 150 + (hasActions ? 150 : 0));
 
   const getRowKey = (row: Record<string, unknown>, index: number) => {
     const fallback = firstColumnKey ? row[firstColumnKey] : undefined;
@@ -86,7 +87,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   return (
     <div>
       {/* Search + count */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+      <div
+        className="data-table-toolbar"
+        style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}
+      >
         <div style={{ position: "relative", flex: 1 }}>
           <span
             style={{
@@ -134,7 +138,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         }}
       >
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table
+            className="responsive-data-table"
+            style={{ width: "100%", minWidth: tableMinWidth, borderCollapse: "collapse", fontSize: "0.86rem" }}
+          >
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (
@@ -215,6 +222,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                         <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
                           {onView && (
                             <button
+                              className="table-action-btn"
                               onClick={() => onView(row)}
                               style={{
                                 background: "#f1f5f9",
@@ -236,6 +244,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                           )}
                           {onEdit && (
                             <button
+                              className="table-action-btn"
                               onClick={() => onEdit(row)}
                               style={{
                                 background: "rgba(195,21,42,0.07)",
@@ -257,6 +266,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                           )}
                           {onDelete && (
                             <button
+                              className="table-action-btn"
                               onClick={() => onDelete(row)}
                               style={{
                                 background: "rgba(239,68,68,0.08)",
@@ -290,6 +300,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       {/* Pagination */}
       {totalPages > 1 && (
         <div
+          className="data-table-pagination"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -302,7 +313,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           <span>
             صفحة {currentPage} من {totalPages} — {sorted.length} سجل إجمالاً
           </span>
-          <div style={{ display: "flex", gap: "0.3rem" }}>
+          <div className="data-table-pagination-controls" style={{ display: "flex", gap: "0.3rem" }}>
             <button
               disabled={currentPage === 1}
               onClick={() => setPage(currentPage - 1)}
@@ -357,6 +368,35 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           </div>
         </div>
       )}
+      <style>{`
+        @media (max-width: 640px) {
+          .data-table-toolbar {
+            flex-direction: column;
+            align-items: stretch !important;
+          }
+          .data-table-toolbar > div:last-child {
+            text-align: center;
+          }
+          .responsive-data-table th,
+          .responsive-data-table td {
+            padding: 0.7rem 0.75rem !important;
+          }
+          .table-action-btn {
+            min-height: 34px;
+            padding: 0.45rem 0.7rem !important;
+          }
+          .data-table-pagination {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.75rem;
+            text-align: center;
+          }
+          .data-table-pagination-controls {
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
     </div>
   );
 }

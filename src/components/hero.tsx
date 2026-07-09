@@ -222,7 +222,7 @@ export function HeroSection() {
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 ابدأ الآن مجانًا →
               </Link>
-              <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
+              <Link href="/login" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 عرض تجريبي مباشر
               </Link>
             </motion.div>
