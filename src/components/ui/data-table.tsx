@@ -125,11 +125,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       return <StatusBadge label={String(val)} color="gray" />;
     }
     if (col.type === "currency") {
-      const numericValue = Number(String(val ?? "").replace(/,/g, ""));
+      const numericValue = parseNumericValue(val);
 
       return (
         <span style={{ fontWeight: 700, color: "#0a0a12" }}>
-          {Number.isFinite(numericValue) ? `${numericValue.toLocaleString("ar-EG")} ج.م` : "—"}
+          {numericValue !== null ? `${numericValue.toLocaleString("ar-EG")} ج.م` : "—"}
         </span>
       );
     }
@@ -198,6 +198,15 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                   <th
                     key={col.key}
                     onClick={() => col.sortable !== false && handleSort(col.key)}
+                    aria-sort={
+                      sortKey === col.key
+                        ? sortAsc
+                          ? "ascending"
+                          : "descending"
+                        : col.sortable === false
+                          ? undefined
+                          : "none"
+                    }
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",

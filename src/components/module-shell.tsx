@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -105,23 +105,44 @@ export function ModuleShell({ slug, config, title }: Props) {
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config.data));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config.data));
+  const [rowsHydrated, setRowsHydrated] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const toastTimersRef = useRef<number[]>([]);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timeoutId = window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+      toastTimersRef.current = toastTimersRef.current.filter((timerId) => timerId !== timeoutId);
+    }, 3500);
+    toastTimersRef.current.push(timeoutId);
   }, []);
 
   useEffect(() => {
+    setRowsHydrated(false);
+    setRows(loadRows(slug, config.data));
+    setRowsHydrated(true);
+  }, [config.data, slug]);
+
+  useEffect(() => {
+    if (!rowsHydrated) {
+      return;
+    }
+
     persistRows(slug, rows);
-  }, [rows, slug]);
+  }, [rows, rowsHydrated, slug]);
+
+  useEffect(() => () => {
+    toastTimersRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    toastTimersRef.current = [];
+  }, []);
 
   useEffect(() => {
     if (ready && user && !hasModuleAccess) {

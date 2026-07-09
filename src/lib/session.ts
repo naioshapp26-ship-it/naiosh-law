@@ -146,12 +146,6 @@ export function useSession(redirectIfMissing = false) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        if (cachedUser) {
-          setVerifiedUser(cachedUser);
-          setVerifiedRawSession(rawSession);
-          setVerified(true);
-          return;
-        }
         setVerifiedUser(null);
         setVerifiedRawSession(rawSession);
         clearStoredSession();

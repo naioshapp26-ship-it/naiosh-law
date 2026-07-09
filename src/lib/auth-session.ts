@@ -27,6 +27,13 @@ const placeholderSecrets = new Set([
   demoSessionSecret,
 ]);
 
+export class SessionConfigurationError extends Error {
+  constructor() {
+    super("NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be set for production session signing.");
+    this.name = "SessionConfigurationError";
+  }
+}
+
 function getSessionSecret() {
   const configuredSecret =
     process.env.NAIOSH_SESSION_SECRET ??
@@ -41,9 +48,7 @@ function getSessionSecret() {
     process.env.NODE_ENV === "production" &&
     process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true"
   ) {
-    throw new Error(
-      "NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be set for production session signing."
-    );
+    throw new SessionConfigurationError();
   }
 
   return demoSessionSecret;

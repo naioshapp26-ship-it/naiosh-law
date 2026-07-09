@@ -13,6 +13,28 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
   const navStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
@@ -70,7 +92,7 @@ export function Navbar() {
             >
               Naiosh Law
             </div>
-            <div style={{ color: "#475569", fontSize: "0.65rem", fontWeight: 500 }}>
+            <div style={{ color: scrolled ? "#94a3b8" : "rgba(255,255,255,0.7)", fontSize: "0.65rem", fontWeight: 500 }}>
               النظام القانوني المتكامل
             </div>
           </div>
@@ -128,6 +150,7 @@ export function Navbar() {
           }}
           className="mobile-menu-btn"
           aria-label="قائمة"
+          aria-expanded={menuOpen}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             {menuOpen ? (

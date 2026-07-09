@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { encodeSession, getSessionCookieOptions, sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth-session";
+import {
+  SessionConfigurationError,
+  encodeSession,
+  getSessionCookieOptions,
+  sessionCookieName,
+  sessionMaxAgeSeconds,
+} from "@/lib/auth-session";
 import type { SessionRole } from "@/lib/auth-session";
 import { findDemoUserByCredentials, findDemoUserByRole, toSessionUser } from "@/data/server-auth";
 import { readJsonBody } from "@/lib/api-request";
@@ -9,6 +15,11 @@ type LoginRequest = {
   password?: unknown;
   role?: unknown;
   demo?: unknown;
+};
+
+const authResponseHeaders = {
+  "Cache-Control": "no-store, private",
+  Vary: "Cookie",
 };
 
 function isSessionRole(role: unknown): role is SessionRole {
@@ -30,12 +41,29 @@ export async function POST(request: Request) {
         : undefined;
 
   if (!demoUser) {
-    return NextResponse.json({ message: "Invalid email or password." }, { status: 401 });
+    return NextResponse.json(
+      { message: "Invalid email or password." },
+      { status: 401, headers: authResponseHeaders }
+    );
   }
 
   const user = toSessionUser(demoUser);
-  const response = NextResponse.json({ user });
-  const token = await encodeSession(user);
+  let token: string;
+
+  try {
+    token = await encodeSession(user);
+  } catch (error) {
+    if (error instanceof SessionConfigurationError) {
+      return NextResponse.json(
+        { message: "Authentication is not configured." },
+        { status: 503, headers: authResponseHeaders }
+      );
+    }
+
+    throw error;
+  }
+
+  const response = NextResponse.json({ user }, { headers: authResponseHeaders });
 
   response.cookies.set(sessionCookieName, token, {
     ...getSessionCookieOptions(request),

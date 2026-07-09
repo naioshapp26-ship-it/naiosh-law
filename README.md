@@ -1,6 +1,6 @@
 # Naiosh Law
 
-Arabic RTL legal-operations dashboard built with Next.js App Router, React, Tailwind CSS, and Framer Motion.
+Arabic RTL legal-operations dashboard built with Next.js App Router, React, and Tailwind CSS.
 
 ## Getting Started
 

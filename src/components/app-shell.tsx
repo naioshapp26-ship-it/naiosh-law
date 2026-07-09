@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
@@ -23,6 +23,8 @@ const roleLabels: Record<Props["role"], string> = {
   admin: "مدير النظام",
   client: "عميل",
 };
+
+const preferredBottomModuleSlugs = ["case-management", "court-sessions", "legal-accounting"];
 
 function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
@@ -152,6 +154,30 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const { logout } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const visibleModules = useMemo(() => getVisibleOperationalModules(role), [role]);
+  const bottomNavItems = useMemo(() => {
+    const moduleItems = preferredBottomModuleSlugs
+      .map((slug) => visibleModules.find((moduleItem) => moduleItem.slug === slug))
+      .filter((moduleItem): moduleItem is (typeof visibleModules)[number] => Boolean(moduleItem))
+      .map((moduleItem) => ({
+        href: `/app/modules/${moduleItem.slug}`,
+        icon: moduleIconMap[moduleItem.slug] ?? "📌",
+        label: moduleItem.title.replace(/^إدارة\s/u, "").replace(/^المحاسبة القانونية$/u, "المالية"),
+      }));
+
+    return [
+      { href: "/app/dashboard", icon: "⊞", label: "الرئيسية" },
+      ...moduleItems,
+    ];
+  }, [visibleModules]);
+
+  const handleLogout = useCallback(() => {
+    setLogoutError("");
+    logout().catch(() => {
+      setLogoutError("تعذر تسجيل الخروج. تحقق من الاتصال ثم حاول مرة أخرى.");
+    });
+  }, [logout]);
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -197,6 +223,7 @@ export function AppShell({ role, name, children }: Props) {
             <button
               onClick={() => setDrawerOpen(true)}
               className="hamburger-btn"
+              type="button"
               style={{
                 width: 38, height: 38, border: "1px solid #e2e8f0",
                 borderRadius: "10px", background: "#f8f9fb",
@@ -205,6 +232,7 @@ export function AppShell({ role, name, children }: Props) {
                 fontSize: "1.1rem", color: "#475569", flexShrink: 0,
               }}
               aria-label="القائمة"
+              aria-expanded={drawerOpen}
             >
               ☰
             </button>
@@ -228,13 +256,13 @@ export function AppShell({ role, name, children }: Props) {
           {/* Right: Notifications + User + Logout */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* Notification bell */}
-            <button style={{
+            <button type="button" style={{
               width: 36, height: 36, borderRadius: "10px",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
-              cursor: "pointer", display: "flex", alignItems: "center",
+              cursor: "default", display: "flex", alignItems: "center",
               justifyContent: "center", fontSize: "0.9rem", position: "relative",
-              flexShrink: 0,
-            }} aria-label="التنبيهات">
+              flexShrink: 0, opacity: 0.8,
+            }} aria-label="التنبيهات" aria-disabled="true">
               🔔
               <span style={{
                 position: "absolute", top: 6, insetInlineEnd: 6,
@@ -264,7 +292,8 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              type="button"
+              onClick={handleLogout}
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
@@ -279,6 +308,22 @@ export function AppShell({ role, name, children }: Props) {
             </button>
           </div>
         </div>
+        {logoutError ? (
+          <div
+            role="alert"
+            style={{
+              background: "rgba(195,21,42,0.08)",
+              borderTop: "1px solid rgba(195,21,42,0.12)",
+              color: "#9f1239",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              padding: "0.5rem 1rem",
+              textAlign: "center",
+            }}
+          >
+            {logoutError}
+          </div>
+        ) : null}
       </header>
 
       {/* ── Body ── */}
@@ -336,12 +381,7 @@ export function AppShell({ role, name, children }: Props) {
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
       }}>
-        {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
-        ].map((item) => {
+        {bottomNavItems.map((item) => {
           const active = pathname === item.href;
           return (
             <Link
@@ -364,6 +404,9 @@ export function AppShell({ role, name, children }: Props) {
         {/* All modules button */}
         <button
           onClick={() => setDrawerOpen(true)}
+          type="button"
+          aria-label="عرض كل الوحدات"
+          aria-expanded={drawerOpen}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",

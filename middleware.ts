@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decodeSession, sessionCookieName } from "@/lib/auth-session";
+import { SessionConfigurationError, decodeSession, sessionCookieName } from "@/lib/auth-session";
 import { canAccessModule } from "@/lib/module-access";
 
 function getModuleSlug(pathname: string) {
@@ -9,7 +9,24 @@ function getModuleSlug(pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  const user = await decodeSession(request.cookies.get(sessionCookieName)?.value);
+  let user;
+  try {
+    user = await decodeSession(request.cookies.get(sessionCookieName)?.value);
+  } catch (error) {
+    if (error instanceof SessionConfigurationError) {
+      return NextResponse.json(
+        { message: "Authentication is not configured." },
+        {
+          status: 503,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
+      );
+    }
+
+    throw error;
+  }
   const isLoginPage = request.nextUrl.pathname === "/login";
   const isDashboardModule = request.nextUrl.pathname === "/app/modules/dashboard";
   const moduleSlug = getModuleSlug(request.nextUrl.pathname);

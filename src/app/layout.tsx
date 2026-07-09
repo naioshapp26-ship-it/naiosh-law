@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <body style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         {children}
       </body>
     </html>

@@ -541,7 +541,7 @@ export function HeroSection() {
             grid-template-columns: minmax(0, 1fr) 360px !important;
           }
         }
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
           .hero-grid {
             grid-template-columns: 1fr !important;
           }
