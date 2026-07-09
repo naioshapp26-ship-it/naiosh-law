@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { demoLoginProfiles } from "@/data/auth";
-import { saveSession } from "@/lib/session";
+import { isSessionUser, saveSession } from "@/lib/session";
 import type { SessionUser } from "@/lib/auth-session";
 import { staticMotion as motion } from "@/components/ui/static-motion";
 
@@ -93,7 +93,12 @@ export default function LoginPage() {
         return;
       }
 
-      const payload = (await response.json()) as { user: SessionUser };
+      const payload = (await response.json()) as { user?: unknown };
+      if (!isSessionUser(payload.user)) {
+        setError("تعذر قراءة بيانات الجلسة من الخادم. أعد المحاولة.");
+        return;
+      }
+
       completeLogin(payload.user);
     } catch {
       setError("تعذر الاتصال بالخادم. حاول مرة أخرى.");
@@ -118,7 +123,12 @@ export default function LoginPage() {
         return;
       }
 
-      const payload = (await response.json()) as { user: SessionUser };
+      const payload = (await response.json()) as { user?: unknown };
+      if (!isSessionUser(payload.user)) {
+        setError("تعذر قراءة بيانات الجلسة من الخادم. أعد المحاولة.");
+        return;
+      }
+
       completeLogin(payload.user);
     } catch {
       setError("تعذر الاتصال بالخادم. حاول مرة أخرى.");

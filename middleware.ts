@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
+import {
+  decodeSession,
+  getSessionCookieOptions,
+  isSessionConfigurationAvailable,
+  sessionCookieName,
+} from "@/lib/auth-session";
 import { canAccessModule } from "@/lib/module-access";
 
 function getModuleSlug(pathname: string) {
@@ -20,8 +25,12 @@ function clearSessionCookie(response: NextResponse, request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get(sessionCookieName)?.value;
-  const user = await decodeSession(sessionToken);
   const isLoginPage = request.nextUrl.pathname === "/login";
+  if (!isLoginPage && !isSessionConfigurationAvailable()) {
+    return new NextResponse("Session secret is not configured.", { status: 503 });
+  }
+
+  const user = await decodeSession(sessionToken);
   const isDashboardModule = request.nextUrl.pathname === "/app/modules/dashboard";
   const moduleSlug = getModuleSlug(request.nextUrl.pathname);
 

@@ -25,6 +25,11 @@ const roleLabels: Record<Props["role"], string> = {
 };
 
 const preferredBottomModuleSlugs = ["case-management", "court-sessions", "legal-accounting"];
+const bottomModuleLabels: Record<string, string> = {
+  "case-management": "القضايا",
+  "court-sessions": "الجلسات",
+  "legal-accounting": "المالية",
+};
 
 function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
@@ -167,7 +172,7 @@ export function AppShell({ role, name, children }: Props) {
     ...bottomModuleItems.map((item) => ({
       href: `/app/modules/${item.slug}`,
       icon: moduleIconMap[item.slug] ?? "📌",
-      label: item.title,
+      label: bottomModuleLabels[item.slug] ?? item.title,
     })),
   ];
 

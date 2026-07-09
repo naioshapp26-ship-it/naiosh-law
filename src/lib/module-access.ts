@@ -1,6 +1,5 @@
 import type { SessionRole } from "@/lib/auth-session";
 
-const adminOnlyModuleSlugs = new Set(["administration", "integrations", "ai-center"]);
 const clientModuleSlugs = new Set([
   "case-management",
   "clients-management",
@@ -13,10 +12,24 @@ const clientModuleSlugs = new Set([
   "notifications-center",
 ]);
 
+const adminOnlyModuleSlugs = new Set([
+  "internal-requests",
+  "smart-templates",
+  "reports-center",
+  "administration",
+  "integrations",
+  "ai-center",
+  "general-tools",
+]);
+
 export function isAdminOnlyModule(slug: string) {
   return adminOnlyModuleSlugs.has(slug);
 }
 
 export function canAccessModule(role: SessionRole, slug: string) {
-  return role === "admin" || clientModuleSlugs.has(slug);
+  if (role === "admin") {
+    return true;
+  }
+
+  return clientModuleSlugs.has(slug) && !isAdminOnlyModule(slug);
 }

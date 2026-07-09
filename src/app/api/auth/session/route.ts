@@ -1,8 +1,17 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { decodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
+import {
+  decodeSession,
+  getSessionCookieOptions,
+  isSessionConfigurationAvailable,
+  sessionCookieName,
+} from "@/lib/auth-session";
 
 export async function GET(request: Request) {
+  if (!isSessionConfigurationAvailable()) {
+    return NextResponse.json({ message: "Session secret is not configured." }, { status: 503 });
+  }
+
   const cookieStore = await cookies();
   const user = await decodeSession(cookieStore.get(sessionCookieName)?.value);
 

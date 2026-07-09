@@ -78,11 +78,15 @@ function parseCompletedTaskStore(rawTasks: string | null) {
     return {};
   }
 
-  const parsed = JSON.parse(rawTasks) as unknown;
+  try {
+    const parsed = JSON.parse(rawTasks) as unknown;
 
-  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-    ? (parsed as Record<string, unknown>)
-    : {};
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function parseCompletedTasks(rawTasks: TaskSnapshot, scope: string) {
@@ -134,7 +138,7 @@ function persistCompletedTasks(tasks: Set<string>, scope: string) {
 }
 
 export default function DashboardPage() {
-  const { user, ready } = useSession(true);
+  const { user, ready, verificationError } = useSession(true);
   const taskStorageScope = getTaskStorageScope(user?.email);
   const completedTasksSnapshot = useSyncExternalStore(
     subscribeToCompletedTasks,
@@ -169,7 +173,7 @@ export default function DashboardPage() {
   };
 
   if (!ready || !user) {
-    return <LoadingScreen />;
+    return <LoadingScreen label={verificationError || undefined} />;
   }
 
   const visibleModules = getVisibleOperationalModules(user.role);

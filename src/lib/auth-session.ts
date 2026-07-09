@@ -51,6 +51,20 @@ function getSessionSecret() {
   return "naiosh-law-demo-session-secret";
 }
 
+export function isSessionConfigurationAvailable() {
+  const hasConfiguredSecret = [
+    process.env.NAIOSH_SESSION_SECRET,
+    process.env.AUTH_SECRET,
+    process.env.NEXTAUTH_SECRET,
+  ].some((secret) => !!secret?.trim());
+
+  return (
+    hasConfiguredSecret ||
+    process.env.NODE_ENV !== "production" ||
+    process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET === "true"
+  );
+}
+
 function shouldUseSecureCookie(request?: Request) {
   if (process.env.NODE_ENV !== "production") {
     return false;

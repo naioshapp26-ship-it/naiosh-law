@@ -331,8 +331,10 @@ export default function HomePage() {
       </footer>
 
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 768px) {
           .features-grid { grid-template-columns: 1fr !important; }
           .modules-grid { grid-template-columns: 1fr !important; }
           .marketing-section { padding-block: 4rem !important; }

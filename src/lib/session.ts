@@ -8,6 +8,7 @@ import type { SessionUser } from "@/lib/auth-session";
 const sessionChangeEvent = "naiosh-law-session-change";
 const sessionVerificationRetries = [250, 750];
 const sessionVerificationMaxAgeMs = 60 * 1000;
+const sessionVerificationErrorMessage = "تعذر التحقق من الجلسة حاليًا. تحقق من الاتصال ثم أعد تحميل الصفحة.";
 
 type SessionSnapshot = string | null | undefined;
 type VerifiedSessionCache = {
@@ -84,7 +85,7 @@ function cacheVerifiedSession(rawSession: SessionSnapshot, user: SessionUser) {
   };
 }
 
-function isSessionUser(value: unknown): value is SessionUser {
+export function isSessionUser(value: unknown): value is SessionUser {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -192,11 +193,16 @@ async function fetchSessionWithRetry(signal: AbortSignal) {
   throw lastError;
 }
 
+function isInvalidSessionResponse(response: Response) {
+  return response.status === 401 || response.status === 403;
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
   const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(null);
   const [verified, setVerified] = useState(!redirectIfMissing);
   const [verifiedRawSession, setVerifiedRawSession] = useState<string | null | undefined>(undefined);
+  const [verificationError, setVerificationError] = useState("");
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
@@ -235,11 +241,18 @@ export function useSession(redirectIfMissing = false) {
     fetchSessionWithRetry(controller.signal)
       .then(async (response) => {
         if (!response.ok) {
-          setVerifiedUser(null);
-          setVerified(false);
           setVerifiedRawSession(rawSession);
-          clearStoredSession();
-          router.replace(loginPathWithNext());
+          if (isInvalidSessionResponse(response)) {
+            setVerifiedUser(null);
+            setVerified(false);
+            setVerificationError("");
+            clearStoredSession();
+            router.replace(loginPathWithNext());
+            return;
+          }
+
+          setVerified(true);
+          setVerificationError(sessionVerificationErrorMessage);
           return;
         }
 
@@ -248,6 +261,7 @@ export function useSession(redirectIfMissing = false) {
           setVerifiedUser(payload.user);
           setVerifiedRawSession(rawSession);
           setVerified(true);
+          setVerificationError("");
           cacheVerifiedSession(rawSession, payload.user);
 
           if (serializeSession(payload.user) !== rawSession) {
@@ -257,6 +271,7 @@ export function useSession(redirectIfMissing = false) {
           setVerifiedUser(null);
           setVerified(false);
           setVerifiedRawSession(rawSession);
+          setVerificationError("");
           clearStoredSession();
           router.replace(loginPathWithNext());
         }
@@ -266,11 +281,9 @@ export function useSession(redirectIfMissing = false) {
           return;
         }
 
-        setVerifiedUser(null);
-        setVerified(false);
+        setVerified(true);
         setVerifiedRawSession(rawSession);
-        clearStoredSession();
-        router.replace(loginPathWithNext());
+        setVerificationError(sessionVerificationErrorMessage);
       });
 
     return () => controller.abort();
@@ -280,6 +293,7 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
+      verificationError,
       logout: async () => {
         const response = await fetch("/api/auth/logout", { method: "POST" });
         if (!response.ok) {
@@ -289,7 +303,7 @@ export function useSession(redirectIfMissing = false) {
         router.replace("/login");
       },
     }),
-    [user, ready, router]
+    [user, ready, verificationError, router]
   );
 
   return api;

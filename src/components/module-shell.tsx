@@ -146,12 +146,20 @@ function clientMatchTerms(user: SessionUser) {
 }
 
 function rowBelongsToClient(slug: string, row: Record<string, unknown>, user: SessionUser) {
+  const terms = clientMatchTerms(user);
+
   if (slug === "notifications-center") {
-    return normalizeSearchText(row.audience).includes("الموكل");
+    const audience = normalizeSearchText(row.audience);
+    const searchableValues = ["client", "name", "email"].map((key) => normalizeSearchText(row[key]));
+
+    return (
+      audience === normalizeSearchText(user.name) ||
+      audience === normalizeSearchText(user.email) ||
+      searchableValues.some((value) => terms.some((term) => value === term || value.includes(term)))
+    );
   }
 
   const searchableValues = ["client", "name", "email"].map((key) => normalizeSearchText(row[key]));
-  const terms = clientMatchTerms(user);
 
   return searchableValues.some((value) => terms.some((term) => value === term || value.includes(term)));
 }
@@ -234,7 +242,7 @@ function persistRows(slug: string, scope: string, rows: Record<string, unknown>[
 }
 
 export function ModuleShell({ slug, config, title }: { slug: string; config: ModuleConfig; title: string }) {
-  const { user, ready } = useSession(true);
+  const { user, ready, verificationError } = useSession(true);
   const router = useRouter();
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
@@ -320,7 +328,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   }, [reportOpen, viewTarget]);
 
   if (!ready || !user) {
-    return <LoadingScreen />;
+    return <LoadingScreen label={verificationError || undefined} />;
   }
 
   if (!hasModuleAccess) {

@@ -111,7 +111,7 @@ export function Navbar() {
             >
               Naiosh Law
             </div>
-            <div style={{ color: "#475569", fontSize: "0.65rem", fontWeight: 500 }}>
+            <div style={{ color: "#cbd5e1", fontSize: "0.65rem", fontWeight: 500 }}>
               النظام القانوني المتكامل
             </div>
           </div>

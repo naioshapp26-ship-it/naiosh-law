@@ -600,13 +600,13 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",   label:"الحالة", type:"badge", badgeMap: { نشط:{label:"نشط",color:"green"}, موقف:{label:"موقف",color:"yellow"}, معطل:{label:"معطل",color:"gray"} } },
     ],
     data: [
-      { title:"تذكير جلسة قادمة",       trigger:"قبل الجلسة بـ 24 ساعة", channel:"بريد + رسالة", audience:"المسؤول + الموكل", sent:892, status:"نشط"  },
+      { title:"تذكير جلسة قادمة",       trigger:"قبل الجلسة بـ 24 ساعة", channel:"بريد + رسالة", audience:"المسؤول + الموكل", client:"أحمد محمد الصاوي", sent:892, status:"نشط"  },
       { title:"فاتورة غير مسددة",       trigger:"تجاوز تاريخ الاستحقاق", channel:"بريد",          audience:"المسؤول + الموكل", sent:234, status:"نشط"  },
       { title:"مهمة عاجلة",             trigger:"إسناد مهمة عاجلة",      channel:"رسالة",         audience:"المُسند له",        sent:156, status:"نشط"  },
       { title:"موعد تقديم مذكرة",       trigger:"قبل 48 ساعة من الموعد", channel:"بريد",          audience:"المحامي المسؤول",   sent:445, status:"نشط"  },
-      { title:"تحديث حالة القضية",      trigger:"تغيير حالة القضية",     channel:"بريد",          audience:"الموكل",            sent:312, status:"نشط"  },
+      { title:"تحديث حالة القضية",      trigger:"تغيير حالة القضية",     channel:"بريد",          audience:"الموكل",            client:"أحمد محمد الصاوي", sent:312, status:"نشط"  },
       { title:"تقرير أسبوعي",           trigger:"كل يوم أحد 8 ص",        channel:"بريد",          audience:"الإدارة",           sent:48,  status:"نشط"  },
-      { title:"تذكير دفع رسوم",         trigger:"قبل الاستحقاق بـ 7 أيام",channel:"بريد + رسالة", audience:"الموكل",            sent:89,  status:"موقف" },
+      { title:"تذكير دفع رسوم",         trigger:"قبل الاستحقاق بـ 7 أيام",channel:"بريد + رسالة", audience:"الموكل",            client:"أحمد محمد الصاوي", sent:89,  status:"موقف" },
       { title:"شكوى جديدة",             trigger:"استلام شكوى",            channel:"بريد",          audience:"الإدارة",           sent:23,  status:"نشط"  },
     ],
     formFields: [
