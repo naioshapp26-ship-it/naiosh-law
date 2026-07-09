@@ -209,6 +209,7 @@ export default function HomePage() {
 
       {/* ── CTA ── */}
       <section
+        id="demo-request"
         style={{
           background: "#0a0a12",
           padding: "6rem 0",
@@ -300,6 +301,7 @@ export default function HomePage() {
 
       {/* ── Footer ── */}
       <footer
+        id="footer-support"
         style={{
           background: "#0a0a12",
           borderTop: "1px solid rgba(255,255,255,0.06)",
