@@ -93,7 +93,8 @@ export function useSession(redirectIfMissing = false) {
         }
       } catch {
         if (active) {
-          setUser(readStoredUser());
+          window.localStorage.removeItem(sessionStorageKey);
+          setUser(null);
         }
       } finally {
         if (active) {

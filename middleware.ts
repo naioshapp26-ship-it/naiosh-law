@@ -6,6 +6,14 @@ import {
   sessionCookieName,
 } from "@/lib/session-shared";
 
+function safeDecodePathSegment(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const session = await readSessionToken(request.cookies.get(sessionCookieName)?.value);
   const isLoginPage = request.nextUrl.pathname === "/login";
@@ -28,7 +36,11 @@ export async function middleware(request: NextRequest) {
 
   const moduleMatch = request.nextUrl.pathname.match(/^\/app\/modules\/([^/]+)/);
   if (moduleMatch) {
-    const slug = decodeURIComponent(moduleMatch[1]);
+    const slug = safeDecodePathSegment(moduleMatch[1]);
+    if (!slug) {
+      return NextResponse.redirect(new URL("/app/dashboard", request.url));
+    }
+
     if (!canAccessModule(slug, session.role)) {
       return NextResponse.redirect(new URL("/app/dashboard", request.url));
     }

@@ -6,8 +6,7 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { moduleConfigMap, type Column } from "@/data/module-configs";
-import { moduleMap } from "@/data/modules";
+import type { Column, ModuleConfig } from "@/data/module-configs";
 import { canAccessModule } from "@/lib/module-routing";
 import { useSession } from "@/lib/session";
 
@@ -132,9 +131,14 @@ function openPrintableReport(title: string, columns: Column[], rows: Record<stri
   return true;
 }
 
-export function ModuleShell({ slug }: { slug: string }) {
+type ModuleShellProps = {
+  slug: string;
+  config: ModuleConfig;
+  moduleTitle: string;
+};
+
+export function ModuleShell({ slug, config, moduleTitle }: ModuleShellProps) {
   const { user, ready } = useSession(true);
-  const config = moduleConfigMap[slug];
   const storageKey = useMemo(() => `naiosh-law:module:${slug}:rows`, [slug]);
 
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
@@ -157,12 +161,6 @@ export function ModuleShell({ slug }: { slug: string }) {
 
     const hydrateRows = () => {
       if (!active) {
-        return;
-      }
-
-      if (!config) {
-        setRows([]);
-        setRowsHydrated(true);
         return;
       }
 
@@ -193,7 +191,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, [config, slug, storageKey]);
 
   useEffect(() => {
-    if (!config || !rowsHydrated) {
+    if (!rowsHydrated) {
       return;
     }
 
@@ -212,18 +210,6 @@ export function ModuleShell({ slug }: { slug: string }) {
           <p>جاري التحميل...</p>
         </div>
       </div>
-    );
-  }
-
-  if (!config) {
-    return (
-      <AppShell role={user.role} name={user.name}>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
     );
   }
 
@@ -274,7 +260,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   };
 
   const handleReportExport = (format: ReportFormat, label: string) => {
-    const reportTitle = `${moduleMap[slug]?.title ?? config.entityName} — ${rows.length} سجل`;
+    const reportTitle = `${moduleTitle} — ${rows.length} سجل`;
     const fileBase = `naiosh-law-${slug}-${new Date().toISOString().slice(0, 10)}`;
 
     if (format === "pdf") {
@@ -377,7 +363,7 @@ export function ModuleShell({ slug }: { slug: string }) {
                  config.entityName === "موكل" ? "👥" :
                  config.entityName === "جلسة" ? "🏛️" :
                  config.entityName === "متابعة" ? "📋" :
-                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleTitle}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
                 إجمالي {rowsHydrated ? rows.length : "..."} {config.entityName} — جميع البيانات محدثة

@@ -19,11 +19,22 @@ const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 function getSessionSecret() {
-  return (
+  const configuredSecret =
     process.env.NAIOSH_SESSION_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    fallbackSessionSecret
-  );
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET;
+
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
+    throw new Error(
+      "NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET must be set in production."
+    );
+  }
+
+  return fallbackSessionSecret;
 }
 
 function encodeBase64Url(bytes: Uint8Array) {
@@ -159,13 +170,14 @@ export function getCookieValue(cookieHeader: string | null | undefined, name: st
 }
 
 export function getSafeAppPath(value: string | null | undefined, fallback = "/app/dashboard") {
-  if (!value || !value.startsWith("/app") || value.startsWith("//") || value.includes("\\")) {
+  if (!value || value.startsWith("//") || value.includes("\\")) {
     return fallback;
   }
 
   try {
     const parsed = new URL(value, "https://naiosh-law.local");
-    if (parsed.origin !== "https://naiosh-law.local" || !parsed.pathname.startsWith("/app")) {
+    const isAppPath = parsed.pathname === "/app" || parsed.pathname.startsWith("/app/");
+    if (parsed.origin !== "https://naiosh-law.local" || !isAppPath) {
       return fallback;
     }
 

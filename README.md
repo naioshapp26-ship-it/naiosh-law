@@ -19,6 +19,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 - Manual demo credentials are validated only on the server.
 - Protected `/app/*` routes require a signed httpOnly session cookie.
 - Client session state is mirrored in `localStorage` only for UI hydration and is revalidated against `/api/auth/session`.
+- Production deployments must set `NAIOSH_SESSION_SECRET`, `AUTH_SECRET`, or `NEXTAUTH_SECRET` for session signing. The demo fallback secret is available only outside production unless `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true` is set deliberately.
+
+## API behavior
+
+- Auth endpoints accept JSON object payloads only and return `400`, `413`, or `415` for malformed, oversized, or unsupported request bodies.
+- Demo integration endpoints under `/api/{sms,email,payments,sign,courts,tax,ocr,analytics}` require an authenticated admin session.
+- Integration `POST` requests accept an empty body as an empty JSON payload for simple connection checks.
 
 ## Data model
 

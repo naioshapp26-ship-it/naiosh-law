@@ -223,7 +223,7 @@ export function AppShell({ role, name, children }: Props) {
           </div>
 
           {/* Right: Notifications + User + Logout */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Notification bell */}
             <button style={{
               width: 36, height: 36, borderRadius: "10px",
@@ -241,7 +241,7 @@ export function AppShell({ role, name, children }: Props) {
             </button>
 
             {/* User chip */}
-            <div style={{
+            <div className="user-chip" style={{
               display: "flex", alignItems: "center", gap: "0.5rem",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               borderRadius: "10px", padding: "0.4rem 0.75rem",
@@ -261,6 +261,7 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
+              className="logout-btn"
               onClick={() => {
                 void logout();
               }}
@@ -376,7 +377,7 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: 280, background: "#ffffff",
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
               {sidebarContent}
@@ -385,7 +386,7 @@ export function AppShell({ role, name, children }: Props) {
         )}
 
         {/* ── Main Content ── */}
-        <main style={{ flex: 1, padding: "1.25rem", minWidth: 0, overflowX: "hidden" }}>
+        <main className="app-main" style={{ flex: 1, padding: "1.25rem", minWidth: 0, overflowX: "hidden" }}>
           {children}
         </main>
       </div>
@@ -394,7 +395,7 @@ export function AppShell({ role, name, children }: Props) {
       <nav className="mobile-bottom-nav" style={{
         display: "none", position: "fixed", bottom: 0, insetInline: 0,
         background: "#ffffff", borderTop: "1px solid #e2e8f0",
-        padding: "0.5rem 0.75rem",
+        padding: "0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom))",
         zIndex: 100,
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
@@ -447,6 +448,16 @@ export function AppShell({ role, name, children }: Props) {
           .user-name-block   { display: none; }
           .drawer-header     { display: flex !important; }
           main               { padding-bottom: 5rem !important; }
+        }
+        @media (max-width: 520px) {
+          .app-header-actions { gap: 0.35rem !important; }
+          .user-chip          { padding: 0.35rem !important; }
+          .logout-btn         { padding: 0.4rem 0.55rem !important; }
+          .app-main           { padding-inline: 0.85rem !important; }
+        }
+        @media (max-width: 390px) {
+          .app-header-actions > button[aria-label="التنبيهات"] { display: none !important; }
+          .logout-btn { font-size: 0.7rem !important; }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { ModulePageClient } from "@/components/module-page-client";
 import { moduleConfigMap } from "@/data/module-configs";
+import { moduleMap } from "@/data/modules";
 import { canAccessModule } from "@/lib/module-routing";
 import { readSessionToken, sessionCookieName } from "@/lib/session-shared";
 
@@ -16,7 +17,8 @@ export default async function ModulePage({ params }: Props) {
     redirect("/app/dashboard");
   }
 
-  if (!moduleConfigMap[slug]) {
+  const config = moduleConfigMap[slug];
+  if (!config) {
     notFound();
   }
 
@@ -31,5 +33,11 @@ export default async function ModulePage({ params }: Props) {
     redirect("/app/dashboard");
   }
 
-  return <ModulePageClient slug={slug} />;
+  return (
+    <ModulePageClient
+      slug={slug}
+      config={config}
+      moduleTitle={moduleMap[slug]?.title ?? config.entityName}
+    />
+  );
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonObject } from "@/lib/api-request";
 import {
   getCookieValue,
   readSessionToken,
@@ -28,24 +29,37 @@ function getIntegration(slug: string) {
   return null;
 }
 
-async function requireSession(request: Request) {
+async function requireAdminSession(request: Request) {
   const token = getCookieValue(request.headers.get("cookie"), sessionCookieName);
   const user = await readSessionToken(token);
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Authentication required" },
-      { status: 401 }
-    );
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { ok: false, error: "Authentication required" },
+        { status: 401 }
+      ),
+    } as const;
   }
 
-  return null;
+  if (user.role !== "admin") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { ok: false, error: "Admin access required" },
+        { status: 403 }
+      ),
+    } as const;
+  }
+
+  return { ok: true, user } as const;
 }
 
 export async function GET(request: Request, { params }: RouteContext) {
-  const authError = await requireSession(request);
-  if (authError) {
-    return authError;
+  const session = await requireAdminSession(request);
+  if (!session.ok) {
+    return session.response;
   }
 
   const { integration } = await params;
@@ -71,9 +85,9 @@ export async function GET(request: Request, { params }: RouteContext) {
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
-  const authError = await requireSession(request);
-  if (authError) {
-    return authError;
+  const session = await requireAdminSession(request);
+  if (!session.ok) {
+    return session.response;
   }
 
   const { integration } = await params;
@@ -86,21 +100,9 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "Invalid JSON payload" },
-      { status: 400 }
-    );
-  }
-
-  if (payload !== null && (typeof payload !== "object" || Array.isArray(payload))) {
-    return NextResponse.json(
-      { ok: false, error: "Payload must be a JSON object" },
-      { status: 400 }
-    );
+  const parsedPayload = await readJsonObject(request, { allowEmpty: true });
+  if (!parsedPayload.ok) {
+    return parsedPayload.response;
   }
 
   return NextResponse.json(
@@ -109,7 +111,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       endpoint: `/api/${integration}`,
       acceptedAt: new Date().toISOString(),
       integration: config.name,
-      payload,
+      payload: parsedPayload.data ?? {},
     },
     { status: 202 }
   );

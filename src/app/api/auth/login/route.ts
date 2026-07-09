@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { demoUsers, toSessionUser } from "@/lib/demo-auth";
+import { readJsonObject } from "@/lib/api-request";
 import {
   createSessionToken,
   sessionCookieName,
@@ -14,17 +15,12 @@ type LoginBody = {
 };
 
 export async function POST(request: Request) {
-  let body: LoginBody;
-
-  try {
-    body = (await request.json()) as LoginBody;
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "Invalid JSON payload" },
-      { status: 400 }
-    );
+  const parsedBody = await readJsonObject(request);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
 
+  const body = parsedBody.data as LoginBody;
   const demoRole = body.demoRole;
   const isDemoRole = demoRole === "admin" || demoRole === "client";
 
