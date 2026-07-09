@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -15,6 +15,19 @@ type Props = {
 
 const PAGE_SIZE = 10;
 
+function rowKey(row: Record<string, unknown>, absoluteIndex: number) {
+  const explicitKey = row.id ?? row._id ?? row.caseNo ?? row.circularNo;
+  if (explicitKey !== undefined && explicitKey !== null) {
+    return String(explicitKey);
+  }
+  return `${absoluteIndex}-${Object.values(row).join("|")}`;
+}
+
+function numericValue(value: unknown) {
+  const numeric = Number(String(value ?? "").replace(/,/g, ""));
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -27,23 +40,34 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     setPage(1);
   };
 
-  const filtered = data.filter((row) => {
-    if (!search) return true;
-    return columns.some((c) =>
-      String(row[c.key] ?? "").toLowerCase().includes(search.toLowerCase())
-    );
-  });
+  const { filtered, sorted } = useMemo(() => {
+    const lowerSearch = search.trim().toLowerCase();
+    const nextFiltered = data.filter((row) => {
+      if (!lowerSearch) return true;
+      return columns.some((c) =>
+        String(row[c.key] ?? "").toLowerCase().includes(lowerSearch)
+      );
+    });
 
-  const sorted = sortKey
-    ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
-      })
-    : filtered;
+    const sortColumn = columns.find((column) => column.key === sortKey);
+    const nextSorted = sortKey
+      ? [...nextFiltered].sort((a, b) => {
+          if (sortColumn?.type === "number" || sortColumn?.type === "currency") {
+            const va = numericValue(a[sortKey]) ?? Number.NEGATIVE_INFINITY;
+            const vb = numericValue(b[sortKey]) ?? Number.NEGATIVE_INFINITY;
+            return sortAsc ? va - vb : vb - va;
+          }
+          const va = String(a[sortKey] ?? "");
+          const vb = String(b[sortKey] ?? "");
+          return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+        })
+      : nextFiltered;
 
+    return { filtered: nextFiltered, sorted: nextSorted };
+  }, [columns, data, search, sortAsc, sortKey]);
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const currentPage = Math.min(page, totalPages);
+  const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const hasActions = !!(onEdit || onDelete || onView);
 
@@ -55,9 +79,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
       return <StatusBadge label={String(val)} color="gray" />;
     }
     if (col.type === "currency") {
+      const numeric = numericValue(val);
       return (
         <span style={{ fontWeight: 700, color: "#0a0a12" }}>
-          {Number(String(val).replace(/,/g, "")).toLocaleString("ar-EG")} ج.م
+          {numeric !== null ? numeric.toLocaleString("ar-EG") : String(val ?? "0")} ج.م
         </span>
       );
     }
@@ -173,7 +198,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               ) : (
                 paged.map((row, i) => (
                   <tr
-                    key={i}
+                    key={rowKey(row, (currentPage - 1) * PAGE_SIZE + i)}
                     style={{
                       borderBottom: "1px solid #f1f5f9",
                       transition: "background 0.15s",
@@ -284,25 +309,25 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           }}
         >
           <span>
-            صفحة {page} من {totalPages} — {sorted.length} سجل إجمالاً
+            صفحة {currentPage} من {totalPages} — {sorted.length} سجل إجمالاً
           </span>
           <div style={{ display: "flex", gap: "0.3rem" }}>
             <button
-              disabled={page === 1}
+              disabled={currentPage === 1}
               onClick={() => setPage((p) => p - 1)}
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
                 border: "1px solid #e2e8f0",
-                background: page === 1 ? "#f8f9fb" : "#fff",
-                cursor: page === 1 ? "not-allowed" : "pointer",
-                opacity: page === 1 ? 0.5 : 1,
+                background: currentPage === 1 ? "#f8f9fb" : "#fff",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                opacity: currentPage === 1 ? 0.5 : 1,
               }}
             >
               ›
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              const p = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
+              const p = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
               if (p < 1 || p > totalPages) return null;
               return (
                 <button
@@ -312,11 +337,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     padding: "0.4rem 0.65rem",
                     borderRadius: "8px",
                     border: "1px solid",
-                    borderColor: p === page ? "#c3152a" : "#e2e8f0",
-                    background: p === page ? "#c3152a" : "#fff",
-                    color: p === page ? "#fff" : "#475569",
+                    borderColor: p === currentPage ? "#c3152a" : "#e2e8f0",
+                    background: p === currentPage ? "#c3152a" : "#fff",
+                    color: p === currentPage ? "#fff" : "#475569",
                     cursor: "pointer",
-                    fontWeight: p === page ? 800 : 400,
+                    fontWeight: p === currentPage ? 800 : 400,
                     minWidth: 32,
                   }}
                 >
@@ -325,15 +350,15 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               );
             })}
             <button
-              disabled={page === totalPages}
+              disabled={currentPage === totalPages}
               onClick={() => setPage((p) => p + 1)}
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
                 border: "1px solid #e2e8f0",
-                background: page === totalPages ? "#f8f9fb" : "#fff",
-                cursor: page === totalPages ? "not-allowed" : "pointer",
-                opacity: page === totalPages ? 0.5 : 1,
+                background: currentPage === totalPages ? "#f8f9fb" : "#fff",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                opacity: currentPage === totalPages ? 0.5 : 1,
               }}
             >
               ‹

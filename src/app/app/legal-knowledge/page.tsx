@@ -22,12 +22,38 @@ export default function LegalKnowledgePage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [openBranch, setOpenBranch] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/legal-branches", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setBranches(data))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    async function loadBranches() {
+      try {
+        const response = await fetch("/api/legal-branches", { credentials: "include" });
+        if (!response.ok) {
+          throw new Error("Failed to load legal branches");
+        }
+        const data: unknown = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid legal branches payload");
+        }
+        if (!cancelled) {
+          setBranches(data as Branch[]);
+          setError("");
+        }
+      } catch {
+        if (!cancelled) {
+          setBranches([]);
+          setError("تعذر تحميل التصنيف القانوني حالياً.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadBranches();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!ready || !user) return null;
@@ -44,6 +70,14 @@ export default function LegalKnowledgePage() {
 
         {loading ? (
           <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+        ) : error ? (
+          <div className="card-white" style={{ padding: "1.5rem", color: "#c3152a", fontWeight: 700 }}>
+            {error}
+          </div>
+        ) : branches.length === 0 ? (
+          <div className="card-white" style={{ padding: "1.5rem", color: "#64748b" }}>
+            لا توجد فروع قانونية مسجلة حالياً.
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {branches.map((branch) => (

@@ -12,21 +12,20 @@ export async function PATCH(request: Request, { params }: Params) {
   if (bodyError) return bodyError;
 
   try {
-    const updated = await prisma.client.update({
+    const updated = await prisma.legalArticle.update({
       where: { id },
       data: {
-        name: body.name !== undefined ? String(body.name) : undefined,
-        type: body.type !== undefined ? String(body.type) : undefined,
-        phone: body.phone !== undefined ? String(body.phone) || null : undefined,
-        email: body.email !== undefined ? String(body.email) || null : undefined,
-        nationalId: body.nationalId !== undefined ? String(body.nationalId) || null : undefined,
-        notes: body.notes !== undefined ? String(body.notes) || null : undefined,
+        title: body.title !== undefined ? String(body.title) : undefined,
+        author: body.author !== undefined ? String(body.author) || null : undefined,
+        summary: body.summary !== undefined ? String(body.summary) || null : undefined,
+        content: body.content !== undefined ? String(body.content) || null : undefined,
+        tags: body.tags !== undefined ? String(body.tags) || null : undefined,
         status: body.status !== undefined ? String(body.status) : undefined,
       },
     });
     return NextResponse.json(updated);
   } catch (error) {
-    return handleApiError(error, "فشل تعديل الموكل");
+    return handleApiError(error, "فشل تعديل المقال");
   }
 }
 
@@ -35,9 +34,9 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (error) return error;
   const { id } = await params;
   try {
-    await prisma.client.delete({ where: { id } });
+    await prisma.legalArticle.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return handleApiError(error, "فشل حذف الموكل");
+    return handleApiError(error, "فشل حذف المقال");
   }
 }

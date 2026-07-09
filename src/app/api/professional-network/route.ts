@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
-import { getSessionFromCookies } from "@/lib/auth";
+import { jsonError, readJsonObject, requireAuth, requireWrite } from "@/lib/api-helpers";
+import type { NetworkRequestType } from "@/generated/prisma/client";
+
+const networkRequestTypes: NetworkRequestType[] = ["collaboration", "case_referral", "opinion_request"];
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -32,13 +34,25 @@ export async function GET() {
 export async function POST(request: Request) {
   const { error, session } = await requireWrite();
   if (error) return error;
-  const body = await request.json();
+  const { body, error: bodyError } = await readJsonObject(request);
+  if (bodyError) return bodyError;
+
+  const receiverId = String(body.receiverId ?? "");
+  const receiver = receiverId
+    ? await prisma.user.findUnique({ where: { id: receiverId }, select: { id: true } })
+    : null;
+  if (!receiver) {
+    return jsonError("المستلم غير موجود", 400);
+  }
+  const type = networkRequestTypes.includes(String(body.type) as NetworkRequestType)
+    ? (String(body.type) as NetworkRequestType)
+    : "collaboration";
 
   const created = await prisma.professionalNetwork.create({
     data: {
       requesterId: session!.sub,
-      receiverId: String(body.receiverId),
-      type: body.type ?? "collaboration",
+      receiverId: receiver.id,
+      type,
       caseRef: body.caseRef ? String(body.caseRef) : null,
       message: body.message ? String(body.message) : null,
     },

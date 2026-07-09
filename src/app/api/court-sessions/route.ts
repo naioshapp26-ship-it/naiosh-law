@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { readJsonObject, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -26,12 +26,18 @@ export async function GET() {
 export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
-  const body = await request.json();
+  const { body, error: bodyError } = await readJsonObject(request);
+  if (bodyError) return bodyError;
+  const caseNo = body.caseNo ? String(body.caseNo).trim() : "";
+  const relatedCase = caseNo
+    ? await prisma.case.findUnique({ where: { caseNo }, select: { id: true, clientName: true } })
+    : null;
 
   const created = await prisma.courtSession.create({
     data: {
-      caseNo: body.caseNo ? String(body.caseNo) : null,
-      client: body.client ? String(body.client) : null,
+      caseId: relatedCase?.id,
+      caseNo: caseNo || null,
+      client: body.client ? String(body.client) : relatedCase?.clientName ?? null,
       court: String(body.court ?? ""),
       room: body.room ? String(body.room) : null,
       date: String(body.date ?? ""),

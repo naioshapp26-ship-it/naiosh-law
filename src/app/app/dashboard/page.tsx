@@ -30,6 +30,7 @@ const recentTasks = [
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const todayLabel = new Intl.DateTimeFormat("ar-EG", { dateStyle: "full" }).format(new Date());
 
   if (!ready || !user) {
     return (
@@ -69,7 +70,7 @@ export default function DashboardPage() {
             لوحة التحكم
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            الأربعاء، 8 يوليو 2026 — مرحبًا {user.name}
+            {todayLabel} — مرحبًا {user.name}
           </p>
         </div>
 

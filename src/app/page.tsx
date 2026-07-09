@@ -259,7 +259,7 @@ export default function HomePage() {
               className="btn-ghost-dark"
               style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}
             >
-              الدخول كزائر
+              الدخول بحساب تجريبي
             </Link>
           </div>
 

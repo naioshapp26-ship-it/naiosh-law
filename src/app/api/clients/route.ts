@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { readJsonObject, requireAuth, requireWrite } from "@/lib/api-helpers";
 
 export async function GET() {
   const { error } = await requireAuth();
   if (error) return error;
 
-  const clients = await prisma.client.findMany({ orderBy: { createdAt: "desc" } });
+  const clients = await prisma.client.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { cases: true } } },
+  });
   return NextResponse.json(
     clients.map((c) => ({
       id: c.id,
@@ -14,7 +17,7 @@ export async function GET() {
       type: c.type,
       phone: c.phone ?? "—",
       email: c.email ?? "—",
-      cases: String(c.casesCount),
+      cases: String(c._count.cases),
       status: c.status,
       since: c.since.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }),
     }))
@@ -25,13 +28,17 @@ export async function POST(request: Request) {
   const { error } = await requireWrite();
   if (error) return error;
 
-  const body = await request.json();
+  const { body, error: bodyError } = await readJsonObject(request);
+  if (bodyError) return bodyError;
+
   const created = await prisma.client.create({
     data: {
       name: String(body.name ?? ""),
       type: String(body.type ?? "فرد"),
       phone: body.phone ? String(body.phone) : null,
       email: body.email ? String(body.email) : null,
+      nationalId: body.nationalId ? String(body.nationalId) : null,
+      notes: body.notes ? String(body.notes) : null,
       status: String(body.status ?? "نشط"),
     },
   });

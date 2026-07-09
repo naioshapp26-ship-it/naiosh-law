@@ -22,6 +22,14 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+function getSafeNextPath() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return "/app/dashboard";
+  }
+  return next;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
@@ -48,7 +56,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      router.push("/app/dashboard");
+      router.push(getSafeNextPath());
     } catch {
       setError("تعذر الاتصال بالخادم");
       setLoading(false);

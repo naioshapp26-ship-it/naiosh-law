@@ -53,8 +53,11 @@ export function useSession(redirectIfMissing = false) {
       user,
       ready,
       logout: async () => {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-        router.replace("/login");
+        try {
+          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } finally {
+          router.replace("/login");
+        }
       },
     }),
     [user, ready, router]

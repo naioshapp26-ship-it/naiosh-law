@@ -3,6 +3,14 @@ import { cookies } from "next/headers";
 import type { UserRole } from "@/generated/prisma/client";
 
 export const AUTH_COOKIE = "naiosh-auth-token";
+const DEV_JWT_SECRET = "naiosh-law-dev-secret-change-in-production";
+
+export class AuthConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthConfigurationError";
+  }
+}
 
 export type AuthPayload = {
   sub: string;
@@ -11,9 +19,21 @@ export type AuthPayload = {
   role: UserRole;
 };
 
+function requireConfiguredSecret() {
+  return process.env.NAIOSH_REQUIRE_SESSION_SECRET === "true";
+}
+
 function getSecret() {
-  const secret = process.env.JWT_SECRET ?? "naiosh-law-dev-secret-change-in-production";
-  return new TextEncoder().encode(secret);
+  const secret = process.env.JWT_SECRET ?? process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret && requireConfiguredSecret()) {
+    throw new AuthConfigurationError("A session secret is required");
+  }
+  return new TextEncoder().encode(secret ?? DEV_JWT_SECRET);
+}
+
+export function isSecureRequest(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  return forwardedProto === "https" || new URL(request.url).protocol === "https:";
 }
 
 export async function signToken(payload: AuthPayload) {
@@ -51,8 +71,4 @@ export async function getSessionFromCookies(): Promise<AuthPayload | null> {
 
 export function canWrite(role: UserRole) {
   return ["admin", "lawyer", "consultant", "industrial_agent", "employee"].includes(role);
-}
-
-export function canManageUsers(role: UserRole) {
-  return role === "admin" || role === "industrial_agent";
 }
