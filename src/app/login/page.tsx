@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { demoUsers } from "@/data/auth";
 
@@ -23,7 +22,6 @@ const perks = [
 ];
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
   const [password, setPassword] = useState("Admin@123");
   const [error, setError] = useState("");
@@ -36,21 +34,29 @@ export default function LoginPage() {
     setError("");
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
+
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "فشل تسجيل الدخول");
         setLoading(false);
         return;
       }
-      router.push("/app/dashboard");
+
+      // Hard redirect so the new auth cookie is picked up immediately
+      window.location.assign("/app/dashboard");
     } catch {
-      setError("تعذر الاتصال بالخادم");
+      setError("تعذر الاتصال بالخادم — حاول مرة أخرى");
       setLoading(false);
     }
   };
