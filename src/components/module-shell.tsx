@@ -110,9 +110,9 @@ export function ModuleShell({ slug }: { slug: string }) {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(rows));
     } catch {
-      pushToast("error", "تعذر حفظ بيانات الوحدة محليًا. تحقق من مساحة المتصفح.");
+      // Ignore localStorage quota/privacy failures; the in-memory demo table remains usable.
     }
-  }, [config, pushToast, rows, rowsHydrated, storageKey]);
+  }, [config, rows, rowsHydrated, storageKey]);
 
   if (!ready || !user) {
     return (
@@ -294,6 +294,7 @@ export function ModuleShell({ slug }: { slug: string }) {
       {/* Add/Edit Modal */}
       {modalOpen && (
         <Modal
+          key={editTarget ? getRowIdentity(editTarget) : `new-${slug}`}
           open={modalOpen}
           title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
           fields={config.formFields}

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -26,13 +26,6 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     buildInitialForm(fields, initial)
   );
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setForm(buildInitialForm(fields, initial));
-      setSaving(false);
-    }
-  }, [fields, initial, open]);
 
   if (!open) return null;
 
