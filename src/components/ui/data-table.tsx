@@ -15,6 +15,43 @@ type Props = {
 
 const PAGE_SIZE = 10;
 const rowIdKey = "_rowId";
+const arabicDigitMap: Record<string, string> = {
+  "٠": "0",
+  "١": "1",
+  "٢": "2",
+  "٣": "3",
+  "٤": "4",
+  "٥": "5",
+  "٦": "6",
+  "٧": "7",
+  "٨": "8",
+  "٩": "9",
+};
+
+function parseNumericValue(value: unknown) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const normalizedValue = String(value ?? "")
+    .replace(/[٠-٩]/gu, (digit) => arabicDigitMap[digit] ?? digit)
+    .replace(/[,\s]/gu, "");
+  const numericValue = Number(normalizedValue);
+
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function getSortableValue(value: unknown, columnType: Column["type"]) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  if (columnType === "number" || columnType === "currency") {
+    return parseNumericValue(value);
+  }
+
+  return String(value);
+}
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
@@ -42,12 +79,26 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const sorted = useMemo(() => (
     sortKey
       ? [...filtered].sort((a, b) => {
-        const va = String(a[sortKey] ?? "");
-        const vb = String(b[sortKey] ?? "");
-        return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
+        const sortColumn = columns.find((column) => column.key === sortKey);
+        const va = getSortableValue(a[sortKey], sortColumn?.type);
+        const vb = getSortableValue(b[sortKey], sortColumn?.type);
+        const direction = sortAsc ? 1 : -1;
+
+        if (va === null && vb === null) return 0;
+        if (va === null) return 1;
+        if (vb === null) return -1;
+
+        if (typeof va === "number" && typeof vb === "number") {
+          return (va - vb) * direction;
+        }
+
+        return String(va).localeCompare(String(vb), "ar", {
+          numeric: true,
+          sensitivity: "base",
+        }) * direction;
       })
       : filtered
-  ), [filtered, sortAsc, sortKey]);
+  ), [columns, filtered, sortAsc, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -196,17 +247,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 paged.map((row, i) => (
                   <tr
                     key={getRowKey(row, i)}
+                    className="data-table-row"
                     style={{
                       borderBottom: "1px solid #f1f5f9",
                       transition: "background 0.15s",
                       background: "transparent",
                     }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "#fafbfc")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "transparent")
-                    }
                   >
                     {columns.map((col) => (
                       <td
@@ -434,7 +480,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       )}
       <style>{`
-        @media (max-width: 700px) {
+        @media (hover: hover) and (pointer: fine) {
+          .data-table-row:hover {
+            background: #fafbfc !important;
+          }
+        }
+        @media (max-width: 760px) {
           .data-table-toolbar {
             flex-direction: column;
             align-items: stretch !important;

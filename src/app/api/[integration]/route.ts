@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { decodeSession, getSessionCookieOptions, sessionCookieName } from "@/lib/auth-session";
+import { readJsonBody } from "@/lib/api-request";
 
 const integrationCatalog: Record<string, { name: string; latencyMs: number }> = {
   sms: { name: "SMS Gateway", latencyMs: 142 },
@@ -54,24 +55,6 @@ async function requireAdminSession(request: Request) {
   return session;
 }
 
-async function parseOptionalJson(request: Request) {
-  const contentType = request.headers.get("content-type");
-
-  if (!contentType) {
-    return null;
-  }
-
-  if (!contentType.toLowerCase().includes("application/json")) {
-    return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
-  }
-
-  try {
-    return await request.json();
-  } catch {
-    return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
-  }
-}
-
 function healthPayload(slug: string, config: { name: string; latencyMs: number }) {
   return {
     ok: true,
@@ -110,15 +93,19 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "Unknown integration endpoint." }, { status: 404 });
   }
 
-  const body = await parseOptionalJson(request);
-  if (body instanceof NextResponse) {
-    return body;
+  const body = await readJsonBody<Record<string, unknown>>(request, {
+    allowEmptyBody: true,
+    emptyBodyValue: {},
+    limitBytes: 32 * 1024,
+  });
+  if (!body.ok) {
+    return body.response;
   }
 
   return NextResponse.json({
     ...healthPayload(slug, config),
     accepted: true,
     requestId: `${slug}-${Date.now()}`,
-    echo: body,
-  });
+    echo: body.data,
+  }, { status: 202 });
 }

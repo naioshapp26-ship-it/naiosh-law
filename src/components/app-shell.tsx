@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVisibleOperationalModules } from "@/data/modules";
 import { moduleIconMap } from "@/data/module-icons";
@@ -26,7 +26,7 @@ const roleLabels: Record<Props["role"], string> = {
 
 function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
-  const visibleModules = getVisibleOperationalModules(role);
+  const visibleModules = useMemo(() => getVisibleOperationalModules(role), [role]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -176,7 +176,7 @@ export function AppShell({ role, name, children }: Props) {
   }, [drawerOpen]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
 
       {/* ── Top Header ── */}
       <header style={{

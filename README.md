@@ -12,7 +12,8 @@ npm ci
 ```
 
 Use a long random `NAIOSH_SESSION_SECRET` value outside local demos. The app also recognizes `AUTH_SECRET` and
-`NEXTAUTH_SECRET` as fallback secret names.
+`NEXTAUTH_SECRET` as fallback secret names. Production requests fail closed when only the placeholder or built-in
+demo secret is available; set `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true` only for an intentional temporary demo.
 
 Run the development server:
 
@@ -46,3 +47,6 @@ This repository currently ships static demo module data. Module add/edit/delete 
 
 Integration demo endpoints are available at `/api/sms`, `/api/email`, `/api/payments`, `/api/sign`, `/api/courts`,
 `/api/tax`, `/api/ocr`, and `/api/analytics`.
+
+Integration POST requests accept JSON bodies up to 32KB and treat an empty body as `{}`. Login requests accept JSON
+bodies up to 16KB.

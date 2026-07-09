@@ -2,9 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { demoLoginProfiles } from "@/data/auth";
 import { saveSession } from "@/lib/session";
+import { staticMotion as motion } from "@/components/ui/static-motion";
 import type { SessionUser } from "@/lib/auth-session";
 
 const fadeUp = {

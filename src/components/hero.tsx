@@ -1,8 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { marketingStats } from "@/data/marketing";
+import { staticMotion as motion } from "@/components/ui/static-motion";
 
 const container = {
   hidden: {},
