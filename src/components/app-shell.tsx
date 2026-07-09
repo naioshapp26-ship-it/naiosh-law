@@ -35,6 +35,7 @@ export function AppShell({ role, name, children }: Props) {
 
     const previousOverflow = document.body.style.overflow;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const fallbackFocus = drawerButtonRef.current;
     document.body.style.overflow = "hidden";
 
     const focusFirstDrawerControl = () => {
@@ -82,7 +83,7 @@ export function AppShell({ role, name, children }: Props) {
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
-      (previousFocus ?? drawerButtonRef.current)?.focus();
+      (previousFocus ?? fallbackFocus)?.focus();
     };
   }, [drawerOpen]);
 

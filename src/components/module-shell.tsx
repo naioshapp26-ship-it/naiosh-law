@@ -85,9 +85,10 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
   const [reportOpen, setReportOpen] = useState(false);
   const viewDialogRef = useRef<HTMLDivElement>(null);
   const reportDialogRef = useRef<HTMLDivElement>(null);
+  const userEmail = user?.email;
   const storageKeys = useMemo(
-    () => (user ? getModuleStorageKeys(slug, user.email) : null),
-    [slug, user?.email]
+    () => (userEmail ? getModuleStorageKeys(slug, userEmail) : null),
+    [slug, userEmail]
   );
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
@@ -97,17 +98,16 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
   }, []);
 
   useEffect(() => {
-    setRows(config.data);
-    setRowsHydrated(false);
-  }, [config, slug]);
-
-  useEffect(() => {
     if (!storageKeys) {
       return;
     }
 
-    setRows(loadStoredRows(storageKeys) ?? config.data);
-    setRowsHydrated(true);
+    const hydrationTimer = window.setTimeout(() => {
+      setRows(loadStoredRows(storageKeys) ?? config.data);
+      setRowsHydrated(true);
+    }, 0);
+
+    return () => window.clearTimeout(hydrationTimer);
   }, [config, storageKeys]);
 
   useEffect(() => {
