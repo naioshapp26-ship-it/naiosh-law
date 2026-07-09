@@ -1,4 +1,4 @@
-// Naiosh Law ERP — PostgreSQL Schema (Phases 0–2)
+// Naiosh Law ERP — PostgreSQL Schema (Phases 0–5)
 
 generator client {
   provider = "prisma-client"
@@ -36,6 +36,8 @@ model User {
   networkRequests    ProfessionalNetwork[] @relation("Requester")
   networkReceived    ProfessionalNetwork[] @relation("Receiver")
   auditLogs          AuditLog[]
+  officeBranchId     String?
+  officeBranch       OfficeBranch? @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
 }
 
 // ─── Core ERP (Phase 0) ─────────────────────────────────────
@@ -280,4 +282,115 @@ model AuditLog {
   entityId  String?
   details   String?
   createdAt DateTime @default(now())
+}
+
+// ─── Notifications & Integrations (Phase 5) ───────────────
+
+model OfficeBranch {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  city        String?
+  address     String?
+  phone       String?
+  email       String?
+  managerName String?
+  status      String   @default("نشط")
+  isMain      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users             User[]
+  notificationRules NotificationRule[]
+  notificationLogs  NotificationLog[]
+  integrations      Integration[]
+}
+
+enum NotificationChannel {
+  email
+  sms
+  whatsapp
+  in_app
+}
+
+enum NotificationProvider {
+  resend
+  twilio
+  internal
+}
+
+model NotificationRule {
+  id             String              @id @default(cuid())
+  title          String
+  trigger        String
+  channel        NotificationChannel @default(email)
+  audience       String
+  status         String              @default("نشط")
+  templateBody   String?
+  sentCount      Int                 @default(0)
+  officeBranchId String?
+  officeBranch   OfficeBranch?       @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  logs NotificationLog[]
+}
+
+model NotificationLog {
+  id             String               @id @default(cuid())
+  ruleId         String?
+  rule           NotificationRule?    @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  channel        NotificationChannel
+  provider       NotificationProvider @default(internal)
+  recipient      String
+  subject        String?
+  body           String?
+  status         String               @default("مرسل")
+  errorMessage   String?
+  officeBranchId String?
+  officeBranch   OfficeBranch?        @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  sentAt         String?
+  createdAt      DateTime             @default(now())
+}
+
+enum IntegrationType {
+  email
+  sms
+  whatsapp
+  payment
+  webhook
+  other
+}
+
+model Integration {
+  id             String          @id @default(cuid())
+  name           String
+  type           IntegrationType @default(other)
+  provider       String
+  endpoint       String?
+  apiKeyMasked   String?
+  config         String?
+  callsToday     Int             @default(0)
+  successRate    Float           @default(100)
+  lastChecked    String?
+  status         String          @default("متصل")
+  officeBranchId String?
+  officeBranch   OfficeBranch?   @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  logs IntegrationLog[]
+}
+
+model IntegrationLog {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  method        String?
+  path          String?
+  statusCode    Int?
+  durationMs    Int?
+  success       Boolean     @default(true)
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
 }
