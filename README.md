@@ -19,7 +19,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 - Manual demo credentials are validated only on the server.
 - Protected `/app/*` routes require a signed httpOnly session cookie.
 - Client session state is mirrored in `localStorage` only for UI hydration and is revalidated against `/api/auth/session`.
-- Production deployments must set `NAIOSH_SESSION_SECRET`, `AUTH_SECRET`, or `NEXTAUTH_SECRET` for session signing. The demo fallback secret is available only outside production unless `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true` is set deliberately.
+- Production deployments should set `NAIOSH_SESSION_SECRET`, `AUTH_SECRET`, or `NEXTAUTH_SECRET` for stable private session signing. If none is configured, the app uses a demo fallback secret so preview/demo environments do not crash.
 
 ## API behavior
 
