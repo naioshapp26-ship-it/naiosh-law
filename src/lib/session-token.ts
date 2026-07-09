@@ -55,7 +55,7 @@ function getSessionSecret() {
     return secret;
   }
 
-  if (process.env.NODE_ENV === "production" && process.env.NAIOSH_ALLOW_DEMO_SESSION_SECRET !== "true") {
+  if (process.env.NODE_ENV === "production") {
     throw new Error("Missing NAIOSH_SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET.");
   }
 

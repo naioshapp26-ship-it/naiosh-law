@@ -9,6 +9,9 @@ export function Navbar() {
   const [solutionsOpen, setSolutionsOpen] = useState(false);
   const [mobileSolutionsOpen, setMobileSolutionsOpen] = useState(false);
   const solutionsMenuRef = useRef<HTMLDivElement>(null);
+  const solutionsMenuId = "solutions-menu";
+  const mobileMenuId = "mobile-nav-menu";
+  const mobileSolutionsMenuId = "mobile-solutions-menu";
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
@@ -26,6 +29,28 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setMobileSolutionsOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [menuOpen]);
+
   const navStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
@@ -40,7 +65,6 @@ export function Navbar() {
   };
 
   const links = [
-    { href: "/#modules", label: "المنتجات" },
     { href: "/#footer-support", label: "الدعم الفني" },
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
@@ -108,6 +132,9 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setSolutionsOpen((prev) => !prev)}
+              aria-expanded={solutionsOpen}
+              aria-haspopup="menu"
+              aria-controls={solutionsMenuId}
               style={{
                 color: "#94a3b8",
                 fontSize: "0.875rem",
@@ -129,6 +156,8 @@ export function Navbar() {
             </button>
             {solutionsOpen && (
               <div
+                id={solutionsMenuId}
+                role="menu"
                 style={{
                   position: "absolute",
                   top: "calc(100% + 0.45rem)",
@@ -147,6 +176,7 @@ export function Navbar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setSolutionsOpen(false)}
+                    role="menuitem"
                     style={{
                       display: "block",
                       padding: "0.55rem 0.65rem",
@@ -205,6 +235,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
+          type="button"
           onClick={() => {
             setMenuOpen((prev) => {
               const next = !prev;
@@ -223,6 +254,8 @@ export function Navbar() {
           }}
           className="mobile-menu-btn"
           aria-label="قائمة"
+          aria-expanded={menuOpen}
+          aria-controls={mobileMenuId}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             {menuOpen ? (
@@ -244,6 +277,7 @@ export function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
+          id={mobileMenuId}
           style={{
             background: "rgba(10,10,18,0.97)",
             borderTop: "1px solid rgba(255,255,255,0.07)",
@@ -253,6 +287,8 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setMobileSolutionsOpen((prev) => !prev)}
+            aria-expanded={mobileSolutionsOpen}
+            aria-controls={mobileSolutionsMenuId}
             style={{
               width: "100%",
               textAlign: "right",
@@ -275,7 +311,7 @@ export function Navbar() {
             <span style={{ fontSize: "0.7rem" }}>{mobileSolutionsOpen ? "▲" : "▼"}</span>
           </button>
           {mobileSolutionsOpen && (
-            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "0.2rem 0 0.55rem" }}>
+            <div id={mobileSolutionsMenuId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "0.2rem 0 0.55rem" }}>
               {solutionItems.map((item) => (
                 <Link
                   key={item.href}

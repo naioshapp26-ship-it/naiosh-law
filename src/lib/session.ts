@@ -105,9 +105,9 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
-      logout: () => {
+      logout: async () => {
         clearSessionMirror();
-        void fetch("/api/auth/logout", { method: "POST" });
+        await fetch("/api/auth/logout", { method: "POST", keepalive: true });
         router.replace("/login");
       },
     }),

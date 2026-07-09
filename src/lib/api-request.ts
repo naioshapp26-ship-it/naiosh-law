@@ -10,9 +10,47 @@ type JsonParseResult<T> =
   | { ok: false; response: NextResponse<{ error: string }> };
 
 const defaultMaxBytes = 64 * 1024;
+const textDecoder = new TextDecoder();
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
+}
+
+async function readCappedBody(request: Request, maxBytes: number) {
+  if (!request.body) {
+    return "";
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        return { ok: false as const, response: jsonError("Request body is too large.", 413) };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return { ok: false as const, response: jsonError("Unable to read request body.", 400) };
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  });
+
+  return { ok: true as const, body: textDecoder.decode(body) };
 }
 
 export async function parseJsonRequest<T = unknown>(
@@ -37,16 +75,11 @@ export async function parseJsonRequest<T = unknown>(
     return { ok: false, response: jsonError("Request body is too large.", 413) };
   }
 
-  let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    return { ok: false, response: jsonError("Unable to read request body.", 400) };
+  const rawBodyResult = await readCappedBody(request, maxBytes);
+  if (!rawBodyResult.ok) {
+    return rawBodyResult;
   }
-
-  if (rawBody.length > maxBytes) {
-    return { ok: false, response: jsonError("Request body is too large.", 413) };
-  }
+  const rawBody = rawBodyResult.body;
 
   if (!rawBody.trim()) {
     if (!required) {

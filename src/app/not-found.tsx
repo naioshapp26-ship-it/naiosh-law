@@ -20,8 +20,8 @@ export default function NotFoundPage() {
         <p style={{ color: "#64748b", marginBottom: "1.5rem" }}>
           الرابط المطلوب غير متاح أو تم نقله.
         </p>
-        <Link href="/app/dashboard" className="btn-primary">
-          العودة للوحة التحكم
+        <Link href="/" className="btn-primary">
+          العودة للرئيسية
         </Link>
       </div>
     </main>

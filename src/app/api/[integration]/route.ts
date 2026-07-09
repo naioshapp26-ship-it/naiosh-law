@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sessionCookieName } from "@/data/auth";
 import { parseJsonRequest } from "@/lib/api-request";
+import { clearSessionCookie } from "@/lib/auth-session";
 import { verifySessionToken } from "@/lib/session-token";
 
 const integrations = new Set(["sms", "email", "payments", "sign", "courts", "tax", "ocr", "analytics"]);
@@ -12,7 +13,11 @@ type Props = {
 async function requireAdmin(request: NextRequest) {
   const user = await verifySessionToken(request.cookies.get(sessionCookieName)?.value);
   if (!user) {
-    return { response: NextResponse.json({ error: "Unauthenticated." }, { status: 401 }) };
+    const response = NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
+    if (request.cookies.has(sessionCookieName)) {
+      clearSessionCookie(response, request);
+    }
+    return { response };
   }
   if (user.role !== "admin") {
     return { response: NextResponse.json({ error: "Forbidden." }, { status: 403 }) };
@@ -26,7 +31,8 @@ export async function GET(request: NextRequest, { params }: Props) {
     return auth.response;
   }
 
-  const { integration } = await params;
+  const { integration: rawIntegration } = await params;
+  const integration = rawIntegration.toLowerCase();
   if (!integrations.has(integration)) {
     return NextResponse.json({ error: "Integration not found." }, { status: 404 });
   }
@@ -44,7 +50,8 @@ export async function POST(request: NextRequest, { params }: Props) {
     return auth.response;
   }
 
-  const { integration } = await params;
+  const { integration: rawIntegration } = await params;
+  const integration = rawIntegration.toLowerCase();
   if (!integrations.has(integration)) {
     return NextResponse.json({ error: "Integration not found." }, { status: 404 });
   }
@@ -58,7 +65,6 @@ export async function POST(request: NextRequest, { params }: Props) {
     {
       integration,
       accepted: true,
-      payload: parsedBody.data,
       queuedAt: new Date().toISOString(),
     },
     { status: 202 }

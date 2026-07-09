@@ -83,7 +83,7 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("تعذر بدء الحساب التجريبي الآن.");
+        setError(response.status === 403 ? "الدخول التجريبي السريع متاح في بيئة التطوير فقط." : "تعذر بدء الحساب التجريبي الآن.");
         setLoading(false);
         return;
       }
@@ -320,6 +320,7 @@ export default function LoginPage() {
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
+                type="button"
                 onClick={() => void loginDemo("admin")}
                 disabled={loading}
                 style={{
@@ -348,6 +349,7 @@ export default function LoginPage() {
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
+                type="button"
                 onClick={() => void loginDemo("client")}
                 disabled={loading}
                 style={{
@@ -396,7 +398,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <motion.div variants={fadeUp} style={{ marginBottom: "1.25rem" }}>
-              <label className="input-label">البريد الإلكتروني</label>
+              <label className="input-label" htmlFor="login-email">البريد الإلكتروني</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -411,6 +413,7 @@ export default function LoginPage() {
                   ✉️
                 </span>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -423,7 +426,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem" }}>
-              <label className="input-label">كلمة المرور</label>
+              <label className="input-label" htmlFor="login-password">كلمة المرور</label>
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -445,6 +448,7 @@ export default function LoginPage() {
                   {showPass ? "🙈" : "👁️"}
                 </button>
                 <input
+                  id="login-password"
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -458,6 +462,7 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
+                role="alert"
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 style={{

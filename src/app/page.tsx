@@ -38,7 +38,7 @@ const features = [
 ];
 
 const statItems = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: String(operationalModules.length), label: "وحدة تشغيلية" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -87,7 +87,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Features ── */}
-      <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
+      <section id="features" className="landing-section" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -103,6 +103,7 @@ export default function HomePage() {
               لماذا Naiosh Law
             </p>
             <h2
+              className="landing-heading"
               style={{
                 fontSize: "2.5rem",
                 fontWeight: 900,
@@ -165,7 +166,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Modules ── */}
-      <section id="modules" style={{ background: "#ffffff", padding: "6rem 0" }}>
+      <section id="modules" className="landing-section" style={{ background: "#ffffff", padding: "6rem 0" }}>
         <div className="container-max">
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p
@@ -181,6 +182,7 @@ export default function HomePage() {
               الوحدات التشغيلية
             </p>
             <h2
+              className="landing-heading"
               style={{
                 fontSize: "2.5rem",
                 fontWeight: 900,
@@ -210,6 +212,7 @@ export default function HomePage() {
       {/* ── CTA ── */}
       <section
         id="demo-request"
+        className="landing-section"
         style={{
           background: "#0a0a12",
           padding: "6rem 0",
@@ -233,6 +236,7 @@ export default function HomePage() {
         />
         <div className="container-max" style={{ position: "relative" }}>
           <h2
+            className="landing-heading"
             style={{
               fontSize: "2.75rem",
               fontWeight: 900,
@@ -336,6 +340,8 @@ export default function HomePage() {
 
       <style>{`
         @media (max-width: 768px) {
+          .landing-section { padding: 4rem 0 !important; }
+          .landing-heading { font-size: clamp(1.75rem, 8vw, 2.3rem) !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .modules-grid { grid-template-columns: 1fr !important; }

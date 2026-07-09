@@ -131,8 +131,8 @@ export function HeroSection() {
             style={{
               width: "100%",
               maxWidth: "min(820px, 72vw)",
-              marginLeft: "auto",
-              marginRight: 0,
+              marginInlineStart: "auto",
+              marginInlineEnd: 0,
               textAlign: "right",
             }}
           >
@@ -145,7 +145,7 @@ export function HeroSection() {
                 maxWidth: "100%",
                 display: "flex",
                 justifyContent: "flex-end",
-                marginLeft: "auto",
+                marginInlineStart: "auto",
                 transform: "translateY(-12px)",
               }}
             >
@@ -232,7 +232,7 @@ export function HeroSection() {
                 fontSize: "1.08rem",
                 lineHeight: 1.9,
                 maxWidth: "620px",
-                marginLeft: "auto",
+                marginInlineStart: "auto",
                 marginBottom: "2.75rem",
               }}
             >

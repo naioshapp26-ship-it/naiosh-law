@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sessionCookieName, type SessionUser } from "@/data/auth";
 import { findDemoCredential, findDemoCredentialByRole } from "@/data/server-auth";
 import { parseJsonRequest } from "@/lib/api-request";
+import { sessionCookieOptions } from "@/lib/auth-session";
 import { createSessionToken, sessionMaxAgeSeconds } from "@/lib/session-token";
 
 type LoginBody = {
@@ -20,7 +21,7 @@ function isLoginBody(value: unknown): value is LoginBody {
 }
 
 function demoLoginEnabled() {
-  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
+  return process.env.NODE_ENV !== "production";
 }
 
 function jsonError(message: string, status: number) {
@@ -66,10 +67,7 @@ export async function POST(request: Request) {
   response.cookies.set({
     name: sessionCookieName,
     value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
+    ...sessionCookieOptions(request),
     maxAge: sessionMaxAgeSeconds,
   });
   return response;

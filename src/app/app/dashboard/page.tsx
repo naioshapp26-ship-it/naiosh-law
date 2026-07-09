@@ -256,6 +256,7 @@ export default function DashboardPage() {
                 >
                   <input
                     type="checkbox"
+                    aria-label={`إنهاء المهمة: ${t.task}`}
                     style={{
                       width: 16,
                       height: 16,

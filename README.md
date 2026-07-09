@@ -13,13 +13,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Demo authentication
 
-The login page supports one-click demo access for admin and client roles. Passwords are validated only on the server and sessions are stored in an httpOnly signed cookie.
+The login page supports one-click demo access for admin and client roles in local development. Passwords are validated only on the server and sessions are stored in an httpOnly signed cookie.
 
-One-click demo login is available automatically in local development. In production, enable it only for demo environments:
-
-```bash
-NAIOSH_ENABLE_DEMO_LOGIN=true
-```
+One-click role-based demo login is disabled in production builds. Use the demo email/password credentials for hosted demo environments instead of enabling passwordless admin access.
 
 Set one of these secrets outside local development:
 
@@ -28,7 +24,7 @@ NAIOSH_SESSION_SECRET=replace-with-a-long-random-secret
 # or AUTH_SECRET / NEXTAUTH_SECRET
 ```
 
-For local development, a demo fallback secret is used. In production, missing secrets cause login to fail closed unless `NAIOSH_ALLOW_DEMO_SESSION_SECRET=true` is set intentionally.
+For local development, a demo fallback secret is used. In production, missing secrets cause login to fail closed.
 
 ## Available scripts
 

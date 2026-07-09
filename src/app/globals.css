@@ -53,7 +53,8 @@ a {
   transition: box-shadow 0.25s, transform 0.25s;
 }
 
-.card-white:hover {
+a.card-white:hover,
+button.card-white:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07), 0 20px 50px rgba(0, 0, 0, 0.07);
   transform: translateY(-3px);
 }
@@ -107,6 +108,16 @@ a {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.22);
   transform: translateY(-1px);
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+.btn-primary:focus-visible,
+.btn-ghost-dark:focus-visible,
+.input-field:focus-visible {
+  outline: 3px solid rgba(195, 21, 42, 0.35);
+  outline-offset: 3px;
 }
 
 /* ── Animations ────────────────────────────── */

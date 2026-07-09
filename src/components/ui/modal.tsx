@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import type { FormField } from "@/data/module-configs";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 
 type Props = {
   open: boolean;
@@ -31,6 +32,9 @@ function createDefaults(fields: FormField[], initial?: Record<string, unknown>) 
 export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
   const [form, setForm] = useState<Record<string, unknown>>(() => createDefaults(fields, initial));
   const [saving, setSaving] = useState(false);
+  const dialogRef = useDialogAccessibility(open, onClose);
+  const titleId = useId();
+  const formId = useId();
 
   if (!open) return null;
 
@@ -59,7 +63,12 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         className="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -82,9 +91,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id={titleId} style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="إغلاق"
             style={{
               width: 34,
               height: 34,
@@ -113,14 +124,17 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             }}
             className="modal-form-grid"
           >
-            {fields.map((f) => (
+            {fields.map((f) => {
+              const fieldId = `${formId}-${f.key}`;
+              return (
               <div
                 key={f.key}
                 style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
               >
-                <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
+                <label className="input-label" htmlFor={fieldId}>{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
                 {f.type === "select" ? (
                   <select
+                    id={fieldId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -134,6 +148,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
+                    id={fieldId}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
@@ -144,6 +159,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 ) : (
                   <input
+                    id={fieldId}
                     type={inputTypeFor(f)}
                     value={String(form[f.key] ?? "")}
                     onChange={(e) => set(f.key, e.target.value)}
@@ -153,7 +169,8 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                   />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Actions */}

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/data/modules";
+import { useDialogAccessibility } from "@/lib/dialog-accessibility";
 import { clearSessionMirror } from "@/lib/session";
 
 type Props = {
@@ -16,6 +17,8 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
   const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
@@ -24,10 +27,23 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarSoftText = "rgba(255,255,255,0.64)";
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
-  const logout = () => {
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const drawerRef = useDialogAccessibility(drawerOpen, closeDrawer);
+
+  const logout = async () => {
+    setLogoutError("");
+    setLoggingOut(true);
     clearSessionMirror();
-    void fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST", keepalive: true });
+      if (!response.ok) {
+        throw new Error("Logout failed.");
+      }
+      router.replace("/login");
+    } catch {
+      setLogoutError("تعذر تسجيل الخروج الآن. حاول مرة أخرى.");
+      setLoggingOut(false);
+    }
   };
 
   const isActive = (href: string) => pathname === href;
@@ -65,6 +81,8 @@ export function AppShell({ role, name, children }: Props) {
         </div>
         <button
           onClick={() => setDrawerOpen(false)}
+          type="button"
+          aria-label="إغلاق القائمة"
           className="drawer-close-btn"
           style={{
             width: 32, height: 32, border: `1px solid ${sidebarBorder}`,
@@ -172,6 +190,7 @@ export function AppShell({ role, name, children }: Props) {
             {/* Hamburger — mobile only */}
             <button
               onClick={() => setDrawerOpen(true)}
+              type="button"
               className="hamburger-btn"
               style={{
                 width: 38, height: 38, border: "1px solid #e2e8f0",
@@ -210,7 +229,7 @@ export function AppShell({ role, name, children }: Props) {
               cursor: "pointer", display: "flex", alignItems: "center",
               justifyContent: "center", fontSize: "0.9rem", position: "relative",
               flexShrink: 0,
-            }} aria-label="التنبيهات">
+            }} aria-label="التنبيهات" type="button">
               🔔
               <span style={{
                 position: "absolute", top: 6, insetInlineEnd: 6,
@@ -240,21 +259,29 @@ export function AppShell({ role, name, children }: Props) {
 
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={() => void logout()}
+              disabled={loggingOut}
+              type="button"
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
                 color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font-cairo)",
+                cursor: loggingOut ? "wait" : "pointer", fontFamily: "var(--font-cairo)",
                 transition: "all 0.2s", whiteSpace: "nowrap",
+                opacity: loggingOut ? 0.7 : 1,
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
-              خروج
+              {loggingOut ? "جارٍ..." : "خروج"}
             </button>
           </div>
         </div>
+        {logoutError && (
+          <div role="alert" style={{ color: "#c3152a", fontSize: "0.75rem", fontWeight: 700, padding: "0 1rem 0.7rem" }}>
+            {logoutError}
+          </div>
+        )}
       </header>
 
       {/* ── Body ── */}
@@ -340,16 +367,18 @@ export function AppShell({ role, name, children }: Props) {
             }}
           >
             {/* Backdrop */}
-            <div
+            <button
+              type="button"
               onClick={() => setDrawerOpen(false)}
-              style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
+              aria-label="إغلاق القائمة"
+              style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)", border: 0, cursor: "pointer" }}
             />
             {/* Drawer panel */}
-            <div style={{
+            <div ref={drawerRef} role="dialog" aria-modal="true" aria-label="قائمة الوحدات" tabIndex={-1} style={{
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
               {renderSidebarContent()}
@@ -400,6 +429,8 @@ export function AppShell({ role, name, children }: Props) {
         {/* All modules button */}
         <button
           onClick={() => setDrawerOpen(true)}
+          type="button"
+          aria-label="فتح قائمة الوحدات"
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",

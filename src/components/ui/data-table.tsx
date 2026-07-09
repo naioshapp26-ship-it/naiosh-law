@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -74,6 +74,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
   const hasActions = !!(onEdit || onDelete || onView);
 
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, totalPages));
+  }, [totalPages]);
+
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
     if (col.type === "badge" && col.badgeMap) {
@@ -117,6 +121,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
             className="input-field"
             style={{ paddingInlineStart: "2.6rem" }}
           />
@@ -152,7 +157,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    onClick={() => col.sortable !== false && handleSort(col.key)}
+                    aria-sort={
+                      sortKey !== col.key
+                        ? "none"
+                        : sortAsc
+                          ? "ascending"
+                          : "descending"
+                    }
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",
@@ -160,15 +171,24 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                       color: "#475569",
                       fontSize: "0.75rem",
                       whiteSpace: "nowrap",
-                      cursor: col.sortable !== false ? "pointer" : "default",
-                      userSelect: "none",
                     }}
                   >
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
-                        {sortAsc ? " ↑" : " ↓"}
-                      </span>
+                    {col.sortable === false ? (
+                      col.label
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSort(col.key)}
+                        className="table-sort-button"
+                        aria-label={`ترتيب حسب ${col.label}`}
+                      >
+                        <span>{col.label}</span>
+                        {sortKey === col.key && (
+                          <span aria-hidden="true" style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
+                            {sortAsc ? " ↑" : " ↓"}
+                          </span>
+                        )}
+                      </button>
                     )}
                   </th>
                 ))}
@@ -227,6 +247,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                         <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
                           {onView && (
                             <button
+                              type="button"
                               onClick={() => onView(row)}
                               style={{
                                 background: "#f1f5f9",
@@ -248,6 +269,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                           )}
                           {onEdit && (
                             <button
+                              type="button"
                               onClick={() => onEdit(row)}
                               style={{
                                 background: "rgba(195,21,42,0.07)",
@@ -269,6 +291,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                           )}
                           {onDelete && (
                             <button
+                              type="button"
                               onClick={() => onDelete(row)}
                               style={{
                                 background: "rgba(239,68,68,0.08)",
@@ -440,6 +463,19 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         .table-action-neutral { background: #f1f5f9; color: #475569; }
         .table-action-primary { background: rgba(195,21,42,0.07); color: #c3152a; }
         .table-action-danger { background: rgba(239,68,68,0.08); color: #dc2626; }
+        .table-sort-button {
+          align-items: center;
+          background: transparent;
+          border: 0;
+          color: inherit;
+          cursor: pointer;
+          display: inline-flex;
+          font: inherit;
+          font-family: var(--font-cairo);
+          font-weight: 700;
+          padding: 0;
+          user-select: none;
+        }
         @media (max-width: 720px) {
           .table-pagination {
             align-items: flex-start !important;
