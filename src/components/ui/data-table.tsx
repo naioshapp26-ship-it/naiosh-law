@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -20,11 +20,26 @@ const toComparableNumber = (value: unknown) => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const sync = () => setMatches(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, [query]);
+
+  return matches;
+}
+
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const useCardLayout = useMediaQuery("(max-width: 900px)");
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc((a) => !a);
@@ -57,6 +72,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const showDesktopTable = useCardLayout !== true;
+  const showMobileCards = useCardLayout !== false;
 
   const hasActions = !!(onEdit || onDelete || onView);
   const firstColumnKey = columns[0]?.key;
@@ -84,6 +101,10 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     }
     return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
   };
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   return (
     <div>
@@ -138,8 +159,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}
       >
+        {showDesktopTable && (
         <div className="desktop-table-wrap" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
               <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map((col) => (
@@ -195,17 +217,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                 paged.map((row, i) => (
                   <tr
                     key={getRowKey(row, i)}
+                    className="data-table-row"
                     style={{
                       borderBottom: "1px solid #f1f5f9",
                       transition: "background 0.15s",
                       background: "transparent",
                     }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "#fafbfc")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "transparent")
-                    }
                   >
                     {columns.map((col) => (
                       <td
@@ -226,6 +243,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                                 border: "none",
                                 borderRadius: "8px",
                                 padding: "0.35rem 0.7rem",
+                                minHeight: 34,
                                 cursor: "pointer",
                                 fontSize: "0.73rem",
                                 fontWeight: 600,
@@ -247,6 +265,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                                 border: "none",
                                 borderRadius: "8px",
                                 padding: "0.35rem 0.7rem",
+                                minHeight: 34,
                                 cursor: "pointer",
                                 fontSize: "0.73rem",
                                 fontWeight: 600,
@@ -268,6 +287,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                                 border: "none",
                                 borderRadius: "8px",
                                 padding: "0.35rem 0.7rem",
+                                minHeight: 34,
                                 cursor: "pointer",
                                 fontSize: "0.73rem",
                                 fontWeight: 600,
@@ -290,6 +310,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             </tbody>
           </table>
         </div>
+        )}
+        {showMobileCards && (
         <div className="mobile-card-list" style={{ display: "none", padding: "0.75rem", background: "#f8f9fb" }}>
           {paged.length === 0 ? (
             <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#94a3b8" }}>
@@ -352,6 +374,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
             ))
           )}
         </div>
+        )}
       </div>
 
       {/* Pagination */}
@@ -426,11 +449,21 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
         </div>
       )}
       <style>{`
-        @media (max-width: 760px) {
+        @media (hover: hover) and (pointer: fine) {
+          .data-table-row:hover { background: #fafbfc !important; }
+        }
+        @media (max-width: 900px) {
           .desktop-table-wrap { display: none; }
           .mobile-card-list {
             display: grid !important;
             gap: 0.75rem;
+          }
+        }
+        @media (pointer: coarse) {
+          .desktop-table-wrap button,
+          .mobile-card-list button,
+          .data-table-pages button {
+            min-height: 44px;
           }
         }
         @media (max-width: 600px) {

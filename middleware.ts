@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { canAccessModule } from "@/lib/module-routing";
-import { decodeSessionToken, SessionConfigError, sessionCookieName } from "@/lib/session-token";
+import { decodeSessionToken, getSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
 
 const protectedPrefix = "/app";
 
@@ -13,8 +13,16 @@ function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", safeAppPath(request.nextUrl.pathname, request.nextUrl.search));
   const response = NextResponse.redirect(loginUrl);
-  response.cookies.delete(sessionCookieName);
+  response.cookies.set(sessionCookieName, "", { ...getSessionCookieOptions(), maxAge: 0 });
   return response;
+}
+
+function decodeModuleSlug(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
 }
 
 export async function middleware(request: NextRequest) {
@@ -48,8 +56,8 @@ export async function middleware(request: NextRequest) {
 
     const moduleMatch = pathname.match(/^\/app\/modules\/([^/]+)$/);
     if (moduleMatch) {
-      const slug = decodeURIComponent(moduleMatch[1]);
-      if (!/^[a-z0-9-]+$/.test(slug) || !canAccessModule(user.role, slug)) {
+      const slug = decodeModuleSlug(moduleMatch[1]);
+      if (!slug || !/^[a-z0-9-]+$/.test(slug) || !canAccessModule(user.role, slug)) {
         return NextResponse.redirect(new URL("/app/dashboard", request.url));
       }
     }

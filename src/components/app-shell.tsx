@@ -37,6 +37,11 @@ export function AppShell({ role, name, children }: Props) {
   const { logout: endSession } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const visibleModules = getVisibleOperationalModules(role);
+  const preferredBottomSlugs = ["case-management", "court-sessions", "legal-accounting"];
+  const bottomNavModules = preferredBottomSlugs
+    .map((slug) => visibleModules.find((item) => item.slug === slug))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+    .slice(0, 3);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
   const sidebarText = "#ffffff";
@@ -53,9 +58,15 @@ export function AppShell({ role, name, children }: Props) {
   useEffect(() => {
     if (!drawerOpen) return;
     const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+
     document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
     };
   }, [drawerOpen]);
 
@@ -208,6 +219,8 @@ export function AppShell({ role, name, children }: Props) {
                 fontSize: "1.1rem", color: "#475569", flexShrink: 0,
               }}
               aria-label="القائمة"
+              aria-controls="app-mobile-drawer"
+              aria-expanded={drawerOpen}
             >
               ☰
             </button>
@@ -278,7 +291,8 @@ export function AppShell({ role, name, children }: Props) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
-              خروج
+              <span className="logout-text">خروج</span>
+              <span className="logout-icon" aria-hidden="true">⎋</span>
             </button>
           </div>
         </div>
@@ -373,12 +387,18 @@ export function AppShell({ role, name, children }: Props) {
             />
             {/* Drawer panel */}
             <div style={{
+              animation: "slide-drawer 0.25s ease",
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
-              animation: "slide-drawer 0.25s ease",
-            }}>
+            }}
+              id="app-mobile-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة وحدات النظام"
+              tabIndex={-1}
+            >
               {sidebarContent}
             </div>
           </div>
@@ -394,16 +414,18 @@ export function AppShell({ role, name, children }: Props) {
       <nav className="mobile-bottom-nav" style={{
         display: "none", position: "fixed", bottom: 0, insetInline: 0,
         background: "#ffffff", borderTop: "1px solid #e2e8f0",
-        padding: "0.5rem 0.75rem",
+        padding: "0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom))",
         zIndex: 100,
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
       }}>
         {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
+          { href: "/app/dashboard", icon: "⊞", label: "الرئيسية" },
+          ...bottomNavModules.map((item) => ({
+            href: `/app/modules/${item.slug}`,
+            icon: iconMap[item.slug] ?? "📌",
+            label: item.title.replace(/^إدارة\s+/, "").split(" ")[0] || item.title,
+          })),
         ].map((item) => {
           const active = pathname === item.href;
           return (
@@ -427,6 +449,8 @@ export function AppShell({ role, name, children }: Props) {
         {/* All modules button */}
         <button
           onClick={() => setDrawerOpen(true)}
+          aria-controls="app-mobile-drawer"
+          aria-expanded={drawerOpen}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
@@ -447,8 +471,14 @@ export function AppShell({ role, name, children }: Props) {
           .mobile-bottom-nav { display: flex !important; }
           .logo-text         { display: none; }
           .user-name-block   { display: none; }
+          .logout-text       { display: inline; }
+          .logout-icon       { display: none; }
           .drawer-header     { display: flex !important; }
-          main               { padding-bottom: 5rem !important; }
+          main               { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
+        }
+        @media (max-width: 420px) {
+          .logout-text       { display: none; }
+          .logout-icon       { display: inline; }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

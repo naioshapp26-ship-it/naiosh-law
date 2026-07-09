@@ -1,4 +1,4 @@
-import type { SessionUser } from "@/lib/session";
+import type { SessionUser } from "@/lib/session-types";
 
 type DemoCredential = SessionUser & {
   password: string;

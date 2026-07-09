@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 type Props = {
   open: boolean;
   title?: string;
@@ -10,6 +12,23 @@ type Props = {
 };
 
 export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onCancel, open]);
+
   if (!open) return null;
   return (
     <div
@@ -29,6 +48,9 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         className="card-white"
         style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         <div
           style={{

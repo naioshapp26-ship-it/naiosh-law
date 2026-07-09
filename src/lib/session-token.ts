@@ -1,4 +1,4 @@
-import type { SessionUser } from "@/lib/session";
+import { normalizeSessionUser, type SessionUser } from "@/lib/session-types";
 
 export const sessionCookieName = "naiosh-law-session-token";
 
@@ -56,6 +56,16 @@ function decodeJson<T>(value: string): T {
   return JSON.parse(new TextDecoder().decode(bytes)) as T;
 }
 
+function isSessionPayload(value: unknown): value is SessionPayload {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "user" in value &&
+    "exp" in value &&
+    typeof (value as { exp?: unknown }).exp === "number"
+  );
+}
+
 async function signPayload(payload: string) {
   const secret = getSessionSecret();
   const key = await crypto.subtle.importKey(
@@ -108,9 +118,9 @@ export async function decodeSessionToken(token: string | undefined | null): Prom
   if (!constantTimeEqual(signature, expected)) return null;
 
   try {
-    const decoded = decodeJson<SessionPayload>(payload);
-    if (!decoded.user || decoded.exp < Math.floor(Date.now() / 1000)) return null;
-    return decoded.user;
+    const decoded = decodeJson<unknown>(payload);
+    if (!isSessionPayload(decoded) || decoded.exp < Math.floor(Date.now() / 1000)) return null;
+    return normalizeSessionUser(decoded.user);
   } catch {
     return null;
   }

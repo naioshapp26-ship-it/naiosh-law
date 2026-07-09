@@ -3,14 +3,8 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
+import { normalizeSessionUser, parseSessionUser, type SessionUser } from "@/lib/session-types";
 
-export type SessionUser = {
-  role: "admin" | "client";
-  name: string;
-  email: string;
-};
-
-const roles = new Set<SessionUser["role"]>(["admin", "client"]);
 const sessionChangeEvent = "naiosh-law-session-change";
 const initialSnapshot: SessionSnapshot = { user: null, ready: false };
 const listeners = new Set<() => void>();
@@ -23,33 +17,7 @@ type SessionSnapshot = {
 let sessionSnapshot = initialSnapshot;
 let hydratedFromStorage = false;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-export function parseSessionUser(raw: string | null): SessionUser | null {
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (
-      isRecord(parsed) &&
-      typeof parsed.name === "string" &&
-      typeof parsed.email === "string" &&
-      roles.has(parsed.role as SessionUser["role"])
-    ) {
-      return {
-        role: parsed.role as SessionUser["role"],
-        name: parsed.name,
-        email: parsed.email,
-      };
-    }
-  } catch {
-    // Invalid demo-session data should fail closed instead of crashing render.
-  }
-
-  return null;
-}
+export { parseSessionUser, type SessionUser };
 
 export function readStoredSession(): SessionUser | null {
   if (typeof window === "undefined") return null;
@@ -146,8 +114,7 @@ async function fetchCurrentSession(): Promise<SessionUser | null> {
   if (!response.ok) return null;
 
   const body = (await response.json()) as { user?: unknown };
-  if (!isRecord(body.user)) return null;
-  return parseSessionUser(JSON.stringify(body.user));
+  return normalizeSessionUser(body.user);
 }
 
 export function useSession(redirectIfMissing = false) {
@@ -176,7 +143,8 @@ export function useSession(redirectIfMissing = false) {
       })
       .catch(() => {
         if (cancelled) return;
-        updateSessionSnapshot({ user: optimisticUser, ready: true });
+        clearStoredSession(false);
+        updateSessionSnapshot({ user: null, ready: true });
       });
 
     return () => {

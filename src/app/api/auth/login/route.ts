@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isRecord, readJsonBody } from "@/lib/api-request";
 import { createSessionToken, getSessionCookieOptions, SessionConfigError, sessionCookieName } from "@/lib/session-token";
 import { getDemoUserByCredentials, getDemoUserByRole } from "@/data/server-auth";
-import type { SessionUser } from "@/lib/session";
+import type { SessionUser } from "@/lib/session-types";
 
 type LoginBody = {
   email?: unknown;

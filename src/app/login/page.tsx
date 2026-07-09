@@ -109,7 +109,7 @@ export default function LoginPage() {
             borderRadius: "50%",
             border: "1px solid rgba(255,255,255,0.08)",
             bottom: -80,
-            left: -80,
+            insetInlineEnd: -80,
             pointerEvents: "none",
           }}
         />
@@ -121,7 +121,7 @@ export default function LoginPage() {
             borderRadius: "50%",
             border: "1px solid rgba(255,255,255,0.06)",
             bottom: 60,
-            left: 60,
+            insetInlineEnd: 60,
             pointerEvents: "none",
           }}
         />
@@ -133,7 +133,7 @@ export default function LoginPage() {
             borderRadius: "50%",
             background: "radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%)",
             top: -150,
-            right: -150,
+            insetInlineStart: -150,
             pointerEvents: "none",
           }}
         />
@@ -279,6 +279,28 @@ export default function LoginPage() {
           animate="show"
           style={{ width: "100%", maxWidth: "420px" }}
         >
+          <div className="mobile-login-brand" style={{ display: "none", marginBottom: "1.5rem", textAlign: "center" }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                margin: "0 auto 0.75rem",
+                background: "linear-gradient(135deg,#c3152a,#7f0d1a)",
+                borderRadius: "14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                fontWeight: 900,
+                boxShadow: "0 6px 18px rgba(195,21,42,0.28)",
+              }}
+            >
+              N
+            </div>
+            <p style={{ fontWeight: 900, color: "#0a0a12", fontSize: "1rem" }}>Naiosh Law</p>
+            <p style={{ color: "#94a3b8", fontSize: "0.76rem" }}>النظام القانوني المتكامل</p>
+          </div>
+
           {/* Heading */}
           <motion.div variants={fadeUp} style={{ marginBottom: "2.5rem" }}>
             <h1
@@ -302,7 +324,7 @@ export default function LoginPage() {
             <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
               دخول سريع تجريبي:
             </p>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
+            <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
               <button
                 type="button"
                 onClick={() => quickDemoLogin("admin")}
@@ -503,7 +525,7 @@ export default function LoginPage() {
                   جاري الدخول...
                 </>
               ) : (
-                <>دخول النظام →</>
+                <>دخول النظام ←</>
               )}
             </motion.button>
           </form>
@@ -528,6 +550,10 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+          .mobile-login-brand { display: block !important; }
+        }
+        @media (max-width: 420px) {
+          .demo-login-buttons { flex-direction: column; }
         }
       `}</style>
     </div>

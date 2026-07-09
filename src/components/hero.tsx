@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { operationalModules } from "@/lib/module-routing";
 
 const stats = [
@@ -29,6 +29,7 @@ const headlineText = "إدارة القضايا والموكلين بذكاء";
 
 export function HeroSection() {
   const dashboardLoginHref = `/login?next=${encodeURIComponent("/app/dashboard")}`;
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <section
@@ -53,7 +54,7 @@ export function HeroSection() {
           background:
             "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
           top: -250,
-          left: -150,
+          insetInlineEnd: -150,
           pointerEvents: "none",
         }}
       />
@@ -66,7 +67,7 @@ export function HeroSection() {
           background:
             "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
           bottom: -100,
-          right: -80,
+          insetInlineStart: -80,
           pointerEvents: "none",
         }}
       />
@@ -93,8 +94,8 @@ export function HeroSection() {
           borderRadius: "50%",
           border: "1px solid rgba(195,21,42,0.12)",
           top: "50%",
-          left: "60%",
-          transform: "translate(-50%, -50%)",
+          insetInlineStart: "40%",
+          transform: "translate(50%, -50%)",
           pointerEvents: "none",
         }}
       />
@@ -106,8 +107,8 @@ export function HeroSection() {
           borderRadius: "50%",
           border: "1px solid rgba(195,21,42,0.08)",
           top: "50%",
-          left: "60%",
-          transform: "translate(-50%, -50%)",
+          insetInlineStart: "40%",
+          transform: "translate(50%, -50%)",
           pointerEvents: "none",
         }}
       />
@@ -128,13 +129,13 @@ export function HeroSection() {
           <motion.div
             className="hero-content-col"
             variants={container}
-            initial="hidden"
+            initial={shouldReduceMotion ? false : "hidden"}
             animate="show"
             style={{
               width: "100%",
               maxWidth: "min(820px, 72vw)",
-              marginLeft: "auto",
-              marginRight: 0,
+              marginInlineEnd: "auto",
+              marginInlineStart: 0,
               textAlign: "right",
             }}
           >
@@ -147,7 +148,7 @@ export function HeroSection() {
                 maxWidth: "100%",
                 display: "flex",
                 justifyContent: "flex-end",
-                marginLeft: "auto",
+                marginInlineEnd: "auto",
                 transform: "translateY(-12px)",
               }}
             >
@@ -207,6 +208,7 @@ export function HeroSection() {
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   whiteSpace: "nowrap",
+                overflowWrap: "anywhere",
                 }}
               >
                 {headlineText}
@@ -234,7 +236,7 @@ export function HeroSection() {
                 fontSize: "1.08rem",
                 lineHeight: 1.9,
                 maxWidth: "620px",
-                marginLeft: "auto",
+                marginInlineEnd: "auto",
                 marginBottom: "2.75rem",
               }}
             >
@@ -254,7 +256,7 @@ export function HeroSection() {
               }}
             >
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
-                ابدأ الآن مجانًا →
+                ابدأ الآن مجانًا ←
               </Link>
               <Link href={dashboardLoginHref} className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 عرض تجريبي مباشر
@@ -302,13 +304,13 @@ export function HeroSection() {
 
           {/* ── Visual column ── */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="float-anim hero-card-col"
             style={{
               position: "absolute",
-              left: 0,
+              insetInlineEnd: 0,
               top: "calc(50% - 180px)",
               width: "min(420px, 35vw)",
               zIndex: 5,
@@ -453,7 +455,7 @@ export function HeroSection() {
 
             {/* Alert mini card */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.1, duration: 0.5 }}
               className="glass-dark"
@@ -507,7 +509,7 @@ export function HeroSection() {
 
             {/* Stats mini card */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3, duration: 0.5 }}
               className="glass-dark"
@@ -541,14 +543,14 @@ export function HeroSection() {
 
       {/* Scroll indicator */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={shouldReduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.8 }}
         style={{
           position: "absolute",
           bottom: "2rem",
-          left: "50%",
-          transform: "translateX(-50%)",
+          insetInlineStart: "50%",
+          transform: "translateX(50%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -593,7 +595,7 @@ export function HeroSection() {
             max-width: min(720px, 70vw) !important;
           }
         }
-        @media (max-width: 980px) {
+        @media (max-width: 1100px) {
           .hero-heading {
             line-height: 1.12 !important;
             font-size: clamp(1.8rem, 5vw, 3rem) !important;
@@ -626,8 +628,7 @@ export function HeroSection() {
           .hero-badge {
             justify-content: center !important;
             transform: none !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
+            margin-inline: auto !important;
           }
           .hero-cta, .hero-stats {
             justify-content: center !important;

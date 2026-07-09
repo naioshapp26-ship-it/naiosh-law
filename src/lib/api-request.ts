@@ -10,6 +10,40 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function payloadTooLarge(maxBytes: number) {
+  return NextResponse.json(
+    { error: "payload_too_large", message: `Request body exceeds ${Math.round(maxBytes / 1024)}KB.` },
+    { status: 413 }
+  );
+}
+
+async function readLimitedText(request: NextRequest, maxBytes: number): Promise<JsonBodyResult & { text?: string }> {
+  const reader = request.body?.getReader();
+  if (!reader) return { ok: true, data: {}, text: "" };
+
+  const chunks: Uint8Array[] = [];
+  let receivedBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    receivedBytes += value.byteLength;
+    if (receivedBytes > maxBytes) {
+      return { ok: false, response: payloadTooLarge(maxBytes) };
+    }
+    chunks.push(value);
+  }
+
+  const body = new Uint8Array(receivedBytes);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  });
+
+  return { ok: true, data: {}, text: new TextDecoder().decode(body) };
+}
+
 export async function readJsonBody(
   request: NextRequest,
   options: { maxBytes?: number; allowEmpty?: boolean } = {}
@@ -32,14 +66,14 @@ export async function readJsonBody(
   if (Number.isFinite(contentLength) && contentLength > maxBytes) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "payload_too_large", message: `Request body exceeds ${Math.round(maxBytes / 1024)}KB.` },
-        { status: 413 }
-      ),
+      response: payloadTooLarge(maxBytes),
     };
   }
 
-  const body = await request.text();
+  const limitedBody = await readLimitedText(request, maxBytes);
+  if (!limitedBody.ok) return limitedBody;
+
+  const body = limitedBody.text ?? "";
   if (!body.trim()) {
     if (allowEmpty) return { ok: true, data: {} };
     return {
@@ -47,16 +81,6 @@ export async function readJsonBody(
       response: NextResponse.json(
         { error: "invalid_json", message: "Request body must be valid JSON." },
         { status: 400 }
-      ),
-    };
-  }
-
-  if (new TextEncoder().encode(body).byteLength > maxBytes) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "payload_too_large", message: `Request body exceeds ${Math.round(maxBytes / 1024)}KB.` },
-        { status: 413 }
       ),
     };
   }

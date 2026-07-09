@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
 import { useSession } from "@/lib/session";
@@ -22,14 +23,15 @@ const upcomingSessions = [
 ];
 
 const recentTasks = [
-  { task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
-  { task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
-  { task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
-  { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
+  { id: "defense-memo-2024-0547", task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
+  { id: "agency-contract-review", task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
+  { id: "commercial-appeal-docs", task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
+  { id: "fees-invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(() => new Set());
 
   if (!ready || !user) {
     return (
@@ -155,9 +157,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {upcomingSessions.map((s, i) => (
+              {upcomingSessions.map((s) => (
                 <div
-                  key={i}
+                  key={`${s.case}-${s.date}`}
                   style={{
                     padding: "0.9rem",
                     background: "#f8f9fb",
@@ -230,9 +232,11 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => (
+              {recentTasks.map((t) => {
+                const completed = completedTasks.has(t.id);
+                return (
                 <div
-                  key={i}
+                  key={t.id}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
@@ -245,6 +249,16 @@ export default function DashboardPage() {
                 >
                   <input
                     type="checkbox"
+                    checked={completed}
+                    onChange={(event) => {
+                      setCompletedTasks((current) => {
+                        const next = new Set(current);
+                        if (event.target.checked) next.add(t.id);
+                        else next.delete(t.id);
+                        return next;
+                      });
+                    }}
+                    aria-label={`تمييز المهمة كمكتملة: ${t.task}`}
                     style={{
                       width: 16,
                       height: 16,
@@ -258,9 +272,10 @@ export default function DashboardPage() {
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: 600,
-                        color: "#0a0a12",
+                        color: completed ? "#94a3b8" : "#0a0a12",
                         marginBottom: "0.25rem",
                         lineHeight: 1.4,
+                        textDecoration: completed ? "line-through" : "none",
                       }}
                     >
                       {t.task}
@@ -287,7 +302,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

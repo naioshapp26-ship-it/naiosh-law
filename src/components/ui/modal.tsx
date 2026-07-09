@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { FormField } from "@/data/module-configs";
 
 type Props = {
@@ -22,6 +22,23 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     return defaults;
   });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -65,6 +82,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           animation: "fade-in-up 0.22s ease",
         }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         {/* Header */}
         <div
