@@ -10,12 +10,20 @@ type LoginRequest = {
   demo?: unknown;
 };
 
+function acceptsJson(request: Request) {
+  return request.headers.get("content-type")?.toLocaleLowerCase().includes("application/json") ?? false;
+}
+
 function isSessionRole(role: unknown): role is SessionRole {
   return role === "admin" || role === "client";
 }
 
 export async function POST(request: Request) {
   let body: LoginRequest;
+
+  if (!acceptsJson(request)) {
+    return NextResponse.json({ message: "Content-Type must be application/json." }, { status: 415 });
+  }
 
   try {
     body = (await request.json()) as LoginRequest;
@@ -27,7 +35,7 @@ export async function POST(request: Request) {
     body.demo === true && isSessionRole(body.role)
       ? findDemoUserByRole(body.role)
       : typeof body.email === "string" && typeof body.password === "string"
-        ? findDemoUserByCredentials(body.email.trim(), body.password)
+        ? findDemoUserByCredentials(body.email.trim().toLocaleLowerCase(), body.password)
         : undefined;
 
   if (!demoUser) {

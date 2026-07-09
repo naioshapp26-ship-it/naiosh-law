@@ -307,7 +307,7 @@ export function AppShell({ role, name, children }: Props) {
       <nav className="mobile-bottom-nav" style={{
         display: "none", position: "fixed", bottom: 0, insetInline: 0,
         background: "#ffffff", borderTop: "1px solid #e2e8f0",
-        padding: "0.5rem 0.75rem",
+        padding: "0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom))",
         zIndex: 100,
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
         justifyContent: "space-around",
@@ -361,7 +361,7 @@ export function AppShell({ role, name, children }: Props) {
           .logo-text         { display: none; }
           .user-name-block   { display: none; }
           .drawer-header     { display: flex !important; }
-          main               { padding-bottom: 5rem !important; }
+          main               { padding: 1rem !important; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
         }
         @media (max-width: 420px) {
           header button[aria-label="التنبيهات"] { display: none !important; }

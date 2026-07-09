@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ModulePageClient } from "@/components/module-page-client";
+import { ModuleShell } from "@/components/module-shell";
 import { moduleConfigMap } from "@/data/module-configs";
 import { operationalModules } from "@/data/modules";
 
@@ -14,7 +14,7 @@ export default async function ModulePage({ params }: Props) {
     notFound();
   }
 
-  return <ModulePageClient slug={slug} />;
+  return <ModuleShell key={slug} slug={slug} />;
 }
 
 export function generateStaticParams() {

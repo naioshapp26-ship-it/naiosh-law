@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { LoadingScreen } from "@/components/loading-screen";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
@@ -45,12 +46,57 @@ function getEntityPlural(entityName: string) {
   return entityPluralMap[entityName] ?? entityName;
 }
 
+function getRowsStorageKey(slug: string) {
+  return `naiosh-law-module-rows:${slug}`;
+}
+
+function isRecordArray(value: unknown): value is Record<string, unknown>[] {
+  return (
+    Array.isArray(value) &&
+    value.every((item) => !!item && typeof item === "object" && !Array.isArray(item))
+  );
+}
+
+function loadRows(slug: string, fallbackRows: Record<string, unknown>[]) {
+  const seededFallback = seedRows(slug, fallbackRows);
+
+  if (typeof window === "undefined") {
+    return seededFallback;
+  }
+
+  const storageKey = getRowsStorageKey(slug);
+  const rawRows = window.localStorage.getItem(storageKey);
+
+  if (!rawRows) {
+    return seededFallback;
+  }
+
+  try {
+    const parsed = JSON.parse(rawRows) as unknown;
+    if (isRecordArray(parsed)) {
+      return seedRows(slug, parsed);
+    }
+  } catch {
+    window.localStorage.removeItem(storageKey);
+  }
+
+  return seededFallback;
+}
+
+function persistRows(slug: string, rows: Record<string, unknown>[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(getRowsStorageKey(slug), JSON.stringify(rows));
+}
+
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const isAdmin = user?.role === "admin";
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(() => seedRows(slug, config?.data ?? []));
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() => loadRows(slug, config?.data ?? []));
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -64,15 +110,16 @@ export function ModuleShell({ slug }: { slug: string }) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
 
+  useEffect(() => {
+    if (!config) {
+      return;
+    }
+
+    persistRows(slug, rows);
+  }, [config, rows, slug]);
+
   if (!ready || !user) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center", color: "#64748b" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#c3152a", animation: "spin-slow 0.9s linear infinite", margin: "0 auto 1rem" }} />
-          <p>جاري التحميل...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!config) {

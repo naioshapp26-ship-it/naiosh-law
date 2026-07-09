@@ -23,7 +23,12 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 function getSessionSecret() {
-  return process.env.NAIOSH_SESSION_SECRET ?? "naiosh-law-demo-session-secret";
+  return (
+    process.env.NAIOSH_SESSION_SECRET ??
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    "naiosh-law-demo-session-secret"
+  );
 }
 
 function shouldUseSecureCookie(request?: Request) {
@@ -80,6 +85,19 @@ async function createSignature(payload: string) {
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
+function constantTimeEqual(left: string, right: string) {
+  const leftBytes = encoder.encode(left);
+  const rightBytes = encoder.encode(right);
+  const length = Math.max(leftBytes.length, rightBytes.length);
+  let diff = leftBytes.length ^ rightBytes.length;
+
+  for (let index = 0; index < length; index += 1) {
+    diff |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
+  }
+
+  return diff === 0;
+}
+
 function isSessionPayload(value: unknown): value is SessionPayload {
   if (!value || typeof value !== "object") {
     return false;
@@ -119,7 +137,7 @@ export async function decodeSession(token?: string | null): Promise<SessionUser 
 
   const expectedSignature = await createSignature(payloadPart);
 
-  if (signaturePart !== expectedSignature) {
+  if (!constantTimeEqual(signaturePart, expectedSignature)) {
     return null;
   }
 

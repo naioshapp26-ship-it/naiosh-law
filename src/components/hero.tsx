@@ -74,19 +74,26 @@ export function HeroSection() {
 
       {/* Decorative ring */}
       <div
-        className="spin-slow"
         style={{
           position: "absolute",
           width: 420,
           height: 420,
-          borderRadius: "50%",
-          border: "1px solid rgba(195,21,42,0.12)",
           top: "50%",
           left: "60%",
           transform: "translate(-50%, -50%)",
           pointerEvents: "none",
         }}
-      />
+      >
+        <div
+          className="spin-slow"
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            border: "1px solid rgba(195,21,42,0.12)",
+          }}
+        />
+      </div>
       <div
         style={{
           position: "absolute",

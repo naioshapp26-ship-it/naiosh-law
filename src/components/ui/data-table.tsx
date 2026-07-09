@@ -131,6 +131,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
 
       {/* Table */}
       <div
+        className="data-table-frame"
         style={{
           borderRadius: "16px",
           border: "1px solid #e2e8f0",
@@ -437,6 +438,9 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           .data-table-toolbar {
             flex-direction: column;
             align-items: stretch !important;
+          }
+          .data-table-frame {
+            display: none;
           }
           .data-table-desktop-scroll {
             display: none;

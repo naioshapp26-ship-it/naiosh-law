@@ -281,6 +281,7 @@ export default function LoginPage() {
 
       {/* ── Right: Form panel ── */}
       <div
+        className="login-form-panel"
         style={{
           flex: 1,
           background: "#ffffff",
@@ -320,7 +321,7 @@ export default function LoginPage() {
             <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.65rem" }}>
               دخول سريع تجريبي:
             </p>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
+            <div className="quick-demo-actions" style={{ display: "flex", gap: "0.75rem" }}>
               {demoLoginProfiles.map((profile) => (
               <button
                 key={profile.role}
@@ -523,6 +524,10 @@ export default function LoginPage() {
         @media (max-width: 860px) {
           .brand-panel { display: none !important; }
           .login-wrap { background: #f8f9fb !important; }
+        }
+        @media (max-width: 480px) {
+          .login-form-panel { padding: 2rem 1rem !important; }
+          .quick-demo-actions { flex-direction: column; }
         }
       `}</style>
     </div>

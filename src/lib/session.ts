@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
 import type { SessionUser } from "@/lib/auth-session";
@@ -85,21 +85,25 @@ function loginPathWithNext() {
 
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
+  const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(null);
+  const [verified, setVerified] = useState(!redirectIfMissing);
   const rawSession = useSyncExternalStore(
     subscribeToSessionChange,
     getClientSessionSnapshot,
     getServerSessionSnapshot
   );
-  const ready = rawSession !== undefined;
-  const user = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
+  const hydrated = rawSession !== undefined;
+  const cachedUser = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
+  const ready = hydrated && (!redirectIfMissing || verified);
+  const user = redirectIfMissing ? verifiedUser : cachedUser;
 
   useEffect(() => {
-    if (rawSession !== undefined && rawSession && !user) {
+    if (rawSession !== undefined && rawSession && !cachedUser) {
       clearStoredSession();
       return;
     }
 
-  }, [rawSession, user]);
+  }, [rawSession, cachedUser]);
 
   useEffect(() => {
     if (rawSession === undefined || !redirectIfMissing) {
@@ -107,6 +111,7 @@ export function useSession(redirectIfMissing = false) {
     }
 
     const controller = new AbortController();
+    setVerified(false);
 
     fetch("/api/auth/session", {
       cache: "no-store",
@@ -121,8 +126,14 @@ export function useSession(redirectIfMissing = false) {
 
         const payload = (await response.json()) as { user?: SessionUser };
         if (payload.user) {
-          saveSession(payload.user);
+          setVerifiedUser(payload.user);
+          setVerified(true);
+
+          if (JSON.stringify(payload.user) !== rawSession) {
+            saveSession(payload.user);
+          }
         } else {
+          setVerifiedUser(null);
           clearStoredSession();
           router.replace(loginPathWithNext());
         }
@@ -131,12 +142,13 @@ export function useSession(redirectIfMissing = false) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
+        setVerifiedUser(null);
         clearStoredSession();
         router.replace(loginPathWithNext());
       });
 
     return () => controller.abort();
-  }, [rawSession, user, redirectIfMissing, router]);
+  }, [rawSession, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({

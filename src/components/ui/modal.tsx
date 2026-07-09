@@ -45,12 +45,14 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    onSave(form);
-    setSaving(false);
+    try {
+      onSave(form);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -169,7 +171,7 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
+          <div className="modal-actions" style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={onClose}
@@ -200,7 +202,11 @@ function ModalContent({ title, fields, initial, onSave, onClose, saveLabel = "ح
       </div>
 
       <style>{`
-        @media (max-width: 600px) { .modal-form-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) {
+          .modal-form-grid { grid-template-columns: 1fr !important; }
+          .modal-actions { flex-direction: column-reverse; }
+          .modal-actions > button { width: 100%; }
+        }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
