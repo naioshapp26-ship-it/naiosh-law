@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import type { SessionUser } from "@/data/auth";
 import { findDemoCredential, findDemoCredentialByRole } from "@/data/server-auth";
+import { jsonError, jsonResponse, readJsonBody } from "@/lib/api-response";
 import { getSessionCookieOptions } from "@/lib/session-cookie";
 import { createSessionToken } from "@/lib/session-token";
 
@@ -15,21 +15,19 @@ function isRole(value: unknown): value is SessionUser["role"] {
   return value === "admin" || value === "client";
 }
 
-function jsonError(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status });
+function demoLoginEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.NAIOSH_ENABLE_DEMO_LOGIN === "true";
 }
 
 export async function POST(request: Request) {
-  const contentType = request.headers.get("content-type") || "";
-  if (!contentType.toLowerCase().includes("application/json")) {
-    return jsonError("Content-Type must be application/json.", 415);
+  const parsed = await readJsonBody<LoginBody>(request);
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
-  let body: LoginBody;
-  try {
-    body = (await request.json()) as LoginBody;
-  } catch {
-    return jsonError("Invalid JSON body.", 400);
+  const body = parsed.data;
+  if (body.demo === true && !demoLoginEnabled()) {
+    return jsonError("Demo login is disabled.", 403);
   }
 
   const user =
@@ -56,7 +54,7 @@ export async function POST(request: Request) {
     return jsonError("Session service is not configured.", 503);
   }
 
-  const response = NextResponse.json({ user: sessionUser });
+  const response = jsonResponse({ user: sessionUser });
   response.cookies.set(getSessionCookieOptions(request, token));
   return response;
 }

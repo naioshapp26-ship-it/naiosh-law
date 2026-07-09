@@ -57,7 +57,6 @@ export function Navbar() {
   };
 
   const links = [
-    { href: "/#modules", label: "المنتجات" },
     { href: "/#footer-support", label: "الدعم الفني" },
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },

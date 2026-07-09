@@ -283,7 +283,7 @@ export function AppShell({ role, name, children }: Props) {
           </div>
 
           {/* Right: Notifications + User + Logout */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Notification bell */}
             <button type="button" tabIndex={-1} aria-disabled="true" style={{
               width: 36, height: 36, borderRadius: "10px",
@@ -301,7 +301,7 @@ export function AppShell({ role, name, children }: Props) {
             </button>
 
             {/* User chip */}
-            <div style={{
+            <div className="app-user-chip" style={{
               display: "flex", alignItems: "center", gap: "0.5rem",
               background: "#f8f9fb", border: "1px solid #e2e8f0",
               borderRadius: "10px", padding: "0.4rem 0.75rem",
@@ -324,6 +324,7 @@ export function AppShell({ role, name, children }: Props) {
               onClick={() => void logout()}
               type="button"
               disabled={loggingOut}
+              className="app-logout-button"
               style={{
                 background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
                 borderRadius: "9px", padding: "0.4rem 0.75rem",
@@ -523,12 +524,21 @@ export function AppShell({ role, name, children }: Props) {
           .drawer-header     { display: flex !important; }
           main               { padding-bottom: 5rem !important; }
         }
+        @media (max-width: 420px) {
+          .app-header-actions {
+            gap: 0.35rem !important;
+          }
+          .app-user-chip,
+          .app-logout-button {
+            padding-inline: 0.55rem !important;
+          }
+        }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }
           .drawer-header     { display: none; }
         }
         @keyframes slide-drawer {
-          from { transform: translateX(-100%); opacity: 0; }
+          from { transform: translateX(100%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
         }
       `}</style>

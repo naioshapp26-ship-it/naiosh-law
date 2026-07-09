@@ -38,7 +38,8 @@ export default function LoginPage() {
     }
 
     const nextParam = new URLSearchParams(window.location.search).get("next");
-    router.push(nextParam?.startsWith("/app") ? nextParam : "/app/dashboard");
+    router.refresh();
+    router.push(nextParam === "/app" || nextParam?.startsWith("/app/") ? nextParam : "/app/dashboard");
   };
 
   const onSubmit = async (event: FormEvent) => {

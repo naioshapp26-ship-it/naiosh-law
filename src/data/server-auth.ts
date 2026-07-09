@@ -6,7 +6,7 @@ type DemoCredential = SessionUser & {
   password: string;
 };
 
-export const demoCredentials: DemoCredential[] = [
+const demoCredentials: DemoCredential[] = [
   {
     role: "admin",
     name: "مدير النظام",

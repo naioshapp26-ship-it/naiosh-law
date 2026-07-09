@@ -183,30 +183,6 @@ a {
   color: #374151;
 }
 
-/* ── Sidebar nav ───────────────────────────── */
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #94a3b8;
-  transition: all 0.18s;
-}
-
-.sidebar-link:hover {
-  background: rgba(195, 21, 42, 0.08);
-  color: var(--primary);
-}
-
-.sidebar-link.active {
-  background: rgba(195, 21, 42, 0.12);
-  color: var(--primary);
-  font-weight: 700;
-}
-
 /* ── Hero CSS entrance animations ─────────── */
 @keyframes hero-fade-in {
   from { opacity: 0; transform: translateY(20px); }

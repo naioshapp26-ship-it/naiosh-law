@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
@@ -22,14 +23,85 @@ const upcomingSessions = [
 ];
 
 const recentTasks = [
-  { task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
-  { task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
-  { task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
-  { task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
+  { id: "defense-memo-2024-0547", task: "إعداد مذكرة دفاعية — قضية #2024-0547", priority: "عاجل", due: "اليوم 9 ص" },
+  { id: "review-agency-ahmed", task: "مراجعة عقد الوكالة للموكل أحمد الصاوي", priority: "عادي", due: "غدًا" },
+  { id: "appeal-documents", task: "تقديم مستندات الاستئناف التجاري", priority: "عاجل", due: "15 يوليو" },
+  { id: "issue-invoice-2024-0312", task: "إصدار فاتورة الرسوم — ملف #2024-0312", priority: "عادي", due: "16 يوليو" },
 ];
+
+const dashboardTaskStoragePrefix = "naiosh-law-dashboard-tasks:";
+
+function storageScope(value: string) {
+  return encodeURIComponent(value.trim().toLowerCase());
+}
+
+function getTaskStorageKey(email: string) {
+  return `${dashboardTaskStoragePrefix}${storageScope(email)}`;
+}
+
+function readCheckedTaskIds(storageKey: string) {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      // Keep the dashboard usable if storage is blocked.
+    }
+    return [];
+  }
+}
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const [checkedTaskIds, setCheckedTaskIds] = useState<Set<string>>(() => new Set());
+  const [tasksHydrated, setTasksHydrated] = useState(false);
+  const taskStorageKey = user ? getTaskStorageKey(user.email) : null;
+
+  useEffect(() => {
+    if (!taskStorageKey) {
+      return;
+    }
+
+    setTasksHydrated(false);
+    setCheckedTaskIds(new Set(readCheckedTaskIds(taskStorageKey)));
+    setTasksHydrated(true);
+  }, [taskStorageKey]);
+
+  useEffect(() => {
+    if (!taskStorageKey || !tasksHydrated) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(taskStorageKey, JSON.stringify(Array.from(checkedTaskIds)));
+    } catch {
+      // Task checks are non-critical UI state; keep the dashboard interactive.
+    }
+  }, [checkedTaskIds, taskStorageKey, tasksHydrated]);
+
+  const completedTasks = useMemo(
+    () => recentTasks.filter((task) => checkedTaskIds.has(task.id)).length,
+    [checkedTaskIds]
+  );
+
+  const toggleTask = (taskId: string) => {
+    setCheckedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  };
 
   if (!ready || !user) {
     return (
@@ -226,68 +298,75 @@ export default function DashboardPage() {
                   fontWeight: 700,
                 }}
               >
-                {recentTasks.length} مهمة
+                {completedTasks}/{recentTasks.length} منجزة
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {recentTasks.map((t, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "0.75rem",
-                    padding: "0.85rem",
-                    background: "#f8f9fb",
-                    borderRadius: "12px",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  <input
-                    type="checkbox"
+              {recentTasks.map((t) => {
+                const checked = checkedTaskIds.has(t.id);
+                return (
+                  <div
+                    key={t.id}
                     style={{
-                      width: 16,
-                      height: 16,
-                      accentColor: "#c3152a",
-                      marginTop: "0.2rem",
-                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "0.75rem",
+                      padding: "0.85rem",
+                      background: checked ? "rgba(34,197,94,0.06)" : "#f8f9fb",
+                      borderRadius: "12px",
+                      border: `1px solid ${checked ? "rgba(34,197,94,0.22)" : "#e2e8f0"}`,
                     }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleTask(t.id)}
+                      aria-label={`تحديد إنجاز ${t.task}`}
                       style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        color: "#0a0a12",
-                        marginBottom: "0.25rem",
-                        lineHeight: 1.4,
+                        width: 16,
+                        height: 16,
+                        accentColor: "#c3152a",
+                        marginTop: "0.2rem",
+                        flexShrink: 0,
                       }}
-                    >
-                      {t.task}
-                    </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p
                         style={{
-                          background:
-                            t.priority === "عاجل"
-                              ? "rgba(239,68,68,0.1)"
-                              : "rgba(100,116,139,0.1)",
-                          color: t.priority === "عاجل" ? "#ef4444" : "#64748b",
-                          borderRadius: "5px",
-                          padding: "0.1rem 0.45rem",
-                          fontSize: "0.62rem",
-                          fontWeight: 700,
+                          fontSize: "0.8rem",
+                          fontWeight: 600,
+                          color: checked ? "#64748b" : "#0a0a12",
+                          marginBottom: "0.25rem",
+                          lineHeight: 1.4,
+                          textDecoration: checked ? "line-through" : "none",
                         }}
                       >
-                        {t.priority}
-                      </span>
-                      <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
-                        {t.due}
-                      </span>
+                        {t.task}
+                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span
+                          style={{
+                            background:
+                              t.priority === "عاجل"
+                                ? "rgba(239,68,68,0.1)"
+                                : "rgba(100,116,139,0.1)",
+                            color: t.priority === "عاجل" ? "#ef4444" : "#64748b",
+                            borderRadius: "5px",
+                            padding: "0.1rem 0.45rem",
+                            fontSize: "0.62rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {t.priority}
+                        </span>
+                        <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
+                          {t.due}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

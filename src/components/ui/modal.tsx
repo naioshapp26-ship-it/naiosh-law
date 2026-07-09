@@ -14,7 +14,7 @@ type Props = {
 };
 
 function inputTypeFor(field: FormField) {
-  if (field.type === "number" || field.type === "email" || field.type === "tel") {
+  if (field.type === "number" || field.type === "email" || field.type === "tel" || field.type === "date") {
     return field.type;
   }
   return "text";
@@ -208,7 +208,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
                     className="input-field"
-                    placeholder={f.placeholder ?? (f.type === "date" ? "مثال: 15 يوليو 2026" : undefined)}
+                    placeholder={f.placeholder}
                   />
                 )}
               </div>

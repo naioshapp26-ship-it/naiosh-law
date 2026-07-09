@@ -43,13 +43,25 @@ function readStoredRows(storageKey: string) {
     const parsed = raw ? JSON.parse(raw) : null;
     return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : null;
   } catch {
-    window.localStorage.removeItem(storageKey);
+    removeStoredRows(storageKey);
     return null;
   }
 }
 
+function removeStoredRows(storageKey: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(storageKey);
+  } catch {
+    // Storage may be unavailable in private or locked-down browser contexts.
+  }
+}
+
 function loadStoredRows(keys: ModuleStorageKeys) {
-  return readStoredRows(keys.scoped) ?? readStoredRows(keys.legacy);
+  return readStoredRows(keys.scoped);
 }
 
 function getRowIdentity(row: Record<string, unknown> | null) {
@@ -85,6 +97,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
   const [reportOpen, setReportOpen] = useState(false);
   const viewDialogRef = useRef<HTMLDivElement>(null);
   const reportDialogRef = useRef<HTMLDivElement>(null);
+  const toastTimersRef = useRef<number[]>([]);
   const userEmail = user?.email;
   const storageKeys = useMemo(
     () => (userEmail ? getModuleStorageKeys(slug, userEmail) : null),
@@ -94,7 +107,8 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    const timeoutId = window.setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+    toastTimersRef.current.push(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -104,6 +118,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
 
     const hydrationTimer = window.setTimeout(() => {
       setRows(loadStoredRows(storageKeys) ?? config.data);
+      removeStoredRows(storageKeys.legacy);
       setRowsHydrated(true);
     }, 0);
 
@@ -121,6 +136,13 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
       // Keep the in-memory table usable if browser storage quota is unavailable.
     }
   }, [rows, rowsHydrated, storageKeys]);
+
+  useEffect(() => {
+    return () => {
+      toastTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+      toastTimersRef.current = [];
+    };
+  }, []);
 
   useEffect(() => {
     const dialogRef = viewTarget ? viewDialogRef : reportOpen ? reportDialogRef : null;
@@ -248,6 +270,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
           aria-modal="true"
           aria-label={`تفاصيل ${config.entityName}`}
           tabIndex={-1}
+          className="module-detail-panel"
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -260,7 +283,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="module-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
@@ -268,7 +291,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div className="module-detail-actions" style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             {user.role === "admin" && (
               <button
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
@@ -291,7 +314,7 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
   return (
     <AppShell role={user.role} name={user.name}>
       {/* Toasts */}
-      <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="module-toast-stack" style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
             {t.text}
@@ -402,23 +425,22 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+                { icon: "📕", label: "تصدير PDF", desc: "قريبًا: ملف PDF مُنسّق وجاهز للطباعة", disabled: true },
+                { icon: "📗", label: "تصدير Excel", desc: "قريبًا: ملف XLSX للتحرير والتحليل", disabled: true },
+                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى", disabled: false },
               ].map((opt) => (
                 <button
                   type="button"
                   key={opt.label}
+                  disabled={opt.disabled}
                   onClick={() => {
                     if (opt.label.includes("CSV")) {
                       exportRowsAsCsv();
                       return;
                     }
-                    pushToast("success", `✅ جاري تحضير ${opt.label}...`);
-                    setReportOpen(false);
                   }}
-                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
+                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: opt.disabled ? "not-allowed" : "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s", opacity: opt.disabled ? 0.62 : 1 }}
+                  onMouseEnter={(e) => { if (!opt.disabled) { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; } }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}
                 >
                   <span style={{ fontSize: "1.5rem" }}>{opt.icon}</span>
@@ -426,7 +448,9 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
                     <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0a0a12" }}>{opt.label}</p>
                     <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.1rem" }}>{opt.desc}</p>
                   </div>
-                  <span style={{ marginInlineStart: "auto", color: "#c3152a", fontSize: "1.1rem" }}>←</span>
+                  <span style={{ marginInlineStart: "auto", color: opt.disabled ? "#94a3b8" : "#c3152a", fontSize: "1.1rem" }}>
+                    {opt.disabled ? "قريبًا" : "←"}
+                  </span>
                 </button>
               ))}
             </div>
@@ -438,6 +462,29 @@ export function ModuleShell({ slug, config }: { slug: string; config: ModuleConf
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+          .module-toast-stack {
+            bottom: 5.75rem !important;
+            inset-inline: 1rem !important;
+          }
+          .module-toast-stack > div {
+            max-width: none !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .module-detail-panel {
+            padding: 1.25rem !important;
+          }
+          .module-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .module-detail-actions {
+            flex-direction: column-reverse !important;
+          }
+          .module-detail-actions button {
+            width: 100%;
+          }
         }
       `}</style>
     </AppShell>

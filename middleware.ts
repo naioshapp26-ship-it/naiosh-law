@@ -9,6 +9,10 @@ function redirectToLogin(request: NextRequest) {
   return NextResponse.redirect(loginUrl);
 }
 
+function safeAppPath(value: string | null) {
+  return value === "/app" || value?.startsWith("/app/") ? value : "/app/dashboard";
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const user = await verifySessionToken(request.cookies.get(sessionCookieName)?.value);
@@ -30,7 +34,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname === "/login" && user) {
-    return NextResponse.redirect(new URL("/app/dashboard", request.url));
+    return NextResponse.redirect(new URL(safeAppPath(request.nextUrl.searchParams.get("next")), request.url));
   }
 
   return NextResponse.next();
