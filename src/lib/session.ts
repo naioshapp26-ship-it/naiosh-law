@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
 
@@ -10,12 +10,37 @@ export type SessionUser = {
   email: string;
 };
 
-function readStoredSession(): SessionUser | null {
+const sessionChangeEvent = "naiosh-law-session-change";
+
+type SessionSnapshot = string | null | undefined;
+
+function getClientSessionSnapshot(): SessionSnapshot {
   if (typeof window === "undefined") {
-    return null;
+    return undefined;
   }
 
-  const raw = window.localStorage.getItem(sessionKey);
+  return window.localStorage.getItem(sessionKey);
+}
+
+function getServerSessionSnapshot(): SessionSnapshot {
+  return undefined;
+}
+
+function subscribeToSessionChange(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(sessionChangeEvent, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(sessionChangeEvent, onStoreChange);
+  };
+}
+
+function notifySessionChange() {
+  window.dispatchEvent(new Event(sessionChangeEvent));
+}
+
+function parseStoredSession(raw: string | null): SessionUser | null {
   if (!raw) {
     return null;
   }
@@ -30,28 +55,33 @@ function readStoredSession(): SessionUser | null {
       return parsed as SessionUser;
     }
   } catch {
-    // Fall through and clear the corrupt value below.
+    return null;
   }
 
-  window.localStorage.removeItem(sessionKey);
   return null;
 }
 
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [ready, setReady] = useState(false);
+  const rawSession = useSyncExternalStore(
+    subscribeToSessionChange,
+    getClientSessionSnapshot,
+    getServerSessionSnapshot
+  );
+  const ready = rawSession !== undefined;
+  const user = useMemo(() => parseStoredSession(rawSession ?? null), [rawSession]);
 
   useEffect(() => {
-    setUser(readStoredSession());
-    setReady(true);
-  }, []);
+    if (ready && rawSession && !user) {
+      window.localStorage.removeItem(sessionKey);
+      notifySessionChange();
+      return;
+    }
 
-  useEffect(() => {
     if (ready && !user && redirectIfMissing) {
       router.replace("/login");
     }
-  }, [ready, user, redirectIfMissing, router]);
+  }, [ready, rawSession, user, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({
@@ -59,7 +89,7 @@ export function useSession(redirectIfMissing = false) {
       ready,
       logout: () => {
         window.localStorage.removeItem(sessionKey);
-        setUser(null);
+        notifySessionChange();
         router.replace("/login");
       },
     }),
