@@ -60,7 +60,7 @@ export function AppShell({ role, name, children }: Props) {
     };
   }, [drawerOpen]);
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Logo inside drawer (mobile) */}
       <div
@@ -380,7 +380,7 @@ export function AppShell({ role, name, children }: Props) {
               boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent />
+              {sidebarContent}
             </div>
           </div>
         )}

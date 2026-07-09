@@ -30,15 +30,6 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
-    setRows(config?.data ?? []);
-    setModalOpen(false);
-    setEditTarget(null);
-    setViewTarget(null);
-    setDeleteTarget(null);
-    setReportOpen(false);
-  }, [config]);
-
-  useEffect(() => {
     return () => {
       toastTimers.current.forEach(window.clearTimeout);
       toastTimers.current = [];
@@ -120,6 +111,9 @@ export function ModuleShell({ slug }: { slug: string }) {
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
+  const modalKey = editTarget
+    ? `edit-${slug}-${String(editTarget._id ?? (firstCol ? editTarget[firstCol] : ""))}`
+    : `add-${slug}`;
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -231,6 +225,7 @@ export function ModuleShell({ slug }: { slug: string }) {
 
       {/* Add/Edit Modal */}
       <Modal
+        key={modalKey}
         open={modalOpen}
         title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
         fields={config.formFields}

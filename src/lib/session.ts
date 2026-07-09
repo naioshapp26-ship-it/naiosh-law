@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
 
@@ -11,6 +11,7 @@ export type SessionUser = {
 };
 
 const roles = new Set<SessionUser["role"]>(["admin", "client"]);
+const sessionChangeEvent = "naiosh-law-session-change";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -52,6 +53,7 @@ export function readStoredSession(): SessionUser | null {
 export function writeStoredSession(user: SessionUser): boolean {
   try {
     window.localStorage.setItem(sessionKey, JSON.stringify(user));
+    window.dispatchEvent(new Event(sessionChangeEvent));
     return true;
   } catch {
     return false;
@@ -61,6 +63,7 @@ export function writeStoredSession(user: SessionUser): boolean {
 export function clearStoredSession() {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(sessionKey);
+    window.dispatchEvent(new Event(sessionChangeEvent));
   }
 }
 
@@ -72,15 +75,23 @@ export function getSafeAppPath(value: string | null | undefined) {
   return value;
 }
 
+function subscribeToSession(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(sessionChangeEvent, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(sessionChangeEvent, callback);
+  };
+}
+
+function getServerSessionSnapshot() {
+  return null;
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setUser(readStoredSession());
-    setReady(true);
-  }, []);
+  const user = useSyncExternalStore(subscribeToSession, readStoredSession, getServerSessionSnapshot);
+  const ready = true;
 
   useEffect(() => {
     if (ready && !user && redirectIfMissing) {
@@ -95,7 +106,6 @@ export function useSession(redirectIfMissing = false) {
       ready,
       logout: () => {
         clearStoredSession();
-        setUser(null);
         router.replace("/login");
       },
     }),
