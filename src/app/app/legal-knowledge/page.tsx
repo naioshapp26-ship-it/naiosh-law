@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { fetchArray } from "@/lib/fetch-array";
 import { useSession } from "@/lib/session";
 
 type Branch = {
@@ -22,13 +23,36 @@ export default function LegalKnowledgePage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [openBranch, setOpenBranch] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/legal-branches", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setBranches(data))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!ready || !user) return;
+    let cancelled = false;
+
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) {
+          setLoading(true);
+          setError("");
+        }
+      })
+      .then(() => fetchArray<Branch>("/api/legal-branches"))
+      .then((data) => {
+        if (!cancelled) setBranches(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setBranches([]);
+        setError("تعذر تحميل التصنيف القانوني");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, user]);
 
   if (!ready || !user) return null;
 
@@ -44,6 +68,10 @@ export default function LegalKnowledgePage() {
 
         {loading ? (
           <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+        ) : error ? (
+          <div className="card-white" style={{ padding: "1.25rem", color: "#c3152a", fontWeight: 700 }}>
+            {error}
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {branches.map((branch) => (
@@ -56,6 +84,8 @@ export default function LegalKnowledgePage() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: "0.75rem",
+                    flexWrap: "wrap",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -64,7 +94,7 @@ export default function LegalKnowledgePage() {
                   }}
                 >
                   <span style={{ fontWeight: 800, fontSize: "1rem", color: "#0a0a12" }}>{branch.name}</span>
-                  <span style={{ color: "#c3152a", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#c3152a", fontSize: "0.85rem", textAlign: "start" }}>
                     {branch.specializations.length} تخصص • {branch._count?.cases ?? 0} قضية {openBranch === branch.id ? "▲" : "▼"}
                   </span>
                 </button>

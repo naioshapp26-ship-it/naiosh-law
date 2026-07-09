@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { readJsonObject, requireAuth, requireWrite } from "@/lib/api-helpers";
+import { nullableString, readJsonObject, requiredString, requireAuth, requireWrite, withApiError } from "@/lib/api-helpers";
 import type { LibraryDocumentType } from "@/generated/prisma/client";
 
 const typeLabels: Record<LibraryDocumentType, string> = {
@@ -26,40 +26,45 @@ export async function GET(request: Request) {
   const type = searchParams.get("type");
   const branchId = searchParams.get("branchId");
   const q = searchParams.get("q");
+  const normalizedType = type && documentTypes.includes(type as LibraryDocumentType)
+    ? (type as LibraryDocumentType)
+    : null;
 
-  const items = await prisma.legalDocument.findMany({
-    where: {
-      ...(type ? { type: type as LibraryDocumentType } : {}),
-      ...(branchId ? { branchId } : {}),
-      ...(q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { summary: { contains: q, mode: "insensitive" } },
-              { tags: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    include: { branch: true, specialization: true },
-  });
+  return withApiError(async () => {
+    const items = await prisma.legalDocument.findMany({
+      where: {
+        ...(normalizedType ? { type: normalizedType } : {}),
+        ...(branchId ? { branchId } : {}),
+        ...(q
+          ? {
+              OR: [
+                { title: { contains: q, mode: "insensitive" } },
+                { summary: { contains: q, mode: "insensitive" } },
+                { tags: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      include: { branch: true, specialization: true },
+    });
 
-  return NextResponse.json(
-    items.map((d) => ({
-      id: d.id,
-      title: d.title,
-      type: typeLabels[d.type] ?? d.type,
-      category: d.category ?? "—",
-      branch: d.branch?.name ?? "—",
-      specialization: d.specialization?.name ?? "—",
-      summary: d.summary ?? "",
-      tags: d.tags ?? "",
-      status: d.status,
-      publishedAt: d.publishedAt ?? "—",
-      fileUrl: d.fileUrl,
-    }))
-  );
+    return NextResponse.json(
+      items.map((d) => ({
+        id: d.id,
+        title: d.title,
+        type: typeLabels[d.type] ?? d.type,
+        category: d.category ?? "—",
+        branch: d.branch?.name ?? "—",
+        specialization: d.specialization?.name ?? "—",
+        summary: d.summary ?? "",
+        tags: d.tags ?? "",
+        status: d.status,
+        publishedAt: d.publishedAt ?? "—",
+        fileUrl: d.fileUrl,
+      }))
+    );
+  }, "List legal documents");
 }
 
 export async function POST(request: Request) {
@@ -67,21 +72,25 @@ export async function POST(request: Request) {
   if (error) return error;
   const { body, error: bodyError } = await readJsonObject(request);
   if (bodyError) return bodyError;
+  const title = requiredString(body, { field: "title", label: "عنوان المستند" });
+  if (title.error) return title.error;
 
-  const created = await prisma.legalDocument.create({
-    data: {
-      title: String(body.title ?? ""),
-      type: normalizeDocumentType(body.type),
-      category: body.category ? String(body.category) : null,
-      branchId: body.branchId ? String(body.branchId) : null,
-      specializationId: body.specializationId ? String(body.specializationId) : null,
-      summary: body.summary ? String(body.summary) : null,
-      content: body.content ? String(body.content) : null,
-      fileUrl: body.fileUrl ? String(body.fileUrl) : null,
-      tags: body.tags ? String(body.tags) : null,
-      status: String(body.status ?? "منشور"),
-      publishedAt: body.publishedAt ? String(body.publishedAt) : null,
-    },
-  });
-  return NextResponse.json(created, { status: 201 });
+  return withApiError(async () => {
+    const created = await prisma.legalDocument.create({
+      data: {
+        title: title.value,
+        type: normalizeDocumentType(body.type),
+        category: nullableString(body.category),
+        branchId: nullableString(body.branchId),
+        specializationId: nullableString(body.specializationId),
+        summary: nullableString(body.summary),
+        content: nullableString(body.content),
+        fileUrl: nullableString(body.fileUrl),
+        tags: nullableString(body.tags),
+        status: nullableString(body.status) ?? "منشور",
+        publishedAt: nullableString(body.publishedAt),
+      },
+    });
+    return NextResponse.json(created, { status: 201 });
+  }, "Create legal document");
 }

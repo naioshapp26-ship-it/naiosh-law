@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naiosh Law
 
-## Getting Started
+Arabic RTL legal ERP built with Next.js App Router, React 19, Prisma 7, and PostgreSQL.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20+
+- PostgreSQL database
+- Environment variables from `.env.example`
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+JWT_SECRET="replace-with-a-long-random-secret"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`JWT_SECRET` is required in production. Development falls back to a local demo secret.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
 
-## Learn More
+Open `http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+## Verification
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Use these checks before shipping changes:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+JWT_SECRET=verification-secret npm run build
+npm audit --audit-level=moderate
+```
 
-## Deploy on Vercel
+## Database notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Prisma schema: `prisma/schema.prisma`
+- Migrations: `prisma/migrations`
+- Seed script: `prisma/seed.ts`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The seed script resets demo data and should only run against local or disposable environments.

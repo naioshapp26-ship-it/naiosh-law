@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { fetchArray } from "@/lib/fetch-array";
 import { useSession } from "@/lib/session";
 
 type Tab = "documents" | "articles" | "circulars";
@@ -50,18 +51,6 @@ const tabs: { key: Tab; label: string }[] = [
   { key: "articles", label: "المقالات" },
   { key: "circulars", label: "التعليمات الدائرية" },
 ];
-
-async function fetchArray<T>(url: string): Promise<T[]> {
-  const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) {
-    throw new Error(`Request failed: ${res.status}`);
-  }
-  const payload: unknown = await res.json();
-  if (!Array.isArray(payload)) {
-    throw new Error("Expected an array response");
-  }
-  return payload as T[];
-}
 
 export default function LegalLibraryPage() {
   const { user, ready } = useSession(true);
@@ -207,7 +196,7 @@ export default function LegalLibraryPage() {
         ) : (
           <>
             {tab === "documents" && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "1rem" }}>
                 {documents.map((d) => (
                   <div key={d.id} className="card-white" style={{ padding: "1.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
@@ -248,7 +237,7 @@ export default function LegalLibraryPage() {
             )}
 
             {tab === "articles" && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "1rem" }}>
                 {articles.map((a) => (
                   <div key={a.id} className="card-white" style={{ padding: "1.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
@@ -276,7 +265,7 @@ export default function LegalLibraryPage() {
             )}
 
             {tab === "circulars" && (
-              <div className="card-white" style={{ padding: "0.5rem 1rem" }}>
+              <div className="card-white" style={{ padding: "0.5rem clamp(0.75rem, 2vw, 1rem)" }}>
                 {circulars.map((c) => (
                   <div
                     key={c.id}
@@ -286,14 +275,14 @@ export default function LegalLibraryPage() {
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem" }}>
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <p style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700, marginBottom: "0.25rem" }}>
                           {c.circularNo} — {c.issuer}
                         </p>
                         <h3 style={{ fontWeight: 800, color: "#0a0a12", fontSize: "0.92rem", marginBottom: "0.35rem" }}>{c.title}</h3>
                         <p style={{ fontSize: "0.82rem", color: "#475569", lineHeight: 1.6 }}>{c.summary}</p>
                       </div>
-                      <div style={{ textAlign: "left", flexShrink: 0 }}>
+                      <div style={{ textAlign: "left", flexShrink: 0, minWidth: "fit-content" }}>
                         <p style={{ fontSize: "0.75rem", color: "#64748b" }}>تاريخ الإصدار: {c.issueDate}</p>
                         <p style={{ fontSize: "0.75rem", color: "#64748b" }}>ساري من: {c.effectiveDate}</p>
                         <span

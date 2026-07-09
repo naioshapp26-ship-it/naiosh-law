@@ -429,10 +429,10 @@ export function AppShell({ role, name, children }: Props) {
             />
             {/* Drawer panel */}
             <div style={{
-              position: "relative", zIndex: 1,
+              position: "absolute", insetInlineEnd: 0, zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
               {renderSidebarContent()}

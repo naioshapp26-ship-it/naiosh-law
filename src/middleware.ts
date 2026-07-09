@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { AUTH_COOKIE } from "@/lib/auth";
-
-const DEV_JWT_SECRET = "naiosh-law-dev-secret-change-in-production";
+import { AUTH_COOKIE, DEV_JWT_SECRET } from "@/lib/auth-constants";
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;

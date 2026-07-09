@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { readJsonObject, requireWrite } from "@/lib/api-helpers";
+import { nullableString, readJsonObject, requireWrite, withApiError } from "@/lib/api-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,25 +11,29 @@ export async function PATCH(request: Request, { params }: Params) {
   const { body, error: bodyError } = await readJsonObject(request);
   if (bodyError) return bodyError;
 
-  const updated = await prisma.client.update({
-    where: { id },
-    data: {
-      name: body.name !== undefined ? String(body.name) : undefined,
-      type: body.type !== undefined ? String(body.type) : undefined,
-      phone: body.phone !== undefined ? String(body.phone) || null : undefined,
-      email: body.email !== undefined ? String(body.email) || null : undefined,
-      nationalId: body.nationalId !== undefined ? String(body.nationalId) || null : undefined,
-      notes: body.notes !== undefined ? String(body.notes) || null : undefined,
-      status: body.status !== undefined ? String(body.status) : undefined,
-    },
-  });
-  return NextResponse.json(updated);
+  return withApiError(async () => {
+    const updated = await prisma.client.update({
+      where: { id },
+      data: {
+        name: body.name !== undefined ? String(body.name).trim() : undefined,
+        type: body.type !== undefined ? String(body.type).trim() : undefined,
+        phone: body.phone !== undefined ? nullableString(body.phone) : undefined,
+        email: body.email !== undefined ? nullableString(body.email) : undefined,
+        nationalId: body.nationalId !== undefined ? nullableString(body.nationalId) : undefined,
+        notes: body.notes !== undefined ? nullableString(body.notes) : undefined,
+        status: body.status !== undefined ? String(body.status).trim() : undefined,
+      },
+    });
+    return NextResponse.json(updated);
+  }, "Update client");
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  await prisma.client.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  return withApiError(async () => {
+    await prisma.client.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  }, "Delete client");
 }

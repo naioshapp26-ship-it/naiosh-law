@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { fetchArray } from "@/lib/fetch-array";
 import { useSession } from "@/lib/session";
 
 type Professional = {
@@ -29,16 +30,45 @@ export default function ProfessionalNetworkPage() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [network, setNetwork] = useState<NetworkItem[]>([]);
   const [tab, setTab] = useState<"professionals" | "network">("professionals");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/professionals", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/professional-network", { credentials: "include" }).then((r) => r.json()),
-    ]).then(([pros, net]) => {
-      setProfessionals(pros);
-      setNetwork(net);
-    });
-  }, []);
+    if (!ready || !user) return;
+    let cancelled = false;
+
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) {
+          setLoading(true);
+          setError("");
+        }
+      })
+      .then(() =>
+        Promise.all([
+          fetchArray<Professional>("/api/professionals"),
+          fetchArray<NetworkItem>("/api/professional-network"),
+        ])
+      )
+      .then(([pros, net]) => {
+        if (cancelled) return;
+        setProfessionals(pros);
+        setNetwork(net);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setProfessionals([]);
+        setNetwork([]);
+        setError("تعذر تحميل بيانات الشبكة المهنية");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, user]);
 
   if (!ready || !user) return null;
 
@@ -77,8 +107,14 @@ export default function ProfessionalNetworkPage() {
           ))}
         </div>
 
-        {tab === "professionals" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+        {loading ? (
+          <p style={{ color: "#64748b" }}>جاري التحميل...</p>
+        ) : error ? (
+          <div className="card-white" style={{ padding: "1.25rem", color: "#c3152a", fontWeight: 700 }}>
+            {error}
+          </div>
+        ) : tab === "professionals" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: "1rem" }}>
             {professionals.map((p) => (
               <div key={p.id} className="card-white" style={{ padding: "1.25rem" }}>
                 <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{p.name}</h3>
@@ -104,6 +140,8 @@ export default function ProfessionalNetworkPage() {
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "0.5rem",
                     padding: "0.85rem 0",
                     borderBottom: "1px solid #f1f5f9",
                     fontSize: "0.85rem",

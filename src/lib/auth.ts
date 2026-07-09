@@ -1,9 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { UserRole } from "@/generated/prisma/client";
+import { AUTH_COOKIE, DEV_JWT_SECRET } from "@/lib/auth-constants";
 
-export const AUTH_COOKIE = "naiosh-auth-token";
-const DEV_JWT_SECRET = "naiosh-law-dev-secret-change-in-production";
+export { AUTH_COOKIE };
 
 export class AuthConfigurationError extends Error {
   constructor(message: string) {
@@ -18,6 +18,8 @@ export type AuthPayload = {
   name: string;
   role: UserRole;
 };
+
+const userRoles: UserRole[] = ["admin", "lawyer", "consultant", "judge", "client", "industrial_agent", "employee"];
 
 function getSecret() {
   const secret = process.env.JWT_SECRET;
@@ -40,6 +42,9 @@ export async function verifyToken(token: string): Promise<AuthPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
     if (!payload.sub || typeof payload.email !== "string" || typeof payload.name !== "string") {
+      return null;
+    }
+    if (!userRoles.includes(payload.role as UserRole)) {
       return null;
     }
     return {
