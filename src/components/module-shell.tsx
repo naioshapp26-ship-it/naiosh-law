@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
+import { canAccessModule } from "@/lib/module-routing";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
@@ -21,12 +22,65 @@ function createRowId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+const rowIdentityFields = [
+  "_id",
+  "id",
+  "caseNo",
+  "jobId",
+  "requestId",
+  "invoiceNo",
+  "code",
+  "ref",
+  "endpoint",
+  "email",
+  "name",
+  "title",
+];
+
+function getRowIdentity(row: Record<string, unknown>) {
+  for (const field of rowIdentityFields) {
+    const value = row[field];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return `${field}:${String(value)}`;
+    }
+  }
+
+  return null;
+}
+
+function normalizeRows(rows: Record<string, unknown>[], slug: string) {
+  return rows.map((row, index) => ({
+    ...row,
+    _id: row._id ?? getRowIdentity(row) ?? `${slug}:seed:${index}`,
+  }));
+}
+
+function toCsvValue(value: unknown) {
+  const text = String(value ?? "").replace(/\r?\n/g, " ");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadTextFile(filename: string, mimeType: string, content: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const storageKey = useMemo(() => `naiosh-law:module:${slug}:rows`, [slug]);
+  const integrationHealthChecked = useRef(false);
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [rows, setRows] = useState<Record<string, unknown>[]>(() =>
+    config ? normalizeRows(config.data, slug) : []
+  );
   const [rowsHydrated, setRowsHydrated] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
@@ -60,16 +114,25 @@ export function ModuleShell({ slug }: { slug: string }) {
         if (storedRows) {
           const parsed = JSON.parse(storedRows);
           if (Array.isArray(parsed)) {
-            setRows(parsed.filter((row) => row && typeof row === "object"));
+            setRows(
+              normalizeRows(
+                parsed.filter((row) => row && typeof row === "object") as Record<string, unknown>[],
+                slug
+              )
+            );
             setRowsHydrated(true);
             return;
           }
         }
       } catch {
-        window.localStorage.removeItem(storageKey);
+        try {
+          window.localStorage.removeItem(storageKey);
+        } catch {
+          // Storage can be disabled; fall back to in-memory demo data.
+        }
       }
 
-      setRows(config.data);
+      setRows(normalizeRows(config.data, slug));
       setRowsHydrated(true);
     };
 
@@ -79,15 +142,102 @@ export function ModuleShell({ slug }: { slug: string }) {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [config, storageKey]);
+  }, [config, slug, storageKey]);
 
   useEffect(() => {
     if (!config || !rowsHydrated) {
       return;
     }
 
-    window.localStorage.setItem(storageKey, JSON.stringify(rows));
-  }, [config, rows, rowsHydrated, storageKey]);
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(rows));
+    } catch {
+      pushToast("error", "تعذر حفظ التغييرات محليًا. قد تكون مساحة التخزين ممتلئة.");
+    }
+  }, [config, pushToast, rows, rowsHydrated, storageKey]);
+
+  useEffect(() => {
+    const syncRowsFromStorage = (event: StorageEvent) => {
+      if (event.key !== storageKey || !config || event.newValue === null) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(event.newValue);
+        if (Array.isArray(parsed)) {
+          setRows(
+            normalizeRows(
+              parsed.filter((row) => row && typeof row === "object") as Record<string, unknown>[],
+              slug
+            )
+          );
+        }
+      } catch {
+        // Ignore malformed cross-tab updates and keep the current in-memory rows.
+      }
+    };
+
+    window.addEventListener("storage", syncRowsFromStorage);
+    return () => window.removeEventListener("storage", syncRowsFromStorage);
+  }, [config, slug, storageKey]);
+
+  useEffect(() => {
+    if (slug !== "integrations" || !rowsHydrated || integrationHealthChecked.current) {
+      return;
+    }
+
+    integrationHealthChecked.current = true;
+
+    const checkIntegrations = async () => {
+      const updates = await Promise.all(
+        rows.map(async (row) => {
+          const endpoint = typeof row.endpoint === "string" ? row.endpoint : "";
+          if (!endpoint.startsWith("/api/")) {
+            return null;
+          }
+
+          try {
+            const response = await fetch(endpoint, { cache: "no-store" });
+            const payload = (await response.json()) as { status?: unknown; checkedAt?: unknown };
+
+            return {
+              endpoint,
+              status: response.ok && typeof payload.status === "string" ? payload.status : "منقطع",
+              lastChecked:
+                response.ok && typeof payload.checkedAt === "string"
+                  ? new Date(payload.checkedAt).toLocaleTimeString("ar-EG", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "فشل الفحص",
+            };
+          } catch {
+            return { endpoint, status: "منقطع", lastChecked: "فشل الفحص" };
+          }
+        })
+      );
+
+      const updatesByEndpoint = new Map(
+        updates.filter((item): item is { endpoint: string; status: string; lastChecked: string } => item !== null)
+          .map((item) => [item.endpoint, item])
+      );
+
+      if (updatesByEndpoint.size === 0) {
+        return;
+      }
+
+      setRows((prev) =>
+        prev.map((row) => {
+          const endpoint = typeof row.endpoint === "string" ? row.endpoint : "";
+          const update = updatesByEndpoint.get(endpoint);
+          return update ? { ...row, status: update.status, lastChecked: update.lastChecked } : row;
+        })
+      );
+      pushToast("success", "تم فحص حالة التكاملات عبر واجهات API التجريبية.");
+    };
+
+    void checkIntegrations();
+  }, [pushToast, rows, rowsHydrated, slug]);
 
   if (!ready || !user) {
     return (
@@ -112,13 +262,30 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   }
 
+  if (!canAccessModule(user.role, slug)) {
+    return (
+      <AppShell role={user.role} name={user.name}>
+        <div style={{ textAlign: "center", padding: "5rem 1rem", color: "#64748b" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔒</div>
+          <h2 style={{ fontWeight: 800, marginBottom: "0.5rem", color: "#0a0a12" }}>
+            لا تملك صلاحية الوصول
+          </h2>
+          <p>هذه الوحدة مخصصة للمستخدمين الإداريين في النسخة التجريبية.</p>
+        </div>
+      </AppShell>
+    );
+  }
+
   /* ── Handlers ── */
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = (data: Record<string, unknown>) => {
     if (editTarget) {
-      setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
+      const targetId = getRowIdentity(editTarget);
+      setRows((prev) =>
+        prev.map((row) => (targetId && getRowIdentity(row) === targetId ? { ...row, ...data } : row))
+      );
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
       const newRow = { ...data, _id: createRowId() };
@@ -133,7 +300,8 @@ export function ModuleShell({ slug }: { slug: string }) {
     if (!deleteTarget) {
       return;
     }
-    setRows((prev) => prev.filter((r) => r !== deleteTarget));
+    const targetId = getRowIdentity(deleteTarget);
+    setRows((prev) => prev.filter((row) => !targetId || getRowIdentity(row) !== targetId));
     pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
     setDeleteTarget(null);
   };
@@ -142,6 +310,25 @@ export function ModuleShell({ slug }: { slug: string }) {
   const deleteMsg = deleteTarget
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
+
+  const exportRows = (format: "csv" | "excel") => {
+    const headers = config.columns.map((column) => column.label);
+    const csvRows = [
+      headers.map(toCsvValue).join(","),
+      ...rows.map((row) => config.columns.map((column) => toCsvValue(row[column.key])).join(",")),
+    ];
+    const content = `\uFEFF${csvRows.join("\n")}`;
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    downloadTextFile(
+      `${slug}-${timestamp}.${format === "excel" ? "xls" : "csv"}`,
+      format === "excel" ? "application/vnd.ms-excel;charset=utf-8" : "text/csv;charset=utf-8",
+      content
+    );
+
+    pushToast("success", `✅ تم تصدير ${rows.length} سجل بنجاح`);
+    setReportOpen(false);
+  };
 
   /* ── View modal content ── */
   const renderViewModal = () => {
@@ -152,13 +339,18 @@ export function ModuleShell({ slug }: { slug: string }) {
         onClick={() => setViewTarget(null)}
       >
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="view-dialog-title"
           style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
+            <h2 id="view-dialog-title" style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
+              aria-label="إغلاق التفاصيل"
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
@@ -173,12 +365,14 @@ export function ModuleShell({ slug }: { slug: string }) {
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             {user.role === "admin" && (
               <button
+                type="button"
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
                 className="btn-primary"
                 style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
               >✏️ تعديل</button>
             )}
             <button
+              type="button"
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
@@ -284,25 +478,28 @@ export function ModuleShell({ slug }: { slug: string }) {
           onClick={() => setReportOpen(false)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reports-dialog-title"
             style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
+              <h2 id="reports-dialog-title" style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
+              <button type="button" onClick={() => setReportOpen(false)} aria-label="إغلاق التصدير" style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
             </div>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
+                { icon: "📗", label: "تصدير Excel", desc: "ملف متوافق مع Excel للتحرير والتحليل", format: "excel" as const },
+                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى", format: "csv" as const },
               ].map((opt) => (
                 <button
+                  type="button"
                   key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
+                  onClick={() => exportRows(opt.format)}
                   style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}

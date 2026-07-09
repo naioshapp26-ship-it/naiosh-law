@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { clearSessionUser } from "@/lib/session";
-import { getModuleHref, moduleIcons, operationalModules } from "@/lib/module-routing";
+import { logoutSessionUser } from "@/lib/session";
+import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/lib/module-routing";
 
 type Props = {
   role: "admin" | "client";
@@ -16,9 +16,11 @@ export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const visibleModules = getVisibleOperationalModules(role);
+  const primaryMobileLinks = visibleModules.slice(0, 3);
 
-  const logout = () => {
-    clearSessionUser();
+  const logout = async () => {
+    await logoutSessionUser();
     router.replace("/login");
   };
 
@@ -101,7 +103,7 @@ export function AppShell({ role, name, children }: Props) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {operationalModules.map((item) => {
+        {visibleModules.map((item) => {
           const href = getModuleHref(item.slug);
           const active = pathname === href;
           return (
@@ -284,7 +286,7 @@ export function AppShell({ role, name, children }: Props) {
             }}>الوحدات التشغيلية</p>
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {operationalModules.map((item) => {
+              {visibleModules.map((item) => {
                 const href = getModuleHref(item.slug);
                 const active = pathname === href;
                 return (
@@ -365,10 +367,12 @@ export function AppShell({ role, name, children }: Props) {
         justifyContent: "space-around",
       }}>
         {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
+          { href: "/app/dashboard", icon: "⊞", label: "الرئيسية" },
+          ...primaryMobileLinks.map((item) => ({
+            href: getModuleHref(item.slug),
+            icon: moduleIcons[item.slug] ?? "📌",
+            label: item.title.replace(/^إدارة\s+/, "").slice(0, 10),
+          })),
         ].map((item) => {
           const active = pathname === item.href;
           return (

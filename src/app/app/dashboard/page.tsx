@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
-import { operationalModules } from "@/lib/module-routing";
+import { getVisibleOperationalModules } from "@/lib/module-routing";
 import { useSession } from "@/lib/session";
 
 const kpis = [
@@ -60,6 +60,14 @@ export default function DashboardPage() {
     );
   }
 
+  const visibleModules = getVisibleOperationalModules(user.role);
+  const today = new Date().toLocaleDateString("ar-EG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <AppShell role={user.role} name={user.name}>
       <div style={{ maxWidth: 1200 }}>
@@ -69,7 +77,7 @@ export default function DashboardPage() {
             لوحة التحكم
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            الأربعاء، 8 يوليو 2026 — مرحبًا {user.name}
+            {today} — مرحبًا {user.name}
           </p>
         </div>
 
@@ -304,14 +312,14 @@ export default function DashboardPage() {
               الوحدات التشغيلية
             </h2>
             <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-              {operationalModules.length} وحدة متاحة
+              {visibleModules.length} وحدة متاحة
             </span>
           </div>
           <div
             style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}
             className="mod-grid"
           >
-            {operationalModules.map((item) => (
+            {visibleModules.map((item) => (
               <ModuleCard key={item.slug} item={item} />
             ))}
           </div>

@@ -55,6 +55,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="module-modal-title"
         style={{
           background: "#fff",
           borderRadius: "20px",
@@ -77,9 +80,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             marginBottom: "1.75rem",
           }}
         >
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
+          <h2 id="module-modal-title" style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="إغلاق النافذة"
             style={{
               width: 34,
               height: 34,

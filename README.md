@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naiosh Law
+
+Arabic RTL demo application for a legal practice management platform built with
+Next.js App Router. The app includes marketing pages, demo authentication,
+dashboard views, operational modules, local demo CRUD persistence, and mock
+integration API endpoints.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies from the lockfile:
+
+```bash
+npm ci
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Validation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm audit --audit-level=moderate
+```
 
-## Learn More
+## Demo architecture
 
-To learn more about Next.js, take a look at the following resources:
+- Demo users are authenticated through `/api/auth/login`.
+- Protected `/app` routes are guarded by middleware using an httpOnly demo
+  session cookie.
+- Client UI state mirrors the session in `localStorage` for hydration and
+  cross-tab updates.
+- Operational module rows are prototype data persisted in browser
+  `localStorage`; there is no production database or ORM in this repository.
+- Mock integrations are exposed through `/api/[integration]` for supported
+  demo slugs such as `/api/sms`, `/api/email`, and `/api/payments`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Important paths
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `src/app` - App Router pages and API routes
+- `src/components` - reusable UI and module shells
+- `src/data` - module metadata and seed data
+- `src/lib` - routing, session, and demo auth helpers
 
-## Deploy on Vercel
+## Production notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This repository is currently a frontend-focused demo. Before using it for real
+customer data, replace demo auth with signed server sessions, add a persistent
+database-backed data layer, enforce permissions server-side, and add rate
+limiting/schema validation to API endpoints.

@@ -1,10 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers } from "@/data/auth";
-import { saveSessionUser } from "@/lib/session";
+import { loginSession, useSession } from "@/lib/session";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -23,36 +22,58 @@ const perks = [
   "تقارير تنفيذية فورية",
 ];
 
+function getNextPath() {
+  if (typeof window === "undefined") {
+    return "/app/dashboard";
+  }
+
+  const nextPath = new URLSearchParams(window.location.search).get("next");
+  return nextPath?.startsWith("/app") ? nextPath : "/app/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const { user, ready } = useSession();
   const [email, setEmail] = useState("admin@naioshlaw.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [quickRole, setQuickRole] = useState<"admin" | "client" | null>(null);
   const [showPass, setShowPass] = useState(false);
+
+  useEffect(() => {
+    if (ready && user) {
+      router.replace(getNextPath());
+    }
+  }, [ready, router, user]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
+    const result = await loginSession({ email, password });
+
+    if (!result.ok) {
       setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
       setLoading(false);
       return;
     }
-    saveSessionUser({ role: user.role, name: user.name, email: user.email });
-    router.push("/app/dashboard");
+
+    router.push(getNextPath());
   };
 
-  const fillDemo = (role: "admin" | "client") => {
-    const user = demoUsers.find((u) => u.role === role)!;
-    setEmail(user.email);
-    setPassword(user.password);
+  const loginDemo = async (role: "admin" | "client") => {
     setError("");
+    setQuickRole(role);
+    const result = await loginSession({ demo: true, role });
+    setQuickRole(null);
+
+    if (!result.ok) {
+      setError("تعذر الدخول بالحساب التجريبي. حاول مرة أخرى.");
+      return;
+    }
+
+    router.push(getNextPath());
   };
 
   return (
@@ -279,17 +300,20 @@ export default function LoginPage() {
             </p>
             <div className="demo-login-buttons" style={{ display: "flex", gap: "0.75rem" }}>
               <button
-                onClick={() => fillDemo("admin")}
+                type="button"
+                onClick={() => loginDemo("admin")}
+                disabled={quickRole !== null || loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
                   borderRadius: "10px",
                   border: "1.5px solid #e2e8f0",
                   background: "#f8f9fb",
-                  cursor: "pointer",
+                  cursor: quickRole || loading ? "not-allowed" : "pointer",
                   fontFamily: "var(--font-cairo)",
                   transition: "all 0.2s",
                   textAlign: "center",
+                  opacity: quickRole || loading ? 0.65 : 1,
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
@@ -301,22 +325,25 @@ export default function LoginPage() {
                 }}
               >
                 <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  ⚙️ Admin
+                  {quickRole === "admin" ? "جاري الدخول..." : "⚙️ Admin"}
                 </span>
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>مدير النظام</span>
               </button>
               <button
-                onClick={() => fillDemo("client")}
+                type="button"
+                onClick={() => loginDemo("client")}
+                disabled={quickRole !== null || loading}
                 style={{
                   flex: 1,
                   padding: "0.65rem",
                   borderRadius: "10px",
                   border: "1.5px solid #e2e8f0",
                   background: "#f8f9fb",
-                  cursor: "pointer",
+                  cursor: quickRole || loading ? "not-allowed" : "pointer",
                   fontFamily: "var(--font-cairo)",
                   transition: "all 0.2s",
                   textAlign: "center",
+                  opacity: quickRole || loading ? 0.65 : 1,
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "#c3152a";
@@ -328,7 +355,7 @@ export default function LoginPage() {
                 }}
               >
                 <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a12", display: "block" }}>
-                  👤 Client
+                  {quickRole === "client" ? "جاري الدخول..." : "👤 Client"}
                 </span>
                 <span style={{ fontSize: "0.68rem", color: "#64748b" }}>عميل تجريبي</span>
               </button>
@@ -490,7 +517,7 @@ export default function LoginPage() {
               lineHeight: 1.6,
             }}
           >
-            هذا نظام تجريبي للعرض — استخدم أي من الحسابات أعلاه للدخول الفوري
+            هذا نظام تجريبي للعرض — استخدم الدخول السريع أو بيانات الحسابات التجريبية المعتمدة
           </motion.p>
         </motion.div>
       </div>

@@ -26,6 +26,10 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
       onClick={onCancel}
     >
       <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
         className="card-white"
         style={{ maxWidth: 400, width: "90%", padding: "2rem", animation: "fade-in-up 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
@@ -46,14 +50,15 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
         >
           🗑️
         </div>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
+        <h3 id="confirm-dialog-title" style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
           {title}
         </h3>
-        <p style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
+        <p id="confirm-dialog-message" style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.7, marginBottom: "1.75rem" }}>
           {message}
         </p>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button
+            type="button"
             onClick={onCancel}
             style={{
               flex: 1,
@@ -71,6 +76,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
             إلغاء
           </button>
           <button
+            type="button"
             onClick={onConfirm}
             disabled={loading}
             style={{

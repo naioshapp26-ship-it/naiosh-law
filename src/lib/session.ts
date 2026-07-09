@@ -3,54 +3,124 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sessionKey } from "@/data/auth";
-
-export type SessionUser = {
-  role: "admin" | "client";
-  name: string;
-  email: string;
-};
+import { isSessionUser, type SessionUser } from "@/lib/session-shared";
 
 const sessionChangedEvent = "naiosh-law:session-changed";
+
+type LoginResult =
+  | { ok: true; user: SessionUser }
+  | { ok: false; error: string };
+
+function notifySessionChanged() {
+  window.dispatchEvent(new Event(sessionChangedEvent));
+}
 
 export function readStoredUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const raw = window.localStorage.getItem(sessionKey);
-  if (!raw) {
-    return null;
-  }
-
   try {
-    const parsed = JSON.parse(raw) as Partial<SessionUser>;
-    if (
-      (parsed.role === "admin" || parsed.role === "client") &&
-      typeof parsed.name === "string" &&
-      typeof parsed.email === "string"
-    ) {
-      return {
-        role: parsed.role,
-        name: parsed.name,
-        email: parsed.email,
-      };
+    const raw = window.localStorage.getItem(sessionKey);
+    if (!raw) {
+      return null;
     }
+
+    const parsed = JSON.parse(raw);
+    if (isSessionUser(parsed)) {
+      return parsed;
+    }
+
+    window.localStorage.removeItem(sessionKey);
   } catch {
-    // Clear invalid demo sessions so a corrupt localStorage value cannot break the app.
+    try {
+      window.localStorage.removeItem(sessionKey);
+    } catch {
+      // Storage can be unavailable in private browsing or hardened environments.
+    }
   }
 
-  window.localStorage.removeItem(sessionKey);
   return null;
 }
 
 export function saveSessionUser(user: SessionUser) {
-  window.localStorage.setItem(sessionKey, JSON.stringify(user));
-  window.dispatchEvent(new Event(sessionChangedEvent));
+  try {
+    window.localStorage.setItem(sessionKey, JSON.stringify(user));
+  } catch {
+    // The cookie remains the source of truth if localStorage is not writable.
+  }
+  notifySessionChanged();
 }
 
 export function clearSessionUser() {
-  window.localStorage.removeItem(sessionKey);
-  window.dispatchEvent(new Event(sessionChangedEvent));
+  try {
+    window.localStorage.removeItem(sessionKey);
+  } catch {
+    // Ignore storage failures during logout; the server cookie is cleared separately.
+  }
+  notifySessionChanged();
+}
+
+async function fetchSessionUser(): Promise<SessionUser | null> {
+  try {
+    const response = await fetch("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as { user?: unknown };
+    return isSessionUser(payload.user) ? payload.user : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function loginSession(payload: {
+  email?: string;
+  password?: string;
+  role?: "admin" | "client";
+  demo?: boolean;
+}): Promise<LoginResult> {
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(payload),
+    });
+    const result = (await response.json()) as { user?: unknown; error?: unknown };
+
+    if (!response.ok || !isSessionUser(result.user)) {
+      return {
+        ok: false,
+        error:
+          typeof result.error === "string"
+            ? result.error
+            : "تعذر تسجيل الدخول. تحقق من البيانات وحاول مرة أخرى.",
+      };
+    }
+
+    saveSessionUser(result.user);
+    return { ok: true, user: result.user };
+  } catch {
+    return { ok: false, error: "تعذر الاتصال بخدمة تسجيل الدخول." };
+  }
+}
+
+export async function logoutSessionUser() {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    });
+  } catch {
+    // Local logout still proceeds when the network request fails.
+  } finally {
+    clearSessionUser();
+  }
 }
 
 export function useSession(redirectIfMissing = false) {
@@ -59,9 +129,29 @@ export function useSession(redirectIfMissing = false) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let active = true;
+
     const syncSession = () => {
-      setUser(readStoredUser());
-      setReady(true);
+      const storedUser = readStoredUser();
+      if (storedUser) {
+        setUser(storedUser);
+        setReady(true);
+        return;
+      }
+
+      setReady(false);
+      void fetchSessionUser().then((serverUser) => {
+        if (!active) {
+          return;
+        }
+
+        if (serverUser) {
+          saveSessionUser(serverUser);
+        }
+
+        setUser(serverUser);
+        setReady(true);
+      });
     };
 
     syncSession();
@@ -69,6 +159,7 @@ export function useSession(redirectIfMissing = false) {
     window.addEventListener(sessionChangedEvent, syncSession);
 
     return () => {
+      active = false;
       window.removeEventListener("storage", syncSession);
       window.removeEventListener(sessionChangedEvent, syncSession);
     };
@@ -84,8 +175,8 @@ export function useSession(redirectIfMissing = false) {
     () => ({
       user,
       ready,
-      logout: () => {
-        clearSessionUser();
+      logout: async () => {
+        await logoutSessionUser();
         setUser(null);
         router.replace("/login");
       },

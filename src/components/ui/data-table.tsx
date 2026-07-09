@@ -16,8 +16,25 @@ type Props = {
 const PAGE_SIZE = 10;
 
 function getRowKey(row: Record<string, unknown>, index: number) {
-  const stableId = row._id ?? row.id ?? row.caseNo ?? row.jobId ?? row.requestId ?? row.invoiceNo ?? row.code;
+  const stableId =
+    row._id ??
+    row.id ??
+    row.caseNo ??
+    row.jobId ??
+    row.requestId ??
+    row.invoiceNo ??
+    row.code ??
+    row.ref ??
+    row.endpoint ??
+    row.email ??
+    row.name ??
+    row.title;
   return stableId ? String(stableId) : `row-${index}`;
+}
+
+function toSortableNumber(value: unknown) {
+  const numericValue = Number(String(value ?? "").replace(/[,\s]/g, ""));
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
 export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlaceholder = "بحث في السجلات..." }: Props) {
@@ -48,12 +65,21 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
     () =>
       sortKey
         ? [...filtered].sort((a, b) => {
+            const column = columns.find((item) => item.key === sortKey);
+            if (column?.type === "currency" || column?.type === "number") {
+              const va = toSortableNumber(a[sortKey]);
+              const vb = toSortableNumber(b[sortKey]);
+              if (va !== null && vb !== null) {
+                return sortAsc ? va - vb : vb - va;
+              }
+            }
+
             const va = String(a[sortKey] ?? "");
             const vb = String(b[sortKey] ?? "");
             return sortAsc ? va.localeCompare(vb, "ar") : vb.localeCompare(va, "ar");
           })
         : filtered,
-    [filtered, sortAsc, sortKey]
+    [columns, filtered, sortAsc, sortKey]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
