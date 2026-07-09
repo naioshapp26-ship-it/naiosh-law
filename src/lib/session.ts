@@ -1,38 +1,91 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { sessionKey } from "@/data/auth";
+import { usePathname, useRouter } from "next/navigation";
+import { sessionStorageKey, type SessionUser } from "@/data/auth";
 
-export type SessionUser = {
-  role: "admin" | "client";
-  name: string;
-  email: string;
-};
+function readSessionMirror() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(sessionStorageKey);
+    return raw ? (JSON.parse(raw) as SessionUser) : null;
+  } catch {
+    window.localStorage.removeItem(sessionStorageKey);
+    return null;
+  }
+}
+
+function writeSessionMirror(user: SessionUser | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (user) {
+      window.localStorage.setItem(sessionStorageKey, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(sessionStorageKey);
+    }
+  } catch {
+    // Browser storage can be unavailable in private or locked-down contexts.
+  }
+}
 
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user] = useState<SessionUser | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    const raw = window.localStorage.getItem(sessionKey);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
-  });
-  const ready = true;
+  const pathname = usePathname();
+  const [user, setUser] = useState<SessionUser | null>(() => readSessionMirror());
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!user && redirectIfMissing) {
-      router.replace("/login");
+    let cancelled = false;
+
+    async function validateSession() {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Session is missing or expired.");
+        }
+
+        const data = (await response.json()) as { user?: SessionUser };
+        if (!data.user) {
+          throw new Error("Session response did not include a user.");
+        }
+
+        if (!cancelled) {
+          setUser(data.user);
+          writeSessionMirror(data.user);
+          setReady(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setUser(null);
+          writeSessionMirror(null);
+          setReady(true);
+          if (redirectIfMissing) {
+            router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+          }
+        }
+      }
     }
-  }, [user, redirectIfMissing, router]);
+
+    void validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({
       user,
       ready,
       logout: () => {
-        window.localStorage.removeItem(sessionKey);
+        writeSessionMirror(null);
+        void fetch("/api/auth/logout", { method: "POST" });
         router.replace("/login");
       },
     }),

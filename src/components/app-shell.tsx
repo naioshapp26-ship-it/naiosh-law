@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { modules } from "@/data/modules";
-import { sessionKey } from "@/data/auth";
+import { getModuleHref, getVisibleOperationalModules, moduleIcons } from "@/data/modules";
+import { sessionStorageKey } from "@/data/auth";
 
 type Props = {
   role: "admin" | "client";
@@ -12,30 +12,11 @@ type Props = {
   children: React.ReactNode;
 };
 
-const iconMap: Record<string, string> = {
-  "dashboard":             "⊞",
-  "case-management":       "⚖️",
-  "clients-management":    "👥",
-  "court-sessions":        "🏛️",
-  "follow-up-center":      "📋",
-  "legal-accounting":      "💰",
-  "legal-services":        "📝",
-  "legal-consultations":   "💬",
-  "internal-requests":     "📤",
-  "complaints-management": "🔔",
-  "smart-templates":       "🤖",
-  "reports-center":        "📊",
-  "administration":        "⚙️",
-  "notifications-center":  "🛎️",
-  "integrations":          "🔗",
-  "ai-center":             "🧠",
-  "general-tools":         "🛠️",
-};
-
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const visibleModules = getVisibleOperationalModules(role);
   const sidebarBg = "linear-gradient(180deg, #b10f24 0%, #8f0c1e 100%)";
   const sidebarBorder = "rgba(255,255,255,0.14)";
   const sidebarText = "#ffffff";
@@ -44,13 +25,18 @@ export function AppShell({ role, name, children }: Props) {
   const sidebarActiveBg = "rgba(255,255,255,0.2)";
 
   const logout = () => {
-    window.localStorage.removeItem(sessionKey);
+    try {
+      window.localStorage.removeItem(sessionStorageKey);
+    } catch {
+      // The server cookie is cleared below; storage is only a UI mirror.
+    }
+    void fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
   };
 
   const isActive = (href: string) => pathname === href;
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Logo inside drawer (mobile) */}
       <div
@@ -127,8 +113,8 @@ export function AppShell({ role, name, children }: Props) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {modules.map((item) => {
-          const href   = `/app/modules/${item.slug}`;
+        {visibleModules.map((item) => {
+          const href   = getModuleHref(item.slug);
           const active = pathname === href;
           return (
             <Link
@@ -145,7 +131,7 @@ export function AppShell({ role, name, children }: Props) {
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}
             >
-              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
+              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{moduleIcons[item.slug] ?? "📌"}</span>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</span>
             </Link>
           );
@@ -310,8 +296,8 @@ export function AppShell({ role, name, children }: Props) {
             }}>الوحدات التشغيلية</p>
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {modules.map((item) => {
-                const href   = `/app/modules/${item.slug}`;
+              {visibleModules.map((item) => {
+                const href   = getModuleHref(item.slug);
                 const active = pathname === href;
                 return (
                   <Link
@@ -326,7 +312,7 @@ export function AppShell({ role, name, children }: Props) {
                       textDecoration: "none", transition: "all 0.15s",
                     }}
                   >
-                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
+                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{moduleIcons[item.slug] ?? "📌"}</span>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
                   </Link>
                 );
@@ -367,10 +353,10 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: 280, background: sidebarBg,
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent />
+              {renderSidebarContent()}
             </div>
           </div>
         )}
@@ -446,7 +432,7 @@ export function AppShell({ role, name, children }: Props) {
           .drawer-header     { display: none; }
         }
         @keyframes slide-drawer {
-          from { transform: translateX(100%); opacity: 0; }
+          from { transform: translateX(-100%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
         }
       `}</style>

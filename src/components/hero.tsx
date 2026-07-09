@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { operationalModules } from "@/data/modules";
 
 const stats = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: String(operationalModules.length), label: "وحدة تشغيلية" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -235,7 +236,7 @@ export function HeroSection() {
                 marginBottom: "2.75rem",
               }}
             >
-              منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من
+              منصة احترافية لمكاتب المحاماة تضم {operationalModules.length} وحدة تشغيلية مترابطة — من
               إدارة القضايا والجلسات وحتى المحاسبة القانونية والذكاء الاصطناعي.
             </p>
 
@@ -253,7 +254,7 @@ export function HeroSection() {
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 ابدأ الآن مجانًا →
               </Link>
-              <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
+              <Link href="/login" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 عرض تجريبي مباشر
               </Link>
             </div>

@@ -45,7 +45,7 @@ export function Navbar() {
     { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
     { href: "/#modules", label: "الوحدات" },
-    { href: "/app/dashboard", label: "عرض تجريبي" },
+    { href: "/login", label: "عرض تجريبي" },
   ];
 
   const solutionItems = [
