@@ -154,7 +154,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
-  const toastTimers = useRef<Map<string, ReturnType<typeof window.setTimeout>>>(new Map());
+  const toastTimers = useRef<Map<string, number>>(new Map());
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
