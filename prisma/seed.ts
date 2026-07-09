@@ -72,6 +72,11 @@ async function main() {
   console.log("🌱 Seeding Naiosh Law database...");
 
   await prisma.auditLog.deleteMany();
+  await prisma.circularAlert.deleteMany();
+  await prisma.supplyChainShipment.deleteMany();
+  await prisma.supplyChainPartner.deleteMany();
+  await prisma.internationalLawMatter.deleteMany();
+  await prisma.naiochBranch.deleteMany();
   await prisma.eSignature.deleteMany();
   await prisma.approvalRequest.deleteMany();
   await prisma.governancePolicy.deleteMany();
@@ -857,6 +862,148 @@ async function main() {
       { userId: industrialAgent.id, action: "approve_request", entity: "approval", entityId: "APR-2026-0002", details: "اعتماد إعفاء رسوم", severity: "info" },
       { userId: admin.id, action: "sign_document", entity: "e_signature", details: "توقيع عقد وكالة", severity: "info" },
       { action: "system_backup", entity: "system", details: "نسخ احتياطي تلقائي", severity: "info" },
+    ],
+  });
+
+  // Phase 7 — Global Operations
+  const partner1 = await prisma.supplyChainPartner.create({
+    data: {
+      name: "LogiLegal Shipping",
+      type: "شحن دولي",
+      country: "الإمارات",
+      contactName: "أحمد الشحات",
+      email: "ops@logilegal.ae",
+      phone: "+971501234567",
+      rating: 4.7,
+    },
+  });
+
+  await prisma.supplyChainPartner.create({
+    data: {
+      name: "مستندات قانونية سريعة",
+      type: "توثيق",
+      country: "مصر",
+      contactName: "منى حسن",
+      phone: "01002223344",
+      rating: 4.5,
+    },
+  });
+
+  await prisma.supplyChainShipment.createMany({
+    data: [
+      {
+        refNo: "SHP-2026-0001",
+        partnerId: partner1.id,
+        caseRef: "#2024-0548",
+        description: "مستندات قضية نزاع عقاري",
+        origin: "القاهرة",
+        destination: "دبي",
+        status: "في الطريق",
+        shipDate: "2026-07-01",
+        eta: "2026-07-12",
+      },
+      {
+        refNo: "SHP-2026-0002",
+        caseRef: "#2024-0547",
+        description: "نسخ معتمدة من أحكام",
+        origin: "الإسكندرية",
+        destination: "الرياض",
+        status: "تم التسليم",
+        shipDate: "2026-06-20",
+        eta: "2026-06-28",
+      },
+    ],
+  });
+
+  await prisma.internationalLawMatter.createMany({
+    data: [
+      {
+        refNo: "INT-2026-0001",
+        title: "نزاع تحكيم تجاري دولي — شركة النيل",
+        jurisdiction: "ICC باريس",
+        treaty: "اتفاقية نيويورك 1958",
+        clientName: "شركة النيل للتجارة",
+        matterType: "تحكيم تجاري",
+        status: "نشط",
+        openedDate: "2026-03-15",
+      },
+      {
+        refNo: "INT-2026-0002",
+        title: "استرداد أصول عبر الحدود",
+        jurisdiction: "المحكمة الجنائية الدولية",
+        clientName: "مجموعة الدلتا الصناعية",
+        matterType: "تعاون قضائي دولي",
+        status: "قيد المراجعة",
+        openedDate: "2026-05-01",
+      },
+    ],
+  });
+
+  const hq = await prisma.naiochBranch.create({
+    data: {
+      name: "نايوش — المقر الإقليمي",
+      code: "HQ-CAI",
+      country: "مصر",
+      city: "القاهرة",
+      managerName: "مدير النظام",
+      phone: "0223910000",
+      email: "hq@naioshlaw.com",
+      isHQ: true,
+    },
+  });
+
+  const dxb = await prisma.naiochBranch.create({
+    data: {
+      name: "نايوش — دبي",
+      code: "DXB",
+      country: "الإمارات",
+      city: "دبي",
+      managerName: "سارة المنصوري",
+      phone: "+97143334455",
+      email: "dubai@naioshlaw.com",
+    },
+  });
+
+  await prisma.naiochBranch.create({
+    data: {
+      name: "نايوش — الرياض",
+      code: "RUH",
+      country: "السعودية",
+      city: "الرياض",
+      managerName: "فهد العتيبي",
+      email: "riyadh@naioshlaw.com",
+    },
+  });
+
+  await prisma.circularAlert.createMany({
+    data: [
+      {
+        title: "تعميم جديد: جلسات عن بُعد",
+        circularRef: "تعميم مجلس القضاء 12/2025",
+        message: "يجب تطبيق إجراءات الجلسات الإلكترونية قبل 1 أغسطس",
+        priority: "عالٍ",
+        status: "جديد",
+        dueDate: "2026-08-01",
+        branchId: hq.id,
+      },
+      {
+        title: "تحديث رسوم التوثيق",
+        circularRef: "وزارة العدل 45/2026",
+        message: "تعديل جداول الرسوم — راجع قسم المحاسبة",
+        priority: "متوسط",
+        status: "مقروء",
+        dueDate: "2026-07-20",
+        branchId: dxb.id,
+        acknowledgedAt: "2026-07-05 10:00",
+      },
+      {
+        title: "مبادئ النقض التجارية",
+        circularRef: "محكمة النقض 8/2024",
+        message: "توحيد الاجتهاد في قضايا الشركات",
+        priority: "منخفض",
+        status: "جديد",
+        dueDate: "2026-09-01",
+      },
     ],
   });
 

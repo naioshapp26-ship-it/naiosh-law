@@ -653,3 +653,84 @@ model ESignature {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
+
+// ─── Global Operations (Phase 7) ──────────────────────────
+
+model SupplyChainPartner {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("مورّد")
+  country     String?
+  contactName String?
+  email       String?
+  phone       String?
+  rating      Float    @default(0)
+  status      String   @default("نشط")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shipments SupplyChainShipment[]
+}
+
+model SupplyChainShipment {
+  id          String             @id @default(cuid())
+  refNo       String             @unique
+  partnerId   String?
+  partner     SupplyChainPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  caseRef     String?
+  description String?
+  origin      String?
+  destination String?
+  status      String             @default("قيد الشحن")
+  shipDate    String?
+  eta         String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model InternationalLawMatter {
+  id           String   @id @default(cuid())
+  refNo        String   @unique
+  title        String
+  jurisdiction String?
+  treaty       String?
+  clientName   String?
+  matterType   String?
+  status       String   @default("نشط")
+  openedDate   String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NaiochBranch {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  country     String
+  city        String?
+  managerName String?
+  phone       String?
+  email       String?
+  status      String   @default("نشط")
+  isHQ        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  alerts CircularAlert[]
+}
+
+model CircularAlert {
+  id            String        @id @default(cuid())
+  title         String
+  circularRef   String?
+  message       String?
+  priority      String        @default("متوسط")
+  status        String        @default("جديد")
+  dueDate       String?
+  branchId      String?
+  branch        NaiochBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  acknowledgedAt String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
