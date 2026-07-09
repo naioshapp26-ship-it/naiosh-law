@@ -32,10 +32,9 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
   useEffect(() => {
     if (!open) return;
 
-    setForm(buildInitialForm(fields, initial));
-    setSaving(false);
-    window.setTimeout(() => firstFieldRef.current?.focus(), 0);
-  }, [fields, initial, open]);
+    const focusTimer = window.setTimeout(() => firstFieldRef.current?.focus(), 0);
+    return () => window.clearTimeout(focusTimer);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;

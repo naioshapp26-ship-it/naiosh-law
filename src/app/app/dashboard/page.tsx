@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModuleCard } from "@/components/module-card";
@@ -31,17 +31,13 @@ const recentTasks = [
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
-  const [todayLabel, setTodayLabel] = useState("");
-
-  useEffect(() => {
-    setTodayLabel(
-      new Intl.DateTimeFormat("ar-EG", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(new Date())
-    );
+  const todayLabel = useMemo(() => {
+    return new Intl.DateTimeFormat("ar-EG", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date());
   }, []);
 
   if (!ready || !user) {
@@ -81,8 +77,8 @@ export default function DashboardPage() {
           <h1 style={{ fontSize: "1.6rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.35rem" }}>
             لوحة التحكم
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            {todayLabel ? `${todayLabel} — ` : ""}مرحبًا {user.name}
+          <p style={{ color: "#64748b", fontSize: "0.875rem" }} suppressHydrationWarning>
+            {todayLabel} — مرحبًا {user.name}
           </p>
         </div>
 

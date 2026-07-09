@@ -27,15 +27,6 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
-    setRows([...(config?.data ?? [])]);
-    setModalOpen(false);
-    setEditTarget(null);
-    setViewTarget(null);
-    setDeleteTarget(null);
-    setReportOpen(false);
-  }, [config, slug]);
-
-  useEffect(() => {
     if (!viewTarget && !reportOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -221,6 +212,7 @@ export function ModuleShell({ slug }: { slug: string }) {
       {/* Add/Edit Modal */}
       {modalOpen && (
         <Modal
+          key={`${slug}-${editTarget ? String(editTarget._id ?? editTarget[firstCol] ?? "edit") : "new"}`}
           open={modalOpen}
           title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
           fields={config.formFields}
