@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { modules } from "@/data/modules";
+import { operationalModules } from "@/data/modules";
+import { moduleIconMap } from "@/data/module-icons";
 import { sessionKey } from "@/data/auth";
 
 type Props = {
@@ -12,39 +13,16 @@ type Props = {
   children: React.ReactNode;
 };
 
-const iconMap: Record<string, string> = {
-  "dashboard":             "⊞",
-  "case-management":       "⚖️",
-  "clients-management":    "👥",
-  "court-sessions":        "🏛️",
-  "follow-up-center":      "📋",
-  "legal-accounting":      "💰",
-  "legal-services":        "📝",
-  "legal-consultations":   "💬",
-  "internal-requests":     "📤",
-  "complaints-management": "🔔",
-  "smart-templates":       "🤖",
-  "reports-center":        "📊",
-  "administration":        "⚙️",
-  "notifications-center":  "🛎️",
-  "integrations":          "🔗",
-  "ai-center":             "🧠",
-  "general-tools":         "🛠️",
+type SidebarContentProps = {
+  pathname: string;
+  role: Props["role"];
+  onClose: () => void;
 };
 
-export function AppShell({ role, name, children }: Props) {
-  const pathname = usePathname();
-  const router   = useRouter();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const logout = () => {
-    window.localStorage.removeItem(sessionKey);
-    router.replace("/login");
-  };
-
+function SidebarContent({ pathname, role, onClose }: SidebarContentProps) {
   const isActive = (href: string) => pathname === href;
 
-  const SidebarContent = () => (
+  return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Logo inside drawer (mobile) */}
       <div
@@ -76,7 +54,7 @@ export function AppShell({ role, name, children }: Props) {
           <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#0a0a12" }}>Naiosh Law</span>
         </div>
         <button
-          onClick={() => setDrawerOpen(false)}
+          onClick={onClose}
           className="drawer-close-btn"
           style={{
             width: 32, height: 32, border: "1px solid #e2e8f0",
@@ -90,7 +68,7 @@ export function AppShell({ role, name, children }: Props) {
       <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
         <Link
           href="/app/dashboard"
-          onClick={() => setDrawerOpen(false)}
+          onClick={onClose}
           style={{
             display: "flex", alignItems: "center", gap: "0.6rem",
             padding: "0.6rem 0.75rem", borderRadius: "10px",
@@ -100,7 +78,7 @@ export function AppShell({ role, name, children }: Props) {
             textDecoration: "none",
           }}
         >
-          <span style={{ fontSize: "1rem" }}>⊞</span>
+          <span style={{ fontSize: "1rem" }}>{moduleIconMap.dashboard}</span>
           <span>لوحة التحكم</span>
         </Link>
       </div>
@@ -121,14 +99,14 @@ export function AppShell({ role, name, children }: Props) {
           display: "flex", flexDirection: "column", gap: "2px",
         }}
       >
-        {modules.map((item) => {
-          const href   = `/app/modules/${item.slug}`;
+        {operationalModules.map((item) => {
+          const href = `/app/modules/${item.slug}`;
           const active = pathname === href;
           return (
             <Link
               key={item.slug}
               href={href}
-              onClick={() => setDrawerOpen(false)}
+              onClick={onClose}
               style={{
                 display: "flex", alignItems: "center", gap: "0.6rem",
                 padding: "0.6rem 0.75rem", borderRadius: "10px",
@@ -139,7 +117,7 @@ export function AppShell({ role, name, children }: Props) {
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}
             >
-              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
+              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{moduleIconMap[item.slug] ?? "📌"}</span>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</span>
             </Link>
           );
@@ -162,6 +140,19 @@ export function AppShell({ role, name, children }: Props) {
       </div>
     </div>
   );
+}
+
+export function AppShell({ role, name, children }: Props) {
+  const pathname = usePathname();
+  const router   = useRouter();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const logout = () => {
+    window.localStorage.removeItem(sessionKey);
+    router.replace("/login");
+  };
+
+  const isActive = (href: string) => pathname === href;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
@@ -180,7 +171,7 @@ export function AppShell({ role, name, children }: Props) {
           gap: "0.75rem",
         }}>
           {/* Left: Hamburger (mobile) + Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
             {/* Hamburger — mobile only */}
             <button
               onClick={() => setDrawerOpen(true)}
@@ -214,7 +205,7 @@ export function AppShell({ role, name, children }: Props) {
           </div>
 
           {/* Right: Notifications + User + Logout */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
             {/* Notification bell */}
             <button style={{
               width: 36, height: 36, borderRadius: "10px",
@@ -292,7 +283,7 @@ export function AppShell({ role, name, children }: Props) {
                   textDecoration: "none",
                 }}
               >
-                <span style={{ fontSize: "1rem" }}>⊞</span>
+                <span style={{ fontSize: "1rem" }}>{moduleIconMap.dashboard}</span>
                 <span>لوحة التحكم</span>
               </Link>
             </div>
@@ -304,7 +295,7 @@ export function AppShell({ role, name, children }: Props) {
             }}>الوحدات التشغيلية</p>
 
             <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {modules.map((item) => {
+              {operationalModules.map((item) => {
                 const href   = `/app/modules/${item.slug}`;
                 const active = pathname === href;
                 return (
@@ -320,7 +311,7 @@ export function AppShell({ role, name, children }: Props) {
                       textDecoration: "none", transition: "all 0.15s",
                     }}
                   >
-                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
+                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{moduleIconMap[item.slug] ?? "📌"}</span>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
                   </Link>
                 );
@@ -349,6 +340,7 @@ export function AppShell({ role, name, children }: Props) {
             style={{
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex",
+              justifyContent: "flex-start",
             }}
           >
             {/* Backdrop */}
@@ -361,10 +353,10 @@ export function AppShell({ role, name, children }: Props) {
               position: "relative", zIndex: 1,
               width: 280, background: "#ffffff",
               height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              boxShadow: "-4px 0 30px rgba(0,0,0,0.15)",
               animation: "slide-drawer 0.25s ease",
             }}>
-              <SidebarContent />
+              <SidebarContent pathname={pathname} role={role} onClose={() => setDrawerOpen(false)} />
             </div>
           </div>
         )}
@@ -434,6 +426,10 @@ export function AppShell({ role, name, children }: Props) {
           .user-name-block   { display: none; }
           .drawer-header     { display: flex !important; }
           main               { padding-bottom: 5rem !important; }
+        }
+        @media (max-width: 420px) {
+          header button[aria-label="التنبيهات"] { display: none !important; }
+          header button:not(.hamburger-btn) { padding-inline: 0.6rem !important; }
         }
         @media (min-width: 769px) {
           .drawer-close-btn  { display: none; }

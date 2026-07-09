@@ -1,36 +1,18 @@
 import Link from "next/link";
 import type { LegalModule } from "@/data/modules";
-
-const iconMap: Record<string, string> = {
-  "dashboard": "⊞",
-  "case-management": "⚖️",
-  "clients-management": "👥",
-  "court-sessions": "🏛️",
-  "follow-up-center": "📋",
-  "legal-accounting": "💰",
-  "legal-services": "📝",
-  "legal-consultations": "💬",
-  "internal-requests": "📤",
-  "complaints-management": "🔔",
-  "smart-templates": "🤖",
-  "reports-center": "📊",
-  "administration": "⚙️",
-  "notifications-center": "🛎️",
-  "integrations": "🔗",
-  "ai-center": "🧠",
-  "general-tools": "🛠️",
-};
+import { moduleIconMap } from "@/data/module-icons";
 
 type Props = {
   item: LegalModule;
 };
 
 export function ModuleCard({ item }: Props) {
-  const icon = iconMap[item.slug] ?? "📌";
+  const icon = moduleIconMap[item.slug] ?? "📌";
+  const href = item.slug === "dashboard" ? "/app/dashboard" : `/app/modules/${item.slug}`;
 
   return (
     <Link
-      href={`/app/modules/${item.slug}`}
+      href={href}
       className="card-white"
       style={{
         display: "block",

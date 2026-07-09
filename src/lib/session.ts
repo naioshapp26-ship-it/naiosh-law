@@ -10,22 +10,48 @@ export type SessionUser = {
   email: string;
 };
 
+function readStoredSession(): SessionUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(sessionKey);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<SessionUser>;
+    if (
+      (parsed.role === "admin" || parsed.role === "client") &&
+      typeof parsed.name === "string" &&
+      typeof parsed.email === "string"
+    ) {
+      return parsed as SessionUser;
+    }
+  } catch {
+    // Fall through and clear the corrupt value below.
+  }
+
+  window.localStorage.removeItem(sessionKey);
+  return null;
+}
+
 export function useSession(redirectIfMissing = false) {
   const router = useRouter();
-  const [user] = useState<SessionUser | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    const raw = window.localStorage.getItem(sessionKey);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
-  });
-  const ready = true;
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!user && redirectIfMissing) {
+    setUser(readStoredSession());
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (ready && !user && redirectIfMissing) {
       router.replace("/login");
     }
-  }, [user, redirectIfMissing, router]);
+  }, [ready, user, redirectIfMissing, router]);
 
   const api = useMemo(
     () => ({
@@ -33,6 +59,7 @@ export function useSession(redirectIfMissing = false) {
       ready,
       logout: () => {
         window.localStorage.removeItem(sessionKey);
+        setUser(null);
         router.replace("/login");
       },
     }),

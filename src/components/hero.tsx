@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 const stats = [
-  { value: "17", label: "وحدة تشغيلية" },
+  { value: "16", label: "وحدة تشغيلية" },
   { value: "128+", label: "قضية نشطة" },
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
@@ -124,7 +124,7 @@ export function HeroSection() {
           {/* ── Text column ── */}
           <motion.div
             variants={container}
-            initial="show"
+            initial="hidden"
             animate="show"
             style={{
               width: "100%",
@@ -134,7 +134,7 @@ export function HeroSection() {
             }}
           >
             {/* Badge */}
-            <div className="hero-badge" style={{ marginBottom: "1.75rem" }}>
+            <motion.div variants={itemAnim} className="hero-badge" style={{ marginBottom: "1.75rem" }}>
               <span
                 style={{
                   display: "inline-flex",
@@ -162,10 +162,11 @@ export function HeroSection() {
                 />
                 Naiosh Law Platform — نظام قانوني من الجيل القادم
               </span>
-            </div>
+            </motion.div>
 
             {/* Heading */}
-            <h1
+            <motion.h1
+              variants={itemAnim}
               className="hero-heading"
               style={{
                 fontSize: "clamp(2.6rem, 4.5vw, 4.75rem)",
@@ -188,10 +189,11 @@ export function HeroSection() {
               >
                 لا مثيل له
               </span>
-            </h1>
+            </motion.h1>
 
             {/* Subtext */}
-            <p
+            <motion.p
+              variants={itemAnim}
               className="hero-sub"
               style={{
                 color: "#94a3b8",
@@ -201,12 +203,13 @@ export function HeroSection() {
                 marginBottom: "2.75rem",
               }}
             >
-              منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من
+              منصة احترافية لمكاتب المحاماة تضم 16 وحدة تشغيلية مترابطة — من
               إدارة القضايا والجلسات وحتى المحاسبة القانونية والذكاء الاصطناعي.
-            </p>
+            </motion.p>
 
             {/* CTAs */}
-            <div
+            <motion.div
+              variants={itemAnim}
               className="hero-cta"
               style={{
                 display: "flex",
@@ -222,10 +225,11 @@ export function HeroSection() {
               <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
                 عرض تجريبي مباشر
               </Link>
-            </div>
+            </motion.div>
 
             {/* Stats */}
-            <div
+            <motion.div
+              variants={itemAnim}
               className="hero-stats"
               style={{
                 display: "flex",
@@ -260,7 +264,7 @@ export function HeroSection() {
                   </div>
                 </div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* ── Visual column ── */}

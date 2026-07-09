@@ -37,4 +37,6 @@ export const modules: LegalModule[] = [
   { slug: "general-tools", title: "الأدوات العامة", subtitle: "أدوات مساعدة يومية للفريق", screens: ["المهام الشخصية", "الملاحظات", "أرشيف سريع"], functions: ["قائمة مهام", "بحث موحد"], workflow: ["تسجيل", "تنظيم", "أرشفة"], relations: ["لوحة التحكم"], dbTables: ["tools_tasks", "notes"], permissions: basePermissions },
 ];
 
+export const operationalModules = modules.filter((item) => item.slug !== "dashboard");
+
 export const moduleMap = Object.fromEntries(modules.map((item) => [item.slug, item]));
