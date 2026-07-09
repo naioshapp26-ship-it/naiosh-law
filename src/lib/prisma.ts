@@ -39,9 +39,7 @@ function createPrismaClient() {
   }
 
   const pool = globalForPrisma.pool ?? createPool(connectionString);
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.pool = pool;
-  }
+  globalForPrisma.pool = pool;
 
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });

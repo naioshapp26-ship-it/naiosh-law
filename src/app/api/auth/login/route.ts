@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { AUTH_COOKIE, signToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "البريد وكلمة المرور مطلوبان" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await getPrisma().user.findUnique({ where: { email } });
     if (!user || !user.active) {
       return NextResponse.json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }, { status: 401 });
     }
@@ -71,6 +71,9 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
+    return NextResponse.json(
+      { error: "خطأ في الخادم", details: process.env.NODE_ENV === "production" ? undefined : message },
+      { status: 500 }
+    );
   }
 }
