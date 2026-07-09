@@ -16,6 +16,11 @@ const extraNav = [
   { href: "/app/legal-knowledge", label: "التصنيف القانوني", icon: "📚" },
   { href: "/app/professional-network", label: "الشبكة المهنية", icon: "🤝" },
   { href: "/app/official-entities", label: "الجهات الرسمية", icon: "🏢" },
+  { href: "/app/legal-finance", label: "المالية المتقدمة", icon: "💰" },
+  { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
+  { href: "/app/communications", label: "الإشعارات والتكاملات", icon: "🛎️" },
+  { href: "/app/governance", label: "الحوكمة والتوقيع", icon: "⚙️" },
+  { href: "/app/global-operations", label: "العمليات العالمية", icon: "🌍" },
 ];
 
 const iconMap: Record<string, string> = {

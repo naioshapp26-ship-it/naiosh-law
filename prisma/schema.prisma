@@ -1,4 +1,4 @@
-// Naiosh Law ERP — PostgreSQL Schema (Phases 0–2)
+// Naiosh Law ERP — PostgreSQL Schema (Phases 0–7)
 
 generator client {
   provider = "prisma-client"
@@ -36,6 +36,11 @@ model User {
   networkRequests    ProfessionalNetwork[] @relation("Requester")
   networkReceived    ProfessionalNetwork[] @relation("Receiver")
   auditLogs          AuditLog[]
+  officeBranchId     String?
+  officeBranch       OfficeBranch? @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  approvalRequests   ApprovalRequest[] @relation("ApprovalRequester")
+  approvalsResolved  ApprovalRequest[] @relation("ApprovalApprover")
+  eSignatures        ESignature[]
 }
 
 // ─── Core ERP (Phase 0) ─────────────────────────────────────
@@ -128,6 +133,9 @@ model LegalBranch {
   specializations LegalSpecialization[]
   cases           Case[]
   consultations   Consultation[]
+  documents       LegalDocument[]
+  articles        LegalArticle[]
+  circulars       CircularInstruction[]
 }
 
 model LegalSpecialization {
@@ -144,6 +152,9 @@ model LegalSpecialization {
   cases         Case[]
   consultations Consultation[]
   subjects      SpecializationSubject[]
+  feeRules      FeeRule[]
+  documents     LegalDocument[]
+  articles      LegalArticle[]
 }
 
 model LegalSubject {
@@ -279,5 +290,447 @@ model AuditLog {
   entity    String
   entityId  String?
   details   String?
+  severity  String   @default("info")
+  ipAddress String?
   createdAt DateTime @default(now())
+}
+
+// ─── Advanced Legal Finance (Phase 3) ─────────────────────
+
+enum PaymentMethod {
+  cash
+  transfer
+  check
+  payment_gateway
+}
+
+model FeeRule {
+  id               String   @id @default(cuid())
+  name             String
+  caseType         String?
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  stage            String?
+  hourlyRate       Float?
+  fixedAmount      Float?
+  percentRate      Float?
+  minAmount        Float?
+  maxAmount        Float?
+  active           Boolean  @default(true)
+  description      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model FinancialRecord {
+  id            String         @id @default(cuid())
+  invoiceNo     String         @unique
+  clientName    String
+  type          String
+  amount        Float
+  paid          Float          @default(0)
+  issueDate     String
+  dueDate       String?
+  status        String         @default("غير مسدد")
+  paymentMethod PaymentMethod?
+  caseRef       String?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  payments Payment[]
+}
+
+model Payment {
+  id         String         @id @default(cuid())
+  recordId   String?
+  record     FinancialRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  amount     Float
+  method     PaymentMethod  @default(cash)
+  reference  String?
+  paidAt     String
+  notes      String?
+  createdAt  DateTime       @default(now())
+}
+
+model BailGuarantee {
+  id          String   @id @default(cuid())
+  caseRef     String
+  clientName  String
+  amount      Float
+  court       String
+  status      String   @default("نشط")
+  depositDate String
+  refundDate  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PersonalGuarantee {
+  id           String   @id @default(cuid())
+  caseRef      String
+  clientName   String
+  guarantorName String
+  relationship String?
+  status       String   @default("ساري")
+  documents    String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum NotificationType {
+  court_summons
+  bail_deadline
+  document_submission
+  judgment_delivery
+  other
+}
+
+model OfficialNotification {
+  id              String           @id @default(cuid())
+  type            NotificationType @default(other)
+  title           String
+  entityName      String
+  caseRef         String?
+  dueDate         String?
+  status          String           @default("قيد المتابعة")
+  deliveryMethod  String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+// ─── Legal Library (Phase 4) ──────────────────────────────
+
+enum LibraryDocumentType {
+  law
+  regulation
+  contract_template
+  court_form
+  memo_template
+  other
+}
+
+model LegalDocument {
+  id               String              @id @default(cuid())
+  title            String
+  type             LibraryDocumentType @default(other)
+  category         String?
+  branchId         String?
+  branch           LegalBranch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  summary          String?
+  content          String?
+  fileUrl          String?
+  tags             String?
+  status           String              @default("منشور")
+  publishedAt      String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model LegalArticle {
+  id               String              @id @default(cuid())
+  title            String
+  author           String?
+  branchId         String?
+  branch           LegalBranch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  specializationId String?
+  specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  summary          String?
+  content          String?
+  tags             String?
+  readMinutes      Int?
+  status           String              @default("منشور")
+  publishedAt      String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model CircularInstruction {
+  id            String       @id @default(cuid())
+  circularNo    String       @unique
+  title         String
+  issuer        String
+  branchId      String?
+  branch        LegalBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  issueDate     String
+  effectiveDate String?
+  summary       String?
+  content       String?
+  status        String       @default("ساري")
+  tags          String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// ─── Notifications & Integrations (Phase 5) ───────────────
+
+model OfficeBranch {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  city        String?
+  address     String?
+  phone       String?
+  email       String?
+  managerName String?
+  status      String   @default("نشط")
+  isMain      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users             User[]
+  notificationRules NotificationRule[]
+  notificationLogs  NotificationLog[]
+  integrations      Integration[]
+}
+
+enum NotificationChannel {
+  email
+  sms
+  whatsapp
+  in_app
+}
+
+enum NotificationProvider {
+  resend
+  twilio
+  internal
+}
+
+model NotificationRule {
+  id             String              @id @default(cuid())
+  title          String
+  trigger        String
+  channel        NotificationChannel @default(email)
+  audience       String
+  status         String              @default("نشط")
+  templateBody   String?
+  sentCount      Int                 @default(0)
+  officeBranchId String?
+  officeBranch   OfficeBranch?       @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  logs NotificationLog[]
+}
+
+model NotificationLog {
+  id             String               @id @default(cuid())
+  ruleId         String?
+  rule           NotificationRule?    @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  channel        NotificationChannel
+  provider       NotificationProvider @default(internal)
+  recipient      String
+  subject        String?
+  body           String?
+  status         String               @default("مرسل")
+  errorMessage   String?
+  officeBranchId String?
+  officeBranch   OfficeBranch?        @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  sentAt         String?
+  createdAt      DateTime             @default(now())
+}
+
+enum IntegrationType {
+  email
+  sms
+  whatsapp
+  payment
+  webhook
+  other
+}
+
+model Integration {
+  id             String          @id @default(cuid())
+  name           String
+  type           IntegrationType @default(other)
+  provider       String
+  endpoint       String?
+  apiKeyMasked   String?
+  config         String?
+  callsToday     Int             @default(0)
+  successRate    Float           @default(100)
+  lastChecked    String?
+  status         String          @default("متصل")
+  officeBranchId String?
+  officeBranch   OfficeBranch?   @relation(fields: [officeBranchId], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  logs IntegrationLog[]
+}
+
+model IntegrationLog {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  method        String?
+  path          String?
+  statusCode    Int?
+  durationMs    Int?
+  success       Boolean     @default(true)
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+}
+
+// ─── Governance & E-Signing (Phase 6) ─────────────────────
+
+enum ApprovalType {
+  case_opening
+  fee_waiver
+  document_release
+  user_access
+  contract_signing
+  other
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+model ApprovalRequest {
+  id          String         @id @default(cuid())
+  refNo       String         @unique
+  type        ApprovalType   @default(other)
+  title       String
+  description String?
+  requesterId String
+  requester   User           @relation("ApprovalRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  approverId  String?
+  approver    User?          @relation("ApprovalApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  entity      String?
+  entityId    String?
+  status      ApprovalStatus @default(pending)
+  priority    String         @default("متوسط")
+  notes       String?
+  requestedAt String
+  resolvedAt  String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model GovernancePolicy {
+  id            String   @id @default(cuid())
+  title         String
+  category      String
+  description   String?
+  version       String   @default("1.0")
+  status        String   @default("ساري")
+  effectiveDate String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum SignatureStatus {
+  pending
+  signed
+  rejected
+  expired
+}
+
+model ESignature {
+  id            String          @id @default(cuid())
+  refNo         String          @unique
+  documentTitle String
+  documentRef   String?
+  signerName    String
+  signerEmail   String?
+  signerRole    String?
+  userId        String?
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status        SignatureStatus @default(pending)
+  signatureHash String?
+  signedAt      String?
+  expiresAt     String?
+  ipAddress     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+// ─── Global Operations (Phase 7) ──────────────────────────
+
+model SupplyChainPartner {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("مورّد")
+  country     String?
+  contactName String?
+  email       String?
+  phone       String?
+  rating      Float    @default(0)
+  status      String   @default("نشط")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shipments SupplyChainShipment[]
+}
+
+model SupplyChainShipment {
+  id          String             @id @default(cuid())
+  refNo       String             @unique
+  partnerId   String?
+  partner     SupplyChainPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  caseRef     String?
+  description String?
+  origin      String?
+  destination String?
+  status      String             @default("قيد الشحن")
+  shipDate    String?
+  eta         String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model InternationalLawMatter {
+  id           String   @id @default(cuid())
+  refNo        String   @unique
+  title        String
+  jurisdiction String?
+  treaty       String?
+  clientName   String?
+  matterType   String?
+  status       String   @default("نشط")
+  openedDate   String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NaiochBranch {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  country     String
+  city        String?
+  managerName String?
+  phone       String?
+  email       String?
+  status      String   @default("نشط")
+  isHQ        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  alerts CircularAlert[]
+}
+
+model CircularAlert {
+  id            String        @id @default(cuid())
+  title         String
+  circularRef   String?
+  message       String?
+  priority      String        @default("متوسط")
+  status        String        @default("جديد")
+  dueDate       String?
+  branchId      String?
+  branch        NaiochBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  acknowledgedAt String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
