@@ -217,9 +217,6 @@ export function useSession(redirectIfMissing = false) {
 
     const reusableSession = getFreshVerifiedSession(rawSession);
     if (reusableSession) {
-      setVerifiedUser(reusableSession);
-      setVerifiedRawSession(rawSession);
-      setVerified(true);
       return;
     }
 

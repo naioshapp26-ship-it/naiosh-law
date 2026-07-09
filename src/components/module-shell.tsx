@@ -14,6 +14,10 @@ import { canAccessModule } from "@/lib/module-access";
 import { useSession } from "@/lib/session";
 
 type ToastMsg = { id: string; type: "success" | "error"; text: string };
+type MemoryRows = {
+  scopeKey: string;
+  rows: Record<string, unknown>[];
+};
 
 const rowIdKey = "_rowId";
 const moduleRowsChangeEvent = "naiosh-law-module-rows-change";
@@ -141,6 +145,7 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
   const isAdmin = user?.role === "admin";
   const hasModuleAccess = !!user && canAccessModule(user.role, slug);
   const rowsStorageScope = getRowsStorageScope(user?.email);
+  const rowsStateKey = `${rowsStorageScope}:${slug}`;
   const storedRowsSnapshot = useSyncExternalStore(
     subscribeToRowsChange,
     () => getRowsSnapshot(slug, rowsStorageScope),
@@ -151,8 +156,8 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
     [config.data, slug, storedRowsSnapshot]
   );
 
-  const [memoryRows, setMemoryRows] = useState<Record<string, unknown>[] | null>(null);
-  const rows = memoryRows ?? storedRows;
+  const [memoryRows, setMemoryRows] = useState<MemoryRows | null>(null);
+  const rows = memoryRows?.scopeKey === rowsStateKey ? memoryRows.rows : storedRows;
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
@@ -172,22 +177,13 @@ export function ModuleShell({ slug, config, title }: { slug: string; config: Mod
     toastTimers.current.set(id, timeoutId);
   }, []);
 
-  useEffect(() => {
-    setMemoryRows(null);
-    setModalOpen(false);
-    setEditTarget(null);
-    setViewTarget(null);
-    setDeleteTarget(null);
-    setReportOpen(false);
-  }, [rowsStorageScope, slug]);
-
   const updateRows = useCallback(
     (updater: (currentRows: Record<string, unknown>[]) => Record<string, unknown>[]) => {
       const nextRows = updater(rows);
-      setMemoryRows(nextRows);
+      setMemoryRows({ scopeKey: rowsStateKey, rows: nextRows });
       persistRows(slug, rowsStorageScope, nextRows);
     },
-    [rows, rowsStorageScope, slug]
+    [rows, rowsStateKey, rowsStorageScope, slug]
   );
 
   useEffect(() => {
