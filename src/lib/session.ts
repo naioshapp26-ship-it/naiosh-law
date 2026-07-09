@@ -223,7 +223,7 @@ export function useSession(redirectIfMissing = false) {
         });
       },
     }),
-    [user, ready, router]
+    [user, ready, verified, router]
   );
 
   return api;
