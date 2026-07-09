@@ -42,30 +42,43 @@ export function ModuleShell({ slug }: { slug: string }) {
   }, []);
 
   useEffect(() => {
-    setRowsHydrated(false);
+    let active = true;
 
-    if (!config) {
-      setRows([]);
-      setRowsHydrated(true);
-      return;
-    }
-
-    try {
-      const storedRows = window.localStorage.getItem(storageKey);
-      if (storedRows) {
-        const parsed = JSON.parse(storedRows);
-        if (Array.isArray(parsed)) {
-          setRows(parsed.filter((row) => row && typeof row === "object"));
-          setRowsHydrated(true);
-          return;
-        }
+    const hydrateRows = () => {
+      if (!active) {
+        return;
       }
-    } catch {
-      window.localStorage.removeItem(storageKey);
-    }
 
-    setRows(config.data);
-    setRowsHydrated(true);
+      if (!config) {
+        setRows([]);
+        setRowsHydrated(true);
+        return;
+      }
+
+      try {
+        const storedRows = window.localStorage.getItem(storageKey);
+        if (storedRows) {
+          const parsed = JSON.parse(storedRows);
+          if (Array.isArray(parsed)) {
+            setRows(parsed.filter((row) => row && typeof row === "object"));
+            setRowsHydrated(true);
+            return;
+          }
+        }
+      } catch {
+        window.localStorage.removeItem(storageKey);
+      }
+
+      setRows(config.data);
+      setRowsHydrated(true);
+    };
+
+    const timer = window.setTimeout(hydrateRows, 0);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [config, storageKey]);
 
   useEffect(() => {

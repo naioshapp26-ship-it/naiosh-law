@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
 
@@ -57,13 +57,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const paged = useMemo(() => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [page, sorted]);
-
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
+  const safePage = Math.min(page, totalPages);
+  const paged = useMemo(() => sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [safePage, sorted]);
 
   const hasActions = !!(onEdit || onDelete || onView);
 
@@ -200,7 +195,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               ) : (
                 paged.map((row, i) => (
                   <tr
-                    key={getRowKey(row, (page - 1) * PAGE_SIZE + i)}
+                    key={getRowKey(row, (safePage - 1) * PAGE_SIZE + i)}
                     style={{
                       borderBottom: "1px solid #f1f5f9",
                       transition: "background 0.15s",
@@ -312,25 +307,25 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
           }}
         >
           <span>
-            صفحة {page} من {totalPages} — {sorted.length} سجل إجمالاً
+            صفحة {safePage} من {totalPages} — {sorted.length} سجل إجمالاً
           </span>
           <div className="pagination-buttons" style={{ display: "flex", gap: "0.3rem" }}>
             <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
+              disabled={safePage === 1}
+              onClick={() => setPage(Math.max(1, safePage - 1))}
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
                 border: "1px solid #e2e8f0",
-                background: page === 1 ? "#f8f9fb" : "#fff",
-                cursor: page === 1 ? "not-allowed" : "pointer",
-                opacity: page === 1 ? 0.5 : 1,
+                background: safePage === 1 ? "#f8f9fb" : "#fff",
+                cursor: safePage === 1 ? "not-allowed" : "pointer",
+                opacity: safePage === 1 ? 0.5 : 1,
               }}
             >
               ›
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              const p = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
+              const p = Math.max(1, Math.min(safePage - 2, totalPages - 4)) + i;
               if (p < 1 || p > totalPages) return null;
               return (
                 <button
@@ -340,11 +335,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
                     padding: "0.4rem 0.65rem",
                     borderRadius: "8px",
                     border: "1px solid",
-                    borderColor: p === page ? "#c3152a" : "#e2e8f0",
-                    background: p === page ? "#c3152a" : "#fff",
-                    color: p === page ? "#fff" : "#475569",
+                    borderColor: p === safePage ? "#c3152a" : "#e2e8f0",
+                    background: p === safePage ? "#c3152a" : "#fff",
+                    color: p === safePage ? "#fff" : "#475569",
                     cursor: "pointer",
-                    fontWeight: p === page ? 800 : 400,
+                    fontWeight: p === safePage ? 800 : 400,
                     minWidth: 32,
                   }}
                 >
@@ -353,15 +348,15 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchPlace
               );
             })}
             <button
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => p + 1)}
+              disabled={safePage === totalPages}
+              onClick={() => setPage(Math.min(totalPages, safePage + 1))}
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
                 border: "1px solid #e2e8f0",
-                background: page === totalPages ? "#f8f9fb" : "#fff",
-                cursor: page === totalPages ? "not-allowed" : "pointer",
-                opacity: page === totalPages ? 0.5 : 1,
+                background: safePage === totalPages ? "#f8f9fb" : "#fff",
+                cursor: safePage === totalPages ? "not-allowed" : "pointer",
+                opacity: safePage === totalPages ? 0.5 : 1,
               }}
             >
               ‹
