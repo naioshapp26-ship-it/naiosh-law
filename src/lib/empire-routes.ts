@@ -2,6 +2,7 @@
 
 import { imperialAxes, type ImperialAxis, type NavItem } from "@/data/empire-structure";
 import { moduleMap } from "@/data/modules";
+import { topicBySlug } from "@/data/international-laws-structure";
 
 export type ResolvedItem = NavItem & {
   axisSlug: string;
@@ -101,7 +102,11 @@ const LEGAL_KNOWLEDGE_PREFIXES = [
 ];
 
 function matchesLegalKnowledge(id: string) {
-  return LEGAL_KNOWLEDGE_PREFIXES.some((p) => id.startsWith(p) || id.includes(p));
+  return LEGAL_KNOWLEDGE_PREFIXES.some((p) => id.startsWith(p) || id.includes(p)) || !!topicBySlug[id];
+}
+
+function legalAxisForItem(id: string): string | undefined {
+  return topicBySlug[id]?.axisSlug;
 }
 
 export function resolveItemHref(item: Pick<NavItem, "id" | "href" | "moduleSlug">): string {
@@ -111,7 +116,11 @@ export function resolveItemHref(item: Pick<NavItem, "id" | "href" | "moduleSlug"
     return `/app/modules/${item.moduleSlug}`;
   }
   if (DOMAIN_PAGES[item.id]) return DOMAIN_PAGES[item.id];
-  if (matchesLegalKnowledge(item.id)) return "/app/legal-knowledge";
+  if (matchesLegalKnowledge(item.id)) {
+    const axis = legalAxisForItem(item.id);
+    if (axis) return `/app/international-laws/${axis}?topic=${item.id}`;
+    return "/app/international-laws";
+  }
   return `/app/axis/item/${item.id}`;
 }
 
@@ -128,7 +137,7 @@ export function findItemById(id: string): ResolvedItem | null {
         href: resolveItemHref(found),
         axisSlug: axis.slug,
         axisTitle: axis.title,
-        domainPage: DOMAIN_PAGES[found.id] ?? (matchesLegalKnowledge(found.id) ? "/app/legal-knowledge" : axis.href),
+        domainPage: DOMAIN_PAGES[found.id] ?? (matchesLegalKnowledge(found.id) ? "/app/international-laws" : axis.href),
       };
     }
   }

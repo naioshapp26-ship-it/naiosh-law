@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import {
   PageHeader,
@@ -133,6 +134,22 @@ export default function LegalKnowledgePage() {
           subtitle="شجرة الفروع والتخصصات والمواد القانونية — فلترة القضايا والاستشارات حسب التخصص"
           actions={
             <>
+              <Link
+                href="/app/international-laws"
+                style={{
+                  padding: "0.6rem 1.15rem",
+                  borderRadius: "12px",
+                  border: "1px solid #0ea5e9",
+                  background: "rgba(14,165,233,0.08)",
+                  color: "#0ea5e9",
+                  fontWeight: 700,
+                  fontSize: "0.875rem",
+                  textDecoration: "none",
+                  fontFamily: "var(--font-cairo)",
+                }}
+              >
+                🌐 منظومة القوانين الدولية (8 محاور)
+              </Link>
               <BtnPrimary onClick={() => openAdd(tab === "subjects" ? "subject" : tab === "specs" ? "spec" : "branch")} disabled={!canWrite}>
                 ➕ إضافة {tab === "subjects" ? "مادة" : tab === "specs" ? "تخصص" : "فرع"}
               </BtnPrimary>

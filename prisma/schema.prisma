@@ -703,6 +703,29 @@ model InternationalLawMatter {
   updatedAt    DateTime @updatedAt
 }
 
+model LegalClassificationEntry {
+  id           String   @id @default(cuid())
+  refNo        String   @unique
+  axisSlug     String
+  topicSlug    String
+  topicName    String
+  title        String
+  jurisdiction String?
+  country      String?
+  category     String?
+  status       String   @default("نشط")
+  clientName   String?
+  effectiveDate String?
+  source       String?
+  description  String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([axisSlug])
+  @@index([topicSlug])
+}
+
 model NaiochBranch {
   id          String   @id @default(cuid())
   name        String

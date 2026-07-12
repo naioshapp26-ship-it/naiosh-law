@@ -164,6 +164,27 @@ export function AxisHubPage({ axis, userName }: Props) {
       {/* Content */}
       {axis.dropdowns ? (
         <div>
+          {axis.slug === "legal-classification" && (
+            <Link
+              href="/app/international-laws"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                marginBottom: "1.25rem",
+                padding: "0.75rem 1.25rem",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, #c3152a 0%, #a01020 100%)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "0.9rem",
+                textDecoration: "none",
+                boxShadow: "0 4px 14px rgba(195,21,42,0.3)",
+              }}
+            >
+              📚 فتح منظومة التصنيف القانوني الكاملة (8 محاور) ←
+            </Link>
+          )}
           <h2 style={{ fontSize: "1.05rem", fontWeight: 800, marginBottom: "1rem", color: "#0a0a12" }}>
             القوائم المنسدلة — التصنيف القانوني
           </h2>

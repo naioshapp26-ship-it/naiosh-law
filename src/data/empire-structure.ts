@@ -120,7 +120,7 @@ export const imperialAxes: ImperialAxis[] = [
     subtitle: "يرتبط بالمحاور الثمانية",
     icon: "📚",
     color: "#0ea5e9",
-    href: "/app/axis/legal-classification",
+    href: "/app/international-laws",
     dropdowns: [
       {
         id: "intl",

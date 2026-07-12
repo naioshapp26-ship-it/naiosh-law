@@ -270,5 +270,28 @@ export async function seedDemoData(prisma: PrismaClient): Promise<SeedDemoResult
     result.naiochBranches = 2;
   }
 
+  if ((await prisma.legalClassificationEntry.count()) === 0) {
+    const demoAxes = [
+      { axisSlug: "intl-cross-border", topicSlug: "intl-law", topicName: "القانون الدولي", title: "اتفاقية جنيف الرابعة — دراسة امتثال", jurisdiction: "دولي", country: "سويسرا", category: "معاهدات", status: "نشط", clientName: "مؤسسة الإغاثة الدولية", effectiveDate: "1949-08-12", source: "الأمم المتحدة" },
+      { axisSlug: "national-local", topicSlug: "constitution", topicName: "دستور الدولة", title: "مراجعة دستورية — المادة 53", jurisdiction: "محلي", country: "مصر", category: "دستوري", status: "نشط", clientName: "أحمد محمد الصاوي", effectiveDate: "2014-01-18", source: "الجريدة الرسمية" },
+      { axisSlug: "commercial-maritime", topicSlug: "maritime-law", topicName: "القانون البحري", title: "نزاع شحن بحري — بضاعة متأخرة", jurisdiction: "بحري", country: "مصر", category: "نقل بحري", status: "نشط", clientName: "شركة الشحن القانوني", effectiveDate: "2026-02-15", source: "هيئة الموانئ" },
+      { axisSlug: "labor-safety", topicSlug: "occupational-safety", topicName: "السلامة المهنية", title: "تفتيش سلامة مصنع", jurisdiction: "عمالي", country: "مصر", category: "سلامة", status: "قيد المراجعة", clientName: "مصنع الدلتا", effectiveDate: "2026-05-10", source: "وزارة القوى العاملة" },
+      { axisSlug: "contracts-poa", topicSlug: "legal-poa", topicName: "التوكيلات القانونية", title: "توكيل قضائي — قضية تجارية", jurisdiction: "محلي", country: "مصر", category: "توكيل", status: "نشط", clientName: "سارة إبراهيم المصري", effectiveDate: "2026-07-01", source: "كاتب العدل" },
+      { axisSlug: "compliance-crimes", topicSlug: "legal-compliance", topicName: "أنظمة الامتثال القانوني", title: "تدقيق امتثال — ISO 37301", jurisdiction: "امتثال", country: "الإمارات", category: "رقابة", status: "نشط", clientName: "شركة الخليج القابضة", effectiveDate: "2026-03-15", source: "ISO" },
+    ];
+    let n = 0;
+    for (const e of demoAxes) {
+      n++;
+      await prisma.legalClassificationEntry.create({
+        data: {
+          refNo: `LAW-${new Date().getFullYear()}-${String(n).padStart(4, "0")}`,
+          ...e,
+          description: `سجل تجريبي — ${e.topicName}`,
+        },
+      });
+    }
+    result.legalClassificationEntries = n;
+  }
+
   return result;
 }
