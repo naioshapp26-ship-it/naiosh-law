@@ -3,18 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { imperialAxes } from "@/data/empire-structure";
+import { useSiteTheme } from "@/components/theme-provider";
 
 type Props = {
   collapsed?: boolean;
 };
 
-const activeLink =
-  "bg-white text-red-900 font-bold shadow-md [&_span]:text-red-900";
-const inactiveLink =
-  "text-white hover:bg-white/15 hover:text-white [&_span]:text-white";
-
 export function EmpireSidebarNav({ collapsed = false }: Props) {
   const pathname = usePathname();
+  const { theme } = useSiteTheme();
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   if (collapsed) return null;
@@ -23,7 +20,7 @@ export function EmpireSidebarNav({ collapsed = false }: Props) {
 
   return (
     <div className="flex flex-col flex-1 justify-evenly min-h-0 py-2">
-      <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-red-200/80 shrink-0">
+      <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0">
         المحاور القانونية
       </p>
 
@@ -34,9 +31,12 @@ export function EmpireSidebarNav({ collapsed = false }: Props) {
             key={axis.slug}
             href={axis.href}
             title={axis.title}
-            className={`flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 ${
-              active ? activeLink : inactiveLink
-            }`}
+            className="flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 hover:bg-white/15"
+            style={
+              active
+                ? { background: "#fff", color: theme.primaryColor, fontWeight: 700, boxShadow: "0 4px 14px rgba(0,0,0,0.12)" }
+                : { color: "#fff" }
+            }
           >
             <span className="text-base shrink-0 w-5 text-center">{axis.icon}</span>
             <span className="truncate leading-snug">{axis.title}</span>

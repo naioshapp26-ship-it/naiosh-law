@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import { BRAND } from "@/lib/brand";
+import { AppProviders } from "@/components/app-providers";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

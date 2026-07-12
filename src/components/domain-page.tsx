@@ -130,15 +130,15 @@ export function BtnPrimary({ children, onClick, disabled }: { children: ReactNod
       disabled={disabled}
       style={{
         padding: "0.6rem 1.25rem",
-        borderRadius: "12px",
+        borderRadius: "var(--radius-base, 12px)",
         border: "none",
-        background: disabled ? "#e2e8f0" : "linear-gradient(135deg, #c3152a 0%, #a01020 100%)",
+        background: disabled ? "#e2e8f0" : "linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)",
         color: disabled ? "#94a3b8" : "#fff",
         fontWeight: 700,
         cursor: disabled ? "not-allowed" : "pointer",
         fontFamily: "var(--font-cairo)",
         fontSize: "0.875rem",
-        boxShadow: disabled ? "none" : "0 4px 12px rgba(195,21,42,0.3)",
+        boxShadow: disabled ? "none" : "0 4px 12px var(--primary-glow)",
         display: "inline-flex",
         alignItems: "center",
         gap: "0.4rem",

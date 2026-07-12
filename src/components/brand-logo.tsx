@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import { useSiteTheme } from "@/components/theme-provider";
 
 type Props = {
   size?: number;
@@ -21,13 +24,29 @@ export function BrandLogo({
   subtitle,
   animated = false,
 }: Props) {
+  const { theme, logoSrc } = useSiteTheme();
+  const displayName = theme.brandName || BRAND.name;
+  const displaySubtitle = subtitle ?? theme.tagline ?? BRAND.tagline;
   const textColor = variant === "light" ? "text-white" : "text-slate-900";
-  const subColor = variant === "light" ? "text-red-100/90" : "text-slate-500";
+  const subColor = variant === "light" ? "text-white/80" : "text-slate-500";
   const height = Math.round(size * 1.2);
+  const isDataUrl = logoSrc.startsWith("data:");
 
-  const img = (
+  const img = isDataUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logoSrc}
+      alt={BRAND.logoAlt}
+      className={`object-contain shrink-0 ${animated ? "logo-float" : ""}`}
+      style={{
+        width: size,
+        height: height,
+        filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
+      }}
+    />
+  ) : (
     <Image
-      src={BRAND.logoPath}
+      src={logoSrc}
       alt={BRAND.logoAlt}
       width={size}
       height={height}
@@ -47,9 +66,9 @@ export function BrandLogo({
       {img}
       {showText && (
         <div className="min-w-0 leading-tight flex-1">
-          <p className={`font-black text-base truncate tracking-tight ${textColor}`}>{BRAND.name}</p>
-          {subtitle && (
-            <p className={`text-[10px] truncate mt-0.5 ${subColor}`}>{subtitle}</p>
+          <p className={`font-black text-base truncate tracking-tight ${textColor}`}>{displayName}</p>
+          {displaySubtitle && (
+            <p className={`text-[10px] truncate mt-0.5 ${subColor}`}>{displaySubtitle}</p>
           )}
         </div>
       )}

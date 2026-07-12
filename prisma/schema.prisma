@@ -757,3 +757,24 @@ model CircularAlert {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
+
+model SiteSettings {
+  id             String   @id @default("default")
+  primaryColor   String   @default("#c3152a")
+  primaryDark    String   @default("#a00f20")
+  accentColor    String   @default("#0ea5e9")
+  sidebarFrom    String   @default("#450a0a")
+  sidebarVia     String   @default("#7f1d1d")
+  sidebarTo      String   @default("#450a0a")
+  backgroundColor String  @default("#f8fafc")
+  textColor      String   @default("#0a0a12")
+  brandName      String   @default("NAIOSH Law")
+  brandNameAr    String   @default("نايوش")
+  tagline        String   @default("النظام القانوني السيادي 360")
+  logoPath       String   @default("/naiosh-logo.png")
+  logoData       String?  @db.Text
+  borderRadius   String   @default("12")
+  updatedBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
