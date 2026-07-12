@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
-import { HeroSection } from "@/components/hero";
+import { LandingHeroSlider } from "@/components/landing-hero-slider";
 import { ModuleCard } from "@/components/module-card";
 import { BrandLogo } from "@/components/brand-logo";
 import { modules } from "@/data/modules";
@@ -38,54 +38,11 @@ const features = [
   },
 ];
 
-const statItems = [
-  { value: "17", label: "وحدة تشغيلية" },
-  { value: "128+", label: "قضية نشطة" },
-  { value: "500+", label: "موكل مسجل" },
-  { value: "99.9%", label: "وقت التشغيل" },
-];
-
 export default function HomePage() {
   return (
     <>
-      <Navbar />
-      <HeroSection />
-
-      {/* ── Stats Bar ── */}
-      <section
-        style={{
-          background: "#ffffff",
-          borderBottom: "1px solid #e2e8f0",
-          padding: "2.75rem 0",
-        }}
-      >
-        <div className="container-max">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "1rem",
-              textAlign: "center",
-            }}
-            className="stats-grid"
-          >
-            {statItems.map((s) => (
-              <div key={s.label}>
-                <div
-                  style={{ fontSize: "2.4rem", fontWeight: 900, color: "#c3152a", lineHeight: 1 }}
-                >
-                  {s.value}
-                </div>
-                <div
-                  style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.35rem", fontWeight: 500 }}
-                >
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Navbar variant="landing" />
+      <LandingHeroSlider />
 
       {/* ── Features ── */}
       <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
@@ -335,7 +292,6 @@ export default function HomePage() {
 
       <style>{`
         @media (max-width: 768px) {
-          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .modules-grid { grid-template-columns: 1fr !important; }
         }
