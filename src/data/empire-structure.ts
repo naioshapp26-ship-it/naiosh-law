@@ -88,12 +88,7 @@ export const dashboardTypes: DashboardType[] = [
 ];
 
 function item(id: string, label: string, moduleSlug?: string, href?: string): NavItem {
-  return {
-    id,
-    label,
-    moduleSlug,
-    href: href ?? (moduleSlug ? `/app/modules/${moduleSlug}` : `/app/axis/item/${id}`),
-  };
+  return { id, label, moduleSlug, href };
 }
 
 export const imperialAxes: ImperialAxis[] = [

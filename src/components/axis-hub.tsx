@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ImperialAxis, NavDropdown, NavItem } from "@/data/empire-structure";
+import { resolveItemHref } from "@/lib/empire-routes";
 
 type Props = {
   axis: ImperialAxis;
@@ -10,9 +11,10 @@ type Props = {
 };
 
 function ItemCard({ item }: { item: NavItem }) {
+  const href = resolveItemHref(item);
   return (
     <Link
-      href={item.href ?? "#"}
+      href={href}
       className="card-white"
       style={{
         display: "block",
