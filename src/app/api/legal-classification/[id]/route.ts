@@ -15,6 +15,7 @@ export async function PATCH(request: Request, { params }: Params) {
     data: {
       title: body.title !== undefined ? String(body.title) : undefined,
       topicName: body.topicName !== undefined ? String(body.topicName) : undefined,
+      topicSlug: body.topicSlug !== undefined ? String(body.topicSlug) : undefined,
       jurisdiction: body.jurisdiction !== undefined ? String(body.jurisdiction) : undefined,
       country: body.country !== undefined ? String(body.country) : undefined,
       category: body.category !== undefined ? String(body.category) : undefined,

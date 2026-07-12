@@ -312,6 +312,14 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
     [axis.topics]
   );
 
+  const activeTopic = useMemo(() => {
+    if (topicFilter === "all") return null;
+    return axis.topics.find((t) => t.slug === topicFilter) ?? null;
+  }, [topicFilter, axis.topics]);
+
+  const resolveTopic = (topicName: string) =>
+    axis.topics.find((t) => t.name === topicName) ?? activeTopic ?? axis.topics[0];
+
   const fieldsWithTopics: FormField[] = entryFields.map((f) =>
     f.key === "topicSlug"
       ? {
@@ -324,6 +332,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   );
 
   const filtered = topicFilter === "all" ? entries : entries.filter((e) => e.topicSlug === topicFilter);
+  const filteredEmpty = !loading && entries.length > 0 && filtered.length === 0;
 
   const openAdd = () => {
     setEditTarget(null);
@@ -337,20 +346,21 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
 
   const handleSave = async (data: Record<string, unknown>) => {
     const topicName = String(data.topicName ?? "");
-    const topic = axis.topics.find((t) => t.name === topicName) ?? axis.topics[0];
+    const topic = resolveTopic(topicName);
 
     if (editTarget) {
       const res = await fetch(`/api/legal-classification/${editTarget.id}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, topicName: topic?.name }),
+        body: JSON.stringify({ ...data, topicName: topic?.name, topicSlug: topic?.slug }),
       });
       if (!res.ok) {
         show("error", "فشل التعديل");
         return;
       }
       show("success", "✅ تم التعديل بنجاح");
+      if (topic?.slug) setTopicFilter(topic.slug);
     } else {
       const res = await fetch("/api/legal-classification", {
         method: "POST",
@@ -368,6 +378,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
         return;
       }
       show("success", "✅ تمت الإضافة بنجاح");
+      if (topic?.slug) setTopicFilter(topic.slug);
     }
     setModalOpen(false);
     setEditTarget(null);
@@ -505,6 +516,17 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
           seeding={seeding}
           canWrite={canWrite}
         />
+      ) : filteredEmpty ? (
+        <div className="card-white" style={{ padding: "2.5rem 2rem", textAlign: "center" }}>
+          <p style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>📭</p>
+          <h3 style={{ fontWeight: 800, marginBottom: "0.5rem", color: "#0a0a12" }}>
+            لا توجد سجلات في «{activeTopic?.name ?? "هذا الموضوع"}»
+          </h3>
+          <p style={{ color: "#64748b", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.7 }}>
+            يوجد {entries.length} سجل في المحور — أضف سجلاً جديداً وسيُحفظ تلقائياً تحت الموضوع المحدد
+          </p>
+          {canWrite && <BtnPrimary onClick={openAdd}>➕ إضافة سجل لهذا الموضوع</BtnPrimary>}
+        </div>
       ) : (
         <div className="card-white" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
@@ -516,7 +538,14 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((e) => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ ...td, textAlign: "center", color: "#94a3b8", padding: "2rem" }}>
+                    لا توجد سجلات لعرضها
+                  </td>
+                </tr>
+              ) : (
+              filtered.map((e) => (
                 <tr key={e.id}>
                   <td style={{ ...td, fontWeight: 700, color: axis.color }}>{e.refNo}</td>
                   <td style={{ ...td, fontWeight: 700 }}>{e.title}</td>
@@ -550,7 +579,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -558,8 +587,9 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
 
       {/* Add/Edit Modal */}
       <Modal
+        key={editTarget?.id ?? `add-${topicFilter}-${modalOpen}`}
         open={modalOpen}
-        title={editTarget ? "تعديل السجل القانوني" : "إضافة سجل قانوني"}
+        title={editTarget ? "تعديل السجل القانوني" : activeTopic ? `إضافة سجل — ${activeTopic.name}` : "إضافة سجل قانوني"}
         fields={fieldsWithTopics}
         initial={
           editTarget
@@ -576,7 +606,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                 description: editTarget.description,
                 notes: editTarget.notes,
               }
-            : { status: "نشط", topicName: axis.topics[0]?.name }
+            : { status: "نشط", topicName: activeTopic?.name ?? axis.topics[0]?.name ?? "" }
         }
         onSave={handleSave}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}
