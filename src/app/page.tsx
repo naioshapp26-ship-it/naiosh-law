@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero";
 import { ModuleCard } from "@/components/module-card";
+import { BrandLogo } from "@/components/brand-logo";
 import { modules } from "@/data/modules";
 
 const features = [
@@ -318,9 +319,7 @@ export default function HomePage() {
             gap: "1rem",
           }}
         >
-          <div style={{ color: "#334155", fontSize: "0.85rem" }}>
-            © 2026 Naiosh Law. جميع الحقوق محفوظة.
-          </div>
+          <BrandLogo href="/" size={40} variant="light" subtitle="جميع الحقوق محفوظة © 2026" />
           <div
             style={{
               color: "#c3152a",

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -62,42 +63,7 @@ export function Navbar() {
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
       >
         {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              background: "linear-gradient(135deg, #c3152a 0%, #7f0d1a 100%)",
-              borderRadius: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-              color: "#fff",
-              fontSize: "1.15rem",
-              boxShadow: "0 4px 14px rgba(195,21,42,0.4)",
-              flexShrink: 0,
-            }}
-          >
-            N
-          </div>
-          <div>
-            <div
-              style={{
-                color: "#ffffff",
-                fontWeight: 800,
-                fontSize: "1.05rem",
-                lineHeight: 1.2,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Naiosh Law
-            </div>
-            <div style={{ color: "#475569", fontSize: "0.65rem", fontWeight: 500 }}>
-              النظام القانوني المتكامل
-            </div>
-          </div>
-        </Link>
+        <BrandLogo href="/" size={44} variant="light" subtitle="النظام القانوني المتكامل" />
 
         {/* Desktop nav */}
         <nav

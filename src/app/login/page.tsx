@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import { demoUsers } from "@/data/auth";
+import { BrandLogo } from "@/components/brand-logo";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -128,33 +129,8 @@ export default function LoginPage() {
 
         {/* Top: Logo */}
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "3rem" }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                background: "rgba(255,255,255,0.12)",
-                borderRadius: "14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                color: "#fff",
-                fontSize: "1.2rem",
-                border: "1px solid rgba(255,255,255,0.2)",
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              N
-            </div>
-            <div>
-              <div style={{ color: "#ffffff", fontWeight: 800, fontSize: "1.1rem", lineHeight: 1.2 }}>
-                Naiosh Law
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>
-                النظام القانوني المتكامل
-              </div>
-            </div>
+          <div style={{ marginBottom: "2.5rem" }}>
+            <BrandLogo size={72} variant="light" subtitle="النظام القانوني المتكامل" />
           </div>
 
           {/* Tagline */}
@@ -226,25 +202,8 @@ export default function LoginPage() {
           <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem", lineHeight: 1.7, fontStyle: "italic" }}>
             &quot;العدالة لا تُدار بالورق المتراكم، بل بالنظام الذي يُوثّق كل خطوة ويُحاسب كل لحظة.&quot;
           </p>
-          <div style={{ marginTop: "0.85rem", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.15)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1rem",
-              }}
-            >
-              ⚖️
-            </div>
-            <div>
-              <p style={{ color: "#ffffff", fontSize: "0.78rem", fontWeight: 700 }}>Naiosh Law</p>
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.68rem" }}>النظام القانوني المتكامل</p>
-            </div>
+          <div style={{ marginTop: "0.85rem" }}>
+            <BrandLogo size={40} variant="light" subtitle="النظام القانوني المتكامل" />
           </div>
         </div>
       </div>
@@ -267,6 +226,10 @@ export default function LoginPage() {
           animate="show"
           style={{ width: "100%", maxWidth: "420px" }}
         >
+          <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "center" }}>
+            <BrandLogo size={56} variant="dark" subtitle="النظام القانوني المتكامل" />
+          </motion.div>
+
           {/* Heading */}
           <motion.div variants={fadeUp} style={{ marginBottom: "2.5rem" }}>
             <h1

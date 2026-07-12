@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 import { EmpireSidebarNav } from "@/components/empire-sidebar";
+import { BrandLogo } from "@/components/brand-logo";
 import { PRIMARY_NAV } from "@/lib/empire-routes";
 import type { UserRole } from "@/lib/session";
 
@@ -51,19 +52,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-slate-50" dir="rtl">
       <aside
         className={`${
-          sidebarOpen ? "w-[280px]" : "w-[68px]"
-        } bg-gradient-to-b from-red-900 via-red-800 to-red-950 text-white transition-all duration-300 flex flex-col shadow-2xl shrink-0 z-20`}
+          sidebarOpen ? "w-[290px]" : "w-[72px]"
+        } sticky top-0 h-screen bg-gradient-to-b from-red-950 via-red-900 to-red-950 text-white transition-all duration-300 flex flex-col shadow-2xl shrink-0 z-20`}
       >
-        {/* Header */}
-        <div className="p-4 border-b border-white/10">
+        {/* Logo */}
+        <div className="shrink-0 p-3 border-b border-white/10">
           <div className="flex items-center justify-between gap-2">
             {sidebarOpen ? (
-              <div className="min-w-0">
-                <h1 className="text-lg font-black text-white tracking-tight">نايوش</h1>
-                <p className="text-[11px] text-red-200/90">النظام القانوني السيادي 360</p>
-              </div>
+              <BrandLogo size={52} href="/app/dashboard" variant="light" className="flex-1" />
             ) : (
-              <span className="text-xl mx-auto">⚖️</span>
+              <Link href="/app/dashboard" className="mx-auto block" title="NAIOSH Law">
+                <BrandLogo size={44} showText={false} variant="light" />
+              </Link>
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -77,7 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* User */}
         {sidebarOpen && (
-          <div className="px-4 py-3 border-b border-white/10">
+          <div className="shrink-0 px-4 py-3 border-b border-white/10">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/20 flex items-center justify-center text-sm font-bold">
                 {user?.name?.charAt(0) ?? "?"}
@@ -92,40 +92,61 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 scrollbar-thin">
-          {sidebarOpen && (
-            <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-red-300/80">
-              القائمة الرئيسية
-            </p>
+        {/* Navigation — موزّع على طول الصفحة */}
+        <nav className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {sidebarOpen ? (
+            <>
+              <div className="flex flex-col flex-1 justify-evenly min-h-0 px-1 py-2">
+                <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-red-300/70 shrink-0">
+                  القائمة الرئيسية
+                </p>
+                {PRIMARY_NAV.map((item) => {
+                  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={item.label}
+                      className={`flex items-center gap-2.5 mx-2 px-3 py-2 rounded-xl text-sm transition-all shrink-0 ${
+                        active
+                          ? "bg-white text-red-800 font-bold shadow-md"
+                          : "text-red-50 hover:bg-white/10"
+                      }`}
+                    >
+                      <span className="text-base shrink-0 w-5 text-center">{item.icon}</span>
+                      <span className="truncate leading-snug">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="h-px bg-white/15 mx-4 shrink-0" />
+
+              <EmpireSidebarNav collapsed={false} />
+            </>
+          ) : (
+            <div className="flex flex-col flex-1 justify-evenly items-center py-4">
+              {PRIMARY_NAV.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={item.label}
+                    className={`p-2.5 rounded-xl text-lg transition-all ${
+                      active ? "bg-white shadow-md" : "hover:bg-white/10"
+                    }`}
+                  >
+                    {item.icon}
+                  </Link>
+                );
+              })}
+            </div>
           )}
-
-          <div className="px-2 space-y-0.5">
-            {PRIMARY_NAV.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(item.href + "/");
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={item.label}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                    active
-                      ? "bg-white text-red-800 font-bold shadow-md"
-                      : "text-red-50 hover:bg-white/10"
-                  }`}
-                >
-                  <span className="text-lg shrink-0 w-6 text-center">{item.icon}</span>
-                  {sidebarOpen && <span className="text-sm truncate">{item.label}</span>}
-                </Link>
-              );
-            })}
-          </div>
-
-          <EmpireSidebarNav collapsed={!sidebarOpen} />
         </nav>
 
         {/* Logout */}
-        <div className="p-3 border-t border-white/10">
+        <div className="shrink-0 p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-100 hover:bg-white/10 transition-colors"
