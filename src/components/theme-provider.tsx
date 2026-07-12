@@ -79,13 +79,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [apply, refresh]);
 
-  const updateLocal = useCallback(
-    (patch: Partial<SiteTheme>) => {
-      const next = { ...theme, ...patch };
-      apply(next);
-    },
-    [apply, theme]
-  );
+  const updateLocal = useCallback((patch: Partial<SiteTheme>) => {
+    setTheme((prev) => {
+      const next = { ...prev, ...patch };
+      applySiteTheme(next);
+      if (typeof document !== "undefined") {
+        document.body.style.background = next.backgroundColor;
+        document.body.style.color = next.textColor;
+      }
+      return next;
+    });
+  }, []);
 
   const value = useMemo(
     () => ({

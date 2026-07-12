@@ -89,6 +89,7 @@ export default function SystemSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const loadedRef = useRef(false);
   const { show, Toast } = useToast();
 
   const load = useCallback(async () => {
@@ -97,7 +98,7 @@ export default function SystemSettingsPage() {
       const res = await fetch("/api/site-settings", { credentials: "include", cache: "no-store" });
       const data = await res.json();
       if (res.ok) {
-        const t: SiteTheme = {
+        setForm({
           primaryColor: data.primaryColor,
           primaryDark: data.primaryDark,
           accentColor: data.accentColor,
@@ -112,18 +113,20 @@ export default function SystemSettingsPage() {
           logoPath: data.logoPath,
           logoData: data.logoData,
           borderRadius: data.borderRadius,
-        };
-        setForm(t);
-        updateLocal(t);
+        });
       }
+    } catch {
+      /* keep defaults */
     } finally {
       setLoading(false);
     }
-  }, [updateLocal]);
+  }, []);
 
   useEffect(() => {
+    if (!ready || !user || user.role !== "admin" || loadedRef.current) return;
+    loadedRef.current = true;
     load();
-  }, [load]);
+  }, [ready, user, load]);
 
   const patch = (key: keyof SiteTheme, value: string | null) => {
     const next = { ...form, [key]: value };
