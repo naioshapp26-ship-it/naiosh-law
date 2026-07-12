@@ -1,7 +1,9 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 const stats = [
   { value: "17", label: "وحدة تشغيلية" },
@@ -9,6 +11,15 @@ const stats = [
   { value: "500+", label: "موكل مسجل" },
   { value: "99.9%", label: "وقت التشغيل" },
 ];
+
+const VISUAL_SLIDES = [
+  { id: "case", label: "إدارة القضايا" },
+  { id: "shield", label: "حماية البيانات" },
+  { id: "clients", label: "إدارة الموكلين" },
+  { id: "ai", label: "ذكاء اصطناعي" },
+] as const;
+
+const ROTATE_MS = 6000;
 
 const container = {
   hidden: {},
@@ -24,22 +35,462 @@ const itemAnim = {
   },
 };
 
+const slideAnim = {
+  initial: { opacity: 0, x: -28, scale: 0.97 },
+  animate: { opacity: 1, x: 0, scale: 1 },
+  exit: { opacity: 0, x: 28, scale: 0.97 },
+  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+};
+
 const headlineText = "إدارة القضايا والموكلين بذكاء";
 
-export function HeroSection() {
+type Props = {
+  variant?: "default" | "landing";
+};
+
+function CaseVisual() {
+  return (
+    <>
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1.75rem",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <span style={{ fontSize: "0.7rem", color: "#475569", fontWeight: 600, letterSpacing: "0.05em" }}>
+            ← إدارة القضايا
+          </span>
+          <span
+            style={{
+              background: "rgba(34,197,94,0.12)",
+              color: "#4ade80",
+              borderRadius: "100px",
+              padding: "0.2rem 0.8rem",
+              fontSize: "0.7rem",
+              fontWeight: 700,
+              border: "1px solid rgba(34,197,94,0.2)",
+            }}
+          >
+            ● نشطة
+          </span>
+        </div>
+
+        <h3 style={{ color: "#ffffff", fontWeight: 800, fontSize: "1rem", marginBottom: "0.35rem" }}>
+          قضية استئناف تجارية
+        </h3>
+        <p style={{ color: "#64748b", fontSize: "0.8rem", marginBottom: "1.4rem" }}>
+          محكمة الاستئناف القاهرة — الغرفة 7
+        </p>
+
+        <div
+          style={{
+            background: "rgba(195,21,42,0.08)",
+            border: "1px solid rgba(195,21,42,0.18)",
+            borderRadius: "14px",
+            padding: "0.85rem 1rem",
+            marginBottom: "1.25rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+          }}
+        >
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "10px",
+              background: "rgba(195,21,42,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.1rem",
+              flexShrink: 0,
+            }}
+          >
+            🏛️
+          </div>
+          <div>
+            <p style={{ color: "#64748b", fontSize: "0.68rem", marginBottom: "0.2rem" }}>الجلسة القادمة</p>
+            <p style={{ color: "#ffffff", fontWeight: 700, fontSize: "0.88rem" }}>الأربعاء، 15 يوليو 2026</p>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+            <span style={{ fontSize: "0.72rem", color: "#64748b" }}>تقدم القضية</span>
+            <span style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}>65%</span>
+          </div>
+          <div
+            style={{
+              height: 5,
+              background: "rgba(255,255,255,0.06)",
+              borderRadius: "99px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: "65%",
+                background: "linear-gradient(90deg, #c3152a, #ff6b6b)",
+                borderRadius: "99px",
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          {["مرفقات 12", "إجراءات 7", "أحكام"].map((tag) => (
+            <span
+              key={tag}
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                color: "#64748b",
+                borderRadius: "8px",
+                padding: "0.25rem 0.65rem",
+                fontSize: "0.68rem",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1rem 1.25rem",
+          marginTop: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.85rem",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: "11px",
+            background: "rgba(251,191,36,0.12)",
+            border: "1px solid rgba(251,191,36,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1rem",
+            flexShrink: 0,
+          }}
+        >
+          ⚡
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 600 }}>تنبيه عاجل</p>
+          <p style={{ color: "#64748b", fontSize: "0.72rem", marginTop: "0.1rem" }}>
+            موعد تقديم المذكرة غدًا الساعة 9 ص
+          </p>
+        </div>
+        <span
+          style={{
+            background: "rgba(251,191,36,0.12)",
+            color: "#fbbf24",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            borderRadius: "6px",
+            padding: "0.2rem 0.5rem",
+            flexShrink: 0,
+          }}
+        >
+          عاجل
+        </span>
+      </div>
+
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1rem 1.25rem",
+          marginTop: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "1.5rem",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+        }}
+      >
+        {[
+          { label: "قضايا", val: "128" },
+          { label: "جلسات الأسبوع", val: "26" },
+          { label: "مهام اليوم", val: "14" },
+        ].map((s) => (
+          <div key={s.label} style={{ textAlign: "center", flex: 1 }}>
+            <p style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 900, lineHeight: 1 }}>{s.val}</p>
+            <p style={{ color: "#475569", fontSize: "0.65rem", marginTop: "0.2rem" }}>{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ShieldVisual() {
+  return (
+  <>
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1.75rem",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: "14px",
+              background: "rgba(195,21,42,0.15)",
+              border: "1px solid rgba(195,21,42,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.5rem",
+            }}
+          >
+            🔐
+          </div>
+          <div>
+            <p style={{ color: "#ffffff", fontWeight: 800, fontSize: "1rem" }}>حماية البيانات</p>
+            <p style={{ color: "#64748b", fontSize: "0.78rem" }}>تشفير من طرف لطرف</p>
+          </div>
+        </div>
+        {["صلاحيات متعددة المستويات", "نسخ احتياطي تلقائي", "سجل تدقيق كامل", "تشفير SSL"].map((t) => (
+          <div
+            key={t}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.65rem",
+              padding: "0.55rem 0",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+            }}
+          >
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c3152a", flexShrink: 0 }} />
+            <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>{t}</span>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1rem 1.25rem",
+          marginTop: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "1.5rem",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+        }}
+      >
+        {[
+          { label: "مستخدمون", val: "24" },
+          { label: "أدوار", val: "8" },
+          { label: "سجلات", val: "1.2k" },
+        ].map((s) => (
+          <div key={s.label} style={{ textAlign: "center", flex: 1 }}>
+            <p style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 900, lineHeight: 1 }}>{s.val}</p>
+            <p style={{ color: "#475569", fontSize: "0.65rem", marginTop: "0.2rem" }}>{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ClientsVisual() {
+  return (
+    <>
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1.75rem",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+          <span style={{ fontSize: "1.25rem" }}>👥</span>
+          <span style={{ color: "#ffffff", fontWeight: 800, fontSize: "1rem" }}>إدارة الموكلين</span>
+        </div>
+        {[
+          { name: "أحمد محمد العلي", cases: "3 قضايا" },
+          { name: "شركة النور للتجارة", cases: "7 قضايا" },
+          { name: "مؤسسة الريادة", cases: "2 قضية" },
+          { name: "سارة حسن محمود", cases: "1 قضية" },
+        ].map((c) => (
+          <div
+            key={c.name}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "0.65rem 0",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <span style={{ color: "#e2e8f0", fontSize: "0.82rem" }}>{c.name}</span>
+            <span style={{ color: "#64748b", fontSize: "0.7rem" }}>{c.cases}</span>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1rem 1.25rem",
+          marginTop: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.85rem",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: "11px",
+            background: "rgba(34,197,94,0.12)",
+            border: "1px solid rgba(34,197,94,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1rem",
+          }}
+        >
+          ✓
+        </div>
+        <div>
+          <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 600 }}>500+ موكل مسجل</p>
+          <p style={{ color: "#64748b", fontSize: "0.72rem", marginTop: "0.1rem" }}>نمو 23% هذا الشهر</p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function AiVisual() {
+  return (
+    <>
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1.75rem",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+          <span style={{ fontSize: "1.25rem" }}>🧠</span>
+          <span style={{ color: "#ffffff", fontWeight: 800, fontSize: "1rem" }}>مساعد ذكي قانوني</span>
+        </div>
+        <div
+          style={{
+            background: "rgba(195,21,42,0.08)",
+            border: "1px solid rgba(195,21,42,0.18)",
+            borderRadius: "14px",
+            padding: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <p style={{ color: "#94a3b8", fontSize: "0.75rem", marginBottom: "0.5rem" }}>تحليل المستند</p>
+          <p style={{ color: "#ffffff", fontSize: "0.85rem", lineHeight: 1.7 }}>
+            تم استخراج 12 بندًا قانونيًا من العقد — جاهز للمراجعة
+          </p>
+        </div>
+        {["تلخيص القضايا", "صياغة مذكرات", "بحث قانوني"].map((t) => (
+          <div key={t} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <span style={{ color: "#c3152a", fontSize: "0.7rem" }}>●</span>
+            <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>{t}</span>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="glass-dark"
+        style={{
+          padding: "1rem 1.25rem",
+          marginTop: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "1.5rem",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+        }}
+      >
+        {[
+          { label: "مستندات", val: "∞" },
+          { label: "دقة", val: "98%" },
+          { label: "وقت موفر", val: "4h" },
+        ].map((s) => (
+          <div key={s.label} style={{ textAlign: "center", flex: 1 }}>
+            <p style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 900, lineHeight: 1 }}>{s.val}</p>
+            <p style={{ color: "#475569", fontSize: "0.65rem", marginTop: "0.2rem" }}>{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function HeroVisualSlide({ slideId }: { slideId: (typeof VISUAL_SLIDES)[number]["id"] }) {
+  switch (slideId) {
+    case "shield":
+      return <ShieldVisual />;
+    case "clients":
+      return <ClientsVisual />;
+    case "ai":
+      return <AiVisual />;
+    default:
+      return <CaseVisual />;
+  }
+}
+
+export function HeroSection({ variant = "default" }: Props) {
+  const isLanding = variant === "landing";
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const next = useCallback(() => setIndex((i) => (i + 1) % VISUAL_SLIDES.length), []);
+  const prev = useCallback(
+    () => setIndex((i) => (i - 1 + VISUAL_SLIDES.length) % VISUAL_SLIDES.length),
+    []
+  );
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(next, ROTATE_MS);
+    return () => clearInterval(t);
+  }, [paused, next]);
+
   return (
     <section
       style={{
-        minHeight: "100vh",
+        minHeight: isLanding ? "calc(100vh - 108px)" : "100vh",
         background: "#0a0a12",
         position: "relative",
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
-        paddingTop: "5rem",
+        paddingTop: isLanding ? "2rem" : "5rem",
       }}
+      aria-label="قسم الهيرو الرئيسي"
     >
-      {/* Glow blobs */}
       <div
         className="glow-pulse"
         style={{
@@ -47,8 +498,7 @@ export function HeroSection() {
           width: 800,
           height: 800,
           borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
+          background: "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
           top: -250,
           left: -150,
           pointerEvents: "none",
@@ -60,15 +510,13 @@ export function HeroSection() {
           width: 500,
           height: 500,
           borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
+          background: "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
           bottom: -100,
           right: -80,
           pointerEvents: "none",
         }}
       />
 
-      {/* Grid pattern */}
       <div
         style={{
           position: "absolute",
@@ -80,7 +528,6 @@ export function HeroSection() {
         }}
       />
 
-      {/* Decorative ring */}
       <div
         className="spin-slow"
         style={{
@@ -111,7 +558,7 @@ export function HeroSection() {
 
       <div
         className="container-max"
-        style={{ position: "relative", zIndex: 10, width: "100%", paddingBlock: "5rem" }}
+        style={{ position: "relative", zIndex: 10, width: "100%", paddingBlock: isLanding ? "3rem" : "5rem" }}
       >
         <div
           style={{
@@ -121,7 +568,6 @@ export function HeroSection() {
           }}
           className="hero-grid"
         >
-          {/* ── Text column ── */}
           <motion.div
             className="hero-content-col"
             variants={container}
@@ -135,7 +581,6 @@ export function HeroSection() {
               textAlign: "right",
             }}
           >
-            {/* Badge */}
             <div
               className="hero-badge"
               style={{
@@ -178,7 +623,6 @@ export function HeroSection() {
               </span>
             </div>
 
-            {/* Heading */}
             <motion.h1
               className="hero-heading"
               style={{
@@ -223,7 +667,6 @@ export function HeroSection() {
               </motion.span>
             </motion.h1>
 
-            {/* Subtext */}
             <p
               className="hero-sub"
               style={{
@@ -235,11 +678,10 @@ export function HeroSection() {
                 marginBottom: "2.75rem",
               }}
             >
-              منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من
-              إدارة القضايا والجلسات وحتى المحاسبة القانونية والذكاء الاصطناعي.
+              منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من إدارة القضايا والجلسات
+              وحتى المحاسبة القانونية والذكاء الاصطناعي.
             </p>
 
-            {/* CTAs */}
             <div
               className="hero-cta"
               style={{
@@ -258,7 +700,6 @@ export function HeroSection() {
               </Link>
             </div>
 
-            {/* Stats */}
             <div
               className="hero-stats"
               style={{
@@ -272,24 +713,10 @@ export function HeroSection() {
             >
               {stats.map((s) => (
                 <div key={s.label} style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontSize: "1.85rem",
-                      fontWeight: 900,
-                      color: "#ffffff",
-                      lineHeight: 1,
-                    }}
-                  >
+                  <div style={{ fontSize: "1.85rem", fontWeight: 900, color: "#ffffff", lineHeight: 1 }}>
                     {s.value}
                   </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "#475569",
-                      marginTop: "0.3rem",
-                      fontWeight: 500,
-                    }}
-                  >
+                  <div style={{ fontSize: "0.75rem", color: "#475569", marginTop: "0.3rem", fontWeight: 500 }}>
                     {s.label}
                   </div>
                 </div>
@@ -297,11 +724,7 @@ export function HeroSection() {
             </div>
           </motion.div>
 
-          {/* ── Visual column ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+          <div
             className="float-anim hero-card-col"
             style={{
               position: "absolute",
@@ -311,232 +734,105 @@ export function HeroSection() {
               zIndex: 5,
             }}
           >
-            {/* Main case card */}
+            <AnimatePresence mode="wait">
+              <motion.div key={VISUAL_SLIDES[index].id} {...slideAnim}>
+                <HeroVisualSlide slideId={VISUAL_SLIDES[index].id} />
+              </motion.div>
+            </AnimatePresence>
+
             <div
-              className="glass-dark"
               style={{
-                padding: "1.75rem",
-                boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: "1.25rem",
+                gap: "0.75rem",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "1.25rem",
-                }}
-              >
-                <span style={{ fontSize: "0.7rem", color: "#475569", fontWeight: 600, letterSpacing: "0.05em" }}>
-                  ← إدارة القضايا
-                </span>
-                <span
-                  style={{
-                    background: "rgba(34,197,94,0.12)",
-                    color: "#4ade80",
-                    borderRadius: "100px",
-                    padding: "0.2rem 0.8rem",
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    border: "1px solid rgba(34,197,94,0.2)",
-                  }}
-                >
-                  ● نشطة
-                </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                {VISUAL_SLIDES.map((slide, i) => (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => setIndex(i)}
+                    aria-label={slide.label}
+                    style={{
+                      height: 8,
+                      width: i === index ? 28 : 8,
+                      borderRadius: 99,
+                      border: "none",
+                      background: i === index ? "#c3152a" : "rgba(255,255,255,0.25)",
+                      cursor: "pointer",
+                      transition: "all 0.25s",
+                    }}
+                  />
+                ))}
               </div>
 
-              <h3
-                style={{
-                  color: "#ffffff",
-                  fontWeight: 800,
-                  fontSize: "1rem",
-                  marginBottom: "0.35rem",
-                }}
-              >
-                قضية استئناف تجارية
-              </h3>
-              <p style={{ color: "#64748b", fontSize: "0.8rem", marginBottom: "1.4rem" }}>
-                محكمة الاستئناف القاهرة — الغرفة 7
-              </p>
-
-              {/* Next session */}
-              <div
-                style={{
-                  background: "rgba(195,21,42,0.08)",
-                  border: "1px solid rgba(195,21,42,0.18)",
-                  borderRadius: "14px",
-                  padding: "0.85rem 1rem",
-                  marginBottom: "1.25rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
-              >
-                <div
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setPaused((p) => !p)}
+                  aria-label={paused ? "تشغيل" : "إيقاف"}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "10px",
-                    background: "rgba(195,21,42,0.15)",
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "1.1rem",
-                    flexShrink: 0,
+                    cursor: "pointer",
                   }}
                 >
-                  🏛️
-                </div>
-                <div>
-                  <p style={{ color: "#64748b", fontSize: "0.68rem", marginBottom: "0.2rem" }}>
-                    الجلسة القادمة
-                  </p>
-                  <p style={{ color: "#ffffff", fontWeight: 700, fontSize: "0.88rem" }}>
-                    الأربعاء، 15 يوليو 2026
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div style={{ marginBottom: "1.25rem" }}>
-                <div
+                  {paused ? <Play size={14} /> : <Pause size={14} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={prev}
+                  aria-label="السابق"
                   style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
                     display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "0.5rem",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
                   }}
                 >
-                  <span style={{ fontSize: "0.72rem", color: "#64748b" }}>تقدم القضية</span>
-                  <span style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}>65%</span>
-                </div>
-                <div
+                  <ChevronRight size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={next}
+                  aria-label="التالي"
                   style={{
-                    height: 5,
-                    background: "rgba(255,255,255,0.06)",
-                    borderRadius: "99px",
-                    overflow: "hidden",
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
                   }}
                 >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: "65%",
-                      background: "linear-gradient(90deg, #c3152a, #ff6b6b)",
-                      borderRadius: "99px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {["مرفقات 12", "إجراءات 7", "أحكام"].map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      color: "#64748b",
-                      borderRadius: "8px",
-                      padding: "0.25rem 0.65rem",
-                      fontSize: "0.68rem",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
+                  <ChevronLeft size={16} />
+                </button>
               </div>
             </div>
-
-            {/* Alert mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
-              className="glass-dark"
-              style={{
-                padding: "1rem 1.25rem",
-                marginTop: "0.85rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.85rem",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
-              }}
-            >
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "11px",
-                  background: "rgba(251,191,36,0.12)",
-                  border: "1px solid rgba(251,191,36,0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1rem",
-                  flexShrink: 0,
-                }}
-              >
-                ⚡
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 600 }}>
-                  تنبيه عاجل
-                </p>
-                <p style={{ color: "#64748b", fontSize: "0.72rem", marginTop: "0.1rem" }}>
-                  موعد تقديم المذكرة غدًا الساعة 9 ص
-                </p>
-              </div>
-              <span
-                style={{
-                  background: "rgba(251,191,36,0.12)",
-                  color: "#fbbf24",
-                  fontSize: "0.65rem",
-                  fontWeight: 700,
-                  borderRadius: "6px",
-                  padding: "0.2rem 0.5rem",
-                  flexShrink: 0,
-                }}
-              >
-                عاجل
-              </span>
-            </motion.div>
-
-            {/* Stats mini card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3, duration: 0.5 }}
-              className="glass-dark"
-              style={{
-                padding: "1rem 1.25rem",
-                marginTop: "0.85rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "1.5rem",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
-              }}
-            >
-              {[
-                { label: "قضايا", val: "128" },
-                { label: "جلسات الأسبوع", val: "26" },
-                { label: "مهام اليوم", val: "14" },
-              ].map((s) => (
-                <div key={s.label} style={{ textAlign: "center", flex: 1 }}>
-                  <p style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 900, lineHeight: 1 }}>
-                    {s.val}
-                  </p>
-                  <p style={{ color: "#475569", fontSize: "0.65rem", marginTop: "0.2rem" }}>
-                    {s.label}
-                  </p>
-                </div>
-              ))}
-            </motion.div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -553,24 +849,21 @@ export function HeroSection() {
           color: "#334155",
           fontSize: "0.7rem",
           fontWeight: 500,
+          zIndex: 10,
         }}
       >
-        <span>اكتشف المزيد</span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          style={{ animation: "float 2s ease-in-out infinite" }}
-        >
-          <path
-            d="M8 3v10M4 9l4 4 4-4"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <a href="#features" style={{ color: "inherit", textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
+          <span>اكتشف المزيد</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: "float 2s ease-in-out infinite" }}>
+            <path
+              d="M8 3v10M4 9l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </a>
       </motion.div>
 
       <style>{`

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
-import { LandingHeroSlider } from "@/components/landing-hero-slider";
+import { HeroSection } from "@/components/hero";
 import { ModuleCard } from "@/components/module-card";
 import { BrandLogo } from "@/components/brand-logo";
 import { modules } from "@/data/modules";
@@ -42,7 +42,7 @@ export default function HomePage() {
   return (
     <>
       <Navbar variant="landing" />
-      <LandingHeroSlider />
+      <HeroSection variant="landing" />
 
       {/* ── Features ── */}
       <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0" }}>
