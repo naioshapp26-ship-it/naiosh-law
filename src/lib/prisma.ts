@@ -17,6 +17,43 @@ function needsSsl(connectionString: string) {
   );
 }
 
+function getConnectionString(): string | undefined {
+  const candidates = [
+    process.env.DATABASE_URL,
+    process.env.DATABASE_PUBLIC_URL,
+    process.env.POSTGRES_URL,
+  ];
+
+  for (const value of candidates) {
+    const trimmed = value?.trim();
+    if (trimmed && !trimmed.startsWith("${")) {
+      return trimmed;
+    }
+  }
+
+  const host = process.env.PGHOST?.trim();
+  const user = process.env.PGUSER?.trim();
+  const password = process.env.PGPASSWORD?.trim();
+  const database = process.env.PGDATABASE?.trim() || process.env.POSTGRES_DB?.trim();
+  const port = process.env.PGPORT?.trim() || "5432";
+
+  if (host && user && password && database) {
+    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+  }
+
+  return undefined;
+}
+
+export function getDatabaseEnvStatus() {
+  return {
+    DATABASE_URL: Boolean(process.env.DATABASE_URL?.trim()),
+    DATABASE_PUBLIC_URL: Boolean(process.env.DATABASE_PUBLIC_URL?.trim()),
+    POSTGRES_URL: Boolean(process.env.POSTGRES_URL?.trim()),
+    PGHOST: Boolean(process.env.PGHOST?.trim()),
+    resolved: Boolean(getConnectionString()),
+  };
+}
+
 function createPool(connectionString: string) {
   const config: PoolConfig = {
     connectionString,
@@ -33,7 +70,7 @@ function createPool(connectionString: string) {
 }
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = getConnectionString();
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set");
   }
@@ -62,7 +99,7 @@ export const prisma = new Proxy({} as PrismaClient, {
 });
 
 export async function checkDatabaseConnection() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = getConnectionString();
   if (!connectionString) {
     return { ok: false as const, error: "DATABASE_URL is not set" };
   }

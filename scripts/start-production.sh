@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-if [ -z "${DATABASE_URL:-}" ]; then
+has_db=false
+if [ -n "${DATABASE_URL:-}" ] || [ -n "${DATABASE_PUBLIC_URL:-}" ] || [ -n "${PGHOST:-}" ]; then
+  has_db=true
+fi
+
+if [ "$has_db" = false ]; then
   echo "WARNING: DATABASE_URL is not set — skipping migrations"
 else
   echo "Running database migrations..."

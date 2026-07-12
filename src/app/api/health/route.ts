@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
-import { prisma, checkDatabaseConnection } from "@/lib/prisma";
+import { prisma, checkDatabaseConnection, getDatabaseEnvStatus } from "@/lib/prisma";
 
 export async function GET() {
-  const dbUrl = Boolean(process.env.DATABASE_URL);
+  const env = getDatabaseEnvStatus();
   const jwt = Boolean(process.env.JWT_SECRET?.trim());
 
-  if (!dbUrl) {
+  if (!env.resolved) {
     return NextResponse.json(
-      { status: "error", database: false, message: "DATABASE_URL غير مضبوط على Railway" },
+      {
+        status: "error",
+        database: false,
+        message: "DATABASE_URL غير مضبوط على Railway",
+        env,
+        hint: "احذفي DATABASE_URL الفارغ وأضيفي Reference من Postgres، أو افتحي > 8 variables added by Railway",
+      },
       { status: 503 }
     );
   }
@@ -28,6 +34,7 @@ export async function GET() {
       jwtConfigured: jwt,
       users,
       needsSeed: users === 0,
+      env,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
