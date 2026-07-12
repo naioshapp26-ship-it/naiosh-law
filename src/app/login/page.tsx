@@ -1,9 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { demoUsers, sessionKey } from "@/data/auth";
+import { demoUsers } from "@/data/auth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -23,7 +22,6 @@ const perks = [
 ];
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("admin@naioshlaw.com");
   const [password, setPassword] = useState("Admin@123");
   const [error, setError] = useState("");
@@ -34,20 +32,33 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 550));
-    const user = demoUsers.find(
-      (item) => item.email === email && item.password === password
-    );
-    if (!user) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "فشل تسجيل الدخول");
+        setLoading(false);
+        return;
+      }
+
+      // Hard redirect so the new auth cookie is picked up immediately
+      window.location.assign("/app/dashboard");
+    } catch {
+      setError("تعذر الاتصال بالخادم — حاول مرة أخرى");
       setLoading(false);
-      return;
     }
-    window.localStorage.setItem(
-      sessionKey,
-      JSON.stringify({ role: user.role, name: user.name, email: user.email })
-    );
-    router.push("/app/dashboard");
   };
 
   const fillDemo = (role: "admin" | "client") => {

@@ -1,16 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
+  const [mobileSolutionsOpen, setMobileSolutionsOpen] = useState(false);
+  const solutionsMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (solutionsMenuRef.current && !solutionsMenuRef.current.contains(event.target as Node)) {
+        setSolutionsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   const navStyle: React.CSSProperties = {
@@ -27,9 +40,19 @@ export function Navbar() {
   };
 
   const links = [
+    { href: "/#modules", label: "المنتجات" },
+    { href: "/#footer-support", label: "الدعم الفني" },
+    { href: "/#demo-request", label: "طلب تجريبي" },
     { href: "/#features", label: "المميزات" },
     { href: "/#modules", label: "الوحدات" },
     { href: "/app/dashboard", label: "عرض تجريبي" },
+  ];
+
+  const solutionItems = [
+    { href: "/app/modules/case-management", label: "حل إدارة القضايا" },
+    { href: "/app/modules/clients-management", label: "حل إدارة الموكلين" },
+    { href: "/app/modules/court-sessions", label: "حل الجلسات والمتابعات" },
+    { href: "/app/modules/legal-accounting", label: "حل المحاسبة القانونية" },
   ];
 
   return (
@@ -81,9 +104,75 @@ export function Navbar() {
           style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}
           className="desktop-nav"
         >
+          <div ref={solutionsMenuRef} style={{ position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setSolutionsOpen((prev) => !prev)}
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                padding: "0.45rem 0.9rem",
+                borderRadius: "8px",
+                border: "none",
+                background: solutionsOpen ? "rgba(255,255,255,0.06)" : "transparent",
+                transition: "color 0.2s, background 0.2s",
+                cursor: "pointer",
+                fontFamily: "var(--font-cairo)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+              }}
+            >
+              <span>الحلول</span>
+              <span style={{ fontSize: "0.7rem" }}>{solutionsOpen ? "▲" : "▼"}</span>
+            </button>
+            {solutionsOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 0.45rem)",
+                  insetInlineEnd: 0,
+                  minWidth: "240px",
+                  background: "rgba(10,10,18,0.96)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  borderRadius: "12px",
+                  padding: "0.45rem",
+                  boxShadow: "0 18px 45px rgba(0,0,0,0.45)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                {solutionItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setSolutionsOpen(false)}
+                    style={{
+                      display: "block",
+                      padding: "0.55rem 0.65rem",
+                      borderRadius: "8px",
+                      color: "#cbd5e1",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.18)";
+                      (e.currentTarget as HTMLElement).style.color = "#ffffff";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "transparent";
+                      (e.currentTarget as HTMLElement).style.color = "#cbd5e1";
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           {links.map((l) => (
             <Link
-              key={l.href}
+              key={`${l.href}-${l.label}`}
               href={l.href}
               style={{
                 color: "#94a3b8",
@@ -116,7 +205,13 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() => {
+            setMenuOpen((prev) => {
+              const next = !prev;
+              if (!next) setMobileSolutionsOpen(false);
+              return next;
+            });
+          }}
           style={{
             display: "none",
             background: "rgba(255,255,255,0.07)",
@@ -155,11 +250,61 @@ export function Navbar() {
             padding: "1.25rem",
           }}
         >
+          <button
+            type="button"
+            onClick={() => setMobileSolutionsOpen((prev) => !prev)}
+            style={{
+              width: "100%",
+              textAlign: "right",
+              padding: "0.75rem 0.5rem",
+              color: "#94a3b8",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+              background: "transparent",
+              borderTop: "none",
+              borderInline: "none",
+              fontFamily: "var(--font-cairo)",
+              cursor: "pointer",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span>الحلول</span>
+            <span style={{ fontSize: "0.7rem" }}>{mobileSolutionsOpen ? "▲" : "▼"}</span>
+          </button>
+          {mobileSolutionsOpen && (
+            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "0.2rem 0 0.55rem" }}>
+              {solutionItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    setMobileSolutionsOpen(false);
+                    setMenuOpen(false);
+                  }}
+                  style={{
+                    display: "block",
+                    padding: "0.55rem 1rem",
+                    color: "#cbd5e1",
+                    fontSize: "0.88rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
           {links.map((l) => (
             <Link
-              key={l.href}
+              key={`${l.href}-${l.label}`}
               href={l.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={() => {
+                setMobileSolutionsOpen(false);
+                setMenuOpen(false);
+              }}
               style={{
                 display: "block",
                 padding: "0.75rem 0.5rem",

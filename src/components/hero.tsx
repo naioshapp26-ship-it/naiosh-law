@@ -24,6 +24,8 @@ const itemAnim = {
   },
 };
 
+const headlineText = "إدارة القضايا والموكلين بذكاء";
+
 export function HeroSection() {
   return (
     <section
@@ -113,48 +115,60 @@ export function HeroSection() {
       >
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 460px)",
-            gap: "clamp(2rem, 4vw, 4rem)",
+            display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-end",
           }}
           className="hero-grid"
         >
           {/* ── Text column ── */}
           <motion.div
+            className="hero-content-col"
             variants={container}
-            initial="show"
+            initial="hidden"
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "720px",
-              marginInline: "auto",
-              textAlign: "center",
+              maxWidth: "min(820px, 72vw)",
+              marginLeft: "auto",
+              marginRight: 0,
+              textAlign: "right",
             }}
           >
             {/* Badge */}
-            <div className="hero-badge" style={{ marginBottom: "1.75rem" }}>
+            <div
+              className="hero-badge"
+              style={{
+                marginBottom: "0.2rem",
+                width: "fit-content",
+                maxWidth: "100%",
+                display: "flex",
+                justifyContent: "flex-end",
+                marginLeft: "auto",
+                transform: "translateY(-12px)",
+              }}
+            >
               <span
+                className="hero-badge-pill"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.55rem",
+                  gap: "0.78rem",
                   background: "rgba(195,21,42,0.1)",
                   border: "1px solid rgba(195,21,42,0.28)",
                   borderRadius: "100px",
-                  padding: "0.45rem 1.25rem",
+                  padding: "0.74rem 1.95rem",
                   color: "#fca5a5",
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  letterSpacing: "0.03em",
+                  fontSize: "1.04rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
                 }}
               >
                 <span
                   className="pulse-dot"
                   style={{
-                    width: 7,
-                    height: 7,
+                    width: 10,
+                    height: 10,
                     borderRadius: "50%",
                     background: "#c3152a",
                     flexShrink: 0,
@@ -165,30 +179,49 @@ export function HeroSection() {
             </div>
 
             {/* Heading */}
-            <h1
+            <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(2.6rem, 4.5vw, 4.75rem)",
+                fontSize: "clamp(1.95rem, 3.9vw, 3.35rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.12,
-                marginBottom: "1.75rem",
+                lineHeight: 1.14,
+                marginBottom: "1.55rem",
                 letterSpacing: "-0.02em",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: "0.25rem",
               }}
+              variants={container}
             >
-              إدارة القضايا
-              <br />
-              والموكلين بذكاء
-              <br />
-              <span
+              <motion.span
+                className="hero-heading-main"
+                variants={itemAnim}
+                style={{
+                  display: "block",
+                  textAlign: "right",
+                  textShadow: "0 0 34px rgba(255,255,255,0.08)",
+                  whiteSpace: "normal",
+                  maxWidth: "100%",
+                }}
+              >
+                {headlineText}
+              </motion.span>
+              <motion.span
+                className="hero-heading-accent"
+                variants={itemAnim}
                 style={{
                   color: "#c3152a",
                   textShadow: "0 0 40px rgba(195,21,42,0.5)",
+                  display: "block",
+                  whiteSpace: "normal",
+                  fontSize: "0.96em",
                 }}
               >
                 لا مثيل له
-              </span>
-            </h1>
+              </motion.span>
+            </motion.h1>
 
             {/* Subtext */}
             <p
@@ -197,7 +230,8 @@ export function HeroSection() {
                 color: "#94a3b8",
                 fontSize: "1.08rem",
                 lineHeight: 1.9,
-                maxWidth: "560px",
+                maxWidth: "620px",
+                marginLeft: "auto",
                 marginBottom: "2.75rem",
               }}
             >
@@ -213,7 +247,7 @@ export function HeroSection() {
                 gap: "1rem",
                 flexWrap: "wrap",
                 marginBottom: "3.75rem",
-                justifyContent: "center",
+                justifyContent: "flex-end",
               }}
             >
               <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
@@ -233,11 +267,11 @@ export function HeroSection() {
                 flexWrap: "wrap",
                 paddingTop: "2rem",
                 borderTop: "1px solid rgba(255,255,255,0.07)",
-                justifyContent: "center",
+                justifyContent: "flex-end",
               }}
             >
               {stats.map((s) => (
-                <div key={s.label}>
+                <div key={s.label} style={{ textAlign: "right" }}>
                   <div
                     style={{
                       fontSize: "1.85rem",
@@ -269,6 +303,13 @@ export function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.15, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="float-anim hero-card-col"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "calc(50% - 180px)",
+              width: "min(420px, 35vw)",
+              zIndex: 5,
+            }}
           >
             {/* Main case card */}
             <div
@@ -533,14 +574,57 @@ export function HeroSection() {
       </motion.div>
 
       <style>{`
+        @keyframes hero-badge-drift {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        .hero-badge-pill {
+          animation: hero-badge-drift 3.4s ease-in-out infinite;
+        }
         @media (max-width: 1200px) {
-          .hero-grid {
-            grid-template-columns: minmax(0, 1fr) 360px !important;
+          .hero-card-col {
+            width: 320px !important;
+            opacity: 0.8;
+          }
+          .hero-content-col {
+            max-width: min(720px, 70vw) !important;
+          }
+        }
+        @media (max-width: 980px) {
+          .hero-heading {
+            line-height: 1.12 !important;
+            font-size: clamp(1.65rem, 4.8vw, 2.7rem) !important;
+          }
+          .hero-heading-main {
+            width: 100%;
+          }
+          .hero-badge-pill {
+            font-size: 0.92rem !important;
+            padding: 0.58rem 1.4rem !important;
           }
         }
         @media (max-width: 900px) {
           .hero-grid {
-            grid-template-columns: 1fr !important;
+            display: block !important;
+          }
+          .hero-content-col {
+            max-width: 760px !important;
+            text-align: center !important;
+          }
+          .hero-heading {
+            justify-content: center !important;
+          }
+          .hero-heading-main, .hero-heading-accent {
+            text-align: center !important;
+          }
+          .hero-badge {
+            justify-content: center !important;
+            transform: none !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+          .hero-cta, .hero-stats {
+            justify-content: center !important;
           }
           .hero-card-col {
             display: none;
