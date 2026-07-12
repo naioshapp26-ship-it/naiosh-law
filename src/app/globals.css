@@ -148,8 +148,26 @@ a {
   to   { transform: rotate(360deg); }
 }
 
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 12px 28px rgba(0,0,0,0.35)); }
+  50%       { transform: translateY(-12px) scale(1.04); filter: drop-shadow(0 20px 40px rgba(212,175,55,0.45)); }
+}
+
+@keyframes logo-glow-ring {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.08); }
+}
+
+@keyframes fade-up-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .float-anim { animation: float 5s ease-in-out infinite; }
 .float-slow-anim { animation: float-slow 7s ease-in-out infinite; }
+.logo-float { animation: logo-float 4s ease-in-out infinite; }
+.logo-glow-ring { animation: logo-glow-ring 3s ease-in-out infinite; }
+.fade-up-in { animation: fade-up-in 0.6s ease-out both; }
 .pulse-dot { animation: pulse-dot 2s infinite; }
 .glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
 .spin-slow { animation: spin-slow 20s linear infinite; }

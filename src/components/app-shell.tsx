@@ -61,18 +61,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         } sticky top-0 h-screen bg-gradient-to-b from-red-950 via-red-900 to-red-950 transition-all duration-300 flex flex-col shadow-2xl shrink-0 z-20`}
       >
         {/* Logo — صورة كبيرة واضحة */}
-        <div className="shrink-0 p-4 border-b border-white/10 bg-black/10">
+        <div className="shrink-0 py-3 px-2 border-b border-white/10">
           <div className="flex items-center justify-between gap-2">
             {sidebarOpen ? (
               <BrandLogo
-                size={80}
+                size={88}
                 href="/app/dashboard"
                 showText={false}
+                framed={false}
                 className="flex-1 justify-center"
               />
             ) : (
               <Link href="/app/dashboard" className="mx-auto block" title="NAIOSH Law">
-                <BrandLogo size={52} showText={false} />
+                <BrandLogo size={48} showText={false} framed={false} />
               </Link>
             )}
             <button
