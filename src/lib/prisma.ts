@@ -1,6 +1,9 @@
 import { Pool, type PoolConfig } from "pg";
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { getConnectionString, getDatabaseEnvStatus } from "@/lib/database-url";
+
+export { getDatabaseEnvStatus };
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -15,43 +18,6 @@ function needsSsl(connectionString: string) {
     connectionString.includes("sslmode=require") ||
     connectionString.includes("ssl=true")
   );
-}
-
-function getConnectionString(): string | undefined {
-  const candidates = [
-    process.env.DATABASE_URL,
-    process.env.DATABASE_PUBLIC_URL,
-    process.env.POSTGRES_URL,
-  ];
-
-  for (const value of candidates) {
-    const trimmed = value?.trim();
-    if (trimmed && !trimmed.startsWith("${")) {
-      return trimmed;
-    }
-  }
-
-  const host = process.env.PGHOST?.trim();
-  const user = process.env.PGUSER?.trim();
-  const password = process.env.PGPASSWORD?.trim();
-  const database = process.env.PGDATABASE?.trim() || process.env.POSTGRES_DB?.trim();
-  const port = process.env.PGPORT?.trim() || "5432";
-
-  if (host && user && password && database) {
-    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
-  }
-
-  return undefined;
-}
-
-export function getDatabaseEnvStatus() {
-  return {
-    DATABASE_URL: Boolean(process.env.DATABASE_URL?.trim()),
-    DATABASE_PUBLIC_URL: Boolean(process.env.DATABASE_PUBLIC_URL?.trim()),
-    POSTGRES_URL: Boolean(process.env.POSTGRES_URL?.trim()),
-    PGHOST: Boolean(process.env.PGHOST?.trim()),
-    resolved: Boolean(getConnectionString()),
-  };
 }
 
 function createPool(connectionString: string) {

@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+# ابنِ DATABASE_URL من PGHOST إن لم يكن موجوداً (Railway)
+if [ -z "${DATABASE_URL:-}" ] && [ -n "${PGHOST:-}" ] && [ -n "${PGPASSWORD:-}" ]; then
+  PGUSER_VAL="${PGUSER:-postgres}"
+  PGPORT_VAL="${PGPORT:-5432}"
+  PGDB_VAL="${PGDATABASE:-${POSTGRES_DB:-railway}}"
+  export DATABASE_URL="postgresql://${PGUSER_VAL}:${PGPASSWORD}@${PGHOST}:${PGPORT_VAL}/${PGDB_VAL}?sslmode=require"
+  echo "Built DATABASE_URL from PGHOST/PGUSER/PGPASSWORD"
+fi
+
 has_db=false
-if [ -n "${DATABASE_URL:-}" ] || [ -n "${DATABASE_PUBLIC_URL:-}" ] || [ -n "${PGHOST:-}" ]; then
+if [ -n "${DATABASE_URL:-}" ] || [ -n "${PGHOST:-}" ]; then
   has_db=true
 fi
 
