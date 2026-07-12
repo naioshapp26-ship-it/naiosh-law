@@ -6,7 +6,7 @@ if [ -z "${DATABASE_URL:-}" ] && [ -n "${PGHOST:-}" ] && [ -n "${PGPASSWORD:-}" 
   PGUSER_VAL="${PGUSER:-postgres}"
   PGPORT_VAL="${PGPORT:-5432}"
   PGDB_VAL="${PGDATABASE:-${POSTGRES_DB:-railway}}"
-  export DATABASE_URL="postgresql://${PGUSER_VAL}:${PGPASSWORD}@${PGHOST}:${PGPORT_VAL}/${PGDB_VAL}?sslmode=require"
+  export DATABASE_URL="postgresql://${PGUSER_VAL}:${PGPASSWORD}@${PGHOST}:${PGPORT_VAL}/${PGDB_VAL}"
   echo "Built DATABASE_URL from PGHOST/PGUSER/PGPASSWORD"
 fi
 

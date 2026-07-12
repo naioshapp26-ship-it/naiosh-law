@@ -24,7 +24,7 @@ export function getConnectionString(): string | undefined {
   const port = process.env.PGPORT?.trim() || "5432";
 
   if (host && password) {
-    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}?sslmode=require`;
+    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
   }
 
   return undefined;
