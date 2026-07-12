@@ -136,7 +136,7 @@ export default function DashboardPage() {
                   pointerEvents: "none",
                 }}
               />
-              <BrandLogo size={110} showText={false} animated />
+              <BrandLogo size={96} showText={false} animated />
             </motion.div>
 
             <div style={{ flex: 1, minWidth: 240 }}>

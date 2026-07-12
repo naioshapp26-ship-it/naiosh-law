@@ -130,7 +130,7 @@ export default function LoginPage() {
         {/* Top: Logo */}
         <div>
           <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "center" }}>
-            <BrandLogo size={100} showText={false} variant="light" />
+            <BrandLogo size={88} showText={false} variant="light" />
           </div>
 
           {/* Tagline */}
@@ -227,7 +227,7 @@ export default function LoginPage() {
           style={{ width: "100%", maxWidth: "420px" }}
         >
           <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "center" }}>
-            <BrandLogo size={90} showText={false} variant="dark" />
+            <BrandLogo size={80} showText={false} variant="dark" />
           </motion.div>
 
           {/* Heading */}

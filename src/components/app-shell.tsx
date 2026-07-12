@@ -65,15 +65,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between gap-2">
             {sidebarOpen ? (
               <BrandLogo
-                size={88}
+                size={72}
                 href="/app/dashboard"
                 showText={false}
-                framed={false}
                 className="flex-1 justify-center"
               />
             ) : (
               <Link href="/app/dashboard" className="mx-auto block" title="NAIOSH Law">
-                <BrandLogo size={48} showText={false} framed={false} />
+                <BrandLogo size={44} showText={false} />
               </Link>
             )}
             <button
