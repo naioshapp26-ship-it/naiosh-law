@@ -29,7 +29,7 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   brandName: "NAIOSH Law",
   brandNameAr: "نايوش",
   tagline: "النظام القانوني السيادي 360",
-  logoPath: "/naiosh-logo.png?v=20260712",
+  logoPath: "/naiosh-logo.png?v=round-20260712",
   logoData: null,
   borderRadius: "12",
 };

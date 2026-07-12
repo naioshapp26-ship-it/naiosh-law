@@ -29,35 +29,34 @@ export function BrandLogo({
   const displaySubtitle = subtitle ?? theme.tagline ?? BRAND.tagline;
   const textColor = variant === "light" ? "text-white" : "text-slate-900";
   const subColor = variant === "light" ? "text-white/80" : "text-slate-500";
-  const height = Math.round(size * 1.2);
+  const dimension = size;
   const isDataUrl = logoSrc.startsWith("data:");
+
+  const imgStyle: React.CSSProperties = {
+    width: dimension,
+    height: dimension,
+    objectFit: "contain",
+    filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
+  };
 
   const img = isDataUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={logoSrc}
       alt={BRAND.logoAlt}
-      className={`object-contain shrink-0 ${animated ? "logo-float" : ""}`}
-      style={{
-        width: size,
-        height: height,
-        filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
-      }}
+      className={`shrink-0 ${animated ? "logo-float" : ""}`}
+      style={imgStyle}
     />
   ) : (
     <Image
       src={logoSrc}
       alt={BRAND.logoAlt}
-      width={size}
-      height={height}
+      width={dimension}
+      height={dimension}
       priority
       unoptimized
-      className={`object-contain shrink-0 ${animated ? "logo-float" : ""}`}
-      style={{
-        width: size,
-        height: height,
-        filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
-      }}
+      className={`shrink-0 ${animated ? "logo-float" : ""}`}
+      style={imgStyle}
     />
   );
 
