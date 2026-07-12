@@ -31,15 +31,17 @@ export function getConnectionString(): string | undefined {
 }
 
 export function getDatabaseEnvStatus() {
+  const host = process.env.PGHOST?.trim() || "";
   return {
     DATABASE_URL: Boolean(process.env.DATABASE_URL?.trim()),
     DATABASE_PUBLIC_URL: Boolean(process.env.DATABASE_PUBLIC_URL?.trim()),
-    PGHOST: Boolean(process.env.PGHOST?.trim()),
+    PGHOST: Boolean(host),
     PGUSER: Boolean(process.env.PGUSER?.trim()),
     PGPASSWORD: Boolean(process.env.PGPASSWORD?.trim()),
     PGDATABASE: Boolean(
       process.env.PGDATABASE?.trim() || process.env.POSTGRES_DB?.trim()
     ),
+    internalHost: host.includes(".railway.internal"),
     resolved: Boolean(getConnectionString()),
   };
 }

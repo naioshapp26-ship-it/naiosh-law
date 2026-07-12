@@ -10,16 +10,22 @@ const globalForPrisma = globalThis as unknown as {
   pool?: Pool;
 };
 
-function needsSsl(connectionString: string) {
-  return (
+function resolveSsl(connectionString: string): PoolConfig["ssl"] {
+  const host = process.env.PGHOST?.trim() || connectionString;
+  // اتصال داخلي على Railway — بدون SSL
+  if (host.includes(".railway.internal")) {
+    return false;
+  }
+  if (
     process.env.NODE_ENV === "production" ||
-    Boolean(process.env.PGHOST) ||
     Boolean(process.env.RAILWAY_ENVIRONMENT) ||
+    Boolean(process.env.PGHOST) ||
     connectionString.includes("railway") ||
-    connectionString.includes("rlwy.net") ||
-    connectionString.includes("sslmode=require") ||
-    connectionString.includes("ssl=true")
-  );
+    connectionString.includes("rlwy.net")
+  ) {
+    return { rejectUnauthorized: false };
+  }
+  return undefined;
 }
 
 function createPool(connectionString: string) {
@@ -28,7 +34,7 @@ function createPool(connectionString: string) {
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
-    ssl: needsSsl(connectionString) ? { rejectUnauthorized: false } : undefined,
+    ssl: resolveSsl(connectionString),
   };
 
   return new Pool(config);
