@@ -17,7 +17,7 @@ export default function AxisPage() {
 
   if (!axis) {
     return (
-      <AppShell role={user.role} name={user.name}>
+      <AppShell>
         <div style={{ textAlign: "center", padding: "4rem" }}>
           <p style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</p>
           <h2 style={{ fontWeight: 800, marginBottom: "0.5rem" }}>المحور غير موجود</h2>
@@ -30,7 +30,7 @@ export default function AxisPage() {
   }
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       <AxisHubPage axis={axis} userName={user.name} />
     </AppShell>
   );

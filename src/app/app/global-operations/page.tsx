@@ -76,7 +76,7 @@ export default function GlobalOperationsPage() {
   const isEmpty = !loading && partners.length === 0 && branches.length === 0;
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {Toast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader

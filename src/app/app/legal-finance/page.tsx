@@ -194,7 +194,7 @@ export default function LegalFinancePage() {
   const isEmpty = !loading && invoices.length === 0 && feeRules.length === 0;
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {Toast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader

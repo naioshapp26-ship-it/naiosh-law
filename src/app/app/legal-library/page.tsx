@@ -100,7 +100,7 @@ export default function LegalLibraryPage() {
   const isEmpty = !loading && documents.length === 0 && articles.length === 0 && circulars.length === 0 && !search.trim();
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {Toast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader

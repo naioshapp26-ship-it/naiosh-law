@@ -69,7 +69,7 @@ export function ModuleShell({ slug }: { slug: string }) {
 
   if (!config) {
     return (
-      <AppShell role={user.role} name={user.name}>
+      <AppShell>
         <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
           <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
@@ -194,7 +194,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [reportOpen, setReportOpen] = useState(false);
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {/* Toasts */}
       <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (

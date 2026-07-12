@@ -124,7 +124,7 @@ export default function LegalKnowledgePage() {
   if (!ready || !user) return null;
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {Toast}
       <div style={{ maxWidth: 1140 }}>
         <PageHeader

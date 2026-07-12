@@ -5,20 +5,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 import { EmpireSidebarNav } from "@/components/empire-sidebar";
-import type { UserRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/session";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: "مدير النظام",
   lawyer: "محامٍ",
+  consultant: "مستشار",
+  judge: "قاضٍ",
   client: "عميل",
-  staff: "موظف",
+  industrial_agent: "وكيل صناعي",
+  employee: "موظف",
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin: "bg-red-600",
   lawyer: "bg-blue-600",
+  consultant: "bg-indigo-600",
+  judge: "bg-purple-600",
   client: "bg-emerald-600",
-  staff: "bg-amber-600",
+  industrial_agent: "bg-amber-600",
+  employee: "bg-slate-600",
 };
 
 const NAV = [
@@ -116,14 +122,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mt-4 px-2">
               <EmpireSidebarNav
                 theme={{
-                  sectionTitle: "text-red-300",
-                  axisActive: "bg-white text-red-800 font-semibold shadow-sm",
-                  axisInactive: "text-red-100 hover:bg-red-700/50 hover:text-white",
-                  itemActive: "bg-red-700/60 text-white font-medium",
-                  itemInactive: "text-red-200 hover:bg-red-700/40 hover:text-white",
-                  dropdownActive: "bg-red-700/40 text-white",
-                  dropdownInactive: "text-red-200 hover:bg-red-700/30",
-                  countBadge: "bg-red-600/50 text-red-100",
+                  text: "#ffffff",
+                  muted: "rgba(254, 226, 226, 0.85)",
+                  activeBg: "rgba(255, 255, 255, 0.18)",
+                  accent: "#fecaca",
                 }}
               />
             </div>

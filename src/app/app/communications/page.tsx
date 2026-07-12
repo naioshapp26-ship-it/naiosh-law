@@ -154,7 +154,7 @@ export default function CommunicationsPage() {
   const isEmpty = !loading && branches.length === 0 && rules.length === 0;
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {Toast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader

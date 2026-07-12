@@ -148,7 +148,7 @@ export default function GovernancePage() {
   const isEmpty = !loading && approvals.length === 0 && policies.length === 0;
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       {Toast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader

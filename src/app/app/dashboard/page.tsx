@@ -82,7 +82,7 @@ export default function DashboardPage() {
   const activeDash = dashboardTypes.find((d) => d.id === dashType)!;
 
   return (
-    <AppShell role={user.role} name={user.name}>
+    <AppShell>
       <div style={{ maxWidth: 1240 }}>
         {/* Imperial hero */}
         <div
