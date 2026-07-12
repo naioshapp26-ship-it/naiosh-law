@@ -5,6 +5,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { modules } from "@/data/modules";
 import { sessionKey } from "@/data/auth";
+import { EmpireSidebarNav } from "@/components/empire-sidebar";
 
 type Props = {
   role: "admin" | "client";
@@ -13,28 +14,28 @@ type Props = {
 };
 
 const iconMap: Record<string, string> = {
-  "dashboard":             "⊞",
-  "case-management":       "⚖️",
-  "clients-management":    "👥",
-  "court-sessions":        "🏛️",
-  "follow-up-center":      "📋",
-  "legal-accounting":      "💰",
-  "legal-services":        "📝",
-  "legal-consultations":   "💬",
-  "internal-requests":     "📤",
+  dashboard: "⊞",
+  "case-management": "⚖️",
+  "clients-management": "👥",
+  "court-sessions": "🏛️",
+  "follow-up-center": "📋",
+  "legal-accounting": "💰",
+  "legal-services": "📝",
+  "legal-consultations": "💬",
+  "internal-requests": "📤",
   "complaints-management": "🔔",
-  "smart-templates":       "🤖",
-  "reports-center":        "📊",
-  "administration":        "⚙️",
-  "notifications-center":  "🛎️",
-  "integrations":          "🔗",
-  "ai-center":             "🧠",
-  "general-tools":         "🛠️",
+  "smart-templates": "🤖",
+  "reports-center": "📊",
+  administration: "⚙️",
+  "notifications-center": "🛎️",
+  integrations: "🔗",
+  "ai-center": "🧠",
+  "general-tools": "🛠️",
 };
 
 export function AppShell({ role, name, children }: Props) {
   const pathname = usePathname();
-  const router   = useRouter();
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const logout = () => {
@@ -43,10 +44,10 @@ export function AppShell({ role, name, children }: Props) {
   };
 
   const isActive = (href: string) => pathname === href;
+  const closeDrawer = () => setDrawerOpen(false);
 
   const SidebarContent = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Logo inside drawer (mobile) */}
       <div
         style={{
           display: "flex",
@@ -72,91 +73,91 @@ export function AppShell({ role, name, children }: Props) {
               fontWeight: 900,
               fontSize: "0.9rem",
             }}
-          >N</div>
-          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#0a0a12" }}>Naiosh Law</span>
+          >
+            N
+          </div>
+          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#0a0a12" }}>Naiosh 360</span>
         </div>
         <button
-          onClick={() => setDrawerOpen(false)}
+          onClick={closeDrawer}
           className="drawer-close-btn"
           style={{
-            width: 32, height: 32, border: "1px solid #e2e8f0",
-            borderRadius: "8px", background: "#f8f9fb", cursor: "pointer",
-            fontSize: "0.9rem", color: "#64748b",
-          }}
-        >✕</button>
-      </div>
-
-      {/* Dashboard link */}
-      <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
-        <Link
-          href="/app/dashboard"
-          onClick={() => setDrawerOpen(false)}
-          style={{
-            display: "flex", alignItems: "center", gap: "0.6rem",
-            padding: "0.6rem 0.75rem", borderRadius: "10px",
-            fontSize: "0.85rem", fontWeight: isActive("/app/dashboard") ? 700 : 500,
-            color: isActive("/app/dashboard") ? "#c3152a" : "#64748b",
-            background: isActive("/app/dashboard") ? "rgba(195,21,42,0.08)" : "transparent",
-            textDecoration: "none",
+            width: 32,
+            height: 32,
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            background: "#f8f9fb",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            color: "#64748b",
           }}
         >
-          <span style={{ fontSize: "1rem" }}>⊞</span>
-          <span>لوحة التحكم</span>
-        </Link>
+          ✕
+        </button>
       </div>
 
-      {/* Section label */}
-      <p style={{
-        fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8",
-        letterSpacing: "0.06em", textTransform: "uppercase",
-        padding: "0.75rem 1.5rem 0.35rem",
-      }}>
-        الوحدات التشغيلية
-      </p>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 0.5rem" }}>
+        <EmpireSidebarNav onNavigate={closeDrawer} />
 
-      {/* Module links */}
-      <nav
-        style={{
-          flex: 1, overflowY: "auto", padding: "0 0.75rem",
-          display: "flex", flexDirection: "column", gap: "2px",
-        }}
-      >
-        {modules.map((item) => {
-          const href   = `/app/modules/${item.slug}`;
-          const active = pathname === href;
-          return (
-            <Link
-              key={item.slug}
-              href={href}
-              onClick={() => setDrawerOpen(false)}
-              style={{
-                display: "flex", alignItems: "center", gap: "0.6rem",
-                padding: "0.6rem 0.75rem", borderRadius: "10px",
-                fontSize: "0.84rem", fontWeight: active ? 700 : 500,
-                color: active ? "#c3152a" : "#64748b",
-                background: active ? "rgba(195,21,42,0.08)" : "transparent",
-                textDecoration: "none", transition: "all 0.15s",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-              }}
-            >
-              <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</span>
-            </Link>
-          );
-        })}
-      </nav>
+        <p
+          style={{
+            fontSize: "0.6rem",
+            fontWeight: 700,
+            color: "#94a3b8",
+            letterSpacing: "0.06em",
+            padding: "0.85rem 0.75rem 0.3rem",
+          }}
+        >
+          الوحدات التشغيلية
+        </p>
+        <nav style={{ display: "flex", flexDirection: "column", gap: "2px", paddingBottom: "1rem" }}>
+          {modules
+            .filter((m) => m.slug !== "dashboard")
+            .map((item) => {
+              const href = `/app/modules/${item.slug}`;
+              const active = pathname === href;
+              return (
+                <Link
+                  key={item.slug}
+                  href={href}
+                  onClick={closeDrawer}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.6rem",
+                    padding: "0.5rem 0.75rem",
+                    borderRadius: "10px",
+                    fontSize: "0.78rem",
+                    fontWeight: active ? 700 : 500,
+                    color: active ? "#c3152a" : "#64748b",
+                    background: active ? "rgba(195,21,42,0.08)" : "transparent",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span style={{ fontSize: "0.85rem" }}>{iconMap[item.slug] ?? "📌"}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {item.title}
+                  </span>
+                </Link>
+              );
+            })}
+        </nav>
+      </div>
 
-      {/* Role badge */}
       <div style={{ padding: "0.75rem" }}>
-        <div style={{
-          background: "rgba(195,21,42,0.05)", border: "1px solid rgba(195,21,42,0.1)",
-          borderRadius: "12px", padding: "0.85rem",
-        }}>
+        <div
+          style={{
+            background: "rgba(195,21,42,0.05)",
+            border: "1px solid rgba(195,21,42,0.1)",
+            borderRadius: "12px",
+            padding: "0.85rem",
+          }}
+        >
           <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
-            {role === "admin" ? "Admin" : "Client"}
+            {role === "admin" ? "مدير النظام" : "مستخدم"}
           </p>
           <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
-            {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
+            {role === "admin" ? "هيكل سيادي موحّد — صلاحية كاملة" : "عرض الحالة والمستندات"}
           </p>
         </div>
       </div>
@@ -165,103 +166,151 @@ export function AppShell({ role, name, children }: Props) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", flexDirection: "column" }}>
-
-      {/* ── Top Header ── */}
-      <header style={{
-        background: "#ffffff",
-        borderBottom: "1px solid #e2e8f0",
-        position: "sticky", top: 0, zIndex: 50,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-      }}>
-        <div style={{
-          display: "flex", alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0.75rem 1rem",
-          gap: "0.75rem",
-        }}>
-          {/* Left: Hamburger (mobile) + Logo */}
+      <header
+        style={{
+          background: "#ffffff",
+          borderBottom: "1px solid #e2e8f0",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0.75rem 1rem",
+            gap: "0.75rem",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            {/* Hamburger — mobile only */}
             <button
               onClick={() => setDrawerOpen(true)}
               className="hamburger-btn"
               style={{
-                width: 38, height: 38, border: "1px solid #e2e8f0",
-                borderRadius: "10px", background: "#f8f9fb",
-                cursor: "pointer", display: "none",
-                alignItems: "center", justifyContent: "center",
-                fontSize: "1.1rem", color: "#475569", flexShrink: 0,
+                width: 38,
+                height: 38,
+                border: "1px solid #e2e8f0",
+                borderRadius: "10px",
+                background: "#f8f9fb",
+                cursor: "pointer",
+                display: "none",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.1rem",
+                color: "#475569",
+                flexShrink: 0,
               }}
               aria-label="القائمة"
             >
               ☰
             </button>
-
-            {/* Logo */}
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.6rem", textDecoration: "none" }}>
-              <div style={{
-                width: 34, height: 34, flexShrink: 0,
-                background: "linear-gradient(135deg,#c3152a,#7f0d1a)",
-                borderRadius: "10px", display: "flex", alignItems: "center",
-                justifyContent: "center", fontWeight: 900, color: "#fff",
-                fontSize: "0.95rem", boxShadow: "0 3px 10px rgba(195,21,42,0.3)",
-              }}>N</div>
+            <Link href="/app/dashboard" style={{ display: "flex", alignItems: "center", gap: "0.6rem", textDecoration: "none" }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  flexShrink: 0,
+                  background: "linear-gradient(135deg,#c3152a,#7f0d1a)",
+                  borderRadius: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  color: "#fff",
+                  fontSize: "0.95rem",
+                  boxShadow: "0 3px 10px rgba(195,21,42,0.3)",
+                }}
+              >
+                N
+              </div>
               <div className="logo-text">
-                <div style={{ color: "#0a0a12", fontWeight: 800, fontSize: "0.9rem", lineHeight: 1.2 }}>Naiosh Law</div>
-                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>لوحة التحكم</div>
+                <div style={{ color: "#0a0a12", fontWeight: 800, fontSize: "0.9rem", lineHeight: 1.2 }}>
+                  Naiosh Law 360
+                </div>
+                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>الهيكل السيادي الموحّد</div>
               </div>
             </Link>
           </div>
 
-          {/* Right: Notifications + User + Logout */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            {/* Notification bell */}
-            <button style={{
-              width: 36, height: 36, borderRadius: "10px",
-              background: "#f8f9fb", border: "1px solid #e2e8f0",
-              cursor: "pointer", display: "flex", alignItems: "center",
-              justifyContent: "center", fontSize: "0.9rem", position: "relative",
-              flexShrink: 0,
-            }} aria-label="التنبيهات">
+            <button
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "10px",
+                background: "#f8f9fb",
+                border: "1px solid #e2e8f0",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.9rem",
+                position: "relative",
+                flexShrink: 0,
+              }}
+              aria-label="التنبيهات"
+            >
               🔔
-              <span style={{
-                position: "absolute", top: 6, insetInlineEnd: 6,
-                width: 7, height: 7, borderRadius: "50%",
-                background: "#c3152a", border: "1.5px solid #fff",
-              }} />
+              <span
+                style={{
+                  position: "absolute",
+                  top: 6,
+                  insetInlineEnd: 6,
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#c3152a",
+                  border: "1.5px solid #fff",
+                }}
+              />
             </button>
-
-            {/* User chip */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: "0.5rem",
-              background: "#f8f9fb", border: "1px solid #e2e8f0",
-              borderRadius: "10px", padding: "0.4rem 0.75rem",
-            }}>
-              <div style={{
-                width: 26, height: 26, borderRadius: "7px",
-                background: "rgba(195,21,42,0.1)", display: "flex",
-                alignItems: "center", justifyContent: "center", fontSize: "0.8rem",
-              }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                background: "#f8f9fb",
+                border: "1px solid #e2e8f0",
+                borderRadius: "10px",
+                padding: "0.4rem 0.75rem",
+              }}
+            >
+              <div
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: "7px",
+                  background: "rgba(195,21,42,0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.8rem",
+                }}
+              >
                 {role === "admin" ? "⚙️" : "👤"}
               </div>
               <div className="user-name-block">
                 <div style={{ color: "#0a0a12", fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.2 }}>{name}</div>
-                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{role === "admin" ? "Admin" : "Client"}</div>
+                <div style={{ color: "#94a3b8", fontSize: "0.58rem" }}>{role === "admin" ? "مدير النظام" : "مستخدم"}</div>
               </div>
             </div>
-
-            {/* Logout */}
             <button
               onClick={logout}
               style={{
-                background: "rgba(195,21,42,0.07)", border: "1px solid rgba(195,21,42,0.15)",
-                borderRadius: "9px", padding: "0.4rem 0.75rem",
-                color: "#c3152a", fontSize: "0.75rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--font-cairo)",
-                transition: "all 0.2s", whiteSpace: "nowrap",
+                background: "rgba(195,21,42,0.07)",
+                border: "1px solid rgba(195,21,42,0.15)",
+                borderRadius: "9px",
+                padding: "0.4rem 0.75rem",
+                color: "#c3152a",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "var(--font-cairo)",
+                whiteSpace: "nowrap",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#c3152a"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)"; (e.currentTarget as HTMLElement).style.color = "#c3152a"; }}
             >
               خروج
             </button>
@@ -269,179 +318,126 @@ export function AppShell({ role, name, children }: Props) {
         </div>
       </header>
 
-      {/* ── Body ── */}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-
-        {/* ── Desktop Sidebar ── */}
-        <aside className="desktop-sidebar" style={{
-          width: 255, background: "#ffffff",
-          borderInlineEnd: "1px solid #e2e8f0",
-          overflowY: "auto", flexShrink: 0,
-        }}>
-          <div style={{ padding: "1rem 0" }}>
-            {/* Dashboard */}
-            <div style={{ padding: "0 0.75rem", marginBottom: "0.25rem" }}>
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: "flex", alignItems: "center", gap: "0.6rem",
-                  padding: "0.6rem 0.75rem", borderRadius: "10px",
-                  fontSize: "0.85rem", fontWeight: isActive("/app/dashboard") ? 700 : 500,
-                  color: isActive("/app/dashboard") ? "#c3152a" : "#64748b",
-                  background: isActive("/app/dashboard") ? "rgba(195,21,42,0.08)" : "transparent",
-                  textDecoration: "none",
-                }}
-              >
-                <span style={{ fontSize: "1rem" }}>⊞</span>
-                <span>لوحة التحكم</span>
-              </Link>
-            </div>
-
-            <p style={{
-              fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8",
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              padding: "0.75rem 1.5rem 0.35rem",
-            }}>الوحدات التشغيلية</p>
-
-            <nav style={{ padding: "0 0.75rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-              {modules.map((item) => {
-                const href   = `/app/modules/${item.slug}`;
-                const active = pathname === href;
-                return (
-                  <Link
-                    key={item.slug}
-                    href={href}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "0.6rem",
-                      padding: "0.6rem 0.75rem", borderRadius: "10px",
-                      fontSize: "0.84rem", fontWeight: active ? 700 : 500,
-                      color: active ? "#c3152a" : "#64748b",
-                      background: active ? "rgba(195,21,42,0.08)" : "transparent",
-                      textDecoration: "none", transition: "all 0.15s",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{iconMap[item.slug] ?? "📌"}</span>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div style={{ padding: "1rem 0.75rem 0" }}>
-              <div style={{
-                background: "rgba(195,21,42,0.05)", border: "1px solid rgba(195,21,42,0.1)",
-                borderRadius: "12px", padding: "0.9rem",
-              }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3152a", marginBottom: "0.2rem" }}>
-                  {role === "admin" ? "Admin" : "Client"}
-                </p>
-                <p style={{ fontSize: "0.67rem", color: "#64748b", lineHeight: 1.5 }}>
-                  {role === "admin" ? "صلاحية كاملة على النظام" : "عرض الحالة والمستندات"}
-                </p>
-              </div>
-            </div>
+        <aside
+          className="desktop-sidebar"
+          style={{
+            width: 270,
+            background: "#ffffff",
+            borderInlineEnd: "1px solid #e2e8f0",
+            overflowY: "auto",
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ padding: "0.75rem 0" }}>
+            <SidebarContent />
           </div>
         </aside>
 
-        {/* ── Mobile Drawer Overlay ── */}
         {drawerOpen && (
-          <div
-            style={{
-              position: "fixed", inset: 0, zIndex: 200,
-              display: "flex",
-            }}
-          >
-            {/* Backdrop */}
+          <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}>
             <div
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeDrawer}
               style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
             />
-            {/* Drawer panel */}
-            <div style={{
-              position: "relative", zIndex: 1,
-              width: 280, background: "#ffffff",
-              height: "100%", overflowY: "auto",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
-              animation: "slide-drawer 0.25s ease",
-            }}>
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                width: 290,
+                background: "#ffffff",
+                height: "100%",
+                overflowY: "auto",
+                boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
+              }}
+            >
               <SidebarContent />
             </div>
           </div>
         )}
 
-        {/* ── Main Content ── */}
-        <main style={{ flex: 1, padding: "1.25rem", minWidth: 0, overflowX: "hidden" }}>
-          {children}
-        </main>
+        <main style={{ flex: 1, padding: "1.25rem", minWidth: 0, overflowX: "hidden" }}>{children}</main>
       </div>
 
-      {/* ── Mobile Bottom Nav ── */}
-      <nav className="mobile-bottom-nav" style={{
-        display: "none", position: "fixed", bottom: 0, insetInline: 0,
-        background: "#ffffff", borderTop: "1px solid #e2e8f0",
-        padding: "0.5rem 0.75rem",
-        zIndex: 100,
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-        justifyContent: "space-around",
-      }}>
+      <nav
+        className="mobile-bottom-nav"
+        style={{
+          display: "none",
+          position: "fixed",
+          bottom: 0,
+          insetInline: 0,
+          background: "#ffffff",
+          borderTop: "1px solid #e2e8f0",
+          padding: "0.5rem 0.75rem",
+          zIndex: 100,
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
+          justifyContent: "space-around",
+        }}
+      >
         {[
-          { href: "/app/dashboard",                  icon: "⊞",  label: "الرئيسية"  },
-          { href: "/app/modules/case-management",    icon: "⚖️", label: "القضايا"   },
-          { href: "/app/modules/court-sessions",     icon: "🏛️", label: "الجلسات"   },
-          { href: "/app/modules/legal-accounting",   icon: "💰", label: "المالية"    },
+          { href: "/app/dashboard", icon: "👑", label: "الإمبراطورية" },
+          { href: "/app/axis/legal-classification", icon: "📚", label: "التصنيف" },
+          { href: "/app/modules/case-management", icon: "⚖️", label: "القضايا" },
+          { href: "/app/modules/court-sessions", icon: "🏛️", label: "الجلسات" },
         ].map((item) => {
-          const active = pathname === item.href;
+          const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               style={{
-                display: "flex", flexDirection: "column", alignItems: "center",
-                gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
-                textDecoration: "none", flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "0.2rem",
+                padding: "0.4rem 0.6rem",
+                borderRadius: "10px",
+                textDecoration: "none",
+                flex: 1,
                 background: active ? "rgba(195,21,42,0.08)" : "transparent",
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
-              <span style={{ fontSize: "0.6rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8" }}>
+              <span style={{ fontSize: "0.58rem", fontWeight: active ? 700 : 500, color: active ? "#c3152a" : "#94a3b8" }}>
                 {item.label}
               </span>
             </Link>
           );
         })}
-        {/* All modules button */}
         <button
           onClick={() => setDrawerOpen(true)}
           style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            gap: "0.2rem", padding: "0.4rem 0.6rem", borderRadius: "10px",
-            background: "none", border: "none", cursor: "pointer",
-            fontFamily: "var(--font-cairo)", flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.2rem",
+            padding: "0.4rem 0.6rem",
+            borderRadius: "10px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--font-cairo)",
+            flex: 1,
           }}
         >
           <span style={{ fontSize: "1.2rem" }}>☰</span>
-          <span style={{ fontSize: "0.6rem", fontWeight: 500, color: "#94a3b8" }}>الكل</span>
+          <span style={{ fontSize: "0.58rem", fontWeight: 500, color: "#94a3b8" }}>الكل</span>
         </button>
       </nav>
 
       <style>{`
-        /* Mobile breakpoint */
         @media (max-width: 768px) {
-          .desktop-sidebar   { display: none !important; }
-          .hamburger-btn     { display: flex !important; }
+          .desktop-sidebar { display: none !important; }
+          .hamburger-btn { display: flex !important; }
           .mobile-bottom-nav { display: flex !important; }
-          .logo-text         { display: none; }
-          .user-name-block   { display: none; }
-          .drawer-header     { display: flex !important; }
-          main               { padding-bottom: 5rem !important; }
+          .logo-text { display: none; }
+          .user-name-block { display: none; }
+          .drawer-header { display: flex !important; }
+          main { padding-bottom: 5rem !important; }
         }
         @media (min-width: 769px) {
-          .drawer-close-btn  { display: none; }
-          .drawer-header     { display: none; }
-        }
-        @keyframes slide-drawer {
-          from { transform: translateX(100%); opacity: 0; }
-          to   { transform: translateX(0);    opacity: 1; }
+          .drawer-close-btn { display: none; }
+          .drawer-header { display: none; }
         }
       `}</style>
     </div>
