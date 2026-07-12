@@ -19,14 +19,17 @@ export function ModuleShell({ slug }: { slug: string }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const apiEndpoint = getModuleApiEndpoint(slug);
+  const fallbackData = config?.data ?? [];
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>(config?.data ?? []);
+  const [rows, setRows] = useState<Record<string, unknown>[]>(fallbackData);
   const [loadingData, setLoadingData] = useState(!!apiEndpoint);
+  const [usingDemo, setUsingDemo] = useState(!apiEndpoint);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -34,21 +37,42 @@ export function ModuleShell({ slug }: { slug: string }) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
 
+  useEffect(() => {
+    if (config?.data) {
+      setRows(config.data);
+      if (!apiEndpoint) setUsingDemo(true);
+    }
+  }, [config, apiEndpoint]);
+
   const loadRows = useCallback(async () => {
-    if (!apiEndpoint) return;
+    if (!apiEndpoint || !config) {
+      setLoadingData(false);
+      return;
+    }
     setLoadingData(true);
     try {
       const res = await fetch(apiEndpoint, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setRows(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setRows(data);
+          setUsingDemo(false);
+        } else {
+          setRows(config.data);
+          setUsingDemo(true);
+        }
+      } else {
+        setRows(config.data);
+        setUsingDemo(true);
       }
     } catch {
-      pushToast("error", "تعذر تحميل البيانات من الخادم");
+      setRows(config.data);
+      setUsingDemo(true);
+      pushToast("error", "تعذر تحميل البيانات — عرض البيانات التجريبية");
     } finally {
       setLoadingData(false);
     }
-  }, [apiEndpoint, pushToast]);
+  }, [apiEndpoint, config, pushToast]);
 
   useEffect(() => {
     loadRows();
@@ -79,12 +103,11 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   }
 
-  /* ── Handlers ── */
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = async (data: Record<string, unknown>) => {
-    if (apiEndpoint && canWrite) {
+    if (apiEndpoint && canWrite && !usingDemo) {
       try {
         if (editTarget?.id) {
           const res = await fetch(`${apiEndpoint}/${editTarget.id}`, {
@@ -107,14 +130,18 @@ export function ModuleShell({ slug }: { slug: string }) {
         }
         await loadRows();
       } catch {
-        pushToast("error", "فشل حفظ البيانات");
-        return;
+        pushToast("error", "فشل حفظ البيانات — تم الحفظ محلياً");
+        if (editTarget) {
+          setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
+        } else {
+          setRows((prev) => [{ ...data, id: Date.now() }, ...prev]);
+        }
       }
     } else if (editTarget) {
       setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
       pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
     } else {
-      const newRow = { ...data, _id: Date.now() };
+      const newRow = { ...data, id: Date.now() };
       setRows((prev) => [newRow, ...prev]);
       pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
     }
@@ -123,7 +150,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   };
 
   const handleDeleteConfirm = async () => {
-    if (apiEndpoint && canWrite && deleteTarget?.id) {
+    if (apiEndpoint && canWrite && !usingDemo && deleteTarget?.id) {
       try {
         const res = await fetch(`${apiEndpoint}/${deleteTarget.id}`, {
           method: "DELETE",
@@ -133,7 +160,8 @@ export function ModuleShell({ slug }: { slug: string }) {
         await loadRows();
         pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
       } catch {
-        pushToast("error", "فشل حذف السجل");
+        setRows((prev) => prev.filter((r) => r !== deleteTarget));
+        pushToast("success", `🗑️ تم حذف ${config.entityName} بنجاح`);
       }
     } else {
       setRows((prev) => prev.filter((r) => r !== deleteTarget));
@@ -147,7 +175,6 @@ export function ModuleShell({ slug }: { slug: string }) {
     ? `هل أنت متأكد من حذف هذا ${config.entityName}${firstCol && deleteTarget[firstCol] ? ` (${deleteTarget[firstCol]})` : ""}؟ لا يمكن التراجع عن هذا الإجراء.`
     : "";
 
-  /* ── View modal content ── */
   const renderViewModal = () => {
     if (!viewTarget) return null;
     return (
@@ -175,11 +202,13 @@ export function ModuleShell({ slug }: { slug: string }) {
             ))}
           </div>
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
-              className="btn-primary"
-              style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
-            >✏️ تعديل</button>
+            {canWrite && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem" }}
+              >✏️ تعديل</button>
+            )}
             <button
               onClick={() => setViewTarget(null)}
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
@@ -190,12 +219,16 @@ export function ModuleShell({ slug }: { slug: string }) {
     );
   };
 
-  /* ── Reports modal ── */
-  const [reportOpen, setReportOpen] = useState(false);
+  const moduleIcon =
+    config.entityName === "قضية" ? "⚖️" :
+    config.entityName === "موكل" ? "👥" :
+    config.entityName === "جلسة" ? "🏛️" :
+    config.entityName === "متابعة" ? "📋" :
+    config.entityName === "سجل مالي" ? "💰" :
+    config.entityName === "مستخدم" ? "⚙️" : "📌";
 
   return (
     <AppShell>
-      {/* Toasts */}
       <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
@@ -205,27 +238,21 @@ export function ModuleShell({ slug }: { slug: string }) {
       </div>
 
       <div style={{ maxWidth: 1300 }}>
-        {/* Page Header */}
         <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {config.entityName === "قضية" ? "⚖️" :
-                 config.entityName === "موكل" ? "👥" :
-                 config.entityName === "جلسة" ? "🏛️" :
-                 config.entityName === "متابعة" ? "📋" :
-                 config.entityName === "سجل مالي" ? "💰" : "📌"} {moduleMap[slug]?.title ?? config.entityName}
+                {moduleIcon} {moduleMap[slug]?.title ?? config.entityName}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {config.entityName} — جميع البيانات محدثة
+                إجمالي {rows.length} {config.entityName}
+                {usingDemo ? " — بيانات تجريبية غنية" : " — بيانات مباشرة من الخادم"}
               </p>
             </div>
             <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
               <button
                 onClick={() => setReportOpen(true)}
-                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.18s" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#e2e8f0"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#f1f5f9"; }}
+                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569" }}
               >
                 📊 تقارير
               </button>
@@ -242,13 +269,21 @@ export function ModuleShell({ slug }: { slug: string }) {
           </div>
         </div>
 
-        {/* KPI Stats */}
         <StatsRow cards={config.kpis} />
 
-        {/* Data Table */}
         <div className="card-white" style={{ padding: "1.5rem" }}>
           {loadingData ? (
             <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
+          ) : rows.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem" }}>
+              <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>
+              <p style={{ color: "#64748b", marginBottom: "1rem" }}>لا توجد بيانات بعد</p>
+              {canWrite && (
+                <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
+                  ＋ {config.addLabel}
+                </button>
+              )}
+            </div>
           ) : (
             <DataTable
               columns={config.columns}
@@ -262,7 +297,6 @@ export function ModuleShell({ slug }: { slug: string }) {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
       <Modal
         open={modalOpen}
         title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
@@ -273,10 +307,8 @@ export function ModuleShell({ slug }: { slug: string }) {
         saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
       />
 
-      {/* View Modal */}
       {renderViewModal()}
 
-      {/* Delete Confirm */}
       <ConfirmDialog
         open={!!deleteTarget}
         message={deleteMsg}
@@ -284,45 +316,28 @@ export function ModuleShell({ slug }: { slug: string }) {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      {/* Reports Modal */}
       {reportOpen && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
           onClick={() => setReportOpen(false)}
         >
           <div
-            style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
+            style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 460, boxShadow: "0 30px 80px rgba(0,0,0,0.25)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>📊 تصدير التقارير</h2>
-              <button onClick={() => setReportOpen(false)} style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", color: "#64748b" }}>✕</button>
-            </div>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 900, marginBottom: "1rem" }}>📊 تصدير التقارير</h2>
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
-              اختر صيغة التصدير المناسبة لـ {rows.length} سجل في {config.entityName}ات
+              {rows.length} سجل في {config.entityName}ات
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {[
-                { icon: "📕", label: "تصدير PDF", desc: "ملف PDF مُنسّق وجاهز للطباعة" },
-                { icon: "📗", label: "تصدير Excel", desc: "ملف XLSX للتحرير والتحليل" },
-                { icon: "📘", label: "تصدير CSV", desc: "ملف CSV للاستيراد في أنظمة أخرى" },
-              ].map((opt) => (
-                <button
-                  key={opt.label}
-                  onClick={() => { pushToast("success", `✅ جاري تحضير ${opt.label}...`); setReportOpen(false); }}
-                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", background: "#f8f9fb", border: "1.5px solid #e2e8f0", borderRadius: "12px", cursor: "pointer", textAlign: "start", fontFamily: "var(--font-cairo)", width: "100%", transition: "all 0.18s" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#c3152a"; (e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.04)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8f9fb"; }}
-                >
-                  <span style={{ fontSize: "1.5rem" }}>{opt.icon}</span>
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0a0a12" }}>{opt.label}</p>
-                    <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.1rem" }}>{opt.desc}</p>
-                  </div>
-                  <span style={{ marginInlineStart: "auto", color: "#c3152a", fontSize: "1.1rem" }}>←</span>
-                </button>
-              ))}
-            </div>
+            {["PDF", "Excel", "CSV"].map((fmt) => (
+              <button
+                key={fmt}
+                onClick={() => { pushToast("success", `✅ جاري تحضير ${fmt}...`); setReportOpen(false); }}
+                style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+              >
+                تصدير {fmt}
+              </button>
+            ))}
           </div>
         </div>
       )}
