@@ -129,8 +129,8 @@ export default function LoginPage() {
 
         {/* Top: Logo */}
         <div>
-          <div style={{ marginBottom: "2.5rem" }}>
-            <BrandLogo size={72} variant="light" subtitle="النظام القانوني المتكامل" />
+          <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "center" }}>
+            <BrandLogo size={100} showText={false} variant="light" />
           </div>
 
           {/* Tagline */}
@@ -227,7 +227,7 @@ export default function LoginPage() {
           style={{ width: "100%", maxWidth: "420px" }}
         >
           <motion.div variants={fadeUp} style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "center" }}>
-            <BrandLogo size={56} variant="dark" subtitle="النظام القانوني المتكامل" />
+            <BrandLogo size={90} showText={false} variant="dark" />
           </motion.div>
 
           {/* Heading */}

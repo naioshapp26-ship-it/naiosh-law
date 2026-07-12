@@ -20,18 +20,23 @@ export function BrandLogo({
   subtitle,
 }: Props) {
   const textColor = variant === "light" ? "text-white" : "text-slate-900";
-  const subColor = variant === "light" ? "text-red-100/80" : "text-slate-500";
+  const subColor = variant === "light" ? "text-red-100/90" : "text-slate-500";
 
   const content = (
     <div className={`flex items-center gap-3 min-w-0 ${className}`}>
-      <Image
-        src={BRAND.logoPath}
-        alt={BRAND.logoAlt}
-        width={size}
-        height={Math.round(size * 1.15)}
-        priority
-        className="object-contain shrink-0 drop-shadow-md"
-      />
+      <div
+        className="shrink-0 rounded-xl bg-white p-1 shadow-lg ring-1 ring-white/40"
+        style={{ width: size, height: Math.round(size * 1.15) }}
+      >
+        <Image
+          src={BRAND.logoPath}
+          alt={BRAND.logoAlt}
+          width={size}
+          height={Math.round(size * 1.15)}
+          priority
+          className="object-contain w-full h-full"
+        />
+      </div>
       {showText && (
         <div className="min-w-0 leading-tight">
           <p className={`font-black text-sm sm:text-base truncate ${textColor}`}>{BRAND.name}</p>

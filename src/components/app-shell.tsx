@@ -29,6 +29,11 @@ const ROLE_COLORS: Record<UserRole, string> = {
   employee: "bg-slate-500",
 };
 
+const activeLink =
+  "bg-white text-red-900 font-bold shadow-md [&_span]:text-red-900";
+const inactiveLink =
+  "text-white hover:bg-white/15 [&_span]:text-white";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useSession();
@@ -53,21 +58,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside
         className={`${
           sidebarOpen ? "w-[290px]" : "w-[72px]"
-        } sticky top-0 h-screen bg-gradient-to-b from-red-950 via-red-900 to-red-950 text-white transition-all duration-300 flex flex-col shadow-2xl shrink-0 z-20`}
+        } sticky top-0 h-screen bg-gradient-to-b from-red-950 via-red-900 to-red-950 transition-all duration-300 flex flex-col shadow-2xl shrink-0 z-20`}
       >
-        {/* Logo */}
-        <div className="shrink-0 p-3 border-b border-white/10">
+        {/* Logo — صورة كبيرة واضحة */}
+        <div className="shrink-0 p-4 border-b border-white/10 bg-black/10">
           <div className="flex items-center justify-between gap-2">
             {sidebarOpen ? (
-              <BrandLogo size={52} href="/app/dashboard" variant="light" className="flex-1" />
+              <BrandLogo
+                size={80}
+                href="/app/dashboard"
+                showText={false}
+                className="flex-1 justify-center"
+              />
             ) : (
               <Link href="/app/dashboard" className="mx-auto block" title="NAIOSH Law">
-                <BrandLogo size={44} showText={false} variant="light" />
+                <BrandLogo size={52} showText={false} />
               </Link>
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-red-100 shrink-0"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white shrink-0"
               aria-label="تبديل القائمة"
             >
               {sidebarOpen ? "◂" : "▸"}
@@ -75,16 +85,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
+        {sidebarOpen && (
+          <div className="shrink-0 px-4 py-2 border-b border-white/10 text-center">
+            <p className="text-white font-bold text-sm">NAIOSH Law</p>
+            <p className="text-red-200/80 text-[10px]">النظام القانوني السيادي 360</p>
+          </div>
+        )}
+
         {/* User */}
         {sidebarOpen && (
           <div className="shrink-0 px-4 py-3 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/20 flex items-center justify-center text-sm font-bold">
+              <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/20 flex items-center justify-center text-sm font-bold text-white">
                 {user?.name?.charAt(0) ?? "?"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.name ?? "مستخدم"}</p>
-                <span className={`inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-full ${roleColor}`}>
+                <p className="text-sm font-semibold truncate text-white">{user?.name ?? "مستخدم"}</p>
+                <span className={`inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-full ${roleColor} text-white`}>
                   {roleLabel}
                 </span>
               </div>
@@ -92,12 +109,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* Navigation — موزّع على طول الصفحة */}
         <nav className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {sidebarOpen ? (
             <>
               <div className="flex flex-col flex-1 justify-evenly min-h-0 px-1 py-2">
-                <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-red-300/70 shrink-0">
+                <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-red-200/80 shrink-0">
                   القائمة الرئيسية
                 </p>
                 {PRIMARY_NAV.map((item) => {
@@ -107,10 +123,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       key={item.href}
                       href={item.href}
                       title={item.label}
-                      className={`flex items-center gap-2.5 mx-2 px-3 py-2 rounded-xl text-sm transition-all shrink-0 ${
-                        active
-                          ? "bg-white text-red-800 font-bold shadow-md"
-                          : "text-red-50 hover:bg-white/10"
+                      className={`flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 ${
+                        active ? activeLink : inactiveLink
                       }`}
                     >
                       <span className="text-base shrink-0 w-5 text-center">{item.icon}</span>
@@ -134,7 +148,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     href={item.href}
                     title={item.label}
                     className={`p-2.5 rounded-xl text-lg transition-all ${
-                      active ? "bg-white shadow-md" : "hover:bg-white/10"
+                      active ? "bg-white shadow-md" : "hover:bg-white/15"
                     }`}
                   >
                     {item.icon}
@@ -145,11 +159,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        {/* Logout */}
         <div className="shrink-0 p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-100 hover:bg-white/10 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white hover:bg-white/15 transition-colors"
           >
             <span className="w-6 text-center">🚪</span>
             {sidebarOpen && <span className="text-sm">تسجيل الخروج</span>}

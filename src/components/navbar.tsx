@@ -63,7 +63,7 @@ export function Navbar() {
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
       >
         {/* Logo */}
-        <BrandLogo href="/" size={44} variant="light" subtitle="النظام القانوني المتكامل" />
+        <BrandLogo href="/" size={52} showText={false} variant="light" />
 
         {/* Desktop nav */}
         <nav
