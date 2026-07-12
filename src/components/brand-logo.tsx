@@ -46,11 +46,11 @@ export function BrandLogo({
     <div className={`flex items-center gap-3 min-w-0 ${className}`}>
       {img}
       {showText && (
-        <div className="min-w-0 leading-tight">
-          <p className={`font-black text-sm sm:text-base truncate ${textColor}`}>{BRAND.name}</p>
-          <p className={`text-[10px] sm:text-[11px] truncate ${subColor}`}>
-            {subtitle ?? BRAND.tagline}
-          </p>
+        <div className="min-w-0 leading-tight flex-1">
+          <p className={`font-black text-base truncate tracking-tight ${textColor}`}>{BRAND.name}</p>
+          {subtitle && (
+            <p className={`text-[10px] truncate mt-0.5 ${subColor}`}>{subtitle}</p>
+          )}
         </div>
       )}
     </div>

@@ -60,15 +60,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           sidebarOpen ? "w-[290px]" : "w-[72px]"
         } sticky top-0 h-screen bg-gradient-to-b from-red-950 via-red-900 to-red-950 transition-all duration-300 flex flex-col shadow-2xl shrink-0 z-20`}
       >
-        {/* Logo — صورة كبيرة واضحة */}
-        <div className="shrink-0 py-3 px-2 border-b border-white/10">
+        {/* Logo + عنوان جنب بعض */}
+        <div className="shrink-0 py-3 px-3 border-b border-white/10">
           <div className="flex items-center justify-between gap-2">
             {sidebarOpen ? (
               <BrandLogo
-                size={72}
+                size={58}
                 href="/app/dashboard"
-                showText={false}
-                className="flex-1 justify-center"
+                showText
+                variant="light"
+                subtitle="النظام القانوني السيادي 360"
+                className="flex-1 min-w-0"
               />
             ) : (
               <Link href="/app/dashboard" className="mx-auto block" title="NAIOSH Law">
@@ -84,13 +86,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
-
-        {sidebarOpen && (
-          <div className="shrink-0 px-4 py-2 border-b border-white/10 text-center">
-            <p className="text-white font-bold text-sm">NAIOSH Law</p>
-            <p className="text-red-200/80 text-[10px]">النظام القانوني السيادي 360</p>
-          </div>
-        )}
 
         {/* User */}
         {sidebarOpen && (
