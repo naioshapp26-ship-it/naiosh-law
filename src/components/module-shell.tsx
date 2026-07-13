@@ -10,6 +10,8 @@ import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { useSession, canWriteRole } from "@/lib/session";
 import { getModuleApiEndpoint } from "@/lib/module-api";
+import { sendRecordToArchive, buildArchiveTitle, buildArchiveRef } from "@/lib/archive-client";
+import { MODULE_LABELS } from "@/lib/archive-types";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -28,6 +30,8 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Record<string, unknown> | null>(null);
+  const [archiving, setArchiving] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
 
@@ -147,6 +151,35 @@ export function ModuleShell({ slug }: { slug: string }) {
     }
     setModalOpen(false);
     setEditTarget(null);
+  };
+
+  const handleArchiveConfirm = async () => {
+    if (!archiveTarget?.id) return;
+    setArchiving(true);
+    try {
+      const result = await sendRecordToArchive({
+        sourceModule: slug,
+        sourceModuleLabel: MODULE_LABELS[slug] ?? moduleMap[slug]?.title ?? slug,
+        sourceId: String(archiveTarget.id),
+        title: buildArchiveTitle(archiveTarget, config.entityName),
+        sourceRef: buildArchiveRef(archiveTarget),
+        recordData: archiveTarget,
+      });
+      if (!result.ok) {
+        pushToast("error", result.message);
+      } else {
+        pushToast("success", result.message);
+        setRows((prev) =>
+          prev.map((r) => (r.id === archiveTarget.id ? { ...r, status: "مؤرشف" } : r))
+        );
+        await loadRows();
+      }
+    } catch {
+      pushToast("error", "فشل أرشفة السجل");
+    } finally {
+      setArchiving(false);
+      setArchiveTarget(null);
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -290,6 +323,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               data={rows}
               onView={setViewTarget}
               onEdit={canWrite ? openEdit : undefined}
+              onArchive={canWrite && !usingDemo ? setArchiveTarget : undefined}
               onDelete={canWrite ? setDeleteTarget : undefined}
               searchPlaceholder={`بحث في ${config.entityName}ات...`}
             />
@@ -308,6 +342,18 @@ export function ModuleShell({ slug }: { slug: string }) {
       />
 
       {renderViewModal()}
+
+      <ConfirmDialog
+        open={!!archiveTarget}
+        title="تأكيد الأرشفة"
+        message={`هل تريد نقل هذا ${config.entityName} إلى الأرشيف؟ سيظهر في صفحة الأرشيف ويُحدَّث وضعه إلى «مؤرشف».`}
+        onConfirm={handleArchiveConfirm}
+        onCancel={() => setArchiveTarget(null)}
+        loading={archiving}
+        confirmLabel="أرشفة"
+        confirmColor="#475569"
+        icon="📦"
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

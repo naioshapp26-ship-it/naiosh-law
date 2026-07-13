@@ -7,9 +7,22 @@ type Props = {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  confirmLabel?: string;
+  confirmColor?: string;
+  icon?: string;
 };
 
-export function ConfirmDialog({ open, title = "تأكيد الحذف", message, onConfirm, onCancel, loading }: Props) {
+export function ConfirmDialog({
+  open,
+  title = "تأكيد الحذف",
+  message,
+  onConfirm,
+  onCancel,
+  loading,
+  confirmLabel = "تأكيد الحذف",
+  confirmColor = "#ef4444",
+  icon = "🗑️",
+}: Props) {
   if (!open) return null;
   return (
     <div
@@ -44,7 +57,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
             marginBottom: "1.25rem",
           }}
         >
-          🗑️
+          {icon}
         </div>
         <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12", marginBottom: "0.5rem" }}>
           {title}
@@ -78,7 +91,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
               padding: "0.75rem",
               borderRadius: "10px",
               border: "none",
-              background: "#ef4444",
+              background: confirmColor,
               cursor: "pointer",
               fontFamily: "var(--font-cairo)",
               fontWeight: 700,
@@ -87,7 +100,7 @@ export function ConfirmDialog({ open, title = "تأكيد الحذف", message, 
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? "جاري الحذف..." : "تأكيد الحذف"}
+            {loading ? "جاري التنفيذ..." : confirmLabel}
           </button>
         </div>
       </div>

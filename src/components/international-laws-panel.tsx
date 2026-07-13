@@ -26,6 +26,7 @@ import {
   IMPERIAL_IDENTITY,
   PRIMARY_TOPIC_CATALOG,
 } from "@/data/international-laws-structure";
+import { sendRecordToArchive } from "@/lib/archive-client";
 
 export type LawEntry = {
   id: string;
@@ -269,7 +270,9 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   const [viewTarget, setViewTarget] = useState<LawEntry | null>(null);
   const [editTarget, setEditTarget] = useState<LawEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LawEntry | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<LawEntry | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const { show, Toast } = useToast();
 
   const load = useCallback(async () => {
@@ -383,6 +386,33 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
     setModalOpen(false);
     setEditTarget(null);
     await load();
+  };
+
+  const handleArchive = async () => {
+    if (!archiveTarget) return;
+    setArchiving(true);
+    try {
+      const result = await sendRecordToArchive({
+        sourceModule: "legal-classification",
+        sourceModuleLabel: "القوانين الدولية والتصنيف",
+        sourceId: archiveTarget.id,
+        title: archiveTarget.title,
+        sourceRef: archiveTarget.refNo,
+        recordData: archiveTarget as unknown as Record<string, unknown>,
+        category: archiveTarget.topicName,
+      });
+      if (!result.ok) {
+        show("error", result.message);
+      } else {
+        show("success", result.message);
+        setArchiveTarget(null);
+        await load();
+      }
+    } catch {
+      show("error", "فشل أرشفة السجل");
+    } finally {
+      setArchiving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -572,6 +602,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                       <button type="button" style={actionBtn} onClick={() => setViewTarget(e)}>👁 عرض</button>
                       {canWrite && (
                         <>
+                          <button type="button" style={{ ...actionBtn, color: "#475569", borderColor: "#cbd5e1" }} onClick={() => setArchiveTarget(e)}>📦 أرشفة</button>
                           <button type="button" style={{ ...actionBtn, color: "#0ea5e9", borderColor: "#bae6fd" }} onClick={() => openEdit(e)}>✏️ تعديل</button>
                           <button type="button" style={{ ...actionBtn, color: "#c3152a", borderColor: "#fecaca" }} onClick={() => setDeleteTarget(e)}>🗑 حذف</button>
                         </>
@@ -665,6 +696,18 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!archiveTarget}
+        title="تأكيد الأرشفة"
+        message={`هل تريد نقل السجل "${archiveTarget?.title}" إلى الأرشيف؟ سيظهر في صفحة الأرشيف المركزي.`}
+        onConfirm={handleArchive}
+        onCancel={() => setArchiveTarget(null)}
+        loading={archiving}
+        confirmLabel="أرشفة"
+        confirmColor="#475569"
+        icon="📦"
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

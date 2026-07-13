@@ -778,3 +778,29 @@ model SiteSettings {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+// ─── Archive ────────────────────────────────────────────────
+
+model ArchiveRecord {
+  id                String   @id @default(cuid())
+  refNo             String   @unique
+  title             String
+  description       String?
+  sourceModule      String
+  sourceModuleLabel String?
+  sourceId          String?
+  sourceRef         String?
+  recordData        String?  @db.Text
+  category          String?
+  tags              String?
+  status            String   @default("مؤرشف")
+  archivedBy        String?
+  notes             String?
+  attachments       String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([sourceModule])
+  @@index([sourceId])
+  @@index([createdAt])
+}

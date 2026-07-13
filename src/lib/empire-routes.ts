@@ -13,7 +13,7 @@ export type ResolvedItem = NavItem & {
 const DOMAIN_PAGES: Record<string, string> = {
   "official-entities": "/app/official-entities",
   library: "/app/legal-library",
-  "archiving-lib": "/app/legal-library",
+  "archiving-lib": "/app/archive",
   "quality-lib": "/app/legal-library",
   "iso-lib": "/app/legal-library",
   "policies-lib": "/app/legal-library",
@@ -158,6 +158,7 @@ export const PRIMARY_NAV = [
   { href: "/app/modules/court-sessions", label: "التقويم والجلسات", icon: "📅" },
   { href: "/app/legal-finance", label: "المالية", icon: "💰" },
   { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
+  { href: "/app/archive", label: "الأرشيف", icon: "📦" },
   { href: "/app/modules/reports-center", label: "التقارير", icon: "📊" },
   { href: "/app/modules/administration", label: "الإعدادات", icon: "⚙️" },
 ] as const;
