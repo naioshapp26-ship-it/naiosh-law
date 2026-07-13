@@ -27,6 +27,9 @@ import {
   PRIMARY_TOPIC_CATALOG,
 } from "@/data/international-laws-structure";
 import { sendRecordToArchive } from "@/lib/archive-client";
+import { RecordSupplementModal } from "@/components/record-supplement-modal";
+import { fetchRecordSupplements, saveRecordSupplement } from "@/lib/record-supplement-client";
+import type { ArchiveAttachment } from "@/lib/archive-types";
 
 export type LawEntry = {
   id: string;
@@ -271,6 +274,10 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   const [editTarget, setEditTarget] = useState<LawEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LawEntry | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<LawEntry | null>(null);
+  const [supplementTarget, setSupplementTarget] = useState<LawEntry | null>(null);
+  const [viewSupplements, setViewSupplements] = useState<
+    { id: string; notes: string; attachments: ArchiveAttachment[]; addedBy: string; createdAt: string }[]
+  >([]);
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const { show, Toast } = useToast();
@@ -386,6 +393,30 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
     setModalOpen(false);
     setEditTarget(null);
     await load();
+  };
+
+  const handleSupplementSave = async (data: { notes: string; attachments: ArchiveAttachment[] }) => {
+    if (!supplementTarget) return;
+    const result = await saveRecordSupplement({
+      sourceModule: "legal-classification",
+      sourceId: supplementTarget.id,
+      sourceRef: supplementTarget.refNo,
+      title: supplementTarget.title,
+      notes: data.notes,
+      attachments: data.attachments,
+    });
+    if (!result.ok) {
+      show("error", result.message);
+      return;
+    }
+    show("success", result.message);
+    setSupplementTarget(null);
+  };
+
+  const openView = async (entry: LawEntry) => {
+    setViewTarget(entry);
+    const supplements = await fetchRecordSupplements("legal-classification", entry.id);
+    setViewSupplements(supplements);
   };
 
   const handleArchive = async () => {
@@ -599,9 +630,10 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                   <td style={td}>{e.client}</td>
                   <td style={td}>
                     <div style={{ display: "flex", gap: "0.35rem", flexWrap: "nowrap" }}>
-                      <button type="button" style={actionBtn} onClick={() => setViewTarget(e)}>👁 عرض</button>
+                      <button type="button" style={actionBtn} onClick={() => void openView(e)}>👁 عرض</button>
                       {canWrite && (
                         <>
+                          <button type="button" style={{ ...actionBtn, color: "#16a34a", borderColor: "#bbf7d0" }} onClick={() => setSupplementTarget(e)}>➕ إضافة</button>
                           <button type="button" style={{ ...actionBtn, color: "#475569", borderColor: "#cbd5e1" }} onClick={() => setArchiveTarget(e)}>📦 أرشفة</button>
                           <button type="button" style={{ ...actionBtn, color: "#0ea5e9", borderColor: "#bae6fd" }} onClick={() => openEdit(e)}>✏️ تعديل</button>
                           <button type="button" style={{ ...actionBtn, color: "#c3152a", borderColor: "#fecaca" }} onClick={() => setDeleteTarget(e)}>🗑 حذف</button>
@@ -644,6 +676,14 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
         saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
       />
 
+      <RecordSupplementModal
+        open={!!supplementTarget}
+        recordRef={supplementTarget?.refNo ?? ""}
+        recordTitle={supplementTarget?.title ?? ""}
+        onSave={handleSupplementSave}
+        onClose={() => setSupplementTarget(null)}
+      />
+
       {/* View Modal */}
       {viewTarget && (
         <div
@@ -652,7 +692,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
             display: "flex", alignItems: "center", justifyContent: "center",
             background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem",
           }}
-          onClick={() => setViewTarget(null)}
+          onClick={() => { setViewTarget(null); setViewSupplements([]); }}
         >
           <div
             className="card-white"
@@ -661,7 +701,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
           >
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.25rem" }}>
               <h2 style={{ fontWeight: 900, fontSize: "1.1rem" }}>عرض السجل</h2>
-              <button type="button" onClick={() => setViewTarget(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem" }}>✕</button>
+              <button type="button" onClick={() => { setViewTarget(null); setViewSupplements([]); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem" }}>✕</button>
             </div>
             {[
               ["المرجع", viewTarget.refNo],
@@ -691,6 +731,47 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
               <div style={{ marginTop: "0.75rem", padding: "1rem", background: "#fff7ed", borderRadius: "12px" }}>
                 <p style={{ fontWeight: 700, fontSize: "0.8rem", color: "#d97706", marginBottom: "0.35rem" }}>ملاحظات</p>
                 <p style={{ fontSize: "0.85rem", lineHeight: 1.7 }}>{viewTarget.notes}</p>
+              </div>
+            )}
+            {viewSupplements.length > 0 && (
+              <div style={{ marginTop: "1rem", padding: "1rem", background: "#f0fdf4", borderRadius: "12px", border: "1px solid #bbf7d0" }}>
+                <p style={{ fontWeight: 800, fontSize: "0.85rem", color: "#16a34a", marginBottom: "0.75rem" }}>
+                  معلومات إضافية ({viewSupplements.length})
+                </p>
+                {viewSupplements.map((s) => (
+                  <div key={s.id} style={{ marginBottom: "0.75rem", paddingBottom: "0.75rem", borderBottom: "1px solid #dcfce7" }}>
+                    {s.notes && <p style={{ fontSize: "0.82rem", lineHeight: 1.7, marginBottom: "0.35rem" }}>{s.notes}</p>}
+                    <p style={{ fontSize: "0.72rem", color: "#64748b" }}>
+                      {s.addedBy} — {new Date(s.createdAt).toLocaleString("ar-EG")}
+                    </p>
+                    {s.attachments.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.5rem" }}>
+                        {s.attachments.map((a, i) => (
+                          <a
+                            key={`${s.id}-${i}`}
+                            href={a.fileData}
+                            download={a.name}
+                            style={{ fontSize: "0.78rem", color: "#c3152a", fontWeight: 600, textDecoration: "none" }}
+                          >
+                            📎 {a.name}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {canWrite && (
+              <div style={{ marginTop: "1rem" }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ padding: "0.55rem 1.2rem", fontSize: "0.82rem" }}
+                  onClick={() => { setViewTarget(null); setSupplementTarget(viewTarget); }}
+                >
+                  ➕ إضافة معلومات لهذا المرجع
+                </button>
               </div>
             )}
           </div>

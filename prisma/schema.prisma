@@ -804,3 +804,19 @@ model ArchiveRecord {
   @@index([sourceId])
   @@index([createdAt])
 }
+
+model RecordSupplement {
+  id           String   @id @default(cuid())
+  sourceModule String
+  sourceId     String
+  sourceRef    String?
+  title        String?
+  notes        String?
+  attachments  String?  @db.Text
+  addedBy      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([sourceModule, sourceId])
+  @@index([createdAt])
+}

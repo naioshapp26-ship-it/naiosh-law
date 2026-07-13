@@ -12,6 +12,9 @@ import { useSession, canWriteRole } from "@/lib/session";
 import { getModuleApiEndpoint } from "@/lib/module-api";
 import { sendRecordToArchive, buildArchiveTitle, buildArchiveRef } from "@/lib/archive-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
+import { RecordSupplementModal } from "@/components/record-supplement-modal";
+import { saveRecordSupplement } from "@/lib/record-supplement-client";
+import type { ArchiveAttachment } from "@/lib/archive-types";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -31,6 +34,7 @@ export function ModuleShell({ slug }: { slug: string }) {
   const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Record<string, unknown> | null>(null);
+  const [supplementTarget, setSupplementTarget] = useState<Record<string, unknown> | null>(null);
   const [archiving, setArchiving] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
@@ -151,6 +155,24 @@ export function ModuleShell({ slug }: { slug: string }) {
     }
     setModalOpen(false);
     setEditTarget(null);
+  };
+
+  const handleSupplementSave = async (data: { notes: string; attachments: ArchiveAttachment[] }) => {
+    if (!supplementTarget?.id) return;
+    const result = await saveRecordSupplement({
+      sourceModule: slug,
+      sourceId: String(supplementTarget.id),
+      sourceRef: buildArchiveRef(supplementTarget),
+      title: buildArchiveTitle(supplementTarget, config.entityName),
+      notes: data.notes,
+      attachments: data.attachments,
+    });
+    if (!result.ok) {
+      pushToast("error", result.message);
+      return;
+    }
+    pushToast("success", result.message);
+    setSupplementTarget(null);
   };
 
   const handleArchiveConfirm = async () => {
@@ -323,6 +345,7 @@ export function ModuleShell({ slug }: { slug: string }) {
               data={rows}
               onView={setViewTarget}
               onEdit={canWrite ? openEdit : undefined}
+              onSupplement={canWrite && !usingDemo ? setSupplementTarget : undefined}
               onArchive={canWrite && !usingDemo ? setArchiveTarget : undefined}
               onDelete={canWrite ? setDeleteTarget : undefined}
               searchPlaceholder={`بحث في ${config.entityName}ات...`}
@@ -342,6 +365,14 @@ export function ModuleShell({ slug }: { slug: string }) {
       />
 
       {renderViewModal()}
+
+      <RecordSupplementModal
+        open={!!supplementTarget}
+        recordRef={buildArchiveRef(supplementTarget ?? {}) ?? String(supplementTarget?.id ?? "")}
+        recordTitle={buildArchiveTitle(supplementTarget ?? {}, config.entityName)}
+        onSave={handleSupplementSave}
+        onClose={() => setSupplementTarget(null)}
+      />
 
       <ConfirmDialog
         open={!!archiveTarget}

@@ -11,12 +11,13 @@ type Props = {
   onDelete?: (row: Record<string, unknown>) => void;
   onView?: (row: Record<string, unknown>) => void;
   onArchive?: (row: Record<string, unknown>) => void;
+  onSupplement?: (row: Record<string, unknown>) => void;
   searchPlaceholder?: string;
 };
 
 const PAGE_SIZE = 10;
 
-export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, searchPlaceholder = "بحث في السجلات..." }: Props) {
+export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, onSupplement, searchPlaceholder = "بحث في السجلات..." }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const hasActions = !!(onEdit || onDelete || onView || onArchive);
+  const hasActions = !!(onEdit || onDelete || onView || onArchive || onSupplement);
 
   const renderCell = (col: Column, row: Record<string, unknown>) => {
     const val = row[col.key];
@@ -238,6 +239,27 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
                             >
                               ✏️ تعديل
+                            </button>
+                          )}
+                          {onSupplement && (
+                            <button
+                              onClick={() => onSupplement(row)}
+                              style={{
+                                background: "rgba(34,197,94,0.1)",
+                                border: "none",
+                                borderRadius: "8px",
+                                padding: "0.35rem 0.7rem",
+                                cursor: "pointer",
+                                fontSize: "0.73rem",
+                                fontWeight: 600,
+                                color: "#16a34a",
+                                fontFamily: "var(--font-cairo)",
+                                transition: "all 0.15s",
+                              }}
+                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,0.18)")}
+                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,0.1)")}
+                            >
+                              ➕ إضافة
                             </button>
                           )}
                           {onArchive && (
