@@ -48,28 +48,40 @@ export function ArchivePanel() {
   const [viewTarget, setViewTarget] = useState<ArchiveRecordDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ArchiveRecordDto | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   const canWrite = user ? canWriteRole(user.role) : false;
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const params = new URLSearchParams();
       if (moduleFilter) params.set("sourceModule", moduleFilter);
       if (search.trim()) params.set("q", search.trim());
       const res = await fetch(`/api/archive?${params}`, { credentials: "include" });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "تعذر تحميل الأرشيف");
+      }
       setRows(Array.isArray(data) ? data : []);
-    } catch {
-      show("error", "تعذر تحميل الأرشيف");
+    } catch (err) {
+      setRows([]);
+      const message = err instanceof Error ? err.message : "تعذر تحميل الأرشيف";
+      setLoadError(message);
+      show("error", message);
     } finally {
       setLoading(false);
     }
   }, [moduleFilter, search, show]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!ready || !user) return;
+    const timer = setTimeout(() => {
+      void load();
+    }, search ? 350 : 0);
+    return () => clearTimeout(timer);
+  }, [ready, user, load, search]);
 
   const stats = useMemo(
     () => [
@@ -145,7 +157,8 @@ export function ArchivePanel() {
     }
   };
 
-  if (!ready || !user) return <PageLoader />;
+  if (!ready) return <PageLoader />;
+  if (!user) return <PageLoader label="جاري التحويل لتسجيل الدخول..." />;
 
   return (
     <AppShell>
@@ -192,7 +205,14 @@ export function ArchivePanel() {
         </div>
 
         {loading ? (
-          <PageLoader />
+          <PageLoader label="جاري تحميل الأرشيف..." />
+        ) : loadError ? (
+          <div className="card-white" style={{ padding: "3rem", textAlign: "center" }}>
+            <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>⚠️</p>
+            <h3 style={{ fontWeight: 800, marginBottom: "0.5rem" }}>تعذر تحميل الأرشيف</h3>
+            <p style={{ color: "#64748b", fontSize: "0.88rem", marginBottom: "1rem" }}>{loadError}</p>
+            <BtnPrimary onClick={() => void load()}>إعادة المحاولة</BtnPrimary>
+          </div>
         ) : rows.length === 0 ? (
           <div className="card-white" style={{ padding: "3rem", textAlign: "center" }}>
             <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>

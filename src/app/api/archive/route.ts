@@ -26,28 +26,36 @@ export async function GET(request: Request) {
   const { error } = await requireAuth();
   if (error) return error;
 
-  const { searchParams } = new URL(request.url);
-  const sourceModule = searchParams.get("sourceModule");
-  const q = searchParams.get("q");
+  try {
+    const { searchParams } = new URL(request.url);
+    const sourceModule = searchParams.get("sourceModule");
+    const q = searchParams.get("q");
 
-  const rows = await prisma.archiveRecord.findMany({
-    where: {
-      ...(sourceModule ? { sourceModule } : {}),
-      ...(q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { refNo: { contains: q, mode: "insensitive" } },
-              { sourceRef: { contains: q, mode: "insensitive" } },
-              { category: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { createdAt: "desc" },
-  });
+    const rows = await prisma.archiveRecord.findMany({
+      where: {
+        ...(sourceModule ? { sourceModule } : {}),
+        ...(q
+          ? {
+              OR: [
+                { title: { contains: q, mode: "insensitive" } },
+                { refNo: { contains: q, mode: "insensitive" } },
+                { sourceRef: { contains: q, mode: "insensitive" } },
+                { category: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return NextResponse.json(rows.map(mapArchiveRecord));
+    return NextResponse.json(rows.map(mapArchiveRecord));
+  } catch (e) {
+    console.error("[archive GET]", e);
+    return NextResponse.json(
+      { error: "تعذر تحميل الأرشيف — تأكد من تشغيل ترحيل قاعدة البيانات" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {

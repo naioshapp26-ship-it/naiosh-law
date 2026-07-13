@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 
 /* ── Page header with gradient accent ── */
 type HeaderProps = {
@@ -246,10 +246,10 @@ export function PageLoader({ label = "جاري التحميل..." }: { label?: s
 export function useToast() {
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const show = (type: "success" | "error", text: string) => {
+  const show = useCallback((type: "success" | "error", text: string) => {
     setToast({ type, text });
     setTimeout(() => setToast(null), 3500);
-  };
+  }, []);
 
   const Toast = toast ? (
     <div
