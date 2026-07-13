@@ -10,7 +10,8 @@ import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { useSession, canWriteRole } from "@/lib/session";
 import { getModuleApiEndpoint } from "@/lib/module-api";
-import { sendRecordToArchive, buildArchiveTitle, buildArchiveRef } from "@/lib/archive-client";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { sendRecordToArchive, buildArchiveRef, buildArchiveTitle } from "@/lib/archive-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
 import { saveRecordSupplement } from "@/lib/record-supplement-client";
@@ -115,14 +116,18 @@ export function ModuleShell({ slug }: { slug: string }) {
   const openEdit = (row: Record<string, unknown>) => { setEditTarget(row); setModalOpen(true); };
 
   const handleSave = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const payload = stripAttachments(data);
+
     if (apiEndpoint && canWrite && !usingDemo) {
       try {
+        let recordId = editTarget?.id ? String(editTarget.id) : "";
         if (editTarget?.id) {
           const res = await fetch(`${apiEndpoint}/${editTarget.id}`, {
             method: "PATCH",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error();
           pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
@@ -131,10 +136,21 @@ export function ModuleShell({ slug }: { slug: string }) {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error();
+          const created = await res.json();
+          recordId = String(created.id ?? "");
           pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
+        }
+        if (recordId && attachments.length) {
+          await persistFormAttachments({
+            sourceModule: slug,
+            sourceId: recordId,
+            sourceRef: buildArchiveRef({ ...payload, id: recordId }),
+            title: buildArchiveTitle(payload, config.entityName),
+            attachments,
+          });
         }
         await loadRows();
       } catch {

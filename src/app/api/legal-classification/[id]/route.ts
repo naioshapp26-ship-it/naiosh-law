@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWrite } from "@/lib/api-helpers";
+import { mergeAttachments } from "@/lib/entry-attachments";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -9,6 +10,10 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
   const { id } = await params;
   const body = await request.json();
+
+  const existing = body.attachments !== undefined
+    ? await prisma.legalClassificationEntry.findUnique({ where: { id }, select: { attachments: true } })
+    : null;
 
   const updated = await prisma.legalClassificationEntry.update({
     where: { id },
@@ -30,6 +35,10 @@ export async function PATCH(request: Request, { params }: Params) {
       source: body.source !== undefined ? String(body.source) : undefined,
       description: body.description !== undefined ? String(body.description) : undefined,
       notes: body.notes !== undefined ? String(body.notes) : undefined,
+      attachments:
+        body.attachments !== undefined
+          ? mergeAttachments(existing?.attachments, body.attachments)
+          : undefined,
     },
   });
   return NextResponse.json(updated);

@@ -15,6 +15,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Branch = {
   id: string;
@@ -92,14 +93,15 @@ export default function LegalKnowledgePage() {
   };
 
   const handleSave = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const payload = stripAttachments(data);
     const endpoints = {
       branch: "/api/legal-branches",
       spec: "/api/legal-specializations",
       subject: "/api/legal-subjects",
     };
-    const payload = { ...data };
-    if (modalType === "spec" && data.branchName) {
-      const branch = branches.find((b) => b.name === data.branchName);
+    if (modalType === "spec" && payload.branchName) {
+      const branch = branches.find((b) => b.name === payload.branchName);
       delete payload.branchName;
       if (branch) payload.branchId = branch.id;
     }
@@ -110,6 +112,15 @@ export default function LegalKnowledgePage() {
       body: JSON.stringify(payload),
     });
     if (!res.ok) return;
+    const created = await res.json();
+    if (created?.id && attachments.length) {
+      await persistFormAttachments({
+        sourceModule: `legal-knowledge-${modalType}`,
+        sourceId: String(created.id),
+        title: String(payload.name ?? ""),
+        attachments,
+      });
+    }
     setModalOpen(false);
     await load();
   };

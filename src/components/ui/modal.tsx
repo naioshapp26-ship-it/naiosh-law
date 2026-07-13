@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import type { FormField } from "@/data/module-configs";
+import { FileUploadField } from "@/components/ui/file-upload-field";
+import { parseAttachments, type FileAttachment } from "@/lib/file-upload";
 
 type Props = {
   open: boolean;
@@ -11,19 +13,43 @@ type Props = {
   onSave: (data: Record<string, unknown>) => void;
   onClose: () => void;
   saveLabel?: string;
+  enableFiles?: boolean;
 };
 
-export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
+export function Modal({
+  open,
+  title,
+  fields,
+  initial,
+  onSave,
+  onClose,
+  saveLabel = "حفظ",
+  enableFiles = true,
+}: Props) {
   const [form, setForm] = useState<Record<string, unknown>>({});
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const hasExplicitFilesField = fields.some((f) => f.type === "files");
 
   useEffect(() => {
     if (open) {
       const defaults: Record<string, unknown> = {};
-      fields.forEach((f) => (defaults[f.key] = initial?.[f.key] ?? ""));
+      fields.forEach((f) => {
+        if (f.type === "files") {
+          defaults[f.key] = parseAttachments(initial?.[f.key]);
+        } else {
+          defaults[f.key] = initial?.[f.key] ?? "";
+        }
+      });
       setForm(defaults);
+      if (enableFiles && !hasExplicitFilesField) {
+        setAttachments(parseAttachments(initial?.attachments));
+      } else {
+        setAttachments([]);
+      }
     }
-  }, [open, initial, fields]);
+  }, [open, initial, fields, enableFiles, hasExplicitFilesField]);
 
   if (!open) return null;
 
@@ -33,7 +59,11 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
     e.preventDefault();
     setSaving(true);
     await new Promise((r) => setTimeout(r, 400));
-    onSave(form);
+    const payload = { ...form };
+    if (enableFiles && !hasExplicitFilesField) {
+      payload.attachments = attachments;
+    }
+    onSave(payload);
     setSaving(false);
   };
 
@@ -66,7 +96,6 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -77,6 +106,7 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
         >
           <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0a0a12" }}>{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
               width: 34,
@@ -96,7 +126,6 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div
             style={{
@@ -109,47 +138,67 @@ export function Modal({ open, title, fields, initial, onSave, onClose, saveLabel
             {fields.map((f) => (
               <div
                 key={f.key}
-                style={f.type === "textarea" ? { gridColumn: "1 / -1" } : {}}
+                style={f.type === "textarea" || f.type === "files" ? { gridColumn: "1 / -1" } : {}}
               >
-                <label className="input-label">{f.label}{f.required && <span style={{ color: "#c3152a" }}> *</span>}</label>
-                {f.type === "select" ? (
-                  <select
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    className="input-field"
-                    style={{ cursor: "pointer" }}
-                  >
-                    <option value="">اختر...</option>
-                    {f.options?.map((o) => (
-                      <option key={o} value={o}>{o}</option>
-                    ))}
-                  </select>
-                ) : f.type === "textarea" ? (
-                  <textarea
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    rows={3}
-                    className="input-field"
-                    style={{ resize: "vertical", minHeight: 80 }}
-                    placeholder={f.placeholder}
+                {f.type === "files" ? (
+                  <FileUploadField
+                    label={f.label}
+                    value={parseAttachments(form[f.key])}
+                    onChange={(files) => set(f.key, files)}
                   />
                 ) : (
-                  <input
-                    type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => set(f.key, e.target.value)}
-                    required={f.required}
-                    className="input-field"
-                    placeholder={f.placeholder}
-                  />
+                  <>
+                    <label className="input-label">
+                      {f.label}
+                      {f.required && <span style={{ color: "#c3152a" }}> *</span>}
+                    </label>
+                    {f.type === "select" ? (
+                      <select
+                        value={String(form[f.key] ?? "")}
+                        onChange={(e) => set(f.key, e.target.value)}
+                        required={f.required}
+                        className="input-field"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <option value="">اختر...</option>
+                        {f.options?.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                    ) : f.type === "textarea" ? (
+                      <textarea
+                        value={String(form[f.key] ?? "")}
+                        onChange={(e) => set(f.key, e.target.value)}
+                        required={f.required}
+                        rows={3}
+                        className="input-field"
+                        style={{ resize: "vertical", minHeight: 80 }}
+                        placeholder={f.placeholder}
+                      />
+                    ) : (
+                      <input
+                        type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                        value={String(form[f.key] ?? "")}
+                        onChange={(e) => set(f.key, e.target.value)}
+                        required={f.required}
+                        className="input-field"
+                        placeholder={f.placeholder}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             ))}
+
+            {enableFiles && !hasExplicitFilesField && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <FileUploadField value={attachments} onChange={setAttachments} />
+              </div>
+            )}
           </div>
 
-          {/* Actions */}
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem", justifyContent: "flex-end" }}>
             <button
               type="button"

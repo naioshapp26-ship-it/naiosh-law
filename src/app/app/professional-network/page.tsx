@@ -14,6 +14,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Professional = {
   id: string;
@@ -71,13 +72,24 @@ export default function ProfessionalNetworkPage() {
   const isEmpty = professionals.length === 0 && network.length === 0;
 
   const handleSave = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const payload = stripAttachments(data);
     const res = await fetch("/api/professionals", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) return;
+    const created = await res.json();
+    if (created?.id && attachments.length) {
+      await persistFormAttachments({
+        sourceModule: "professional-network",
+        sourceId: String(created.id),
+        title: String(payload.name ?? ""),
+        attachments,
+      });
+    }
     setModalOpen(false);
     await load();
   };

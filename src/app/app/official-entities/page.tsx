@@ -13,6 +13,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Entity = {
   id: string;
@@ -66,13 +67,24 @@ export default function OfficialEntitiesPage() {
   const isEmpty = entities.length === 0;
 
   const handleSave = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const payload = stripAttachments(data);
     const res = await fetch("/api/official-entities", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, status: "نشط" }),
+      body: JSON.stringify({ ...payload, status: "نشط" }),
     });
     if (!res.ok) return;
+    const created = await res.json();
+    if (created?.id && attachments.length) {
+      await persistFormAttachments({
+        sourceModule: "official-entities",
+        sourceId: String(created.id),
+        title: String(payload.name ?? ""),
+        attachments,
+      });
+    }
     setModalOpen(false);
     await load();
   };

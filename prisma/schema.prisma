@@ -719,6 +719,7 @@ model LegalClassificationEntry {
   source       String?
   description  String?
   notes        String?
+  attachments  String?  @db.Text
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

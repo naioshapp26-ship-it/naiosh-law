@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import type { ArchiveAttachment } from "@/lib/archive-types";
-import { ACCEPTED_FILE_TYPES, MAX_ATTACHMENT_BYTES } from "@/lib/archive-types";
+import { FileUploadField } from "@/components/ui/file-upload-field";
+import type { FileAttachment } from "@/lib/file-upload";
 
 type Props = {
   open: boolean;
@@ -14,7 +14,7 @@ type Props = {
     tags?: string;
     notes?: string;
     sourceModuleLabel?: string;
-    attachments?: ArchiveAttachment[];
+    attachments?: FileAttachment[];
   };
   onSave: (data: {
     title: string;
@@ -22,28 +22,11 @@ type Props = {
     category: string;
     tags: string;
     notes: string;
-    attachments: ArchiveAttachment[];
+    attachments: FileAttachment[];
   }) => void | Promise<void>;
   onClose: () => void;
   saveLabel?: string;
 };
-
-async function readFile(file: File): Promise<ArchiveAttachment | null> {
-  if (file.size > MAX_ATTACHMENT_BYTES) return null;
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      resolve({
-        name: file.name,
-        mimeType: file.type || "application/octet-stream",
-        fileData: String(reader.result ?? ""),
-        size: file.size,
-      });
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
-}
 
 export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel = "حفظ" }: Props) {
   const [form, setForm] = useState({
@@ -53,9 +36,8 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
     tags: "",
     notes: "",
   });
-  const [attachments, setAttachments] = useState<ArchiveAttachment[]>([]);
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [saving, setSaving] = useState(false);
-  const [fileError, setFileError] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -67,26 +49,10 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
         notes: initial?.notes ?? "",
       });
       setAttachments(initial?.attachments ?? []);
-      setFileError("");
     }
   }, [open, initial]);
 
   if (!open) return null;
-
-  const handleFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
-    setFileError("");
-    const next = [...attachments];
-    for (const file of Array.from(files)) {
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        setFileError(`الملف ${file.name} أكبر من 3 ميجابايت`);
-        continue;
-      }
-      const parsed = await readFile(file);
-      if (parsed) next.push(parsed);
-    }
-    setAttachments(next);
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -135,87 +101,25 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
           <div style={{ display: "grid", gap: "1rem" }}>
             <div>
               <label className="input-label">العنوان <span style={{ color: "#c3152a" }}>*</span></label>
-              <input
-                className="input-field"
-                required
-                value={form.title}
-                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-              />
+              <input className="input-field" required value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
             </div>
             <div>
               <label className="input-label">التصنيف / النظام</label>
-              <input
-                className="input-field"
-                value={form.category}
-                onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-              />
+              <input className="input-field" value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} />
             </div>
             <div>
               <label className="input-label">الوصف</label>
-              <textarea
-                className="input-field"
-                rows={3}
-                value={form.description}
-                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-              />
+              <textarea className="input-field" rows={3} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
             </div>
             <div>
               <label className="input-label">الوسوم</label>
-              <input
-                className="input-field"
-                placeholder="مثال: عقود، 2026، تجاري"
-                value={form.tags}
-                onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))}
-              />
+              <input className="input-field" placeholder="مثال: عقود، 2026، تجاري" value={form.tags} onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))} />
             </div>
             <div>
               <label className="input-label">ملاحظات</label>
-              <textarea
-                className="input-field"
-                rows={2}
-                value={form.notes}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
-              />
+              <textarea className="input-field" rows={2} value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} />
             </div>
-
-            <div>
-              <label className="input-label">المرفقات (PDF، Excel، Word، صور)</label>
-              <input
-                type="file"
-                multiple
-                accept={ACCEPTED_FILE_TYPES}
-                className="input-field"
-                onChange={(e) => handleFiles(e.target.files)}
-              />
-              {fileError && <p style={{ color: "#c3152a", fontSize: "0.78rem", marginTop: "0.35rem" }}>{fileError}</p>}
-              {attachments.length > 0 && (
-                <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
-                  {attachments.map((a, i) => (
-                    <div
-                      key={`${a.name}-${i}`}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "0.55rem 0.75rem",
-                        background: "#f8f9fb",
-                        borderRadius: "10px",
-                        border: "1px solid #e2e8f0",
-                      }}
-                    >
-                      <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>📎 {a.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
-                        style={{ background: "none", border: "none", color: "#c3152a", cursor: "pointer", fontSize: "0.75rem" }}
-                      >
-                        إزالة
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <FileUploadField value={attachments} onChange={setAttachments} />
           </div>
 
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.75rem", justifyContent: "flex-end" }}>

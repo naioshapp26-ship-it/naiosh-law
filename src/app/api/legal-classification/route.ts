@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { mapEntryAttachments, serializeAttachments } from "@/lib/entry-attachments";
 
 export async function GET(request: Request) {
   const { error } = await requireAuth();
@@ -35,6 +36,7 @@ export async function GET(request: Request) {
       source: e.source ?? "—",
       description: e.description ?? "",
       notes: e.notes ?? "",
+      attachments: mapEntryAttachments(e.attachments),
     }))
   );
 }
@@ -63,6 +65,7 @@ export async function POST(request: Request) {
       source: body.source ? String(body.source) : null,
       description: body.description ? String(body.description) : null,
       notes: body.notes ? String(body.notes) : null,
+      attachments: serializeAttachments(body.attachments),
     },
   });
 

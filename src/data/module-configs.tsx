@@ -4,7 +4,7 @@ import type { KpiCard } from "@/components/ui/stats-row";
 export type FormField = {
   key: string;
   label: string;
-  type: "text" | "select" | "date" | "number" | "textarea" | "email" | "tel";
+  type: "text" | "select" | "date" | "number" | "textarea" | "email" | "tel" | "files";
   options?: string[];
   required?: boolean;
   placeholder?: string;

@@ -29,7 +29,8 @@ import {
 import { sendRecordToArchive } from "@/lib/archive-client";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
 import { fetchRecordSupplements, saveRecordSupplement } from "@/lib/record-supplement-client";
-import type { ArchiveAttachment } from "@/lib/archive-types";
+import { extractAttachments, stripAttachments } from "@/lib/form-attachments";
+import type { FileAttachment } from "@/lib/file-upload";
 
 export type LawEntry = {
   id: string;
@@ -47,6 +48,7 @@ export type LawEntry = {
   source: string;
   description: string;
   notes: string;
+  attachments: FileAttachment[];
 };
 
 const entryFields: FormField[] = [
@@ -276,7 +278,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   const [archiveTarget, setArchiveTarget] = useState<LawEntry | null>(null);
   const [supplementTarget, setSupplementTarget] = useState<LawEntry | null>(null);
   const [viewSupplements, setViewSupplements] = useState<
-    { id: string; notes: string; attachments: ArchiveAttachment[]; addedBy: string; createdAt: string }[]
+    { id: string; notes: string; attachments: FileAttachment[]; addedBy: string; createdAt: string }[]
   >([]);
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -355,7 +357,9 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   };
 
   const handleSave = async (data: Record<string, unknown>) => {
-    const topicName = String(data.topicName ?? "");
+    const attachments = extractAttachments(data);
+    const payload = stripAttachments(data);
+    const topicName = String(payload.topicName ?? "");
     const topic = resolveTopic(topicName);
 
     if (editTarget) {
@@ -363,7 +367,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, topicName: topic?.name, topicSlug: topic?.slug }),
+        body: JSON.stringify({ ...payload, topicName: topic?.name, topicSlug: topic?.slug, attachments }),
       });
       if (!res.ok) {
         show("error", "فشل التعديل");
@@ -377,10 +381,11 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...data,
+          ...payload,
           axisSlug: axis.slug,
           topicSlug: topic?.slug,
           topicName: topic?.name,
+          attachments,
         }),
       });
       if (!res.ok) {
@@ -395,7 +400,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
     await load();
   };
 
-  const handleSupplementSave = async (data: { notes: string; attachments: ArchiveAttachment[] }) => {
+  const handleSupplementSave = async (data: { notes: string; attachments: FileAttachment[] }) => {
     if (!supplementTarget) return;
     const result = await saveRecordSupplement({
       sourceModule: "legal-classification",
@@ -668,6 +673,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                 source: editTarget.source === "—" ? "" : editTarget.source,
                 description: editTarget.description,
                 notes: editTarget.notes,
+                attachments: editTarget.attachments ?? [],
               }
             : { status: "نشط", topicName: activeTopic?.name ?? axis.topics[0]?.name ?? "" }
         }
@@ -731,6 +737,18 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
               <div style={{ marginTop: "0.75rem", padding: "1rem", background: "#fff7ed", borderRadius: "12px" }}>
                 <p style={{ fontWeight: 700, fontSize: "0.8rem", color: "#d97706", marginBottom: "0.35rem" }}>ملاحظات</p>
                 <p style={{ fontSize: "0.85rem", lineHeight: 1.7 }}>{viewTarget.notes}</p>
+              </div>
+            )}
+            {viewTarget.attachments && viewTarget.attachments.length > 0 && (
+              <div style={{ marginTop: "1rem" }}>
+                <p style={{ fontWeight: 700, fontSize: "0.8rem", color: "#64748b", marginBottom: "0.5rem" }}>مرفقات السجل</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                  {viewTarget.attachments.map((a, i) => (
+                    <a key={`entry-${i}`} href={a.fileData} download={a.name} style={{ fontSize: "0.78rem", color: "#c3152a", fontWeight: 600, textDecoration: "none" }}>
+                      📎 {a.name}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
             {viewSupplements.length > 0 && (

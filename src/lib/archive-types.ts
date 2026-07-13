@@ -1,9 +1,7 @@
-export type ArchiveAttachment = {
-  name: string;
-  mimeType: string;
-  fileData: string;
-  size: number;
-};
+import type { FileAttachment } from "@/lib/file-upload";
+import { ACCEPTED_FILE_TYPES as FILE_TYPES, MAX_FILE_BYTES } from "@/lib/file-upload";
+
+export type ArchiveAttachment = FileAttachment;
 
 export type ArchiveRecordDto = {
   id: string;
@@ -47,7 +45,5 @@ export const MODULE_LABELS: Record<string, string> = {
   archive: "الأرشيف",
 };
 
-export const ACCEPTED_FILE_TYPES =
-  ".pdf,.xlsx,.xls,.doc,.docx,.jpg,.jpeg,.png,.webp,.gif,.csv,.txt";
-
-export const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+export const ACCEPTED_FILE_TYPES = FILE_TYPES;
+export const MAX_ATTACHMENT_BYTES = MAX_FILE_BYTES;
