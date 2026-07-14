@@ -6,6 +6,11 @@ export function LandingPromoBar() {
   return (
     <div
       style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 60,
         background: "linear-gradient(90deg, #3b0a10 0%, #1a0508 50%, #3b0a10 100%)",
         color: "#fecaca",
         fontSize: "0.78rem",
