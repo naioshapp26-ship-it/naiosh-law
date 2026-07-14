@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 const stats = [
-  { value: "17", label: "وحدة تشغيلية" },
-  { value: "128+", label: "قضية نشطة" },
-  { value: "500+", label: "موكل مسجل" },
-  { value: "99.9%", label: "وقت التشغيل" },
+  { value: 17, suffix: "", label: "وحدة تشغيلية" },
+  { value: 128, suffix: "+", label: "قضية نشطة" },
+  { value: 500, suffix: "+", label: "موكل مسجل" },
+  { value: 99.9, suffix: "%", label: "وقت التشغيل", decimals: 1 },
 ];
 
 const VISUAL_SLIDES = [
@@ -20,29 +20,88 @@ const VISUAL_SLIDES = [
 ] as const;
 
 const ROTATE_MS = 6000;
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
 };
 
 const itemAnim = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: { opacity: 0, y: 32, filter: "blur(6px)" },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: EASE },
+  },
+};
+
+const wordAnim = {
+  hidden: { opacity: 0, y: 28 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: EASE },
   },
 };
 
 const slideAnim = {
-  initial: { opacity: 0, x: -28, scale: 0.97 },
-  animate: { opacity: 1, x: 0, scale: 1 },
-  exit: { opacity: 0, x: 28, scale: 0.97 },
-  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  initial: { opacity: 0, x: -40, scale: 0.94, rotateY: 8 },
+  animate: { opacity: 1, x: 0, scale: 1, rotateY: 0 },
+  exit: { opacity: 0, x: 36, scale: 0.96, rotateY: -6 },
+  transition: { duration: 0.55, ease: EASE },
 };
 
-const headlineText = "إدارة القضايا والموكلين بذكاء";
+const headlineWords = ["إدارة", "القضايا", "والموكلين", "بذكاء"];
+
+function AnimatedStat({
+  value,
+  suffix,
+  label,
+  decimals = 0,
+  delay = 0,
+}: {
+  value: number;
+  suffix: string;
+  label: string;
+  decimals?: number;
+  delay?: number;
+}) {
+  const reduce = useReducedMotion();
+  const mv = useMotionValue(0);
+  const display = useTransform(mv, (v) =>
+    decimals > 0 ? v.toFixed(decimals) : Math.round(v).toString()
+  );
+  const [text, setText] = useState(reduce ? (decimals > 0 ? value.toFixed(decimals) : String(value)) : "0");
+
+  useEffect(() => {
+    if (reduce) {
+      setText(decimals > 0 ? value.toFixed(decimals) : String(value));
+      return;
+    }
+    const unsub = display.on("change", (v) => setText(v));
+    const controls = animate(mv, value, { duration: 1.6, delay: delay + 0.9, ease: EASE });
+    return () => {
+      unsub();
+      controls.stop();
+    };
+  }, [value, decimals, delay, display, mv, reduce]);
+
+  return (
+    <motion.div
+      style={{ textAlign: "right" }}
+      variants={itemAnim}
+      whileHover={reduce ? undefined : { y: -4, scale: 1.04 }}
+    >
+      <div style={{ fontSize: "1.85rem", fontWeight: 900, color: "#ffffff", lineHeight: 1 }}>
+        {text}
+        {suffix}
+      </div>
+      <div style={{ fontSize: "0.75rem", color: "#475569", marginTop: "0.3rem", fontWeight: 500 }}>{label}</div>
+    </motion.div>
+  );
+}
 
 type Props = {
   variant?: "default" | "landing";
@@ -127,7 +186,14 @@ function CaseVisual() {
         <div style={{ marginBottom: "1.25rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
             <span style={{ fontSize: "0.72rem", color: "#64748b" }}>تقدم القضية</span>
-            <span style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}>65%</span>
+            <motion.span
+              style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              65%
+            </motion.span>
           </div>
           <div
             style={{
@@ -137,13 +203,15 @@ function CaseVisual() {
               overflow: "hidden",
             }}
           >
-            <div
+            <motion.div
               style={{
                 height: "100%",
-                width: "65%",
                 background: "linear-gradient(90deg, #c3152a, #ff6b6b)",
                 borderRadius: "99px",
               }}
+              initial={{ width: "0%" }}
+              animate={{ width: "65%" }}
+              transition={{ duration: 1.4, delay: 0.55, ease: EASE }}
             />
           </div>
         </div>
@@ -465,6 +533,7 @@ export function HeroSection({ variant = "default" }: Props) {
   const isLanding = variant === "landing";
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const reduce = useReducedMotion();
 
   const next = useCallback(() => setIndex((i) => (i + 1) % VISUAL_SLIDES.length), []);
   const prev = useCallback(
@@ -491,7 +560,7 @@ export function HeroSection({ variant = "default" }: Props) {
       }}
       aria-label="قسم الهيرو الرئيسي"
     >
-      <div
+      <motion.div
         className="glow-pulse"
         style={{
           position: "absolute",
@@ -503,8 +572,10 @@ export function HeroSection({ variant = "default" }: Props) {
           left: -150,
           pointerEvents: "none",
         }}
+        animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.55, 0.95, 0.55] }}
+        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div
+      <motion.div
         style={{
           position: "absolute",
           width: 500,
@@ -515,18 +586,49 @@ export function HeroSection({ variant = "default" }: Props) {
           right: -80,
           pointerEvents: "none",
         }}
+        animate={reduce ? undefined : { scale: [1, 1.18, 1], x: [0, -20, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div
+      <motion.div
+        className="hero-grid-bg"
         style={{
           position: "absolute",
-          inset: 0,
+          inset: "-65px",
           backgroundImage:
             "linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)",
           backgroundSize: "65px 65px",
           pointerEvents: "none",
         }}
+        animate={reduce ? undefined : { y: [0, 32, 0], opacity: [0.45, 0.75, 0.45] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
+
+      {/* floating particles */}
+      {!reduce &&
+        [0, 1, 2, 3, 4, 5].map((i) => (
+          <motion.span
+            key={i}
+            aria-hidden
+            style={{
+              position: "absolute",
+              width: 4 + (i % 3) * 2,
+              height: 4 + (i % 3) * 2,
+              borderRadius: "50%",
+              background: i % 2 === 0 ? "rgba(195,21,42,0.55)" : "rgba(255,255,255,0.25)",
+              top: `${18 + i * 12}%`,
+              left: `${8 + i * 14}%`,
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+            animate={{
+              y: [0, -28 - i * 4, 0],
+              opacity: [0.2, 0.9, 0.2],
+              scale: [1, 1.4, 1],
+            }}
+            transition={{ duration: 4 + i * 0.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.35 }}
+          />
+        ))}
 
       <div
         className="spin-slow"
@@ -542,7 +644,7 @@ export function HeroSection({ variant = "default" }: Props) {
           pointerEvents: "none",
         }}
       />
-      <div
+      <motion.div
         style={{
           position: "absolute",
           width: 280,
@@ -551,9 +653,12 @@ export function HeroSection({ variant = "default" }: Props) {
           border: "1px solid rgba(195,21,42,0.08)",
           top: "50%",
           left: "60%",
-          transform: "translate(-50%, -50%)",
+          marginTop: -140,
+          marginLeft: -140,
           pointerEvents: "none",
         }}
+        animate={reduce ? undefined : { rotate: -360 }}
+        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
       />
 
       <div
@@ -581,8 +686,9 @@ export function HeroSection({ variant = "default" }: Props) {
               textAlign: "right",
             }}
           >
-            <div
+            <motion.div
               className="hero-badge"
+              variants={itemAnim}
               style={{
                 marginBottom: "0.2rem",
                 width: "fit-content",
@@ -621,7 +727,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 />
                 Naiosh Law Platform — نظام قانوني من الجيل القادم
               </span>
-            </div>
+            </motion.div>
 
             <motion.h1
               className="hero-heading"
@@ -641,34 +747,56 @@ export function HeroSection({ variant = "default" }: Props) {
             >
               <motion.span
                 className="hero-heading-main"
-                variants={itemAnim}
                 style={{
-                  display: "block",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "flex-end",
+                  gap: "0.35em",
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
-                  whiteSpace: "normal",
                   maxWidth: "100%",
                 }}
+                variants={container}
               >
-                {headlineText}
+                {headlineWords.map((word) => (
+                  <motion.span key={word} variants={wordAnim} style={{ display: "inline-block" }}>
+                    {word}
+                  </motion.span>
+                ))}
               </motion.span>
               <motion.span
                 className="hero-heading-accent"
                 variants={itemAnim}
                 style={{
                   color: "#c3152a",
-                  textShadow: "0 0 40px rgba(195,21,42,0.5)",
                   display: "block",
                   whiteSpace: "normal",
                   fontSize: "0.96em",
                 }}
               >
-                لا مثيل له
+                <motion.span
+                  style={{ display: "inline-block", textShadow: "0 0 40px rgba(195,21,42,0.5)" }}
+                  animate={
+                    reduce
+                      ? undefined
+                      : {
+                          textShadow: [
+                            "0 0 24px rgba(195,21,42,0.35)",
+                            "0 0 48px rgba(195,21,42,0.75)",
+                            "0 0 24px rgba(195,21,42,0.35)",
+                          ],
+                        }
+                  }
+                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  لا مثيل له
+                </motion.span>
               </motion.span>
             </motion.h1>
 
-            <p
+            <motion.p
               className="hero-sub"
+              variants={itemAnim}
               style={{
                 color: "#94a3b8",
                 fontSize: "1.08rem",
@@ -680,10 +808,11 @@ export function HeroSection({ variant = "default" }: Props) {
             >
               منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من إدارة القضايا والجلسات
               وحتى المحاسبة القانونية والذكاء الاصطناعي.
-            </p>
+            </motion.p>
 
-            <div
+            <motion.div
               className="hero-cta"
+              variants={itemAnim}
               style={{
                 display: "flex",
                 gap: "1rem",
@@ -692,16 +821,26 @@ export function HeroSection({ variant = "default" }: Props) {
                 justifyContent: "flex-end",
               }}
             >
-              <Link href="/login" className="btn-primary" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
-                ابدأ الآن مجانًا →
-              </Link>
-              <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
-                عرض تجريبي مباشر
-              </Link>
-            </div>
+              <motion.div
+                whileHover={reduce ? undefined : { scale: 1.07, y: -3 }}
+                whileTap={reduce ? undefined : { scale: 0.96 }}
+                animate={reduce ? undefined : { scale: [1, 1.03, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Link href="/login" className="btn-primary btn-pulse-glow" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
+                  ابدأ الآن مجانًا →
+                </Link>
+              </motion.div>
+              <motion.div whileHover={reduce ? undefined : { scale: 1.05, y: -2 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
+                <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
+                  عرض تجريبي مباشر
+                </Link>
+              </motion.div>
+            </motion.div>
 
-            <div
+            <motion.div
               className="hero-stats"
+              variants={container}
               style={{
                 display: "flex",
                 gap: "2.5rem",
@@ -711,27 +850,31 @@ export function HeroSection({ variant = "default" }: Props) {
                 justifyContent: "flex-end",
               }}
             >
-              {stats.map((s) => (
-                <div key={s.label} style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "1.85rem", fontWeight: 900, color: "#ffffff", lineHeight: 1 }}>
-                    {s.value}
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#475569", marginTop: "0.3rem", fontWeight: 500 }}>
-                    {s.label}
-                  </div>
-                </div>
+              {stats.map((s, i) => (
+                <AnimatedStat
+                  key={s.label}
+                  value={s.value}
+                  suffix={s.suffix}
+                  label={s.label}
+                  decimals={s.decimals}
+                  delay={i * 0.12}
+                />
               ))}
-            </div>
+            </motion.div>
           </motion.div>
 
-          <div
+          <motion.div
             className="float-anim hero-card-col"
+            initial={reduce ? false : { opacity: 0, x: -70, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
             style={{
               position: "absolute",
               left: 0,
               top: "calc(50% - 180px)",
               width: "min(420px, 35vw)",
               zIndex: 5,
+              perspective: 900,
             }}
           >
             <AnimatePresence mode="wait">
@@ -829,14 +972,14 @@ export function HeroSection({ variant = "default" }: Props) {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.6, duration: 0.6 }}
         style={{
           position: "absolute",
           bottom: "2rem",
@@ -854,7 +997,14 @@ export function HeroSection({ variant = "default" }: Props) {
       >
         <a href="#features" style={{ color: "inherit", textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
           <span>اكتشف المزيد</span>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: "float 2s ease-in-out infinite" }}>
+          <motion.svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            animate={reduce ? undefined : { y: [0, 6, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          >
             <path
               d="M8 3v10M4 9l4 4 4-4"
               stroke="currentColor"
@@ -862,7 +1012,7 @@ export function HeroSection({ variant = "default" }: Props) {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-          </svg>
+          </motion.svg>
         </a>
       </motion.div>
 
@@ -890,6 +1040,7 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-heading-main {
             width: 100%;
+            justify-content: center !important;
           }
           .hero-badge-pill {
             font-size: 0.92rem !important;
@@ -921,6 +1072,11 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-card-col {
             display: none;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-badge-pill, .float-anim, .glow-pulse, .spin-slow, .pulse-dot {
+            animation: none !important;
           }
         }
       `}</style>

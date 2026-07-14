@@ -229,17 +229,28 @@ a {
   font-weight: 700;
 }
 
-/* ── Hero CSS entrance animations ─────────── */
-@keyframes hero-fade-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── Landing motion helpers ──────────────── */
+@keyframes btn-pulse-glow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(195, 21, 42, 0.35); }
+  50%      { box-shadow: 0 8px 36px rgba(195, 21, 42, 0.65); }
 }
 
-.hero-badge    { animation: hero-fade-in 0.5s ease 0.1s both; }
-.hero-heading  { animation: hero-fade-in 0.55s ease 0.18s both; }
-.hero-sub      { animation: hero-fade-in 0.55s ease 0.26s both; }
-.hero-cta      { animation: hero-fade-in 0.55s ease 0.34s both; }
-.hero-stats    { animation: hero-fade-in 0.55s ease 0.42s both; }
+.btn-pulse-glow {
+  animation: btn-pulse-glow 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-anim,
+  .float-slow-anim,
+  .glow-pulse,
+  .spin-slow,
+  .pulse-dot,
+  .btn-pulse-glow,
+  .logo-float,
+  .logo-glow-ring {
+    animation: none !important;
+  }
+}
 
 /* ── Mobile responsive helpers ─────────────── */
 @media (max-width: 768px) {
