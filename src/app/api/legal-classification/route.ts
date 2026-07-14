@@ -37,6 +37,10 @@ export async function GET(request: Request) {
       description: e.description ?? "",
       notes: e.notes ?? "",
       attachments: mapEntryAttachments(e.attachments),
+      firstParty: e.firstParty ?? "",
+      firstPartyPhone: e.firstPartyPhone ?? "",
+      secondParty: e.secondParty ?? "",
+      secondPartyPhone: e.secondPartyPhone ?? "",
     }))
   );
 }
@@ -66,6 +70,10 @@ export async function POST(request: Request) {
       description: body.description ? String(body.description) : null,
       notes: body.notes ? String(body.notes) : null,
       attachments: serializeAttachments(body.attachments),
+      firstParty: body.firstParty ? String(body.firstParty) : null,
+      firstPartyPhone: body.firstPartyPhone ? String(body.firstPartyPhone) : null,
+      secondParty: body.secondParty ? String(body.secondParty) : null,
+      secondPartyPhone: body.secondPartyPhone ? String(body.secondPartyPhone) : null,
     },
   });
 

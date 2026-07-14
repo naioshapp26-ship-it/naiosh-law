@@ -16,6 +16,8 @@ import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
+import { upsertRecordParties } from "@/lib/record-parties-client";
 
 type Branch = {
   id: string;
@@ -94,7 +96,8 @@ export default function LegalKnowledgePage() {
 
   const handleSave = async (data: Record<string, unknown>) => {
     const attachments = extractAttachments(data);
-    const payload = stripAttachments(data);
+    const parties = extractPartyFields(data);
+    const payload = stripPartyFields(stripAttachments(data));
     const endpoints = {
       branch: "/api/legal-branches",
       spec: "/api/legal-specializations",
@@ -119,6 +122,13 @@ export default function LegalKnowledgePage() {
         sourceId: String(created.id),
         title: String(payload.name ?? ""),
         attachments,
+      });
+    }
+    if (created?.id) {
+      await upsertRecordParties({
+        sourceModule: `legal-knowledge-${modalType}`,
+        sourceId: String(created.id),
+        parties,
       });
     }
     setModalOpen(false);

@@ -720,6 +720,10 @@ model LegalClassificationEntry {
   description  String?
   notes        String?
   attachments  String?  @db.Text
+  firstParty       String?
+  firstPartyPhone  String?
+  secondParty      String?
+  secondPartyPhone String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -820,4 +824,21 @@ model RecordSupplement {
 
   @@index([sourceModule, sourceId])
   @@index([createdAt])
+}
+
+model RecordParty {
+  id               String   @id @default(cuid())
+  sourceModule     String
+  sourceId         String
+  sourceRef        String?
+  firstParty       String?
+  firstPartyPhone  String?
+  secondParty      String?
+  secondPartyPhone String?
+  updatedBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([sourceModule, sourceId])
+  @@index([sourceModule])
 }

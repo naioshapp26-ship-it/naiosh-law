@@ -39,6 +39,10 @@ export async function PATCH(request: Request, { params }: Params) {
         body.attachments !== undefined
           ? mergeAttachments(existing?.attachments, body.attachments)
           : undefined,
+      firstParty: body.firstParty !== undefined ? String(body.firstParty) : undefined,
+      firstPartyPhone: body.firstPartyPhone !== undefined ? String(body.firstPartyPhone) : undefined,
+      secondParty: body.secondParty !== undefined ? String(body.secondParty) : undefined,
+      secondPartyPhone: body.secondPartyPhone !== undefined ? String(body.secondPartyPhone) : undefined,
     },
   });
   return NextResponse.json(updated);

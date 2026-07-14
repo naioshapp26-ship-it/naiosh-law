@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import type { FileAttachment } from "@/lib/file-upload";
+import { emptyPartyFields, type PartyFields } from "@/lib/party-fields";
 
 type Props = {
   open: boolean;
@@ -15,6 +16,10 @@ type Props = {
     notes?: string;
     sourceModuleLabel?: string;
     attachments?: FileAttachment[];
+    firstParty?: string;
+    firstPartyPhone?: string;
+    secondParty?: string;
+    secondPartyPhone?: string;
   };
   onSave: (data: {
     title: string;
@@ -23,6 +28,10 @@ type Props = {
     tags: string;
     notes: string;
     attachments: FileAttachment[];
+    firstParty: string;
+    firstPartyPhone: string;
+    secondParty: string;
+    secondPartyPhone: string;
   }) => void | Promise<void>;
   onClose: () => void;
   saveLabel?: string;
@@ -36,6 +45,7 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
     tags: "",
     notes: "",
   });
+  const [parties, setParties] = useState<PartyFields>(emptyPartyFields());
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -48,6 +58,12 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
         tags: initial?.tags ?? "",
         notes: initial?.notes ?? "",
       });
+      setParties({
+        firstParty: initial?.firstParty ?? "",
+        firstPartyPhone: initial?.firstPartyPhone ?? "",
+        secondParty: initial?.secondParty ?? "",
+        secondPartyPhone: initial?.secondPartyPhone ?? "",
+      });
       setAttachments(initial?.attachments ?? []);
     }
   }, [open, initial]);
@@ -58,7 +74,7 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
     e.preventDefault();
     setSaving(true);
     try {
-      await onSave({ ...form, attachments });
+      await onSave({ ...form, attachments, ...parties });
     } finally {
       setSaving(false);
     }
@@ -107,6 +123,26 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
               <label className="input-label">التصنيف / النظام</label>
               <input className="input-field" value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} />
             </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
+              <div>
+                <label className="input-label">طرف أول <span style={{ color: "#c3152a" }}>*</span></label>
+                <input className="input-field" required value={parties.firstParty} onChange={(e) => setParties((p) => ({ ...p, firstParty: e.target.value }))} />
+              </div>
+              <div>
+                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#c3152a" }}>*</span></label>
+                <input className="input-field" type="tel" required value={parties.firstPartyPhone} onChange={(e) => setParties((p) => ({ ...p, firstPartyPhone: e.target.value }))} />
+              </div>
+              <div>
+                <label className="input-label">طرف ثاني <span style={{ color: "#c3152a" }}>*</span></label>
+                <input className="input-field" required value={parties.secondParty} onChange={(e) => setParties((p) => ({ ...p, secondParty: e.target.value }))} />
+              </div>
+              <div>
+                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#c3152a" }}>*</span></label>
+                <input className="input-field" type="tel" required value={parties.secondPartyPhone} onChange={(e) => setParties((p) => ({ ...p, secondPartyPhone: e.target.value }))} />
+              </div>
+            </div>
+
             <div>
               <label className="input-label">الوصف</label>
               <textarea className="input-field" rows={3} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />

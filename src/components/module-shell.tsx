@@ -12,6 +12,8 @@ import { useSession, canWriteRole } from "@/lib/session";
 import { getModuleApiEndpoint } from "@/lib/module-api";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { sendRecordToArchive, buildArchiveRef, buildArchiveTitle } from "@/lib/archive-client";
+import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
+import { upsertRecordParties } from "@/lib/record-parties-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
 import { saveRecordSupplement } from "@/lib/record-supplement-client";
@@ -117,7 +119,8 @@ export function ModuleShell({ slug }: { slug: string }) {
 
   const handleSave = async (data: Record<string, unknown>) => {
     const attachments = extractAttachments(data);
-    const payload = stripAttachments(data);
+    const parties = extractPartyFields(data);
+    const payload = stripPartyFields(stripAttachments(data));
 
     if (apiEndpoint && canWrite && !usingDemo) {
       try {
@@ -152,6 +155,14 @@ export function ModuleShell({ slug }: { slug: string }) {
             attachments,
           });
         }
+        if (recordId) {
+          await upsertRecordParties({
+            sourceModule: slug,
+            sourceId: recordId,
+            sourceRef: buildArchiveRef({ ...payload, id: recordId }),
+            parties,
+          });
+        }
         await loadRows();
       } catch {
         pushToast("error", "فشل حفظ البيانات — تم الحفظ محلياً");
@@ -173,7 +184,14 @@ export function ModuleShell({ slug }: { slug: string }) {
     setEditTarget(null);
   };
 
-  const handleSupplementSave = async (data: { notes: string; attachments: ArchiveAttachment[] }) => {
+  const handleSupplementSave = async (data: {
+    notes: string;
+    attachments: ArchiveAttachment[];
+    firstParty: string;
+    firstPartyPhone: string;
+    secondParty: string;
+    secondPartyPhone: string;
+  }) => {
     if (!supplementTarget?.id) return;
     const result = await saveRecordSupplement({
       sourceModule: slug,
@@ -187,6 +205,17 @@ export function ModuleShell({ slug }: { slug: string }) {
       pushToast("error", result.message);
       return;
     }
+    await upsertRecordParties({
+      sourceModule: slug,
+      sourceId: String(supplementTarget.id),
+      sourceRef: buildArchiveRef(supplementTarget),
+      parties: {
+        firstParty: data.firstParty,
+        firstPartyPhone: data.firstPartyPhone,
+        secondParty: data.secondParty,
+        secondPartyPhone: data.secondPartyPhone,
+      },
+    });
     pushToast("success", result.message);
     setSupplementTarget(null);
   };

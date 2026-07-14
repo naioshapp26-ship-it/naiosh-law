@@ -49,6 +49,10 @@ export type LawEntry = {
   description: string;
   notes: string;
   attachments: FileAttachment[];
+  firstParty: string;
+  firstPartyPhone: string;
+  secondParty: string;
+  secondPartyPhone: string;
 };
 
 const entryFields: FormField[] = [
@@ -61,6 +65,10 @@ const entryFields: FormField[] = [
   { key: "client", label: "الموكل / الجهة", type: "text" },
   { key: "effectiveDate", label: "تاريخ السريان", type: "text" },
   { key: "source", label: "المصدر", type: "text" },
+  { key: "firstParty", label: "طرف أول", type: "text", required: true, placeholder: "اسم الطرف الأول" },
+  { key: "firstPartyPhone", label: "رقم جوال الطرف الأول", type: "tel", required: true, placeholder: "05xxxxxxxx" },
+  { key: "secondParty", label: "طرف ثاني", type: "text", required: true, placeholder: "اسم الطرف الثاني" },
+  { key: "secondPartyPhone", label: "رقم جوال الطرف الثاني", type: "tel", required: true, placeholder: "05xxxxxxxx" },
   { key: "description", label: "الوصف", type: "textarea" },
   { key: "notes", label: "ملاحظات", type: "textarea" },
 ];
@@ -400,7 +408,14 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
     await load();
   };
 
-  const handleSupplementSave = async (data: { notes: string; attachments: FileAttachment[] }) => {
+  const handleSupplementSave = async (data: {
+    notes: string;
+    attachments: FileAttachment[];
+    firstParty: string;
+    firstPartyPhone: string;
+    secondParty: string;
+    secondPartyPhone: string;
+  }) => {
     if (!supplementTarget) return;
     const result = await saveRecordSupplement({
       sourceModule: "legal-classification",
@@ -414,8 +429,21 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
       show("error", result.message);
       return;
     }
+    // Also update main record party fields when adding from row action
+    await fetch(`/api/legal-classification/${supplementTarget.id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstParty: data.firstParty,
+        firstPartyPhone: data.firstPartyPhone,
+        secondParty: data.secondParty,
+        secondPartyPhone: data.secondPartyPhone,
+      }),
+    });
     show("success", result.message);
     setSupplementTarget(null);
+    await load();
   };
 
   const openView = async (entry: LawEntry) => {
@@ -598,7 +626,7 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
             <thead>
               <tr>
-                {["المرجع", "العنوان", "الموضوع", "الاختصاص", "الدولة", "الحالة", "الموكل", "إجراءات"].map((h) => (
+                {["المرجع", "العنوان", "الموضوع", "طرف أول", "طرف ثاني", "الحالة", "الموكل", "إجراءات"].map((h) => (
                   <th key={h} style={th}>{h}</th>
                 ))}
               </tr>
@@ -616,8 +644,14 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                   <td style={{ ...td, fontWeight: 700, color: axis.color }}>{e.refNo}</td>
                   <td style={{ ...td, fontWeight: 700 }}>{e.title}</td>
                   <td style={td}>{e.topicName}</td>
-                  <td style={td}>{e.jurisdiction}</td>
-                  <td style={td}>{e.country}</td>
+                  <td style={td}>
+                    <div style={{ fontWeight: 700 }}>{e.firstParty || "—"}</div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{e.firstPartyPhone || ""}</div>
+                  </td>
+                  <td style={td}>
+                    <div style={{ fontWeight: 700 }}>{e.secondParty || "—"}</div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{e.secondPartyPhone || ""}</div>
+                  </td>
                   <td style={td}>
                     <span
                       style={{
@@ -674,6 +708,10 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
                 description: editTarget.description,
                 notes: editTarget.notes,
                 attachments: editTarget.attachments ?? [],
+                firstParty: editTarget.firstParty ?? "",
+                firstPartyPhone: editTarget.firstPartyPhone ?? "",
+                secondParty: editTarget.secondParty ?? "",
+                secondPartyPhone: editTarget.secondPartyPhone ?? "",
               }
             : { status: "نشط", topicName: activeTopic?.name ?? axis.topics[0]?.name ?? "" }
         }
@@ -719,6 +757,10 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
               ["التصنيف", viewTarget.category],
               ["الحالة", viewTarget.status],
               ["الموكل", viewTarget.client],
+              ["طرف أول", viewTarget.firstParty || "—"],
+              ["جوال الطرف الأول", viewTarget.firstPartyPhone || "—"],
+              ["طرف ثاني", viewTarget.secondParty || "—"],
+              ["جوال الطرف الثاني", viewTarget.secondPartyPhone || "—"],
               ["تاريخ السريان", viewTarget.effectiveDate],
               ["المصدر", viewTarget.source],
             ].map(([label, val]) => (

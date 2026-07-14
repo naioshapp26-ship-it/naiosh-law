@@ -9,6 +9,7 @@ import { PageHeader, PageStats, BtnPrimary, PageLoader, useToast } from "@/compo
 import { useSession, canWriteRole } from "@/lib/session";
 import type { ArchiveRecordDto } from "@/lib/archive-types";
 import { MODULE_LABELS } from "@/lib/archive-types";
+import { upsertRecordParties } from "@/lib/record-parties-client";
 
 const th: React.CSSProperties = {
   textAlign: "right",
@@ -105,29 +106,68 @@ export function ArchivePanel() {
     tags: string;
     notes: string;
     attachments: ArchiveRecordDto["attachments"];
+    firstParty: string;
+    firstPartyPhone: string;
+    secondParty: string;
+    secondPartyPhone: string;
   }) => {
     try {
+      const payload = {
+        ...data,
+        notes: [
+          data.notes,
+          data.firstParty ? `طرف أول: ${data.firstParty} (${data.firstPartyPhone})` : "",
+          data.secondParty ? `طرف ثاني: ${data.secondParty} (${data.secondPartyPhone})` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      };
       if (editTarget) {
         const res = await fetch(`/api/archive/${editTarget.id}`, {
           method: "PATCH",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error();
         show("success", "✅ تم تحديث السجل المؤرشف");
+        await upsertRecordParties({
+          sourceModule: "archive",
+          sourceId: editTarget.id,
+          sourceRef: editTarget.refNo,
+          parties: {
+            firstParty: data.firstParty,
+            firstPartyPhone: data.firstPartyPhone,
+            secondParty: data.secondParty,
+            secondPartyPhone: data.secondPartyPhone,
+          },
+        });
       } else {
         const res = await fetch("/api/archive", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...data,
+            ...payload,
             sourceModule: "manual",
             sourceModuleLabel: data.category || "إضافة يدوية",
           }),
         });
         if (!res.ok) throw new Error();
+        const created = await res.json();
+        if (created?.id) {
+          await upsertRecordParties({
+            sourceModule: "archive",
+            sourceId: String(created.id),
+            sourceRef: created.refNo,
+            parties: {
+              firstParty: data.firstParty,
+              firstPartyPhone: data.firstPartyPhone,
+              secondParty: data.secondParty,
+              secondPartyPhone: data.secondPartyPhone,
+            },
+          });
+        }
         show("success", "✅ تمت إضافة السجل للأرشيف");
       }
       setModalOpen(false);

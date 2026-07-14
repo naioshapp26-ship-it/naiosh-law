@@ -15,6 +15,8 @@ import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
+import { upsertRecordParties } from "@/lib/record-parties-client";
 
 type Professional = {
   id: string;
@@ -73,7 +75,8 @@ export default function ProfessionalNetworkPage() {
 
   const handleSave = async (data: Record<string, unknown>) => {
     const attachments = extractAttachments(data);
-    const payload = stripAttachments(data);
+    const parties = extractPartyFields(data);
+    const payload = stripPartyFields(stripAttachments(data));
     const res = await fetch("/api/professionals", {
       method: "POST",
       credentials: "include",
@@ -88,6 +91,13 @@ export default function ProfessionalNetworkPage() {
         sourceId: String(created.id),
         title: String(payload.name ?? ""),
         attachments,
+      });
+    }
+    if (created?.id) {
+      await upsertRecordParties({
+        sourceModule: "professional-network",
+        sourceId: String(created.id),
+        parties,
       });
     }
     setModalOpen(false);
