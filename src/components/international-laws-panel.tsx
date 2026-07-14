@@ -25,6 +25,8 @@ import {
   NAIOSH_360_INTRO,
   IMPERIAL_IDENTITY,
   PRIMARY_TOPIC_CATALOG,
+  PRIMARY_TOPICS,
+  topicPageHref,
 } from "@/data/international-laws-structure";
 import { sendRecordToArchive } from "@/lib/archive-client";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
@@ -234,27 +236,49 @@ export function InternationalLawsHub() {
             ))}
           </div>
 
-          {/* Primary catalog */}
+          {/* Primary catalog — كل موضوع صفحة منفصلة */}
           <div className="card-white" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <h2 style={{ fontWeight: 800, fontSize: "1rem", marginBottom: "1rem", color: "#0a0a12" }}>
+            <h2 style={{ fontWeight: 800, fontSize: "1rem", marginBottom: "0.4rem", color: "#0a0a12" }}>
               القائمة الأولية — موضوعات المنظومة الشاملة
             </h2>
+            <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem", lineHeight: 1.6 }}>
+              اضغط على أي موضوع للدخول إلى صفحته الخاصة وإدارة سجلاته بشكل منفصل.
+            </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
-              {PRIMARY_TOPIC_CATALOG.map((t) => (
-                <span
-                  key={t}
+              {PRIMARY_TOPICS.map((t) => (
+                <Link
+                  key={`${t.catalogName}-${t.slug}`}
+                  href={t.href}
                   style={{
                     background: "linear-gradient(135deg, #f8f9fb 0%, #f1f5f9 100%)",
                     border: "1px solid #e2e8f0",
                     borderRadius: "10px",
-                    padding: "0.35rem 0.75rem",
+                    padding: "0.4rem 0.85rem",
                     fontSize: "0.72rem",
-                    color: "#475569",
-                    fontWeight: 600,
+                    color: "#334155",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    transition: "all 0.18s ease",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.35rem",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)";
+                    e.currentTarget.style.borderColor = "#fecaca";
+                    e.currentTarget.style.color = "#c3152a";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "linear-gradient(135deg, #f8f9fb 0%, #f1f5f9 100%)";
+                    e.currentTarget.style.borderColor = "#e2e8f0";
+                    e.currentTarget.style.color = "#334155";
+                    e.currentTarget.style.transform = "none";
                   }}
                 >
-                  {t}
-                </span>
+                  {t.catalogName}
+                  <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>←</span>
+                </Link>
               ))}
             </div>
           </div>
@@ -269,11 +293,15 @@ export function InternationalLawsHub() {
 }
 
 /* ── Axis detail page ── */
-type AxisPageProps = { axis: LawAxis };
+type AxisPageProps = {
+  axis: LawAxis;
+  /** عند التمرير: صفحة موضوع منفصلة (تُقفل على موضوع واحد) */
+  lockedTopicSlug?: string;
+};
 
-export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
+export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPageProps) {
   const searchParams = useSearchParams();
-  const initialTopic = searchParams.get("topic") ?? "all";
+  const initialTopic = lockedTopicSlug ?? searchParams.get("topic") ?? "all";
   const { user, ready } = useSession(true);
   const [entries, setEntries] = useState<LawEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -295,22 +323,29 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/legal-classification?axisSlug=${axis.slug}`, { credentials: "include" });
+      const qs = lockedTopicSlug
+        ? `topicSlug=${encodeURIComponent(lockedTopicSlug)}`
+        : `axisSlug=${encodeURIComponent(axis.slug)}`;
+      const res = await fetch(`/api/legal-classification?${qs}`, { credentials: "include" });
       const data = await res.json();
       setEntries(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
     }
-  }, [axis.slug]);
+  }, [axis.slug, lockedTopicSlug]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   useEffect(() => {
+    if (lockedTopicSlug) {
+      setTopicFilter(lockedTopicSlug);
+      return;
+    }
     const t = searchParams.get("topic");
     if (t) setTopicFilter(t);
-  }, [searchParams]);
+  }, [searchParams, lockedTopicSlug]);
 
   const seed = async () => {
     setSeeding(true);
@@ -328,17 +363,23 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
   };
 
   const topicOptions = useMemo(
-    () => axis.topics.map((t) => t.name),
-    [axis.topics]
+    () => (lockedTopicSlug
+      ? axis.topics.filter((t) => t.slug === lockedTopicSlug).map((t) => t.name)
+      : axis.topics.map((t) => t.name)),
+    [axis.topics, lockedTopicSlug]
   );
 
   const activeTopic = useMemo(() => {
     if (topicFilter === "all") return null;
-    return axis.topics.find((t) => t.slug === topicFilter) ?? null;
+    return axis.topics.find((t) => t.slug === topicFilter) ?? topicBySlug[topicFilter] ?? null;
   }, [topicFilter, axis.topics]);
 
-  const resolveTopic = (topicName: string) =>
-    axis.topics.find((t) => t.name === topicName) ?? activeTopic ?? axis.topics[0];
+  const resolveTopic = (topicName: string) => {
+    if (lockedTopicSlug) {
+      return axis.topics.find((t) => t.slug === lockedTopicSlug) ?? topicBySlug[lockedTopicSlug] ?? axis.topics[0];
+    }
+    return axis.topics.find((t) => t.name === topicName) ?? activeTopic ?? axis.topics[0];
+  };
 
   const fieldsWithTopics: FormField[] = entryFields.map((f) =>
     f.key === "topicSlug"
@@ -502,6 +543,9 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
 
   const canWrite = canWriteRole(user.role);
   const isEmpty = !loading && entries.length === 0;
+  const lockedTopic = lockedTopicSlug
+    ? axis.topics.find((t) => t.slug === lockedTopicSlug) ?? topicBySlug[lockedTopicSlug] ?? null
+    : null;
 
   return (
     <div style={{ maxWidth: 1200 }}>
@@ -516,23 +560,48 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
           color: "#fff",
         }}
       >
-        <Link href="/app/international-laws" style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", fontWeight: 600, textDecoration: "none" }}>
-          ← العودة للتصنيف القانوني
-        </Link>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+          <Link href="/app/international-laws" style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", fontWeight: 600, textDecoration: "none" }}>
+            ← التصنيف القانوني
+          </Link>
+          {lockedTopic && (
+            <>
+              <span style={{ opacity: 0.45 }}>•</span>
+              <Link
+                href={`/app/international-laws/${axis.slug}`}
+                style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", fontWeight: 600, textDecoration: "none" }}
+              >
+                {axis.subtitle}
+              </Link>
+            </>
+          )}
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.75rem" }}>
           <span style={{ fontSize: "2rem" }}>{axis.icon}</span>
           <div>
-            <p style={{ fontSize: "0.75rem", opacity: 0.8 }}>{axis.subtitle}</p>
-            <h1 style={{ fontSize: "1.45rem", fontWeight: 900 }}>{axis.title}</h1>
+            <p style={{ fontSize: "0.75rem", opacity: 0.8 }}>
+              {lockedTopic ? `${axis.subtitle} — موضوع مستقل` : axis.subtitle}
+            </p>
+            <h1 style={{ fontSize: "1.45rem", fontWeight: 900 }}>
+              {lockedTopic ? lockedTopic.name : axis.title}
+            </h1>
           </div>
         </div>
-        <p style={{ fontSize: "0.88rem", opacity: 0.9, marginTop: "0.75rem", maxWidth: 680, lineHeight: 1.8 }}>{axis.description}</p>
+        <p style={{ fontSize: "0.88rem", opacity: 0.9, marginTop: "0.75rem", maxWidth: 680, lineHeight: 1.8 }}>
+          {lockedTopic
+            ? `صفحة مخصصة لموضوع «${lockedTopic.name}» ضمن ${axis.title}. أدر السجلات والمراجع والاطراف بشكل منفصل عن باقي موضوعات المحور.`
+            : axis.description}
+        </p>
       </div>
 
       <PageHeader
         icon={axis.icon}
-        title={`سجلات ${axis.title}`}
-        subtitle={`${axis.topics.length} موضوع قانوني — إدارة السجلات والمراجع`}
+        title={lockedTopic ? `سجلات ${lockedTopic.name}` : `سجلات ${axis.title}`}
+        subtitle={
+          lockedTopic
+            ? `صفحة الموضوع المنفصلة — ${axis.title}`
+            : `${axis.topics.length} موضوع قانوني — إدارة السجلات والمراجع`
+        }
         actions={
           <>
             {canWrite && <BtnPrimary onClick={openAdd}>➕ إضافة سجل</BtnPrimary>}
@@ -547,64 +616,119 @@ export function InternationalLawsAxisPage({ axis }: AxisPageProps) {
 
       <PageStats
         stats={[
-          { label: "الموضوعات", value: axis.topics.length, icon: "📋", color: axis.color },
+          {
+            label: lockedTopic ? "الموضوع" : "الموضوعات",
+            value: lockedTopic ? 1 : axis.topics.length,
+            icon: "📋",
+            color: axis.color,
+          },
           { label: "السجلات", value: entries.length, icon: "📁", color: "#c3152a" },
           { label: "نشط", value: entries.filter((e) => e.status === "نشط").length, icon: "✅" },
           { label: "قيد المراجعة", value: entries.filter((e) => e.status === "قيد المراجعة").length, icon: "⏳" },
         ]}
       />
 
-      {/* Topics chips */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.25rem" }}>
-        <button
-          type="button"
-          onClick={() => setTopicFilter("all")}
+      {/* Topics chips — روابط لصفحات الموضوعات المنفصلة */}
+      {!lockedTopic && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.25rem" }}>
+          <button
+            type="button"
+            onClick={() => setTopicFilter("all")}
+            style={{
+              padding: "0.45rem 0.9rem",
+              borderRadius: "10px",
+              border: topicFilter === "all" ? `2px solid ${axis.color}` : "1px solid #e2e8f0",
+              background: topicFilter === "all" ? `${axis.color}15` : "#fff",
+              color: topicFilter === "all" ? axis.color : "#475569",
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "var(--font-cairo)",
+              fontSize: "0.78rem",
+            }}
+          >
+            الكل ({entries.length})
+          </button>
+          {axis.topics.map((t) => {
+            const count = entries.filter((e) => e.topicSlug === t.slug).length;
+            return (
+              <Link
+                key={t.slug}
+                href={topicPageHref(t.slug)}
+                style={{
+                  padding: "0.45rem 0.9rem",
+                  borderRadius: "10px",
+                  border: topicFilter === t.slug ? `2px solid ${axis.color}` : "1px solid #e2e8f0",
+                  background: topicFilter === t.slug ? `${axis.color}15` : "#fff",
+                  color: topicFilter === t.slug ? axis.color : "#475569",
+                  fontWeight: 600,
+                  fontFamily: "var(--font-cairo)",
+                  fontSize: "0.75rem",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.3rem",
+                }}
+              >
+                {t.name} {count > 0 && `(${count})`}
+                <span style={{ fontSize: "0.65rem", opacity: 0.65 }}>←</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {lockedTopic && (
+        <div
           style={{
-            padding: "0.45rem 0.9rem",
-            borderRadius: "10px",
-            border: topicFilter === "all" ? `2px solid ${axis.color}` : "1px solid #e2e8f0",
-            background: topicFilter === "all" ? `${axis.color}15` : "#fff",
-            color: topicFilter === "all" ? axis.color : "#475569",
-            fontWeight: 700,
-            cursor: "pointer",
-            fontFamily: "var(--font-cairo)",
-            fontSize: "0.78rem",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.55rem",
+            marginBottom: "1.25rem",
+            alignItems: "center",
           }}
         >
-          الكل ({entries.length})
-        </button>
-        {axis.topics.map((t) => {
-          const count = entries.filter((e) => e.topicSlug === t.slug).length;
-          return (
-            <button
-              key={t.slug}
-              type="button"
-              onClick={() => setTopicFilter(t.slug)}
-              style={{
-                padding: "0.45rem 0.9rem",
-                borderRadius: "10px",
-                border: topicFilter === t.slug ? `2px solid ${axis.color}` : "1px solid #e2e8f0",
-                background: topicFilter === t.slug ? `${axis.color}15` : "#fff",
-                color: topicFilter === t.slug ? axis.color : "#475569",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "var(--font-cairo)",
-                fontSize: "0.75rem",
-              }}
-            >
-              {t.name} {count > 0 && `(${count})`}
-            </button>
-          );
-        })}
-      </div>
+          <span
+            style={{
+              padding: "0.45rem 0.9rem",
+              borderRadius: "10px",
+              border: `2px solid ${axis.color}`,
+              background: `${axis.color}15`,
+              color: axis.color,
+              fontWeight: 800,
+              fontSize: "0.78rem",
+            }}
+          >
+            {lockedTopic.name}
+          </span>
+          <Link
+            href={`/app/international-laws/${axis.slug}`}
+            style={{
+              padding: "0.4rem 0.85rem",
+              borderRadius: "10px",
+              border: "1px solid #e2e8f0",
+              background: "#fff",
+              color: "#64748b",
+              fontWeight: 700,
+              fontSize: "0.75rem",
+              textDecoration: "none",
+            }}
+          >
+            عرض كل موضوعات المحور
+          </Link>
+        </div>
+      )}
 
       {loading ? (
         <PageLoader />
       ) : isEmpty ? (
         <EmptyState
           icon={axis.icon}
-          title="لا توجد سجلات في هذا المحور"
-          description="حمّل البيانات التجريبية أو أضف سجلاً قانونياً جديداً"
+          title={lockedTopic ? `لا توجد سجلات في «${lockedTopic.name}»` : "لا توجد سجلات في هذا المحور"}
+          description={
+            lockedTopic
+              ? "أضف أول سجل قانوني لهذا الموضوع من الصفحة المنفصلة"
+              : "حمّل البيانات التجريبية أو أضف سجلاً قانونياً جديداً"
+          }
           onSeed={seed}
           onAdd={openAdd}
           seeding={seeding}

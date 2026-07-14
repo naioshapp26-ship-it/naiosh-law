@@ -22,7 +22,7 @@ export const NAIOSH_360_INTRO =
 export const IMPERIAL_IDENTITY =
   "منصة نايوش 360 القانونية هي منظومة سيادية متكاملة تجمع بين القانون الدولي والمحلي، وتدمج بين الحوكمة والأتمتة، وتبني جسورًا بين التشريع والاقتصاد، وتوفر حلولًا قانونية شاملة تمتد من الفرد إلى الدولة، ومن الدولة إلى العالم.";
 
-/** القائمة الأولية — موضوعات المنظومة الشاملة */
+/** القائمة الأولية — موضوعات المنظومة الشاملة (أسماء العرض) */
 export const PRIMARY_TOPIC_CATALOG: string[] = [
   "القانون الدولي",
   "المنظمات الدولية",
@@ -91,6 +91,12 @@ export const PRIMARY_TOPIC_CATALOG: string[] = [
   "الرهن وفك الرهن",
 ];
 
+/** أسماء القائمة الأولية التي تختلف عن اسم الموضوع في المحور → slug */
+const PRIMARY_TOPIC_ALIAS_SLUG: Record<string, string> = {
+  "سلاسل الإمداد": "intl-supply",
+  "قوانين ضبط الجودة": "quality-control",
+};
+
 function topic(slug: string, name: string): LawTopic {
   return { slug, name };
 }
@@ -124,6 +130,7 @@ export const internationalLawAxes: LawAxis[] = [
       topic("intl-fraud", "الاحتيالات الدولية"),
       topic("intl-conferences", "المؤتمرات الدولية"),
       topic("intl-events", "الفعاليات الدولية"),
+      topic("intl-traffic", "قانون السير الدولي"),
     ],
   },
   {
@@ -172,6 +179,7 @@ export const internationalLawAxes: LawAxis[] = [
       topic("loans", "القروض البنكية"),
       topic("investment-laws", "قوانين الاستثمار"),
       topic("customs-clearance", "قوانين التخليص الجمركي"),
+      topic("intl-trade", "التجارة الدولية"),
     ],
   },
   {
@@ -191,6 +199,7 @@ export const internationalLawAxes: LawAxis[] = [
       topic("work-compensation", "تعويضات مخاطر العمل"),
       topic("sector-safety", "قوانين السلامة في القطاعات والمصانع"),
       topic("violations", "المخالفات الدستورية والقانونية والسير"),
+      topic("expat-work-permit", "تصريح العمالة الوافدة"),
     ],
   },
   {
@@ -210,6 +219,7 @@ export const internationalLawAxes: LawAxis[] = [
       topic("performance", "نظام قياس الأداء"),
       topic("social-systems", "النظم الاجتماعية"),
       topic("archiving", "الأرشفة"),
+      topic("human-resources", "الموارد البشرية"),
     ],
   },
   {
@@ -264,6 +274,7 @@ export const internationalLawAxes: LawAxis[] = [
       topic("violations-2", "المخالفات"),
       topic("quality-control", "أنظمة ضبط الجودة"),
       topic("legal-compliance", "أنظمة الامتثال القانوني"),
+      topic("extortion-bullying", "الابتزاز والتنمر"),
     ],
   },
 ];
@@ -273,7 +284,51 @@ export const axisBySlug = Object.fromEntries(
 ) as Record<string, LawAxis>;
 
 export const topicBySlug = Object.fromEntries(
-  internationalLawAxes.flatMap((a) => a.topics.map((t) => [t.slug, { ...t, axisSlug: a.slug, axisTitle: a.title }]))
+  internationalLawAxes.flatMap((a) =>
+    a.topics.map((t) => [t.slug, { ...t, axisSlug: a.slug, axisTitle: a.title }])
+  )
 ) as Record<string, LawTopic & { axisSlug: string; axisTitle: string }>;
 
 export const TOTAL_TOPICS = internationalLawAxes.reduce((n, a) => n + a.topics.length, 0);
+
+const topicByName = Object.fromEntries(
+  internationalLawAxes.flatMap((a) =>
+    a.topics.map((t) => [t.name, { ...t, axisSlug: a.slug, axisTitle: a.title }])
+  )
+) as Record<string, LawTopic & { axisSlug: string; axisTitle: string }>;
+
+export type PrimaryTopicLink = LawTopic & {
+  axisSlug: string;
+  axisTitle: string;
+  catalogName: string;
+  href: string;
+};
+
+export function topicPageHref(topicSlug: string) {
+  return `/app/international-laws/topic/${topicSlug}`;
+}
+
+/** موضوعات القائمة الأولية مربوطة بصفحاتها المنفصلة */
+export const PRIMARY_TOPICS: PrimaryTopicLink[] = PRIMARY_TOPIC_CATALOG.map((catalogName) => {
+  const aliasSlug = PRIMARY_TOPIC_ALIAS_SLUG[catalogName];
+  const byAlias = aliasSlug ? topicBySlug[aliasSlug] : undefined;
+  const byName = topicByName[catalogName];
+  const resolved = byAlias ?? byName;
+
+  if (!resolved) {
+    throw new Error(`PRIMARY topic not mapped: ${catalogName}`);
+  }
+
+  return {
+    slug: resolved.slug,
+    name: resolved.name,
+    axisSlug: resolved.axisSlug,
+    axisTitle: resolved.axisTitle,
+    catalogName,
+    href: topicPageHref(resolved.slug),
+  };
+});
+
+export const primaryTopicBySlug = Object.fromEntries(
+  PRIMARY_TOPICS.map((t) => [t.slug, t])
+) as Record<string, PrimaryTopicLink>;
