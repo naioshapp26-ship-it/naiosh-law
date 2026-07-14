@@ -2,7 +2,7 @@
 
 import { imperialAxes, type ImperialAxis, type NavItem } from "@/data/empire-structure";
 import { moduleMap } from "@/data/modules";
-import { topicBySlug } from "@/data/international-laws-structure";
+import { topicBySlug, topicPageHref } from "@/data/international-laws-structure";
 
 export type ResolvedItem = NavItem & {
   axisSlug: string;
@@ -117,6 +117,7 @@ export function resolveItemHref(item: Pick<NavItem, "id" | "href" | "moduleSlug"
   }
   if (DOMAIN_PAGES[item.id]) return DOMAIN_PAGES[item.id];
   if (matchesLegalKnowledge(item.id)) {
+    if (topicBySlug[item.id]) return topicPageHref(item.id);
     const axis = legalAxisForItem(item.id);
     if (axis) return `/app/international-laws/${axis}?topic=${item.id}`;
     return "/app/international-laws";
