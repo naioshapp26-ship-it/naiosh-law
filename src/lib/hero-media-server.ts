@@ -120,6 +120,53 @@ export async function readHeroMediaFile(fileName: string) {
   }
 }
 
+/** استجابة بث/تحميل وسائط الهيرو مع دعم Range للفيديو حتى 100MB */
+export function heroMediaResponse(
+  data: Buffer,
+  mimeType: string,
+  request?: Request,
+  cacheControl = "public, max-age=120, must-revalidate"
+) {
+  const total = data.byteLength;
+  const range = request?.headers.get("range");
+  if (range) {
+    const match = /bytes=(\d*)-(\d*)/.exec(range);
+    if (match) {
+      const start = match[1] ? Number(match[1]) : 0;
+      const end = match[2] ? Number(match[2]) : total - 1;
+      if (
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        start >= 0 &&
+        end >= start &&
+        end < total
+      ) {
+        const chunk = data.subarray(start, end + 1);
+        return new Response(new Uint8Array(chunk), {
+          status: 206,
+          headers: {
+            "Content-Type": mimeType,
+            "Content-Length": String(chunk.byteLength),
+            "Content-Range": `bytes ${start}-${end}/${total}`,
+            "Accept-Ranges": "bytes",
+            "Cache-Control": cacheControl,
+          },
+        });
+      }
+    }
+  }
+
+  return new Response(new Uint8Array(data), {
+    status: 200,
+    headers: {
+      "Content-Type": mimeType,
+      "Content-Length": String(total),
+      "Accept-Ranges": "bytes",
+      "Cache-Control": cacheControl,
+    },
+  });
+}
+
 export async function deleteHeroMediaFile(publicUrl: string | null | undefined) {
   const fileName = resolveHeroUploadFileName(publicUrl);
   if (!fileName) return;

@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_SITE_THEME } from "@/lib/site-settings";
 import {
+  heroMediaResponse,
   readHeroMediaFile,
   resolveHeroUploadFileName,
   sanitizeMissingHeroUpload,
 } from "@/lib/hero-media-server";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 function parseDataUrl(dataUrl: string): { mimeType: string; bytes: Buffer } | null {
   const match = /^data:([^;,]+)?(?:;charset=[^;,]+)?;base64,(.+)$/i.exec(dataUrl.trim());
@@ -22,8 +24,8 @@ function parseDataUrl(dataUrl: string): { mimeType: string; bytes: Buffer } | nu
   }
 }
 
-/** تقديم بنر/فيديو الهيرو الحالي من الملف أو من قاعدة البيانات */
-export async function GET() {
+/** تقديم بنر/فيديو الهيرو الحالي من الملف أو من قاعدة البيانات (حتى 100MB) */
+export async function GET(request: Request) {
   let row = await prisma.siteSettings.findUnique({ where: { id: "default" } });
   if (!row) {
     row = await prisma.siteSettings.create({
@@ -37,14 +39,7 @@ export async function GET() {
   if (fileName) {
     const media = await readHeroMediaFile(fileName);
     if (media) {
-      return new NextResponse(new Uint8Array(media.data), {
-        status: 200,
-        headers: {
-          "Content-Type": media.mimeType,
-          "Cache-Control": "public, max-age=120, must-revalidate",
-          "Content-Length": String(media.data.byteLength),
-        },
-      });
+      return heroMediaResponse(media.data, media.mimeType, request);
     }
   }
 
@@ -52,14 +47,7 @@ export async function GET() {
   if (dataUrl) {
     const parsed = parseDataUrl(dataUrl);
     if (parsed) {
-      return new NextResponse(new Uint8Array(parsed.bytes), {
-        status: 200,
-        headers: {
-          "Content-Type": parsed.mimeType,
-          "Cache-Control": "public, max-age=120, must-revalidate",
-          "Content-Length": String(parsed.bytes.byteLength),
-        },
-      });
+      return heroMediaResponse(parsed.bytes, parsed.mimeType, request);
     }
   }
 

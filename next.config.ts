@@ -7,10 +7,12 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
-    // بنر/فيديو الهيرو حتى 100MB عبر FormData
+    // فيديو/بنر الهيرو حتى 100MB — بدون هذه الحدود البروكسي يقطع عند 10MB
     serverActions: {
       bodySizeLimit: "110mb",
     },
+    proxyClientMaxBodySize: "110mb",
+    middlewareClientMaxBodySize: "110mb",
   },
   async redirects() {
     return [
