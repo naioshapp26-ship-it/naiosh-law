@@ -1,4 +1,4 @@
-import { mkdir, writeFile, unlink } from "fs/promises";
+import { access, mkdir, writeFile, unlink } from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 import {
@@ -6,6 +6,7 @@ import {
   resolveHeroMediaKind,
   type HeroMediaKind,
 } from "@/lib/hero-media";
+import { prisma } from "@/lib/prisma";
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/png": "png",
@@ -72,4 +73,50 @@ export async function deleteHeroMediaFile(publicUrl: string | null | undefined) 
   } catch {
     /* ignore missing file */
   }
+}
+
+async function localHeroUploadExists(publicUrl: string) {
+  if (!publicUrl.startsWith("/uploads/hero/")) return true; // external/absolute URL
+  const fileName = publicUrl.replace("/uploads/hero/", "").split("?")[0];
+  if (!fileName || fileName.includes("..") || fileName.includes("/")) return false;
+  try {
+    await access(path.join(uploadsRoot(), fileName));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * إذا كان مسار البنر المحلي مفقودًا بعد إعادة النشر، امسحه من الإعدادات
+ * حتى لا يتحول الهيرو لوضع البنر بدون صورة.
+ */
+export async function sanitizeMissingHeroUpload<T extends {
+  id: string;
+  heroBannerPath: string | null;
+  heroBannerData: string | null;
+  heroMediaKind: string | null;
+}>(row: T): Promise<T> {
+  const pathValue = row.heroBannerPath?.trim() || null;
+  if (!pathValue || row.heroBannerData?.trim()) return row;
+  if (!pathValue.startsWith("/uploads/hero/")) return row;
+
+  const exists = await localHeroUploadExists(pathValue);
+  if (exists) return row;
+
+  await prisma.siteSettings.update({
+    where: { id: row.id },
+    data: {
+      heroBannerPath: null,
+      heroBannerData: null,
+      heroMediaKind: null,
+    },
+  });
+
+  return {
+    ...row,
+    heroBannerPath: null,
+    heroBannerData: null,
+    heroMediaKind: null,
+  };
 }
