@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useSiteTheme } from "@/components/theme-provider";
+import { isHeroVideoSrc } from "@/lib/hero-media";
 
 const stats = [
   { value: 17, suffix: "", label: "وحدة تشغيلية" },
@@ -535,8 +536,9 @@ export function HeroSection({ variant = "default" }: Props) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
-  const { heroBannerSrc } = useSiteTheme();
+  const { heroBannerSrc, theme } = useSiteTheme();
   const hasBanner = Boolean(heroBannerSrc);
+  const isVideoBanner = isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
 
   const next = useCallback(() => setIndex((i) => (i + 1) % VISUAL_SLIDES.length), []);
   const prev = useCallback(
@@ -564,26 +566,49 @@ export function HeroSection({ variant = "default" }: Props) {
       aria-label="قسم الهيرو الرئيسي"
       data-hero-banner={hasBanner ? "true" : "false"}
     >
-      {/* Uploaded / configured hero banner */}
+      {/* Uploaded / configured hero banner (image or video up to 100MB) */}
       {hasBanner && heroBannerSrc && (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={heroBannerSrc}
-            alt=""
-            aria-hidden
-            className="hero-banner-image"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center",
-              zIndex: 0,
-              pointerEvents: "none",
-            }}
-          />
+          {isVideoBanner ? (
+            <video
+              src={heroBannerSrc}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-hidden
+              className="hero-banner-video"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+                zIndex: 0,
+                pointerEvents: "none",
+              }}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={heroBannerSrc}
+              alt=""
+              aria-hidden
+              className="hero-banner-image"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+                zIndex: 0,
+                pointerEvents: "none",
+              }}
+            />
+          )}
           <div
             aria-hidden
             style={{

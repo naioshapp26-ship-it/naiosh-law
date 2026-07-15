@@ -47,6 +47,7 @@ export async function PUT(request: Request) {
     "logoData",
     "heroBannerPath",
     "heroBannerData",
+    "heroMediaKind",
     "borderRadius",
   ];
 
@@ -60,6 +61,10 @@ export async function PUT(request: Request) {
   if (body.logoData === "") data.logoData = null;
   if (body.heroBannerData === "") data.heroBannerData = null;
   if (body.heroBannerPath === "") data.heroBannerPath = null;
+  if (body.heroMediaKind === "" || body.heroMediaKind === null) data.heroMediaKind = null;
+  if (data.heroMediaKind && data.heroMediaKind !== "image" && data.heroMediaKind !== "video") {
+    data.heroMediaKind = null;
+  }
 
   const updated = await prisma.siteSettings.upsert({
     where: { id: "default" },
@@ -88,6 +93,7 @@ export async function DELETE() {
       logoData: null,
       heroBannerData: null,
       heroBannerPath: null,
+      heroMediaKind: null,
       updatedBy: session!.email,
     },
   });

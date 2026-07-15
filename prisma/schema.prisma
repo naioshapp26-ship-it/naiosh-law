@@ -780,6 +780,7 @@ model SiteSettings {
   logoData       String?  @db.Text
   heroBannerPath String?
   heroBannerData String?  @db.Text
+  heroMediaKind  String?  // "image" | "video"
   borderRadius   String   @default("12")
   updatedBy      String?
   createdAt      DateTime @default(now())

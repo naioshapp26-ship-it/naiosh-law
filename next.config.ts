@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  experimental: {
+    // بنر/فيديو الهيرو حتى 100MB عبر FormData
+    serverActions: {
+      bodySizeLimit: "110mb",
+    },
+  },
   async redirects() {
     return [
       { source: "/app/cases", destination: "/app/modules/case-management", permanent: false },
