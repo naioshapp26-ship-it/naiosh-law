@@ -535,16 +535,22 @@ export function HeroSection({ variant = "default" }: Props) {
   const isLanding = variant === "landing";
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [bannerReady, setBannerReady] = useState(false);
   const reduce = useReducedMotion();
-  const { heroBannerSrc, theme } = useSiteTheme();
-  const hasBanner = Boolean(heroBannerSrc);
+  const { heroBannerSrc, theme, loading: themeLoading } = useSiteTheme();
   const isVideoBanner = isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
+  // لا نفعّل وضع البنر إلا بعد نجاح تحميل الوسائط — يمنع التحول لشكل مكسور
+  const hasBanner = !themeLoading && Boolean(heroBannerSrc) && bannerReady;
 
   const next = useCallback(() => setIndex((i) => (i + 1) % VISUAL_SLIDES.length), []);
   const prev = useCallback(
     () => setIndex((i) => (i - 1 + VISUAL_SLIDES.length) % VISUAL_SLIDES.length),
     []
   );
+
+  useEffect(() => {
+    setBannerReady(false);
+  }, [heroBannerSrc, theme.heroMediaKind]);
 
   useEffect(() => {
     if (paused || hasBanner) return;
@@ -566,6 +572,34 @@ export function HeroSection({ variant = "default" }: Props) {
       aria-label="قسم الهيرو الرئيسي"
       data-hero-banner={hasBanner ? "true" : "false"}
     >
+      {/* Preload banner media without switching layout until it loads */}
+      {!themeLoading && heroBannerSrc && !bannerReady && (
+        isVideoBanner ? (
+          <video
+            key={`preload-${heroBannerSrc}`}
+            src={heroBannerSrc}
+            muted
+            playsInline
+            preload="auto"
+            onLoadedData={() => setBannerReady(true)}
+            onError={() => setBannerReady(false)}
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+            aria-hidden
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={`preload-${heroBannerSrc}`}
+            src={heroBannerSrc}
+            alt=""
+            onLoad={() => setBannerReady(true)}
+            onError={() => setBannerReady(false)}
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+            aria-hidden
+          />
+        )
+      )}
+
       {/* Uploaded / configured hero banner (image or video up to 100MB) */}
       {hasBanner && heroBannerSrc && (
         <>
@@ -579,6 +613,7 @@ export function HeroSection({ variant = "default" }: Props) {
               preload="metadata"
               aria-hidden
               className="hero-banner-video"
+              onError={() => setBannerReady(false)}
               style={{
                 position: "absolute",
                 inset: 0,
@@ -597,6 +632,7 @@ export function HeroSection({ variant = "default" }: Props) {
               alt=""
               aria-hidden
               className="hero-banner-image"
+              onError={() => setBannerReady(false)}
               style={{
                 position: "absolute",
                 inset: 0,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-helpers";
 import { DEFAULT_SITE_THEME, recordToTheme, type SiteTheme } from "@/lib/site-settings";
+import { sanitizeMissingHeroUpload } from "@/lib/hero-media-server";
 
 async function getOrCreateSettings() {
   let row = await prisma.siteSettings.findUnique({ where: { id: "default" } });
@@ -10,7 +11,7 @@ async function getOrCreateSettings() {
       data: { id: "default", ...DEFAULT_SITE_THEME },
     });
   }
-  return row;
+  return sanitizeMissingHeroUpload(row);
 }
 
 export async function GET() {
