@@ -33,5 +33,6 @@ export function isHeroVideoSrc(src: string | null | undefined, kind?: string | n
   if (kind === "image") return false;
   if (!src) return false;
   if (src.startsWith("data:video/")) return true;
+  if (/\/api\/site-settings\/hero-banner(\?|$)/i.test(src)) return false;
   return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(src);
 }

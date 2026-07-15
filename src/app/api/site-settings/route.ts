@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-helpers";
-import { DEFAULT_SITE_THEME, recordToTheme, type SiteTheme } from "@/lib/site-settings";
+import {
+  DEFAULT_SITE_THEME,
+  hasHeroBannerMedia,
+  heroBannerPublicUrl,
+  recordToTheme,
+  type SiteTheme,
+} from "@/lib/site-settings";
 import { sanitizeMissingHeroUpload } from "@/lib/hero-media-server";
 
 async function getOrCreateSettings() {
@@ -14,14 +20,24 @@ async function getOrCreateSettings() {
   return sanitizeMissingHeroUpload(row);
 }
 
-export async function GET() {
-  const row = await getOrCreateSettings();
-  return NextResponse.json({
+/** استجابة خفيفة للواجهة: بدون data URL الضخم + رابط عرض ثابت */
+function toClientSettingsPayload(row: Awaited<ReturnType<typeof getOrCreateSettings>>) {
+  const theme = recordToTheme(row);
+  const hasBanner = hasHeroBannerMedia(theme);
+  return {
     id: row.id,
-    ...recordToTheme(row),
+    ...theme,
+    // لا نرسل قاعدة/ميغابايتات base64 للمتصفح — العرض عبر /api/site-settings/hero-banner
+    heroBannerData: null,
+    heroBannerPath: hasBanner ? heroBannerPublicUrl(row.updatedAt) : null,
     updatedBy: row.updatedBy,
     updatedAt: row.updatedAt.toISOString(),
-  });
+  };
+}
+
+export async function GET() {
+  const row = await getOrCreateSettings();
+  return NextResponse.json(toClientSettingsPayload(row));
 }
 
 export async function PUT(request: Request) {
@@ -32,6 +48,7 @@ export async function PUT(request: Request) {
 
   const data: Partial<SiteTheme> & { updatedBy?: string } = {};
 
+  // وسائط الهيرو تُدار حصريًا عبر /api/site-settings/hero-media حتى لا يمسح الحفظ العام البنر
   const fields: (keyof SiteTheme)[] = [
     "primaryColor",
     "primaryDark",
@@ -46,9 +63,6 @@ export async function PUT(request: Request) {
     "tagline",
     "logoPath",
     "logoData",
-    "heroBannerPath",
-    "heroBannerData",
-    "heroMediaKind",
     "borderRadius",
   ];
 
@@ -60,12 +74,6 @@ export async function PUT(request: Request) {
   }
 
   if (body.logoData === "") data.logoData = null;
-  if (body.heroBannerData === "") data.heroBannerData = null;
-  if (body.heroBannerPath === "") data.heroBannerPath = null;
-  if (body.heroMediaKind === "" || body.heroMediaKind === null) data.heroMediaKind = null;
-  if (data.heroMediaKind && data.heroMediaKind !== "image" && data.heroMediaKind !== "video") {
-    data.heroMediaKind = null;
-  }
 
   const updated = await prisma.siteSettings.upsert({
     where: { id: "default" },
@@ -74,10 +82,7 @@ export async function PUT(request: Request) {
   });
 
   return NextResponse.json({
-    id: updated.id,
-    ...recordToTheme(updated),
-    updatedBy: updated.updatedBy,
-    updatedAt: updated.updatedAt.toISOString(),
+    ...toClientSettingsPayload(updated),
     message: "تم حفظ إعدادات النظام بنجاح",
   });
 }
@@ -100,8 +105,7 @@ export async function DELETE() {
   });
 
   return NextResponse.json({
-    id: updated.id,
-    ...recordToTheme(updated),
+    ...toClientSettingsPayload(updated),
     message: "تم استعادة الإعدادات الافتراضية",
   });
 }

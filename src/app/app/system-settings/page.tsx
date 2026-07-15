@@ -199,12 +199,14 @@ export default function SystemSettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل الرفع");
-      setForm({
+      const next = {
         ...form,
         heroBannerPath: data.heroBannerPath ?? null,
         heroBannerData: data.heroBannerData ?? null,
         heroMediaKind: data.heroMediaKind ?? null,
-      });
+      };
+      setForm(next);
+      updateLocal(next);
       await refresh();
       show("success", data.message ?? "تم رفع وسائط الهيرو");
     } catch (e) {
@@ -432,8 +434,8 @@ export default function SystemSettingsPage() {
               <div className="card-white" style={{ padding: "1.35rem" }}>
                 <h2 style={{ fontWeight: 800, marginBottom: "0.4rem", fontSize: "1rem" }}>🖼️ بنر / فيديو واجهة الهيرو</h2>
                 <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "1rem", lineHeight: 1.7 }}>
-                  ارفع صورة بنر أو فيديو يظهر كخلفية لقسم الهيرو في الصفحة الرئيسية. الحد الأقصى{" "}
-                  {formatFileSize(HERO_MEDIA_MAX_BYTES)} للصورة والفيديو.
+                  ارفع صورة بنر أو فيديو تظهر في لوحة بارزة على يسار قسم الهيرو (الصفحة الرئيسية). الحد الأقصى{" "}
+                  {formatFileSize(HERO_MEDIA_MAX_BYTES)} للصورة والفيديو — الرفع يُحفظ فورًا ولا يُمسح عند حفظ باقي الإعدادات.
                 </p>
                 <div style={{ marginBottom: "1rem" }}>
                   <label className="input-label">مسار البنر/الفيديو (اختياري — رابط أو مسار محلي)</label>
