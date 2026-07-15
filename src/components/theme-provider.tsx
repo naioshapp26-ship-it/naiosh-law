@@ -104,6 +104,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       refresh,
       updateLocal,
       logoSrc: getLogoSrc(theme),
+      // API يُرجع مسار العرض الثابت؛ getHeroBannerSrc يحوّل أي data URL قديم إلى نفس المسار
       heroBannerSrc: getHeroBannerSrc(theme),
     }),
     [theme, loading, refresh, updateLocal]

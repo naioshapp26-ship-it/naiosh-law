@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-helpers";
-import { DEFAULT_SITE_THEME, recordToTheme } from "@/lib/site-settings";
+import {
+  DEFAULT_SITE_THEME,
+  hasHeroBannerMedia,
+  heroBannerPublicUrl,
+  recordToTheme,
+} from "@/lib/site-settings";
 import { deleteHeroMediaFile, saveHeroMediaFile } from "@/lib/hero-media-server";
 
 export const runtime = "nodejs";
@@ -14,6 +19,19 @@ async function getOrCreateSettings() {
     });
   }
   return row;
+}
+
+function toClientPayload(row: Awaited<ReturnType<typeof getOrCreateSettings>>) {
+  const theme = recordToTheme(row);
+  const hasBanner = hasHeroBannerMedia(theme);
+  return {
+    id: row.id,
+    ...theme,
+    heroBannerData: null,
+    heroBannerPath: hasBanner ? heroBannerPublicUrl(row.updatedAt) : null,
+    updatedBy: row.updatedBy,
+    updatedAt: row.updatedAt.toISOString(),
+  };
 }
 
 /** رفع بنر/فيديو الهيرو حتى 100MB */
@@ -32,38 +50,35 @@ export async function POST(request: Request) {
     const current = await getOrCreateSettings();
     await deleteHeroMediaFile(current.heroBannerPath);
 
+    // احفظ مسار الملف دائمًا + نسخة DB للصور الصغيرة (تبقى بعد إعادة النشر)
     const updated = await prisma.siteSettings.upsert({
       where: { id: "default" },
       create: {
         id: "default",
         ...DEFAULT_SITE_THEME,
-        heroBannerPath: saved.inlineDataUrl ? null : saved.url,
+        heroBannerPath: saved.url,
         heroBannerData: saved.inlineDataUrl,
         heroMediaKind: saved.kind,
         updatedBy: session!.email,
       },
       update: {
-        // الصور ≤5MB تُحفظ في القاعدة (تظهر فوراً وتبقى بعد النشر)
-        // الفيديو/الصور الكبيرة تُقدَّم عبر /api/uploads/hero/*
-        heroBannerPath: saved.inlineDataUrl ? null : saved.url,
+        heroBannerPath: saved.url,
         heroBannerData: saved.inlineDataUrl,
         heroMediaKind: saved.kind,
         updatedBy: session!.email,
       },
     });
 
+    const payload = toClientPayload(updated);
     return NextResponse.json({
-      id: updated.id,
-      ...recordToTheme(updated),
-      updatedBy: updated.updatedBy,
-      updatedAt: updated.updatedAt.toISOString(),
+      ...payload,
       uploaded: {
-        url: saved.inlineDataUrl || saved.url,
+        url: payload.heroBannerPath,
         kind: saved.kind,
         mimeType: saved.mimeType,
         size: saved.size,
         fileName: saved.fileName,
-        storedAs: saved.inlineDataUrl ? "database" : "file",
+        storedAs: saved.inlineDataUrl ? "database+file" : "file",
       },
       message:
         saved.kind === "video"
@@ -95,8 +110,7 @@ export async function DELETE() {
   });
 
   return NextResponse.json({
-    id: updated.id,
-    ...recordToTheme(updated),
+    ...toClientPayload(updated),
     message: "تم إزالة بنر/فيديو الهيرو",
   });
 }

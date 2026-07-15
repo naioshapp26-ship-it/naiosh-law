@@ -535,12 +535,12 @@ export function HeroSection({ variant = "default" }: Props) {
   const isLanding = variant === "landing";
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [bannerReady, setBannerReady] = useState(false);
+  const [mediaFailed, setMediaFailed] = useState(false);
   const reduce = useReducedMotion();
-  const { heroBannerSrc, theme, loading: themeLoading } = useSiteTheme();
+  const { heroBannerSrc, theme } = useSiteTheme();
   const isVideoBanner = isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
-  // لا نفعّل وضع البنر إلا بعد نجاح تحميل الوسائط — يمنع التحول لشكل مكسور
-  const hasBanner = !themeLoading && Boolean(heroBannerSrc) && bannerReady;
+  // اعرض البنر فور توفره من الإعدادات — بدون بوابة preload تمنع الظهور
+  const hasBanner = Boolean(heroBannerSrc) && !mediaFailed;
 
   const next = useCallback(() => setIndex((i) => (i + 1) % VISUAL_SLIDES.length), []);
   const prev = useCallback(
@@ -549,7 +549,7 @@ export function HeroSection({ variant = "default" }: Props) {
   );
 
   useEffect(() => {
-    setBannerReady(false);
+    setMediaFailed(false);
   }, [heroBannerSrc, theme.heroMediaKind]);
 
   useEffect(() => {
@@ -572,35 +572,7 @@ export function HeroSection({ variant = "default" }: Props) {
       aria-label="قسم الهيرو الرئيسي"
       data-hero-banner={hasBanner ? "true" : "false"}
     >
-      {/* Preload banner media without switching layout until it loads */}
-      {!themeLoading && heroBannerSrc && !bannerReady && (
-        isVideoBanner ? (
-          <video
-            key={`preload-${heroBannerSrc}`}
-            src={heroBannerSrc}
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={() => setBannerReady(true)}
-            onError={() => setBannerReady(false)}
-            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-            aria-hidden
-          />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={`preload-${heroBannerSrc}`}
-            src={heroBannerSrc}
-            alt=""
-            onLoad={() => setBannerReady(true)}
-            onError={() => setBannerReady(false)}
-            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-            aria-hidden
-          />
-        )
-      )}
-
-      {/* Uploaded / configured hero banner (image or video up to 100MB) */}
+      {/* خلفية خفيفة من الصورة المرفوعة (غائمة) + تدرج ليبقى النص مقروءًا */}
       {hasBanner && heroBannerSrc && (
         <>
           {isVideoBanner ? (
@@ -612,8 +584,7 @@ export function HeroSection({ variant = "default" }: Props) {
               playsInline
               preload="metadata"
               aria-hidden
-              className="hero-banner-video"
-              onError={() => setBannerReady(false)}
+              className="hero-banner-bg"
               style={{
                 position: "absolute",
                 inset: 0,
@@ -623,6 +594,9 @@ export function HeroSection({ variant = "default" }: Props) {
                 objectPosition: "center",
                 zIndex: 0,
                 pointerEvents: "none",
+                opacity: 0.35,
+                filter: "blur(2px) saturate(0.9)",
+                transform: "scale(1.04)",
               }}
             />
           ) : (
@@ -631,8 +605,7 @@ export function HeroSection({ variant = "default" }: Props) {
               src={heroBannerSrc}
               alt=""
               aria-hidden
-              className="hero-banner-image"
-              onError={() => setBannerReady(false)}
+              className="hero-banner-bg"
               style={{
                 position: "absolute",
                 inset: 0,
@@ -642,6 +615,9 @@ export function HeroSection({ variant = "default" }: Props) {
                 objectPosition: "center",
                 zIndex: 0,
                 pointerEvents: "none",
+                opacity: 0.38,
+                filter: "blur(2px) saturate(0.95)",
+                transform: "scale(1.04)",
               }}
             />
           )}
@@ -652,116 +628,120 @@ export function HeroSection({ variant = "default" }: Props) {
               inset: 0,
               zIndex: 1,
               background:
-                "linear-gradient(105deg, rgba(10,10,18,0.72) 0%, rgba(10,10,18,0.55) 45%, rgba(10,10,18,0.78) 100%)",
+                "linear-gradient(105deg, rgba(10,10,18,0.78) 0%, rgba(10,10,18,0.62) 42%, rgba(10,10,18,0.86) 100%)",
               pointerEvents: "none",
             }}
           />
         </>
       )}
 
-      {!hasBanner && (
-        <>
-          <motion.div
-            className="glow-pulse"
-            style={{
-              position: "absolute",
-              width: 800,
-              height: 800,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
-              top: -250,
-              left: -150,
-              pointerEvents: "none",
-            }}
-            animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.55, 0.95, 0.55] }}
-            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            style={{
-              position: "absolute",
-              width: 500,
-              height: 500,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
-              bottom: -100,
-              right: -80,
-              pointerEvents: "none",
-            }}
-            animate={reduce ? undefined : { scale: [1, 1.18, 1], x: [0, -20, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          />
+      <>
+        <motion.div
+          className="glow-pulse"
+          style={{
+            position: "absolute",
+            width: 800,
+            height: 800,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
+            top: -250,
+            left: -150,
+            pointerEvents: "none",
+            zIndex: 2,
+          }}
+          animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.55, 0.95, 0.55] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          style={{
+            position: "absolute",
+            width: 500,
+            height: 500,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
+            bottom: -100,
+            right: -80,
+            pointerEvents: "none",
+            zIndex: 2,
+          }}
+          animate={reduce ? undefined : { scale: [1, 1.18, 1], x: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
 
-          <motion.div
-            className="hero-grid-bg"
-            style={{
-              position: "absolute",
-              inset: "-65px",
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)",
-              backgroundSize: "65px 65px",
-              pointerEvents: "none",
-            }}
-            animate={reduce ? undefined : { y: [0, 32, 0], opacity: [0.45, 0.75, 0.45] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          />
+        {!hasBanner && (
+          <>
+            <motion.div
+              className="hero-grid-bg"
+              style={{
+                position: "absolute",
+                inset: "-65px",
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)",
+                backgroundSize: "65px 65px",
+                pointerEvents: "none",
+              }}
+              animate={reduce ? undefined : { y: [0, 32, 0], opacity: [0.45, 0.75, 0.45] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            />
 
-          {!reduce &&
-            [0, 1, 2, 3, 4, 5].map((i) => (
-              <motion.span
-                key={i}
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  width: 4 + (i % 3) * 2,
-                  height: 4 + (i % 3) * 2,
-                  borderRadius: "50%",
-                  background: i % 2 === 0 ? "rgba(195,21,42,0.55)" : "rgba(255,255,255,0.25)",
-                  top: `${18 + i * 12}%`,
-                  left: `${8 + i * 14}%`,
-                  pointerEvents: "none",
-                  zIndex: 1,
-                }}
-                animate={{
-                  y: [0, -28 - i * 4, 0],
-                  opacity: [0.2, 0.9, 0.2],
-                  scale: [1, 1.4, 1],
-                }}
-                transition={{ duration: 4 + i * 0.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.35 }}
-              />
-            ))}
+            {!reduce &&
+              [0, 1, 2, 3, 4, 5].map((i) => (
+                <motion.span
+                  key={i}
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    width: 4 + (i % 3) * 2,
+                    height: 4 + (i % 3) * 2,
+                    borderRadius: "50%",
+                    background: i % 2 === 0 ? "rgba(195,21,42,0.55)" : "rgba(255,255,255,0.25)",
+                    top: `${18 + i * 12}%`,
+                    left: `${8 + i * 14}%`,
+                    pointerEvents: "none",
+                    zIndex: 1,
+                  }}
+                  animate={{
+                    y: [0, -28 - i * 4, 0],
+                    opacity: [0.2, 0.9, 0.2],
+                    scale: [1, 1.4, 1],
+                  }}
+                  transition={{ duration: 4 + i * 0.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.35 }}
+                />
+              ))}
 
-          <div
-            className="spin-slow"
-            style={{
-              position: "absolute",
-              width: 420,
-              height: 420,
-              borderRadius: "50%",
-              border: "1px solid rgba(195,21,42,0.12)",
-              top: "50%",
-              left: "60%",
-              transform: "translate(-50%, -50%)",
-              pointerEvents: "none",
-            }}
-          />
-          <motion.div
-            style={{
-              position: "absolute",
-              width: 280,
-              height: 280,
-              borderRadius: "50%",
-              border: "1px solid rgba(195,21,42,0.08)",
-              top: "50%",
-              left: "60%",
-              marginTop: -140,
-              marginLeft: -140,
-              pointerEvents: "none",
-            }}
-            animate={reduce ? undefined : { rotate: -360 }}
-            transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-          />
-        </>
-      )}
+            <div
+              className="spin-slow"
+              style={{
+                position: "absolute",
+                width: 420,
+                height: 420,
+                borderRadius: "50%",
+                border: "1px solid rgba(195,21,42,0.12)",
+                top: "50%",
+                left: "60%",
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+              }}
+            />
+            <motion.div
+              style={{
+                position: "absolute",
+                width: 280,
+                height: 280,
+                borderRadius: "50%",
+                border: "1px solid rgba(195,21,42,0.08)",
+                top: "50%",
+                left: "60%",
+                marginTop: -140,
+                marginLeft: -140,
+                pointerEvents: "none",
+              }}
+              animate={reduce ? undefined : { rotate: -360 }}
+              transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+            />
+          </>
+        )}
+      </>
 
       <div
         className="container-max"
@@ -776,16 +756,16 @@ export function HeroSection({ variant = "default" }: Props) {
           className="hero-grid"
         >
           <motion.div
-            className={`hero-content-col${hasBanner ? " hero-content-banner" : ""}`}
+            className="hero-content-col"
             variants={container}
             initial="hidden"
             animate="show"
             style={{
               width: "100%",
-              maxWidth: hasBanner ? "min(760px, 92vw)" : "min(820px, 72vw)",
-              marginLeft: hasBanner ? "auto" : "auto",
-              marginRight: hasBanner ? "auto" : 0,
-              textAlign: hasBanner ? "center" : "right",
+              maxWidth: hasBanner ? "min(640px, 52vw)" : "min(820px, 72vw)",
+              marginLeft: "auto",
+              marginRight: 0,
+              textAlign: "right",
             }}
           >
             <motion.div
@@ -796,10 +776,9 @@ export function HeroSection({ variant = "default" }: Props) {
                 width: "fit-content",
                 maxWidth: "100%",
                 display: "flex",
-                justifyContent: hasBanner ? "center" : "flex-end",
+                justifyContent: "flex-end",
                 marginLeft: "auto",
-                marginRight: hasBanner ? "auto" : undefined,
-                transform: hasBanner ? "none" : "translateY(-12px)",
+                transform: "translateY(-12px)",
               }}
             >
               <span
@@ -843,7 +822,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 letterSpacing: "-0.02em",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: hasBanner ? "center" : "flex-end",
+                alignItems: "flex-end",
                 gap: "0.25rem",
               }}
               variants={container}
@@ -853,9 +832,9 @@ export function HeroSection({ variant = "default" }: Props) {
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  justifyContent: hasBanner ? "center" : "flex-end",
+                  justifyContent: "flex-end",
                   gap: "0.35em",
-                  textAlign: hasBanner ? "center" : "right",
+                  textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   maxWidth: "100%",
                 }}
@@ -906,7 +885,6 @@ export function HeroSection({ variant = "default" }: Props) {
                 lineHeight: 1.9,
                 maxWidth: "620px",
                 marginLeft: "auto",
-                marginRight: hasBanner ? "auto" : undefined,
                 marginBottom: "2.75rem",
               }}
             >
@@ -922,7 +900,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 gap: "1rem",
                 flexWrap: "wrap",
                 marginBottom: "3.75rem",
-                justifyContent: hasBanner ? "center" : "flex-end",
+                justifyContent: "flex-end",
               }}
             >
               <motion.div
@@ -951,7 +929,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 flexWrap: "wrap",
                 paddingTop: "2rem",
                 borderTop: "1px solid rgba(255,255,255,0.07)",
-                justifyContent: hasBanner ? "center" : "flex-end",
+                justifyContent: "flex-end",
               }}
             >
               {stats.map((s, i) => (
@@ -967,117 +945,188 @@ export function HeroSection({ variant = "default" }: Props) {
             </motion.div>
           </motion.div>
 
-          {!hasBanner && (
-          <motion.div
-            className="float-anim hero-card-col"
-            initial={reduce ? false : { opacity: 0, x: -70, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: "calc(50% - 180px)",
-              width: "min(420px, 35vw)",
-              zIndex: 5,
-              perspective: 900,
-            }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div key={VISUAL_SLIDES[index].id} {...slideAnim}>
-                <HeroVisualSlide slideId={VISUAL_SLIDES[index].id} />
-              </motion.div>
-            </AnimatePresence>
-
+          {/* لوحة الصورة المرفوعة — تظهر واضحة على اليسار مثل NAIS */}
+          {hasBanner && heroBannerSrc ? (
             <div
+              className="hero-card-col hero-media-panel"
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: "1.25rem",
-                gap: "0.75rem",
+                position: "absolute",
+                left: 0,
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "min(480px, 40vw)",
+                zIndex: 5,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                {VISUAL_SLIDES.map((slide, i) => (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    onClick={() => setIndex(i)}
-                    aria-label={slide.label}
-                    style={{
-                      height: 8,
-                      width: i === index ? 28 : 8,
-                      borderRadius: 99,
-                      border: "none",
-                      background: i === index ? "#c3152a" : "rgba(255,255,255,0.25)",
-                      cursor: "pointer",
-                      transition: "all 0.25s",
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                <button
-                  type="button"
-                  onClick={() => setPaused((p) => !p)}
-                  aria-label={paused ? "تشغيل" : "إيقاف"}
+              <motion.div
+                className="float-anim"
+                initial={reduce ? false : { opacity: 0, x: -56, scale: 0.96 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ duration: 0.85, delay: 0.2, ease: EASE }}
+              >
+                <div
+                  className="hero-media-frame"
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "#94a3b8",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
+                    position: "relative",
+                    width: "100%",
+                    aspectRatio: "4 / 3",
+                    borderRadius: 18,
+                    overflow: "hidden",
+                    boxShadow:
+                      "0 28px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.12)",
+                    background: "#111827",
                   }}
                 >
-                  {paused ? <Play size={14} /> : <Pause size={14} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={prev}
-                  aria-label="السابق"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "#94a3b8",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <ChevronRight size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={next}
-                  aria-label="التالي"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "#94a3b8",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              </div>
+                  {isVideoBanner ? (
+                    <video
+                      key={heroBannerSrc}
+                      src={heroBannerSrc}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      className="hero-banner-video"
+                      onError={() => setMediaFailed(true)}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        display: "block",
+                      }}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={heroBannerSrc}
+                      src={heroBannerSrc}
+                      alt="بانر الهيرو"
+                      className="hero-banner-image"
+                      onError={() => setMediaFailed(true)}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        display: "block",
+                      }}
+                    />
+                  )}
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
+          ) : (
+            <motion.div
+              className="float-anim hero-card-col"
+              initial={reduce ? false : { opacity: 0, x: -70, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: "calc(50% - 180px)",
+                width: "min(420px, 35vw)",
+                zIndex: 5,
+                perspective: 900,
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div key={VISUAL_SLIDES[index].id} {...slideAnim}>
+                  <HeroVisualSlide slideId={VISUAL_SLIDES[index].id} />
+                </motion.div>
+              </AnimatePresence>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: "1.25rem",
+                  gap: "0.75rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  {VISUAL_SLIDES.map((slide, i) => (
+                    <button
+                      key={slide.id}
+                      type="button"
+                      onClick={() => setIndex(i)}
+                      aria-label={slide.label}
+                      style={{
+                        height: 8,
+                        width: i === index ? 28 : 8,
+                        borderRadius: 99,
+                        border: "none",
+                        background: i === index ? "#c3152a" : "rgba(255,255,255,0.25)",
+                        cursor: "pointer",
+                        transition: "all 0.25s",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <button
+                    type="button"
+                    onClick={() => setPaused((p) => !p)}
+                    aria-label={paused ? "تشغيل" : "إيقاف"}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)",
+                      color: "#94a3b8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {paused ? <Play size={14} /> : <Pause size={14} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={prev}
+                    aria-label="السابق"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)",
+                      color: "#94a3b8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={next}
+                    aria-label="التالي"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)",
+                      color: "#94a3b8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
       </div>
@@ -1130,16 +1179,16 @@ export function HeroSection({ variant = "default" }: Props) {
         .hero-badge-pill {
           animation: hero-badge-drift 3.4s ease-in-out infinite;
         }
-        .hero-content-banner .hero-stats > div {
-          text-align: center !important;
-        }
         @media (max-width: 1200px) {
-          .hero-card-col {
+          .hero-card-col:not(.hero-media-panel) {
             width: 320px !important;
             opacity: 0.8;
           }
-          .hero-content-col:not(.hero-content-banner) {
-            max-width: min(720px, 70vw) !important;
+          .hero-media-panel {
+            width: min(380px, 38vw) !important;
+          }
+          .hero-content-col {
+            max-width: min(720px, 58vw) !important;
           }
         }
         @media (max-width: 980px) {
@@ -1158,7 +1207,10 @@ export function HeroSection({ variant = "default" }: Props) {
         }
         @media (max-width: 900px) {
           .hero-grid {
-            display: block !important;
+            display: flex !important;
+            flex-direction: column-reverse !important;
+            align-items: center !important;
+            gap: 2rem !important;
           }
           .hero-content-col {
             max-width: 760px !important;
@@ -1166,9 +1218,11 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-heading {
             justify-content: center !important;
+            align-items: center !important;
           }
           .hero-heading-main, .hero-heading-accent {
             text-align: center !important;
+            justify-content: center !important;
           }
           .hero-badge {
             justify-content: center !important;
@@ -1179,8 +1233,16 @@ export function HeroSection({ variant = "default" }: Props) {
           .hero-cta, .hero-stats {
             justify-content: center !important;
           }
-          .hero-card-col {
+          .hero-card-col:not(.hero-media-panel) {
             display: none;
+          }
+          .hero-media-panel {
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            transform: none !important;
+            width: min(520px, 92vw) !important;
+            margin: 0 auto !important;
           }
         }
         @media (prefers-reduced-motion: reduce) {

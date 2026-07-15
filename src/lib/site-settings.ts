@@ -72,12 +72,60 @@ export function getLogoSrc(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
   return theme.logoData?.trim() || theme.logoPath || DEFAULT_SITE_THEME.logoPath;
 }
 
-/** بنر الهيرو — إن وُجدت صورة مرفوعة أو مسار */
-export function getHeroBannerSrc(theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData">) {
-  const data = theme.heroBannerData?.trim();
-  if (data) return data;
-  const path = theme.heroBannerPath?.trim();
-  return path || null;
+/** مسار ثابت لتقديم بنر الهيرو (ملف أو نسخة قاعدة البيانات) */
+export const HERO_BANNER_SERVE_PATH = "/api/site-settings/hero-banner";
+
+export function heroBannerCacheKey(updatedAt?: string | Date | null) {
+  if (!updatedAt) return null;
+  const t = updatedAt instanceof Date ? updatedAt.getTime() : Date.parse(updatedAt);
+  return Number.isFinite(t) ? t : null;
+}
+
+/** رابط العرض الثابت لبنر الهيرو مع كسر للكاش بعد التحديث */
+export function heroBannerPublicUrl(updatedAt?: string | Date | null) {
+  const v = heroBannerCacheKey(updatedAt);
+  return v ? `${HERO_BANNER_SERVE_PATH}?v=${v}` : HERO_BANNER_SERVE_PATH;
+}
+
+/** هل الإعدادات تحتوي وسائط هيرو محفوظة؟ */
+export function hasHeroBannerMedia(
+  theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData" | "heroMediaKind">
+) {
+  return Boolean(
+    theme.heroBannerData?.trim() || theme.heroBannerPath?.trim() || theme.heroMediaKind
+  );
+}
+
+/**
+ * بنر الهيرو للعرض في الواجهة.
+ * يفضّل المسار القصير/الثابت — لا يُمرَّر data URL الضخم إلى <img>.
+ */
+export function getHeroBannerSrc(
+  theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData" | "heroMediaKind">,
+  cacheKey?: string | number | null
+) {
+  const path = theme.heroBannerPath?.trim() || null;
+  const data = theme.heroBannerData?.trim() || null;
+  const version =
+    cacheKey != null && String(cacheKey) ? `?v=${encodeURIComponent(String(cacheKey))}` : "";
+
+  if (path) {
+    if (path.startsWith(HERO_BANNER_SERVE_PATH)) return path;
+    if (/^https?:\/\//i.test(path)) return path;
+    // مسارات الرفع المحلية تُقدَّم عبر endpoint ثابت (مع رجوع لقاعدة البيانات)
+    if (path.startsWith("/api/uploads/hero/") || path.startsWith("/uploads/hero/")) {
+      return `${HERO_BANNER_SERVE_PATH}${version}`;
+    }
+    return path;
+  }
+
+  if (data) {
+    // data URL تُخدم عبر المسار الثابت حتى لا تُحمَّل داخل JSON الواجهة
+    if (data.startsWith("data:")) return `${HERO_BANNER_SERVE_PATH}${version}`;
+    return data;
+  }
+
+  return null;
 }
 
 export type SiteSettingsRecord = SiteTheme & {
