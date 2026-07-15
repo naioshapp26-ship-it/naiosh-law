@@ -832,7 +832,8 @@ export function HeroSection({ variant = "default" }: Props) {
                 letterSpacing: "-0.02em",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "flex-end",
+                // في RTL: flex-start على المحور العرضي = يمين الشاشة
+                alignItems: "flex-start",
                 gap: "0.12rem",
                 width: "100%",
                 maxWidth: "100%",
@@ -845,11 +846,12 @@ export function HeroSection({ variant = "default" }: Props) {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "flex-end",
+                  alignItems: "flex-start",
                   gap: "0.06em",
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   maxWidth: "100%",
+                  marginInlineStart: "auto",
                 }}
                 variants={container}
               >
@@ -1229,6 +1231,8 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-heading-main {
             align-items: center !important;
+            margin-inline-start: auto !important;
+            margin-inline-end: auto !important;
           }
           .hero-badge-pill {
             font-size: 0.92rem !important;
