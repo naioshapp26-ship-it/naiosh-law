@@ -748,27 +748,12 @@ export function HeroSection({ variant = "default" }: Props) {
         style={{ position: "relative", zIndex: 10, width: "100%", paddingBlock: isLanding ? "3rem" : "5rem" }}
       >
         <div
-          style={
-            hasBanner
-              ? {
-                  display: "flex",
-                  // الصفحة RTL: row يضع النص (أول عنصر) يمينًا والصورة شمالًا
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  // نصف المسافة السابقة تقريبًا بين لوحة الوسائط والنص
-                  gap: "clamp(2rem, 4.5vw, 4rem)",
-                  maxWidth: 1080,
-                  marginInline: "auto",
-                  width: "100%",
-                }
-              : {
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                }
-          }
-          className={`hero-grid${hasBanner ? " hero-grid-banner" : ""}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+          className="hero-grid"
         >
           <motion.div
             className="hero-content-col"
@@ -777,9 +762,9 @@ export function HeroSection({ variant = "default" }: Props) {
             animate="show"
             style={{
               width: "100%",
-              maxWidth: hasBanner ? "min(520px, 48%)" : "min(820px, 72vw)",
-              flex: hasBanner ? "1 1 420px" : undefined,
-              marginLeft: hasBanner ? 0 : "auto",
+              // الكتابة تبقى في مكانها الأصلي أقصى اليمين — لا نغيّر إلا مكان لوحة البنر
+              maxWidth: hasBanner ? "min(640px, 52vw)" : "min(820px, 72vw)",
+              marginLeft: "auto",
               marginRight: 0,
               textAlign: "right",
             }}
@@ -966,12 +951,12 @@ export function HeroSection({ variant = "default" }: Props) {
             <div
               className="hero-card-col hero-media-panel"
               style={{
-                position: "relative",
-                left: "auto",
-                top: "auto",
-                transform: "none",
-                width: "min(420px, 38%)",
-                flex: "0 1 420px",
+                position: "absolute",
+                // قرّب البنر فقط ناحية النص (نصف المسافة السابقة) دون تحريك الكتابة
+                left: "clamp(5rem, 16vw, 12rem)",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "min(420px, 34vw)",
                 zIndex: 5,
               }}
             >
@@ -1201,18 +1186,12 @@ export function HeroSection({ variant = "default" }: Props) {
             width: 320px !important;
             opacity: 0.8;
           }
-          .hero-grid-banner {
-            gap: clamp(1.75rem, 3.5vw, 3rem) !important;
-            max-width: 960px !important;
+          .hero-media-panel {
+            width: min(360px, 32vw) !important;
+            left: clamp(3.5rem, 12vw, 9rem) !important;
           }
-          .hero-grid-banner .hero-media-panel {
-            width: min(360px, 40%) !important;
-          }
-          .hero-grid-banner .hero-content-col {
-            max-width: min(480px, 52%) !important;
-          }
-          .hero-grid:not(.hero-grid-banner) .hero-content-col {
-            max-width: min(720px, 58vw) !important;
+          .hero-content-col {
+            max-width: min(720px, 70vw) !important;
           }
         }
         @media (max-width: 980px) {
@@ -1230,18 +1209,15 @@ export function HeroSection({ variant = "default" }: Props) {
           }
         }
         @media (max-width: 900px) {
-          .hero-grid,
-          .hero-grid-banner {
+          .hero-grid {
             display: flex !important;
             flex-direction: column-reverse !important;
             align-items: center !important;
             gap: 2rem !important;
-            max-width: none !important;
           }
           .hero-content-col {
             max-width: 760px !important;
             text-align: center !important;
-            flex: none !important;
           }
           .hero-heading {
             justify-content: center !important;
@@ -1269,7 +1245,6 @@ export function HeroSection({ variant = "default" }: Props) {
             top: auto !important;
             transform: none !important;
             width: min(520px, 92vw) !important;
-            flex: none !important;
             margin: 0 auto !important;
           }
         }
