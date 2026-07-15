@@ -745,7 +745,16 @@ export function HeroSection({ variant = "default" }: Props) {
 
       <div
         className="container-max"
-        style={{ position: "relative", zIndex: 10, width: "100%", paddingBlock: isLanding ? "3rem" : "5rem" }}
+        style={{
+          position: "relative",
+          zIndex: 10,
+          width: "100%",
+          paddingBlock: isLanding ? "3rem" : "5rem",
+          // مسافة أمان من حافة الشاشة حتى لا يُقطع النص
+          paddingInlineEnd: "clamp(1.25rem, 3.5vw, 2.75rem)",
+          paddingInlineStart: "clamp(1rem, 2vw, 1.5rem)",
+          boxSizing: "border-box",
+        }}
       >
         <div
           style={{
@@ -762,11 +771,11 @@ export function HeroSection({ variant = "default" }: Props) {
             animate="show"
             style={{
               width: "100%",
-              // العنوان والكتابة على اليمين كما كانت — المسافة الإضافية للجملة الوصفية فقط
-              maxWidth: hasBanner ? "min(720px, 58vw)" : "min(820px, 72vw)",
+              maxWidth: hasBanner ? "min(560px, 48vw)" : "min(720px, 68vw)",
               marginLeft: "auto",
               marginRight: 0,
               textAlign: "right",
+              boxSizing: "border-box",
             }}
           >
             <motion.div
@@ -815,17 +824,19 @@ export function HeroSection({ variant = "default" }: Props) {
             <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(1.95rem, 3.9vw, 3.35rem)",
+                fontSize: "clamp(2rem, 4vw, 3.4rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.14,
+                lineHeight: 1.12,
                 marginBottom: "1.55rem",
                 letterSpacing: "-0.02em",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-end",
-                gap: "0.25rem",
+                gap: "0.12rem",
                 width: "100%",
+                maxWidth: "100%",
+                overflow: "visible",
               }}
               variants={container}
             >
@@ -833,18 +844,21 @@ export function HeroSection({ variant = "default" }: Props) {
                 className="hero-heading-main"
                 style={{
                   display: "flex",
-                  flexWrap: "nowrap",
-                  justifyContent: "flex-end",
-                  gap: "0.35em",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: "0.06em",
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   maxWidth: "100%",
-                  whiteSpace: "nowrap",
                 }}
                 variants={container}
               >
                 {headlineWords.map((word) => (
-                  <motion.span key={word} variants={wordAnim} style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+                  <motion.span
+                    key={word}
+                    variants={wordAnim}
+                    style={{ display: "block", whiteSpace: "nowrap" }}
+                  >
                     {word}
                   </motion.span>
                 ))}
@@ -886,12 +900,13 @@ export function HeroSection({ variant = "default" }: Props) {
                 color: "#94a3b8",
                 fontSize: "1.08rem",
                 lineHeight: 1.95,
-                maxWidth: "min(560px, 100%)",
+                maxWidth: "min(480px, 100%)",
+                width: "100%",
                 marginLeft: "auto",
                 marginBottom: "2.75rem",
-                paddingInlineEnd: "clamp(0.75rem, 2vw, 1.5rem)",
                 textWrap: "pretty",
-                overflowWrap: "break-word",
+                overflowWrap: "anywhere",
+                wordBreak: "break-word",
               }}
             >
               منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من إدارة القضايا والجلسات
@@ -1196,36 +1211,32 @@ export function HeroSection({ variant = "default" }: Props) {
             left: clamp(3.5rem, 12vw, 9rem) !important;
           }
           .hero-content-col {
-            max-width: min(720px, 70vw) !important;
+            max-width: min(520px, 52vw) !important;
           }
           .hero-sub {
-            max-width: min(520px, 100%) !important;
+            max-width: min(460px, 100%) !important;
           }
         }
         @media (max-width: 1100px) {
           .hero-heading {
-            font-size: clamp(1.75rem, 3.4vw, 2.9rem) !important;
+            font-size: clamp(1.85rem, 3.6vw, 3rem) !important;
           }
         }
         @media (max-width: 980px) {
           .hero-heading {
             line-height: 1.12 !important;
-            font-size: clamp(1.65rem, 4.8vw, 2.7rem) !important;
+            font-size: clamp(1.7rem, 5vw, 2.6rem) !important;
           }
           .hero-heading-main {
-            width: 100%;
-            justify-content: center !important;
-            flex-wrap: wrap !important;
-            white-space: normal !important;
+            align-items: center !important;
           }
           .hero-badge-pill {
             font-size: 0.92rem !important;
             padding: 0.58rem 1.4rem !important;
           }
           .hero-sub {
-            max-width: min(480px, 92%) !important;
+            max-width: min(460px, 90%) !important;
             margin-inline: auto !important;
-            padding-inline: 0.75rem !important;
           }
         }
         @media (max-width: 900px) {
@@ -1238,12 +1249,12 @@ export function HeroSection({ variant = "default" }: Props) {
           .hero-content-col {
             max-width: 760px !important;
             text-align: center !important;
-            padding-inline: 1rem !important;
+            padding-inline: 1.25rem !important;
           }
           .hero-sub {
             text-align: center !important;
             margin-inline: auto !important;
-            max-width: min(520px, 94%) !important;
+            max-width: min(480px, 92%) !important;
           }
           .hero-heading {
             justify-content: center !important;
@@ -1251,7 +1262,7 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-heading-main, .hero-heading-accent {
             text-align: center !important;
-            justify-content: center !important;
+            align-items: center !important;
           }
           .hero-badge {
             justify-content: center !important;
