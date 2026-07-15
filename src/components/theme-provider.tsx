@@ -12,6 +12,7 @@ import {
 import {
   applySiteTheme,
   DEFAULT_SITE_THEME,
+  getHeroBannerSrc,
   getLogoSrc,
   type SiteSettingsRecord,
   type SiteTheme,
@@ -23,6 +24,7 @@ type ThemeContextValue = {
   refresh: () => Promise<void>;
   updateLocal: (patch: Partial<SiteTheme>) => void;
   logoSrc: string;
+  heroBannerSrc: string | null;
 };
 
 const ThemeContext = createContext<ThemeContextValue>({
@@ -31,6 +33,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   refresh: async () => {},
   updateLocal: () => {},
   logoSrc: DEFAULT_SITE_THEME.logoPath,
+  heroBannerSrc: null,
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -65,6 +68,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         tagline: data.tagline,
         logoPath: data.logoPath,
         logoData: data.logoData,
+        heroBannerPath: data.heroBannerPath ?? null,
+        heroBannerData: data.heroBannerData ?? null,
         borderRadius: data.borderRadius,
       });
     } catch {
@@ -98,6 +103,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       refresh,
       updateLocal,
       logoSrc: getLogoSrc(theme),
+      heroBannerSrc: getHeroBannerSrc(theme),
     }),
     [theme, loading, refresh, updateLocal]
   );

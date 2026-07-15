@@ -45,6 +45,8 @@ export async function PUT(request: Request) {
     "tagline",
     "logoPath",
     "logoData",
+    "heroBannerPath",
+    "heroBannerData",
     "borderRadius",
   ];
 
@@ -56,6 +58,8 @@ export async function PUT(request: Request) {
   }
 
   if (body.logoData === "") data.logoData = null;
+  if (body.heroBannerData === "") data.heroBannerData = null;
+  if (body.heroBannerPath === "") data.heroBannerPath = null;
 
   const updated = await prisma.siteSettings.upsert({
     where: { id: "default" },
@@ -79,7 +83,13 @@ export async function DELETE() {
   const updated = await prisma.siteSettings.upsert({
     where: { id: "default" },
     create: { id: "default", ...DEFAULT_SITE_THEME, updatedBy: session!.email },
-    update: { ...DEFAULT_SITE_THEME, logoData: null, updatedBy: session!.email },
+    update: {
+      ...DEFAULT_SITE_THEME,
+      logoData: null,
+      heroBannerData: null,
+      heroBannerPath: null,
+      updatedBy: session!.email,
+    },
   });
 
   return NextResponse.json({

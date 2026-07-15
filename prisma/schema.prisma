@@ -778,6 +778,8 @@ model SiteSettings {
   tagline        String   @default("النظام القانوني السيادي 360")
   logoPath       String   @default("/naiosh-logo.png")
   logoData       String?  @db.Text
+  heroBannerPath String?
+  heroBannerData String?  @db.Text
   borderRadius   String   @default("12")
   updatedBy      String?
   createdAt      DateTime @default(now())

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { useSiteTheme } from "@/components/theme-provider";
 
 const stats = [
   { value: 17, suffix: "", label: "وحدة تشغيلية" },
@@ -534,6 +535,8 @@ export function HeroSection({ variant = "default" }: Props) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
+  const { heroBannerSrc } = useSiteTheme();
+  const hasBanner = Boolean(heroBannerSrc);
 
   const next = useCallback(() => setIndex((i) => (i + 1) % VISUAL_SLIDES.length), []);
   const prev = useCallback(
@@ -542,10 +545,10 @@ export function HeroSection({ variant = "default" }: Props) {
   );
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || hasBanner) return;
     const t = setInterval(next, ROTATE_MS);
     return () => clearInterval(t);
-  }, [paused, next]);
+  }, [paused, next, hasBanner]);
 
   return (
     <section
@@ -559,107 +562,145 @@ export function HeroSection({ variant = "default" }: Props) {
         paddingTop: isLanding ? "2rem" : "5rem",
       }}
       aria-label="قسم الهيرو الرئيسي"
+      data-hero-banner={hasBanner ? "true" : "false"}
     >
-      <motion.div
-        className="glow-pulse"
-        style={{
-          position: "absolute",
-          width: 800,
-          height: 800,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
-          top: -250,
-          left: -150,
-          pointerEvents: "none",
-        }}
-        animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.55, 0.95, 0.55] }}
-        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        style={{
-          position: "absolute",
-          width: 500,
-          height: 500,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
-          bottom: -100,
-          right: -80,
-          pointerEvents: "none",
-        }}
-        animate={reduce ? undefined : { scale: [1, 1.18, 1], x: [0, -20, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="hero-grid-bg"
-        style={{
-          position: "absolute",
-          inset: "-65px",
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)",
-          backgroundSize: "65px 65px",
-          pointerEvents: "none",
-        }}
-        animate={reduce ? undefined : { y: [0, 32, 0], opacity: [0.45, 0.75, 0.45] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* floating particles */}
-      {!reduce &&
-        [0, 1, 2, 3, 4, 5].map((i) => (
-          <motion.span
-            key={i}
+      {/* Uploaded / configured hero banner */}
+      {hasBanner && heroBannerSrc && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={heroBannerSrc}
+            alt=""
+            aria-hidden
+            className="hero-banner-image"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              zIndex: 0,
+              pointerEvents: "none",
+            }}
+          />
+          <div
             aria-hidden
             style={{
               position: "absolute",
-              width: 4 + (i % 3) * 2,
-              height: 4 + (i % 3) * 2,
-              borderRadius: "50%",
-              background: i % 2 === 0 ? "rgba(195,21,42,0.55)" : "rgba(255,255,255,0.25)",
-              top: `${18 + i * 12}%`,
-              left: `${8 + i * 14}%`,
-              pointerEvents: "none",
+              inset: 0,
               zIndex: 1,
+              background:
+                "linear-gradient(105deg, rgba(10,10,18,0.72) 0%, rgba(10,10,18,0.55) 45%, rgba(10,10,18,0.78) 100%)",
+              pointerEvents: "none",
             }}
-            animate={{
-              y: [0, -28 - i * 4, 0],
-              opacity: [0.2, 0.9, 0.2],
-              scale: [1, 1.4, 1],
-            }}
-            transition={{ duration: 4 + i * 0.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.35 }}
           />
-        ))}
+        </>
+      )}
 
-      <div
-        className="spin-slow"
-        style={{
-          position: "absolute",
-          width: 420,
-          height: 420,
-          borderRadius: "50%",
-          border: "1px solid rgba(195,21,42,0.12)",
-          top: "50%",
-          left: "60%",
-          transform: "translate(-50%, -50%)",
-          pointerEvents: "none",
-        }}
-      />
-      <motion.div
-        style={{
-          position: "absolute",
-          width: 280,
-          height: 280,
-          borderRadius: "50%",
-          border: "1px solid rgba(195,21,42,0.08)",
-          top: "50%",
-          left: "60%",
-          marginTop: -140,
-          marginLeft: -140,
-          pointerEvents: "none",
-        }}
-        animate={reduce ? undefined : { rotate: -360 }}
-        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-      />
+      {!hasBanner && (
+        <>
+          <motion.div
+            className="glow-pulse"
+            style={{
+              position: "absolute",
+              width: 800,
+              height: 800,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
+              top: -250,
+              left: -150,
+              pointerEvents: "none",
+            }}
+            animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.55, 0.95, 0.55] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            style={{
+              position: "absolute",
+              width: 500,
+              height: 500,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
+              bottom: -100,
+              right: -80,
+              pointerEvents: "none",
+            }}
+            animate={reduce ? undefined : { scale: [1, 1.18, 1], x: [0, -20, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+
+          <motion.div
+            className="hero-grid-bg"
+            style={{
+              position: "absolute",
+              inset: "-65px",
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)",
+              backgroundSize: "65px 65px",
+              pointerEvents: "none",
+            }}
+            animate={reduce ? undefined : { y: [0, 32, 0], opacity: [0.45, 0.75, 0.45] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          />
+
+          {!reduce &&
+            [0, 1, 2, 3, 4, 5].map((i) => (
+              <motion.span
+                key={i}
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  width: 4 + (i % 3) * 2,
+                  height: 4 + (i % 3) * 2,
+                  borderRadius: "50%",
+                  background: i % 2 === 0 ? "rgba(195,21,42,0.55)" : "rgba(255,255,255,0.25)",
+                  top: `${18 + i * 12}%`,
+                  left: `${8 + i * 14}%`,
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+                animate={{
+                  y: [0, -28 - i * 4, 0],
+                  opacity: [0.2, 0.9, 0.2],
+                  scale: [1, 1.4, 1],
+                }}
+                transition={{ duration: 4 + i * 0.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.35 }}
+              />
+            ))}
+
+          <div
+            className="spin-slow"
+            style={{
+              position: "absolute",
+              width: 420,
+              height: 420,
+              borderRadius: "50%",
+              border: "1px solid rgba(195,21,42,0.12)",
+              top: "50%",
+              left: "60%",
+              transform: "translate(-50%, -50%)",
+              pointerEvents: "none",
+            }}
+          />
+          <motion.div
+            style={{
+              position: "absolute",
+              width: 280,
+              height: 280,
+              borderRadius: "50%",
+              border: "1px solid rgba(195,21,42,0.08)",
+              top: "50%",
+              left: "60%",
+              marginTop: -140,
+              marginLeft: -140,
+              pointerEvents: "none",
+            }}
+            animate={reduce ? undefined : { rotate: -360 }}
+            transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+          />
+        </>
+      )}
 
       <div
         className="container-max"
@@ -674,16 +715,16 @@ export function HeroSection({ variant = "default" }: Props) {
           className="hero-grid"
         >
           <motion.div
-            className="hero-content-col"
+            className={`hero-content-col${hasBanner ? " hero-content-banner" : ""}`}
             variants={container}
             initial="hidden"
             animate="show"
             style={{
               width: "100%",
-              maxWidth: "min(820px, 72vw)",
-              marginLeft: "auto",
-              marginRight: 0,
-              textAlign: "right",
+              maxWidth: hasBanner ? "min(760px, 92vw)" : "min(820px, 72vw)",
+              marginLeft: hasBanner ? "auto" : "auto",
+              marginRight: hasBanner ? "auto" : 0,
+              textAlign: hasBanner ? "center" : "right",
             }}
           >
             <motion.div
@@ -694,9 +735,10 @@ export function HeroSection({ variant = "default" }: Props) {
                 width: "fit-content",
                 maxWidth: "100%",
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent: hasBanner ? "center" : "flex-end",
                 marginLeft: "auto",
-                transform: "translateY(-12px)",
+                marginRight: hasBanner ? "auto" : undefined,
+                transform: hasBanner ? "none" : "translateY(-12px)",
               }}
             >
               <span
@@ -740,7 +782,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 letterSpacing: "-0.02em",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "flex-end",
+                alignItems: hasBanner ? "center" : "flex-end",
                 gap: "0.25rem",
               }}
               variants={container}
@@ -750,9 +792,9 @@ export function HeroSection({ variant = "default" }: Props) {
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  justifyContent: "flex-end",
+                  justifyContent: hasBanner ? "center" : "flex-end",
                   gap: "0.35em",
-                  textAlign: "right",
+                  textAlign: hasBanner ? "center" : "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   maxWidth: "100%",
                 }}
@@ -803,6 +845,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 lineHeight: 1.9,
                 maxWidth: "620px",
                 marginLeft: "auto",
+                marginRight: hasBanner ? "auto" : undefined,
                 marginBottom: "2.75rem",
               }}
             >
@@ -818,7 +861,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 gap: "1rem",
                 flexWrap: "wrap",
                 marginBottom: "3.75rem",
-                justifyContent: "flex-end",
+                justifyContent: hasBanner ? "center" : "flex-end",
               }}
             >
               <motion.div
@@ -847,7 +890,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 flexWrap: "wrap",
                 paddingTop: "2rem",
                 borderTop: "1px solid rgba(255,255,255,0.07)",
-                justifyContent: "flex-end",
+                justifyContent: hasBanner ? "center" : "flex-end",
               }}
             >
               {stats.map((s, i) => (
@@ -863,6 +906,7 @@ export function HeroSection({ variant = "default" }: Props) {
             </motion.div>
           </motion.div>
 
+          {!hasBanner && (
           <motion.div
             className="float-anim hero-card-col"
             initial={reduce ? false : { opacity: 0, x: -70, scale: 0.9 }}
@@ -973,6 +1017,7 @@ export function HeroSection({ variant = "default" }: Props) {
               </div>
             </div>
           </motion.div>
+          )}
         </div>
       </div>
 
@@ -989,7 +1034,7 @@ export function HeroSection({ variant = "default" }: Props) {
           flexDirection: "column",
           alignItems: "center",
           gap: "0.4rem",
-          color: "#334155",
+          color: hasBanner ? "rgba(255,255,255,0.65)" : "#334155",
           fontSize: "0.7rem",
           fontWeight: 500,
           zIndex: 10,
@@ -1024,12 +1069,15 @@ export function HeroSection({ variant = "default" }: Props) {
         .hero-badge-pill {
           animation: hero-badge-drift 3.4s ease-in-out infinite;
         }
+        .hero-content-banner .hero-stats > div {
+          text-align: center !important;
+        }
         @media (max-width: 1200px) {
           .hero-card-col {
             width: 320px !important;
             opacity: 0.8;
           }
-          .hero-content-col {
+          .hero-content-col:not(.hero-content-banner) {
             max-width: min(720px, 70vw) !important;
           }
         }
