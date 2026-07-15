@@ -7,9 +7,10 @@ import { useSiteTheme } from "@/components/theme-provider";
 
 type Props = {
   collapsed?: boolean;
+  onNavigate?: () => void;
 };
 
-export function EmpireSidebarNav({ collapsed = false }: Props) {
+export function EmpireSidebarNav({ collapsed = false, onNavigate }: Props) {
   const pathname = usePathname();
   const { theme } = useSiteTheme();
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
@@ -31,6 +32,7 @@ export function EmpireSidebarNav({ collapsed = false }: Props) {
             key={axis.slug}
             href={axis.href}
             title={axis.title}
+            onClick={onNavigate}
             className="flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 hover:bg-white/15"
             style={
               active
