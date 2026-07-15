@@ -762,14 +762,10 @@ export function HeroSection({ variant = "default" }: Props) {
             animate="show"
             style={{
               width: "100%",
-              // الكتابة تبقى في مكانها الأصلي أقصى اليمين — لا نغيّر إلا مكان لوحة البنر
-              maxWidth: hasBanner ? "min(640px, 52vw)" : "min(820px, 72vw)",
+              // العنوان والكتابة على اليمين كما كانت — المسافة الإضافية للجملة الوصفية فقط
+              maxWidth: hasBanner ? "min(720px, 58vw)" : "min(820px, 72vw)",
               marginLeft: "auto",
               marginRight: 0,
-              // مسافة عن حرف الشاشة يمينًا حتى لا تلصق/تُقطع الجملة
-              paddingInlineEnd: "clamp(1rem, 2.8vw, 2.25rem)",
-              paddingInlineStart: hasBanner ? "clamp(0.75rem, 1.5vw, 1.25rem)" : 0,
-              boxSizing: "border-box",
               textAlign: "right",
             }}
           >
@@ -829,6 +825,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 flexDirection: "column",
                 alignItems: "flex-end",
                 gap: "0.25rem",
+                width: "100%",
               }}
               variants={container}
             >
@@ -836,17 +833,18 @@ export function HeroSection({ variant = "default" }: Props) {
                 className="hero-heading-main"
                 style={{
                   display: "flex",
-                  flexWrap: "wrap",
+                  flexWrap: "nowrap",
                   justifyContent: "flex-end",
                   gap: "0.35em",
                   textAlign: "right",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   maxWidth: "100%",
+                  whiteSpace: "nowrap",
                 }}
                 variants={container}
               >
                 {headlineWords.map((word) => (
-                  <motion.span key={word} variants={wordAnim} style={{ display: "inline-block" }}>
+                  <motion.span key={word} variants={wordAnim} style={{ display: "inline-block", whiteSpace: "nowrap" }}>
                     {word}
                   </motion.span>
                 ))}
@@ -857,7 +855,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 style={{
                   color: "#c3152a",
                   display: "block",
-                  whiteSpace: "normal",
+                  whiteSpace: "nowrap",
                   fontSize: "0.96em",
                 }}
               >
@@ -890,9 +888,8 @@ export function HeroSection({ variant = "default" }: Props) {
                 lineHeight: 1.95,
                 maxWidth: "min(560px, 100%)",
                 marginLeft: "auto",
-                marginInlineEnd: 0,
                 marginBottom: "2.75rem",
-                paddingInline: "0.15rem",
+                paddingInlineEnd: "clamp(0.75rem, 2vw, 1.5rem)",
                 textWrap: "pretty",
                 overflowWrap: "break-word",
               }}
@@ -1200,10 +1197,14 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-content-col {
             max-width: min(720px, 70vw) !important;
-            padding-inline-end: clamp(1.1rem, 3vw, 2rem) !important;
           }
           .hero-sub {
             max-width: min(520px, 100%) !important;
+          }
+        }
+        @media (max-width: 1100px) {
+          .hero-heading {
+            font-size: clamp(1.75rem, 3.4vw, 2.9rem) !important;
           }
         }
         @media (max-width: 980px) {
@@ -1214,6 +1215,8 @@ export function HeroSection({ variant = "default" }: Props) {
           .hero-heading-main {
             width: 100%;
             justify-content: center !important;
+            flex-wrap: wrap !important;
+            white-space: normal !important;
           }
           .hero-badge-pill {
             font-size: 0.92rem !important;
