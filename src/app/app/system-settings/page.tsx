@@ -202,7 +202,7 @@ export default function SystemSettingsPage() {
       setForm({
         ...form,
         heroBannerPath: data.heroBannerPath ?? null,
-        heroBannerData: null,
+        heroBannerData: data.heroBannerData ?? null,
         heroMediaKind: data.heroMediaKind ?? null,
       });
       await refresh();
