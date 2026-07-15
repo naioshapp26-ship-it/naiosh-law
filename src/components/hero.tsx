@@ -766,6 +766,10 @@ export function HeroSection({ variant = "default" }: Props) {
               maxWidth: hasBanner ? "min(640px, 52vw)" : "min(820px, 72vw)",
               marginLeft: "auto",
               marginRight: 0,
+              // مسافة عن حرف الشاشة يمينًا حتى لا تلصق/تُقطع الجملة
+              paddingInlineEnd: "clamp(1rem, 2.8vw, 2.25rem)",
+              paddingInlineStart: hasBanner ? "clamp(0.75rem, 1.5vw, 1.25rem)" : 0,
+              boxSizing: "border-box",
               textAlign: "right",
             }}
           >
@@ -883,10 +887,14 @@ export function HeroSection({ variant = "default" }: Props) {
               style={{
                 color: "#94a3b8",
                 fontSize: "1.08rem",
-                lineHeight: 1.9,
-                maxWidth: "620px",
+                lineHeight: 1.95,
+                maxWidth: "min(560px, 100%)",
                 marginLeft: "auto",
+                marginInlineEnd: 0,
                 marginBottom: "2.75rem",
+                paddingInline: "0.15rem",
+                textWrap: "pretty",
+                overflowWrap: "break-word",
               }}
             >
               منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من إدارة القضايا والجلسات
@@ -1192,6 +1200,10 @@ export function HeroSection({ variant = "default" }: Props) {
           }
           .hero-content-col {
             max-width: min(720px, 70vw) !important;
+            padding-inline-end: clamp(1.1rem, 3vw, 2rem) !important;
+          }
+          .hero-sub {
+            max-width: min(520px, 100%) !important;
           }
         }
         @media (max-width: 980px) {
@@ -1207,6 +1219,11 @@ export function HeroSection({ variant = "default" }: Props) {
             font-size: 0.92rem !important;
             padding: 0.58rem 1.4rem !important;
           }
+          .hero-sub {
+            max-width: min(480px, 92%) !important;
+            margin-inline: auto !important;
+            padding-inline: 0.75rem !important;
+          }
         }
         @media (max-width: 900px) {
           .hero-grid {
@@ -1218,6 +1235,12 @@ export function HeroSection({ variant = "default" }: Props) {
           .hero-content-col {
             max-width: 760px !important;
             text-align: center !important;
+            padding-inline: 1rem !important;
+          }
+          .hero-sub {
+            text-align: center !important;
+            margin-inline: auto !important;
+            max-width: min(520px, 94%) !important;
           }
           .hero-heading {
             justify-content: center !important;
