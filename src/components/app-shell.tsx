@@ -85,10 +85,54 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navLinkStyle = (active: boolean): React.CSSProperties =>
     active ? activeStyle : { ...inactiveStyle, background: "transparent" };
 
+  const SystemSettingsLink = ({
+    onNavigate,
+    collapsed = false,
+  }: {
+    onNavigate?: () => void;
+    collapsed?: boolean;
+  }) => {
+    if (!isAdmin) return null;
+    const active = isActive(ADMIN_NAV.href);
+    if (collapsed) {
+      return (
+        <Link
+          href={ADMIN_NAV.href}
+          title={ADMIN_NAV.label}
+          onClick={onNavigate}
+          className="p-2.5 rounded-xl text-lg transition-all mx-auto block w-fit"
+          style={active ? { background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" } : { background: "rgba(255,255,255,0.12)" }}
+        >
+          {ADMIN_NAV.icon}
+        </Link>
+      );
+    }
+    return (
+      <Link
+        href={ADMIN_NAV.href}
+        title={ADMIN_NAV.label}
+        onClick={onNavigate}
+        className="flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 hover:bg-white/15"
+        style={{
+          ...navLinkStyle(active),
+          ...(active
+            ? {}
+            : {
+                border: "1px solid rgba(255,255,255,0.28)",
+                background: "rgba(255,255,255,0.12)",
+              }),
+        }}
+      >
+        <span className="text-base shrink-0 w-5 text-center">{ADMIN_NAV.icon}</span>
+        <span className="truncate leading-snug font-bold">{ADMIN_NAV.label}</span>
+      </Link>
+    );
+  };
+
   const SidebarNavBody = ({ onNavigate, showEmpire }: { onNavigate?: () => void; showEmpire: boolean }) => (
     <>
-      <div className="flex flex-col flex-1 justify-evenly min-h-0 px-1 py-2">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0">
+      <div className="flex flex-col gap-0.5 px-1 py-2">
+        <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0 mb-1">
           القائمة الرئيسية
         </p>
         {PRIMARY_NAV.map((item) => {
@@ -107,33 +151,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
-
-        {isAdmin && (
-          <>
-            <div className="h-px bg-white/15 mx-4 my-1 shrink-0" />
-            <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0">
-              تحكم المدير
-            </p>
-            <Link
-              href={ADMIN_NAV.href}
-              title={ADMIN_NAV.label}
-              onClick={onNavigate}
-              className="flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 hover:bg-white/15"
-              style={{
-                ...navLinkStyle(isActive(ADMIN_NAV.href)),
-                ...(isActive(ADMIN_NAV.href)
-                  ? {}
-                  : {
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      background: "rgba(255,255,255,0.08)",
-                    }),
-              }}
-            >
-              <span className="text-base shrink-0 w-5 text-center">{ADMIN_NAV.icon}</span>
-              <span className="truncate leading-snug font-bold">{ADMIN_NAV.label}</span>
-            </Link>
-          </>
-        )}
       </div>
 
       {showEmpire && (
@@ -224,9 +241,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   fontSize: "0.9rem",
                   textDecoration: "none",
                 }}
-                aria-label="الإعدادات"
+                aria-label="إعدادات النظام"
+                title="إعدادات النظام"
               >
-                ⚙️
+                🎨
               </Link>
             )}
             <div
@@ -315,7 +333,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <nav className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <nav className="flex-1 flex flex-col min-h-0 overflow-y-auto">
           {sidebarOpen ? (
             <SidebarNavBody showEmpire />
           ) : (
@@ -334,19 +352,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
-              {isAdmin && (
-                <Link
-                  href={ADMIN_NAV.href}
-                  title={ADMIN_NAV.label}
-                  className="p-2.5 rounded-xl text-lg transition-all"
-                  style={isActive(ADMIN_NAV.href) ? { background: "#fff" } : {}}
-                >
-                  {ADMIN_NAV.icon}
-                </Link>
-              )}
             </div>
           )}
         </nav>
+
+        {/* مثبت دائماً أسفل القائمة حتى يظهر لمدير النظام بوضوح */}
+        {isAdmin && (
+          <div className="shrink-0 px-1 py-2 border-t border-white/10">
+            {sidebarOpen && (
+              <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                تحكم المدير
+              </p>
+            )}
+            <SystemSettingsLink collapsed={!sidebarOpen} />
+          </div>
+        )}
 
         <div className="shrink-0 p-3 border-t border-white/10">
           <button
@@ -416,6 +436,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <nav className="flex-1 flex flex-col min-h-0 overflow-auto">
               <SidebarNavBody onNavigate={() => setDrawerOpen(false)} showEmpire />
             </nav>
+            {isAdmin && (
+              <div className="shrink-0 px-1 py-2 border-t border-white/10">
+                <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                  تحكم المدير
+                </p>
+                <SystemSettingsLink onNavigate={() => setDrawerOpen(false)} />
+              </div>
+            )}
             <div className="shrink-0 p-3 border-t border-white/10">
               <button
                 onClick={handleLogout}

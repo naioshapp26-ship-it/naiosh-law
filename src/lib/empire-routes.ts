@@ -161,7 +161,7 @@ export const PRIMARY_NAV = [
   { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
   { href: "/app/archive", label: "الأرشيف", icon: "📦" },
   { href: "/app/modules/reports-center", label: "التقارير", icon: "📊" },
-  { href: "/app/modules/administration", label: "الإعدادات", icon: "⚙️" },
+  { href: "/app/modules/administration", label: "الإدارة والصلاحيات", icon: "⚙️" },
 ] as const;
 
 export const AXIS_QUICK_NAV = imperialAxes
