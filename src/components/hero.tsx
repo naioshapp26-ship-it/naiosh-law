@@ -748,12 +748,26 @@ export function HeroSection({ variant = "default" }: Props) {
         style={{ position: "relative", zIndex: 10, width: "100%", paddingBlock: isLanding ? "3rem" : "5rem" }}
       >
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-          className="hero-grid"
+          style={
+            hasBanner
+              ? {
+                  display: "flex",
+                  flexDirection: "row-reverse",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  // نصف المسافة السابقة تقريبًا بين لوحة الوسائط والنص
+                  gap: "clamp(2rem, 4.5vw, 4rem)",
+                  maxWidth: 1080,
+                  marginInline: "auto",
+                  width: "100%",
+                }
+              : {
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                }
+          }
+          className={`hero-grid${hasBanner ? " hero-grid-banner" : ""}`}
         >
           <motion.div
             className="hero-content-col"
@@ -762,8 +776,9 @@ export function HeroSection({ variant = "default" }: Props) {
             animate="show"
             style={{
               width: "100%",
-              maxWidth: hasBanner ? "min(640px, 52vw)" : "min(820px, 72vw)",
-              marginLeft: "auto",
+              maxWidth: hasBanner ? "min(520px, 48%)" : "min(820px, 72vw)",
+              flex: hasBanner ? "1 1 420px" : undefined,
+              marginLeft: hasBanner ? 0 : "auto",
               marginRight: 0,
               textAlign: "right",
             }}
@@ -950,11 +965,12 @@ export function HeroSection({ variant = "default" }: Props) {
             <div
               className="hero-card-col hero-media-panel"
               style={{
-                position: "absolute",
-                left: 0,
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "min(480px, 40vw)",
+                position: "relative",
+                left: "auto",
+                top: "auto",
+                transform: "none",
+                width: "min(420px, 38%)",
+                flex: "0 1 420px",
                 zIndex: 5,
               }}
             >
@@ -1184,10 +1200,17 @@ export function HeroSection({ variant = "default" }: Props) {
             width: 320px !important;
             opacity: 0.8;
           }
-          .hero-media-panel {
-            width: min(380px, 38vw) !important;
+          .hero-grid-banner {
+            gap: clamp(1.75rem, 3.5vw, 3rem) !important;
+            max-width: 960px !important;
           }
-          .hero-content-col {
+          .hero-grid-banner .hero-media-panel {
+            width: min(360px, 40%) !important;
+          }
+          .hero-grid-banner .hero-content-col {
+            max-width: min(480px, 52%) !important;
+          }
+          .hero-grid:not(.hero-grid-banner) .hero-content-col {
             max-width: min(720px, 58vw) !important;
           }
         }
@@ -1206,15 +1229,18 @@ export function HeroSection({ variant = "default" }: Props) {
           }
         }
         @media (max-width: 900px) {
-          .hero-grid {
+          .hero-grid,
+          .hero-grid-banner {
             display: flex !important;
             flex-direction: column-reverse !important;
             align-items: center !important;
             gap: 2rem !important;
+            max-width: none !important;
           }
           .hero-content-col {
             max-width: 760px !important;
             text-align: center !important;
+            flex: none !important;
           }
           .hero-heading {
             justify-content: center !important;
@@ -1242,6 +1268,7 @@ export function HeroSection({ variant = "default" }: Props) {
             top: auto !important;
             transform: none !important;
             width: min(520px, 92vw) !important;
+            flex: none !important;
             margin: 0 auto !important;
           }
         }
