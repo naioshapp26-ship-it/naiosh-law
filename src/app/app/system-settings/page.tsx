@@ -434,8 +434,9 @@ export default function SystemSettingsPage() {
               <div className="card-white" style={{ padding: "1.35rem" }}>
                 <h2 style={{ fontWeight: 800, marginBottom: "0.4rem", fontSize: "1rem" }}>🖼️ بنر / فيديو واجهة الهيرو</h2>
                 <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "1rem", lineHeight: 1.7 }}>
-                  ارفع صورة بنر أو فيديو تظهر في لوحة بارزة على يسار قسم الهيرو (الصفحة الرئيسية). الحد الأقصى{" "}
-                  {formatFileSize(HERO_MEDIA_MAX_BYTES)} للصورة والفيديو — الرفع يُحفظ فورًا ولا يُمسح عند حفظ باقي الإعدادات.
+                  ارفع صورة بنر أو فيديو تظهر في لوحة بارزة على يسار قسم الهيرو (الصفحة الرئيسية). الحد الأقصى للفيديو
+                  والصورة <strong>100 ميجابايت</strong> ({formatFileSize(HERO_MEDIA_MAX_BYTES)}) — الرفع يُحفظ فورًا ولا
+                  يُمسح عند حفظ باقي الإعدادات.
                 </p>
                 <div style={{ marginBottom: "1rem" }}>
                   <label className="input-label">مسار البنر/الفيديو (اختياري — رابط أو مسار محلي)</label>
@@ -477,7 +478,7 @@ export default function SystemSettingsPage() {
                     )}
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
-                    الرفع يُطبَّق فوراً على الصفحة الرئيسية (حتى {formatFileSize(HERO_MEDIA_MAX_BYTES)})
+                    يدعم فيديو الهيرو حتى 100 ميجابايت ويظهر فورًا على الصفحة الرئيسية
                   </p>
                 </div>
                 {bannerPreview ? (
