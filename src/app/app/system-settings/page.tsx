@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader, BtnPrimary, BtnSecondary, PageLoader, useToast } from "@/components/domain-page";
 import { useSession } from "@/lib/session";
 import { useSiteTheme } from "@/components/theme-provider";
-import { DEFAULT_SITE_THEME, getLogoSrc, type SiteTheme } from "@/lib/site-settings";
+import { DEFAULT_SITE_THEME, getHeroBannerSrc, getLogoSrc, type SiteTheme } from "@/lib/site-settings";
 import { BrandLogo } from "@/components/brand-logo";
 
 type ColorField = { key: keyof SiteTheme; label: string; hint?: string };
@@ -89,6 +89,7 @@ export default function SystemSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
   const { show, Toast } = useToast();
 
@@ -112,6 +113,8 @@ export default function SystemSettingsPage() {
           tagline: data.tagline,
           logoPath: data.logoPath,
           logoData: data.logoData,
+          heroBannerPath: data.heroBannerPath ?? null,
+          heroBannerData: data.heroBannerData ?? null,
           borderRadius: data.borderRadius,
         });
       }
@@ -163,6 +166,27 @@ export default function SystemSettingsPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleBannerFile = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      show("error", "الملف يجب أن يكون صورة");
+      return;
+    }
+    if (file.size > 2_500_000) {
+      show("error", "حجم بنر الهيرو كبير جداً — الحد الأقصى 2.5 ميجابايت");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result ?? "");
+      const next = { ...form, heroBannerData: dataUrl };
+      setForm(next);
+      updateLocal(next);
+      show("success", "تم تحميل بنر الهيرو — اضغط حفظ لتطبيقه على الصفحة الرئيسية");
+    };
+    reader.readAsDataURL(file);
+  };
+
   const save = async () => {
     setSaving(true);
     try {
@@ -193,6 +217,8 @@ export default function SystemSettingsPage() {
       setForm({
         ...DEFAULT_SITE_THEME,
         logoData: null,
+        heroBannerData: null,
+        heroBannerPath: null,
       });
       await refresh();
       show("success", data.message ?? "تمت الاستعادة");
@@ -218,6 +244,7 @@ export default function SystemSettingsPage() {
   }
 
   const logoPreview = getLogoSrc(form);
+  const bannerPreview = getHeroBannerSrc(form);
 
   return (
     <AppShell>
@@ -226,7 +253,7 @@ export default function SystemSettingsPage() {
         <PageHeader
           icon="🎨"
           title="إعدادات النظام"
-          subtitle="تحكم كامل في ألوان الموقع، الشعار، والعلامة التجارية — يظهر لجميع المستخدمين فور الحفظ"
+          subtitle="تحكم كامل في ألوان الموقع، الشعار، بنر الهيرو، والعلامة التجارية — يظهر لجميع المستخدمين فور الحفظ"
           actions={
             <>
               <BtnSecondary onClick={resetDefaults} disabled={resetting || saving}>
@@ -345,6 +372,96 @@ export default function SystemSettingsPage() {
                     style={{ maxWidth: 120 }}
                   />
                 </div>
+              </div>
+
+              {/* Hero banner */}
+              <div className="card-white" style={{ padding: "1.35rem" }}>
+                <h2 style={{ fontWeight: 800, marginBottom: "0.4rem", fontSize: "1rem" }}>🖼️ بنر واجهة الهيرو</h2>
+                <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "1rem", lineHeight: 1.7 }}>
+                  ارفع صورة بنر عادية تظهر كخلفية لقسم الهيرو في الصفحة الرئيسية. يُفضَّل أبعاد عريضة (مثلاً 1920×800).
+                </p>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label className="input-label">مسار البنر (اختياري — رابط أو مسار محلي)</label>
+                  <input
+                    className="input-field"
+                    value={form.heroBannerPath ?? ""}
+                    onChange={(e) => patch("heroBannerPath", e.target.value || null)}
+                    dir="ltr"
+                    placeholder="/hero-banner.jpg أو https://..."
+                  />
+                </div>
+                <div style={{ marginBottom: "0.75rem" }}>
+                  <label className="input-label">رفع صورة البنر (PNG / JPG / WebP)</label>
+                  <input
+                    ref={bannerFileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    style={{ display: "none" }}
+                    onChange={(e) => handleBannerFile(e.target.files?.[0] ?? null)}
+                  />
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <BtnPrimary onClick={() => bannerFileRef.current?.click()}>📤 رفع بنر الهيرو</BtnPrimary>
+                    {(form.heroBannerData || form.heroBannerPath) && (
+                      <BtnSecondary
+                        onClick={() => {
+                          const next = { ...form, heroBannerData: null, heroBannerPath: null };
+                          setForm(next);
+                          updateLocal(next);
+                        }}
+                      >
+                        🗑 إزالة البنر
+                      </BtnSecondary>
+                    )}
+                  </div>
+                  <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
+                    بعد الرفع اضغط «حفظ الإعدادات» — الصورة تظهر مباشرة في واجهة الهيرو
+                  </p>
+                </div>
+                {bannerPreview ? (
+                  <div
+                    style={{
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      border: "1px solid #e2e8f0",
+                      position: "relative",
+                      aspectRatio: "21 / 9",
+                      background: "#0a0a12",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={bannerPreview}
+                      alt="معاينة بنر الهيرو"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(90deg, rgba(10,10,18,0.15) 0%, rgba(10,10,18,0.55) 100%)",
+                        display: "flex",
+                        alignItems: "flex-end",
+                        padding: "0.85rem 1rem",
+                      }}
+                    >
+                      <span style={{ color: "#fff", fontWeight: 800, fontSize: "0.78rem" }}>معاينة البنر على الهيرو</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      borderRadius: 14,
+                      border: "1px dashed #cbd5e1",
+                      padding: "1.5rem",
+                      textAlign: "center",
+                      color: "#94a3b8",
+                      fontSize: "0.8rem",
+                      background: "#f8fafc",
+                    }}
+                  >
+                    لا يوجد بنر حالياً — الهيرو يظهر بالتصميم الافتراضي
+                  </div>
+                )}
               </div>
             </div>
 

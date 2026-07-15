@@ -14,6 +14,8 @@ export type SiteTheme = {
   tagline: string;
   logoPath: string;
   logoData: string | null;
+  heroBannerPath: string | null;
+  heroBannerData: string | null;
   borderRadius: string;
 };
 
@@ -31,6 +33,8 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   tagline: "النظام القانوني السيادي 360",
   logoPath: "/naiosh-logo.png?v=exact-20260712",
   logoData: null,
+  heroBannerPath: null,
+  heroBannerData: null,
   borderRadius: "12",
 };
 
@@ -66,6 +70,14 @@ export function getLogoSrc(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
   return theme.logoData?.trim() || theme.logoPath || DEFAULT_SITE_THEME.logoPath;
 }
 
+/** بنر الهيرو — إن وُجدت صورة مرفوعة أو مسار */
+export function getHeroBannerSrc(theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData">) {
+  const data = theme.heroBannerData?.trim();
+  if (data) return data;
+  const path = theme.heroBannerPath?.trim();
+  return path || null;
+}
+
 export type SiteSettingsRecord = SiteTheme & {
   id: string;
   updatedBy: string | null;
@@ -86,6 +98,8 @@ export function recordToTheme(row: {
   tagline: string;
   logoPath: string;
   logoData: string | null;
+  heroBannerPath?: string | null;
+  heroBannerData?: string | null;
   borderRadius: string;
 }): SiteTheme {
   return {
@@ -102,6 +116,8 @@ export function recordToTheme(row: {
     tagline: row.tagline,
     logoPath: row.logoPath,
     logoData: row.logoData,
+    heroBannerPath: row.heroBannerPath ?? null,
+    heroBannerData: row.heroBannerData ?? null,
     borderRadius: row.borderRadius,
   };
 }
