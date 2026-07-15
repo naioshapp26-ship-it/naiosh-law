@@ -16,7 +16,7 @@ async function getOrCreateSettings() {
   return row;
 }
 
-/** رفع بنر/فيديو الهيرو حتى 100MB إلى التخزين المحلي */
+/** رفع بنر/فيديو الهيرو حتى 100MB */
 export async function POST(request: Request) {
   const { error, session } = await requireAdmin();
   if (error) return error;
@@ -37,14 +37,16 @@ export async function POST(request: Request) {
       create: {
         id: "default",
         ...DEFAULT_SITE_THEME,
-        heroBannerPath: saved.url,
-        heroBannerData: null,
+        heroBannerPath: saved.inlineDataUrl ? null : saved.url,
+        heroBannerData: saved.inlineDataUrl,
         heroMediaKind: saved.kind,
         updatedBy: session!.email,
       },
       update: {
-        heroBannerPath: saved.url,
-        heroBannerData: null,
+        // الصور ≤5MB تُحفظ في القاعدة (تظهر فوراً وتبقى بعد النشر)
+        // الفيديو/الصور الكبيرة تُقدَّم عبر /api/uploads/hero/*
+        heroBannerPath: saved.inlineDataUrl ? null : saved.url,
+        heroBannerData: saved.inlineDataUrl,
         heroMediaKind: saved.kind,
         updatedBy: session!.email,
       },
@@ -56,15 +58,16 @@ export async function POST(request: Request) {
       updatedBy: updated.updatedBy,
       updatedAt: updated.updatedAt.toISOString(),
       uploaded: {
-        url: saved.url,
+        url: saved.inlineDataUrl || saved.url,
         kind: saved.kind,
         mimeType: saved.mimeType,
         size: saved.size,
         fileName: saved.fileName,
+        storedAs: saved.inlineDataUrl ? "database" : "file",
       },
       message:
         saved.kind === "video"
-          ? "تم رفع فيديو الهيرو بنجاح وظهرت على الصفحة الرئيسية"
+          ? "تم رفع فيديو الهيرو بنجاح وظهر على الصفحة الرئيسية"
           : "تم رفع بنر الهيرو بنجاح وظهر على الصفحة الرئيسية",
     });
   } catch (e) {

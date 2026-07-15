@@ -1,4 +1,4 @@
-import { access, mkdir, writeFile, unlink } from "fs/promises";
+import { access, mkdir, writeFile, unlink, readFile } from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 import {
@@ -7,6 +7,9 @@ import {
   type HeroMediaKind,
 } from "@/lib/hero-media";
 import { prisma } from "@/lib/prisma";
+
+/** صور البنر الأصغر من هذا الحجم تُحفظ في قاعدة البيانات لتعمل فوراً وتبقى بعد إعادة النشر */
+export const HERO_INLINE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/png": "png",
@@ -20,8 +23,41 @@ const EXT_BY_MIME: Record<string, string> = {
   "video/x-m4v": "m4v",
 };
 
-function uploadsRoot() {
-  return path.join(process.cwd(), "public", "uploads", "hero");
+const MIME_BY_EXT: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  m4v: "video/x-m4v",
+};
+
+export function uploadsRoot() {
+  return path.join(process.cwd(), ".data", "uploads", "hero");
+}
+
+export function heroMediaPublicUrl(fileName: string) {
+  return `/api/uploads/hero/${fileName}`;
+}
+
+export function heroMediaMimeFromFileName(fileName: string) {
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  return MIME_BY_EXT[ext] || "application/octet-stream";
+}
+
+export function resolveHeroUploadFileName(publicUrl: string | null | undefined) {
+  if (!publicUrl) return null;
+  if (publicUrl.startsWith("/api/uploads/hero/")) {
+    return publicUrl.replace("/api/uploads/hero/", "").split("?")[0] || null;
+  }
+  // مسار قديم من public/uploads/hero
+  if (publicUrl.startsWith("/uploads/hero/")) {
+    return publicUrl.replace("/uploads/hero/", "").split("?")[0] || null;
+  }
+  return null;
 }
 
 export async function saveHeroMediaFile(file: File): Promise<{
@@ -30,6 +66,7 @@ export async function saveHeroMediaFile(file: File): Promise<{
   mimeType: string;
   size: number;
   fileName: string;
+  inlineDataUrl: string | null;
 }> {
   if (file.size <= 0) throw new Error("الملف فارغ");
   if (file.size > HERO_MEDIA_MAX_BYTES) {
@@ -55,19 +92,37 @@ export async function saveHeroMediaFile(file: File): Promise<{
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(absPath, buffer);
 
+  const inlineDataUrl =
+    kind === "image" && file.size <= HERO_INLINE_IMAGE_MAX_BYTES
+      ? `data:${mimeType};base64,${buffer.toString("base64")}`
+      : null;
+
   return {
-    url: `/uploads/hero/${safeName}`,
+    url: heroMediaPublicUrl(safeName),
     kind,
     mimeType,
     size: file.size,
     fileName: safeName,
+    inlineDataUrl,
   };
 }
 
+export async function readHeroMediaFile(fileName: string) {
+  if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
+    return null;
+  }
+  try {
+    const absPath = path.join(uploadsRoot(), fileName);
+    const data = await readFile(absPath);
+    return { data, mimeType: heroMediaMimeFromFileName(fileName) };
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteHeroMediaFile(publicUrl: string | null | undefined) {
-  if (!publicUrl || !publicUrl.startsWith("/uploads/hero/")) return;
-  const fileName = publicUrl.replace("/uploads/hero/", "").split("?")[0];
-  if (!fileName || fileName.includes("..") || fileName.includes("/")) return;
+  const fileName = resolveHeroUploadFileName(publicUrl);
+  if (!fileName) return;
   try {
     await unlink(path.join(uploadsRoot(), fileName));
   } catch {
@@ -76,9 +131,11 @@ export async function deleteHeroMediaFile(publicUrl: string | null | undefined) 
 }
 
 async function localHeroUploadExists(publicUrl: string) {
-  if (!publicUrl.startsWith("/uploads/hero/")) return true; // external/absolute URL
-  const fileName = publicUrl.replace("/uploads/hero/", "").split("?")[0];
-  if (!fileName || fileName.includes("..") || fileName.includes("/")) return false;
+  const fileName = resolveHeroUploadFileName(publicUrl);
+  if (!fileName) {
+    // رابط خارجي أو مسار غير محلي
+    return !publicUrl.startsWith("/uploads/hero/") && !publicUrl.startsWith("/api/uploads/hero/");
+  }
   try {
     await access(path.join(uploadsRoot(), fileName));
     return true;
@@ -89,7 +146,7 @@ async function localHeroUploadExists(publicUrl: string) {
 
 /**
  * إذا كان مسار البنر المحلي مفقودًا بعد إعادة النشر، امسحه من الإعدادات
- * حتى لا يتحول الهيرو لوضع البنر بدون صورة.
+ * (مع الإبقاء على heroBannerData إن وُجد).
  */
 export async function sanitizeMissingHeroUpload<T extends {
   id: string;
@@ -98,8 +155,28 @@ export async function sanitizeMissingHeroUpload<T extends {
   heroMediaKind: string | null;
 }>(row: T): Promise<T> {
   const pathValue = row.heroBannerPath?.trim() || null;
-  if (!pathValue || row.heroBannerData?.trim()) return row;
-  if (!pathValue.startsWith("/uploads/hero/")) return row;
+  if (!pathValue) return row;
+  // لو عندنا data URL لا نمسحه بسبب مسار مكسور
+  if (row.heroBannerData?.trim()) {
+    if (
+      pathValue.startsWith("/uploads/hero/") ||
+      pathValue.startsWith("/api/uploads/hero/")
+    ) {
+      const exists = await localHeroUploadExists(pathValue);
+      if (!exists) {
+        await prisma.siteSettings.update({
+          where: { id: row.id },
+          data: { heroBannerPath: null },
+        });
+        return { ...row, heroBannerPath: null };
+      }
+    }
+    return row;
+  }
+
+  if (!pathValue.startsWith("/uploads/hero/") && !pathValue.startsWith("/api/uploads/hero/")) {
+    return row;
+  }
 
   const exists = await localHeroUploadExists(pathValue);
   if (exists) return row;
