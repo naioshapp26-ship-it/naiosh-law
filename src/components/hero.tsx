@@ -752,7 +752,8 @@ export function HeroSection({ variant = "default" }: Props) {
             hasBanner
               ? {
                   display: "flex",
-                  flexDirection: "row-reverse",
+                  // الصفحة RTL: row يضع النص (أول عنصر) يمينًا والصورة شمالًا
+                  flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
                   // نصف المسافة السابقة تقريبًا بين لوحة الوسائط والنص
