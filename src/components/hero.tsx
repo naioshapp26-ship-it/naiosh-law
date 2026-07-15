@@ -55,7 +55,7 @@ const slideAnim = {
   transition: { duration: 0.55, ease: EASE },
 };
 
-const headlineWords = ["إدارة", "القضايا", "والموكلين", "بذكاء"];
+const headlineWords = ["إدارة", "القضايا", "والموكلين", "بذكاء", "لا مثيل له"];
 
 function AnimatedStat({
   value,
@@ -824,20 +824,14 @@ export function HeroSection({ variant = "default" }: Props) {
             <motion.h1
               className="hero-heading"
               style={{
-                fontSize: "clamp(2rem, 4vw, 3.4rem)",
+                fontSize: "clamp(1.85rem, 3.6vw, 3.15rem)",
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 1.12,
+                lineHeight: 1.25,
                 marginBottom: "1.55rem",
                 letterSpacing: "-0.02em",
-                display: "flex",
-                flexDirection: "column",
-                // في RTL: flex-start على المحور العرضي = يمين الشاشة
-                alignItems: "flex-start",
-                gap: "0.12rem",
                 width: "100%",
                 maxWidth: "100%",
-                overflow: "visible",
               }}
               variants={container}
             >
@@ -845,10 +839,13 @@ export function HeroSection({ variant = "default" }: Props) {
                 className="hero-heading-main"
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "0.06em",
+                  flexWrap: "wrap",
+                  // RTL: flex-start يضع الكلمات من اليمين جنب بعض
+                  justifyContent: "flex-start",
+                  gap: "0.35em",
+                  rowGap: "0.2em",
                   textAlign: "right",
+                  color: "#ffffff",
                   textShadow: "0 0 34px rgba(255,255,255,0.08)",
                   maxWidth: "100%",
                   marginInlineStart: "auto",
@@ -859,39 +856,11 @@ export function HeroSection({ variant = "default" }: Props) {
                   <motion.span
                     key={word}
                     variants={wordAnim}
-                    style={{ display: "block", whiteSpace: "nowrap" }}
+                    style={{ display: "inline-block", whiteSpace: "nowrap", color: "#ffffff" }}
                   >
                     {word}
                   </motion.span>
                 ))}
-              </motion.span>
-              <motion.span
-                className="hero-heading-accent"
-                variants={itemAnim}
-                style={{
-                  color: "#c3152a",
-                  display: "block",
-                  whiteSpace: "nowrap",
-                  fontSize: "0.96em",
-                }}
-              >
-                <motion.span
-                  style={{ display: "inline-block", textShadow: "0 0 40px rgba(195,21,42,0.5)" }}
-                  animate={
-                    reduce
-                      ? undefined
-                      : {
-                          textShadow: [
-                            "0 0 24px rgba(195,21,42,0.35)",
-                            "0 0 48px rgba(195,21,42,0.75)",
-                            "0 0 24px rgba(195,21,42,0.35)",
-                          ],
-                        }
-                  }
-                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  لا مثيل له
-                </motion.span>
               </motion.span>
             </motion.h1>
 
@@ -1226,13 +1195,12 @@ export function HeroSection({ variant = "default" }: Props) {
         }
         @media (max-width: 980px) {
           .hero-heading {
-            line-height: 1.12 !important;
-            font-size: clamp(1.7rem, 5vw, 2.6rem) !important;
+            line-height: 1.25 !important;
+            font-size: clamp(1.65rem, 4.8vw, 2.55rem) !important;
           }
           .hero-heading-main {
-            align-items: center !important;
-            margin-inline-start: auto !important;
-            margin-inline-end: auto !important;
+            justify-content: center !important;
+            margin-inline: auto !important;
           }
           .hero-badge-pill {
             font-size: 0.92rem !important;
@@ -1260,13 +1228,9 @@ export function HeroSection({ variant = "default" }: Props) {
             margin-inline: auto !important;
             max-width: min(480px, 92%) !important;
           }
-          .hero-heading {
+          .hero-heading-main {
             justify-content: center !important;
-            align-items: center !important;
-          }
-          .hero-heading-main, .hero-heading-accent {
             text-align: center !important;
-            align-items: center !important;
           }
           .hero-badge {
             justify-content: center !important;
