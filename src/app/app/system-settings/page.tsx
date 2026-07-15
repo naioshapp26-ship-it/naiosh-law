@@ -7,6 +7,13 @@ import { useSession } from "@/lib/session";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DEFAULT_SITE_THEME, getHeroBannerSrc, getLogoSrc, type SiteTheme } from "@/lib/site-settings";
 import { BrandLogo } from "@/components/brand-logo";
+import {
+  HERO_MEDIA_MAX_BYTES,
+  LOGO_MAX_BYTES,
+  isHeroVideoSrc,
+  type HeroMediaKind,
+} from "@/lib/hero-media";
+import { formatFileSize } from "@/lib/file-upload";
 
 type ColorField = { key: keyof SiteTheme; label: string; hint?: string };
 
@@ -88,6 +95,7 @@ export default function SystemSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [uploadingHero, setUploadingHero] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
@@ -115,6 +123,7 @@ export default function SystemSettingsPage() {
           logoData: data.logoData,
           heroBannerPath: data.heroBannerPath ?? null,
           heroBannerData: data.heroBannerData ?? null,
+          heroMediaKind: data.heroMediaKind ?? null,
           borderRadius: data.borderRadius,
         });
       }
@@ -153,8 +162,8 @@ export default function SystemSettingsPage() {
 
   const handleLogoFile = (file: File | null) => {
     if (!file) return;
-    if (file.size > 800_000) {
-      show("error", "حجم الشعار كبير جداً — الحد الأقصى 800 كيلوبايت");
+    if (file.size > LOGO_MAX_BYTES) {
+      show("error", `حجم الشعار كبير جداً — الحد الأقصى ${Math.round(LOGO_MAX_BYTES / 1000)} كيلوبايت`);
       return;
     }
     const reader = new FileReader();
@@ -166,25 +175,68 @@ export default function SystemSettingsPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleBannerFile = (file: File | null) => {
+  const handleHeroMediaFile = async (file: File | null) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      show("error", "الملف يجب أن يكون صورة");
+    if (file.size > HERO_MEDIA_MAX_BYTES) {
+      show("error", `حجم الملف كبير جداً — الحد الأقصى ${formatFileSize(HERO_MEDIA_MAX_BYTES)}`);
       return;
     }
-    if (file.size > 2_500_000) {
-      show("error", "حجم بنر الهيرو كبير جداً — الحد الأقصى 2.5 ميجابايت");
+    const isImage = file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(file.name);
+    const isVideo = file.type.startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(file.name);
+    if (!isImage && !isVideo) {
+      show("error", "ارفع صورة بنر أو فيديو للهيرو (PNG/JPG/WebP أو MP4/WebM/MOV)");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result ?? "");
-      const next = { ...form, heroBannerData: dataUrl };
-      setForm(next);
-      updateLocal(next);
-      show("success", "تم تحميل بنر الهيرو — اضغط حفظ لتطبيقه على الصفحة الرئيسية");
-    };
-    reader.readAsDataURL(file);
+
+    setUploadingHero(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/site-settings/hero-media", {
+        method: "POST",
+        credentials: "include",
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل الرفع");
+      setForm({
+        ...form,
+        heroBannerPath: data.heroBannerPath ?? null,
+        heroBannerData: null,
+        heroMediaKind: data.heroMediaKind ?? null,
+      });
+      await refresh();
+      show("success", data.message ?? "تم رفع وسائط الهيرو");
+    } catch (e) {
+      show("error", e instanceof Error ? e.message : "فشل رفع ملف الهيرو");
+    } finally {
+      setUploadingHero(false);
+      if (bannerFileRef.current) bannerFileRef.current.value = "";
+    }
+  };
+
+  const removeHeroMedia = async () => {
+    setUploadingHero(true);
+    try {
+      const res = await fetch("/api/site-settings/hero-media", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل الحذف");
+      setForm({
+        ...form,
+        heroBannerPath: null,
+        heroBannerData: null,
+        heroMediaKind: null,
+      });
+      await refresh();
+      show("success", data.message ?? "تم إزالة بنر/فيديو الهيرو");
+    } catch (e) {
+      show("error", e instanceof Error ? e.message : "فشل إزالة الملف");
+    } finally {
+      setUploadingHero(false);
+    }
   };
 
   const save = async () => {
@@ -219,6 +271,7 @@ export default function SystemSettingsPage() {
         logoData: null,
         heroBannerData: null,
         heroBannerPath: null,
+        heroMediaKind: null,
       });
       await refresh();
       show("success", data.message ?? "تمت الاستعادة");
@@ -245,6 +298,7 @@ export default function SystemSettingsPage() {
 
   const logoPreview = getLogoSrc(form);
   const bannerPreview = getHeroBannerSrc(form);
+  const bannerIsVideo = isHeroVideoSrc(bannerPreview, form.heroMediaKind);
 
   return (
     <AppShell>
@@ -357,7 +411,7 @@ export default function SystemSettingsPage() {
                     )}
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
-                    الشعار المرفوع يُخزَّن في قاعدة البيانات ويُطبَّق على كل الصفحات
+                    الحد الأقصى {Math.round(LOGO_MAX_BYTES / 1000)} كيلوبايت — يمكن رفع الشعار الأصلي بدون تصغير زائد
                   </p>
                 </div>
                 <div>
@@ -374,47 +428,54 @@ export default function SystemSettingsPage() {
                 </div>
               </div>
 
-              {/* Hero banner */}
+              {/* Hero banner / video */}
               <div className="card-white" style={{ padding: "1.35rem" }}>
-                <h2 style={{ fontWeight: 800, marginBottom: "0.4rem", fontSize: "1rem" }}>🖼️ بنر واجهة الهيرو</h2>
+                <h2 style={{ fontWeight: 800, marginBottom: "0.4rem", fontSize: "1rem" }}>🖼️ بنر / فيديو واجهة الهيرو</h2>
                 <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "1rem", lineHeight: 1.7 }}>
-                  ارفع صورة بنر عادية تظهر كخلفية لقسم الهيرو في الصفحة الرئيسية. يُفضَّل أبعاد عريضة (مثلاً 1920×800).
+                  ارفع صورة بنر أو فيديو يظهر كخلفية لقسم الهيرو في الصفحة الرئيسية. الحد الأقصى{" "}
+                  {formatFileSize(HERO_MEDIA_MAX_BYTES)} للصورة والفيديو.
                 </p>
                 <div style={{ marginBottom: "1rem" }}>
-                  <label className="input-label">مسار البنر (اختياري — رابط أو مسار محلي)</label>
+                  <label className="input-label">مسار البنر/الفيديو (اختياري — رابط أو مسار محلي)</label>
                   <input
                     className="input-field"
                     value={form.heroBannerPath ?? ""}
-                    onChange={(e) => patch("heroBannerPath", e.target.value || null)}
+                    onChange={(e) => {
+                      const value = e.target.value || null;
+                      const kind: HeroMediaKind | null = value
+                        ? isHeroVideoSrc(value, null)
+                          ? "video"
+                          : "image"
+                        : null;
+                      const next = { ...form, heroBannerPath: value, heroMediaKind: kind };
+                      setForm(next);
+                      updateLocal(next);
+                    }}
                     dir="ltr"
-                    placeholder="/hero-banner.jpg أو https://..."
+                    placeholder="/uploads/hero/banner.jpg أو رابط فيديو"
                   />
                 </div>
                 <div style={{ marginBottom: "0.75rem" }}>
-                  <label className="input-label">رفع صورة البنر (PNG / JPG / WebP)</label>
+                  <label className="input-label">رفع بنر أو فيديو (PNG / JPG / WebP / MP4 / WebM / MOV)</label>
                   <input
                     ref={bannerFileRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v"
                     style={{ display: "none" }}
-                    onChange={(e) => handleBannerFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => void handleHeroMediaFile(e.target.files?.[0] ?? null)}
                   />
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <BtnPrimary onClick={() => bannerFileRef.current?.click()}>📤 رفع بنر الهيرو</BtnPrimary>
+                    <BtnPrimary onClick={() => bannerFileRef.current?.click()} disabled={uploadingHero}>
+                      {uploadingHero ? "⏳ جاري الرفع..." : "📤 رفع بنر / فيديو الهيرو"}
+                    </BtnPrimary>
                     {(form.heroBannerData || form.heroBannerPath) && (
-                      <BtnSecondary
-                        onClick={() => {
-                          const next = { ...form, heroBannerData: null, heroBannerPath: null };
-                          setForm(next);
-                          updateLocal(next);
-                        }}
-                      >
-                        🗑 إزالة البنر
+                      <BtnSecondary onClick={() => void removeHeroMedia()} disabled={uploadingHero}>
+                        🗑 إزالة البنر/الفيديو
                       </BtnSecondary>
                     )}
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
-                    بعد الرفع اضغط «حفظ الإعدادات» — الصورة تظهر مباشرة في واجهة الهيرو
+                    الرفع يُطبَّق فوراً على الصفحة الرئيسية (حتى {formatFileSize(HERO_MEDIA_MAX_BYTES)})
                   </p>
                 </div>
                 {bannerPreview ? (
@@ -428,23 +489,37 @@ export default function SystemSettingsPage() {
                       background: "#0a0a12",
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={bannerPreview}
-                      alt="معاينة بنر الهيرو"
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    />
+                    {bannerIsVideo ? (
+                      <video
+                        src={bannerPreview}
+                        controls
+                        muted
+                        playsInline
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={bannerPreview}
+                        alt="معاينة بنر الهيرو"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                    )}
                     <div
                       style={{
                         position: "absolute",
-                        inset: 0,
+                        insetInlineStart: 0,
+                        bottom: 0,
                         background: "linear-gradient(90deg, rgba(10,10,18,0.15) 0%, rgba(10,10,18,0.55) 100%)",
                         display: "flex",
                         alignItems: "flex-end",
                         padding: "0.85rem 1rem",
+                        pointerEvents: "none",
                       }}
                     >
-                      <span style={{ color: "#fff", fontWeight: 800, fontSize: "0.78rem" }}>معاينة البنر على الهيرو</span>
+                      <span style={{ color: "#fff", fontWeight: 800, fontSize: "0.78rem" }}>
+                        {bannerIsVideo ? "معاينة فيديو الهيرو" : "معاينة البنر على الهيرو"}
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -459,7 +534,7 @@ export default function SystemSettingsPage() {
                       background: "#f8fafc",
                     }}
                   >
-                    لا يوجد بنر حالياً — الهيرو يظهر بالتصميم الافتراضي
+                    لا يوجد بنر/فيديو حالياً — الهيرو يظهر بالتصميم الافتراضي
                   </div>
                 )}
               </div>

@@ -16,6 +16,7 @@ export type SiteTheme = {
   logoData: string | null;
   heroBannerPath: string | null;
   heroBannerData: string | null;
+  heroMediaKind: "image" | "video" | null;
   borderRadius: string;
 };
 
@@ -35,6 +36,7 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   logoData: null,
   heroBannerPath: null,
   heroBannerData: null,
+  heroMediaKind: null,
   borderRadius: "12",
 };
 
@@ -100,8 +102,10 @@ export function recordToTheme(row: {
   logoData: string | null;
   heroBannerPath?: string | null;
   heroBannerData?: string | null;
+  heroMediaKind?: string | null;
   borderRadius: string;
 }): SiteTheme {
+  const kind = row.heroMediaKind === "video" || row.heroMediaKind === "image" ? row.heroMediaKind : null;
   return {
     primaryColor: row.primaryColor,
     primaryDark: row.primaryDark,
@@ -118,6 +122,7 @@ export function recordToTheme(row: {
     logoData: row.logoData,
     heroBannerPath: row.heroBannerPath ?? null,
     heroBannerData: row.heroBannerData ?? null,
+    heroMediaKind: kind,
     borderRadius: row.borderRadius,
   };
 }

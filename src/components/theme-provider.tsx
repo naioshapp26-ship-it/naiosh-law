@@ -70,6 +70,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         logoData: data.logoData,
         heroBannerPath: data.heroBannerPath ?? null,
         heroBannerData: data.heroBannerData ?? null,
+        heroMediaKind: data.heroMediaKind ?? null,
         borderRadius: data.borderRadius,
       });
     } catch {
