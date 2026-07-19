@@ -42,8 +42,8 @@ export function Navbar({ variant = "dark" }: Props) {
         zIndex: 100,
         background: "#ffffff",
         borderBottom: "1px solid #e2e8f0",
-        boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.06)" : "0 1px 0 rgba(0,0,0,0.04)",
-        padding: "0.85rem 0",
+        boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
+        padding: "0.45rem 0",
       }
     : {
         position: "fixed",
@@ -94,18 +94,7 @@ export function Navbar({ variant = "dark" }: Props) {
   ];
 
   const utilityButtons = isLanding ? (
-    <div
-      className="landing-header-actions"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.45rem",
-        flexWrap: "nowrap",
-        marginInlineStart: "0.35rem",
-        paddingInlineStart: "0.55rem",
-        borderInlineStart: "1px solid #e2e8f0",
-      }}
-    >
+    <div className="landing-header-actions">
       <Link href="/login" className="landing-action-btn landing-action-soft">
         إنشاء حساب
       </Link>
@@ -136,103 +125,113 @@ export function Navbar({ variant = "dark" }: Props) {
     <>
       <header style={navStyle}>
         <div
-          className="container-max"
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}
+          className={`container-max${isLanding ? " landing-header-row" : ""}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: isLanding ? "0.75rem" : "1rem",
+            minHeight: isLanding ? 56 : undefined,
+          }}
         >
           <BrandLogo
             href="/"
-            size={48}
+            size={isLanding ? 40 : 48}
             showText={isLanding}
             variant={isLanding ? "dark" : "light"}
             subtitle={isLanding ? "النظام القانوني السيادي 360" : undefined}
           />
 
-          <nav style={{ display: "flex", alignItems: "center", gap: isLanding ? "0.05rem" : "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }} className="desktop-nav">
-            {!isLanding && (
-            <div ref={solutionsMenuRef} style={{ position: "relative" }}>
-              <button
-                type="button"
-                onClick={() => setSolutionsOpen((prev) => !prev)}
-                style={{
-                  color: linkColor,
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  padding: "0.45rem 0.75rem",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: solutionsOpen ? linkHoverBg : "transparent",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-cairo)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.35rem",
-                }}
-              >
-                <span>الحلول</span>
-                <span style={{ fontSize: "0.65rem" }}>{solutionsOpen ? "▲" : "▼"}</span>
-              </button>
-              {solutionsOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "calc(100% + 0.45rem)",
-                    insetInlineEnd: 0,
-                    minWidth: "240px",
-                    background: isLanding ? "#fff" : "rgba(10,10,18,0.96)",
-                    border: isLanding ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.09)",
-                    borderRadius: "12px",
-                    padding: "0.45rem",
-                    boxShadow: "0 18px 45px rgba(0,0,0,0.12)",
-                  }}
-                >
-                  {solutionItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setSolutionsOpen(false)}
+          <div className={isLanding ? "desktop-nav landing-desktop-cluster" : "desktop-nav"} style={isLanding ? undefined : { display: "flex", alignItems: "center", gap: "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <nav className={isLanding ? "landing-nav-links" : undefined} aria-label="التنقل الرئيسي" style={isLanding ? undefined : { display: "contents" }}>
+              {!isLanding && (
+                <div ref={solutionsMenuRef} style={{ position: "relative" }}>
+                  <button
+                    type="button"
+                    onClick={() => setSolutionsOpen((prev) => !prev)}
+                    style={{
+                      color: linkColor,
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      padding: "0.45rem 0.75rem",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: solutionsOpen ? linkHoverBg : "transparent",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-cairo)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <span>الحلول</span>
+                    <span style={{ fontSize: "0.65rem" }}>{solutionsOpen ? "▲" : "▼"}</span>
+                  </button>
+                  {solutionsOpen && (
+                    <div
                       style={{
-                        display: "block",
-                        padding: "0.55rem 0.65rem",
-                        borderRadius: "8px",
-                        color: isLanding ? "#475569" : "#cbd5e1",
-                        fontSize: "0.82rem",
-                        fontWeight: 500,
+                        position: "absolute",
+                        top: "calc(100% + 0.45rem)",
+                        insetInlineEnd: 0,
+                        minWidth: "240px",
+                        background: isLanding ? "#fff" : "rgba(10,10,18,0.96)",
+                        border: isLanding ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.09)",
+                        borderRadius: "12px",
+                        padding: "0.45rem",
+                        boxShadow: "0 18px 45px rgba(0,0,0,0.12)",
                       }}
                     >
-                      {item.label}
-                    </Link>
-                  ))}
+                      {solutionItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setSolutionsOpen(false)}
+                          style={{
+                            display: "block",
+                            padding: "0.55rem 0.65rem",
+                            borderRadius: "8px",
+                            color: isLanding ? "#475569" : "#cbd5e1",
+                            fontSize: "0.82rem",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-            )}
-            {links.map((l) => (
-              <Link
-                key={`${l.href}-${l.label}`}
-                href={l.href}
-                style={{
-                  color: isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor,
-                  fontSize: isLanding ? "0.78rem" : "0.875rem",
-                  fontWeight: isLanding && l.label === "الرئيسية" ? 800 : 600,
-                  padding: isLanding ? "0.35rem 0.48rem" : "0.45rem 0.75rem",
-                  borderRadius: "8px",
-                  transition: "color 0.2s, background 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = linkHoverColor;
-                  (e.currentTarget as HTMLElement).style.background = linkHoverBg;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color =
-                    isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor;
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                }}
-              >
-                {l.label}
-              </Link>
-            ))}
+              {links.map((l) => (
+                <Link
+                  key={`${l.href}-${l.label}`}
+                  href={l.href}
+                  className={isLanding && l.label === "الرئيسية" ? "landing-nav-link is-active" : "landing-nav-link"}
+                  style={{
+                    color: isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor,
+                    fontSize: isLanding ? "0.72rem" : "0.875rem",
+                    fontWeight: isLanding && l.label === "الرئيسية" ? 800 : 600,
+                    padding: isLanding ? "0.28rem 0.38rem" : "0.45rem 0.75rem",
+                    borderRadius: "8px",
+                    transition: "color 0.2s, background 0.2s",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = linkHoverColor;
+                    (e.currentTarget as HTMLElement).style.background = linkHoverBg;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.color =
+                      isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor;
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                  }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
             {utilityButtons}
-          </nav>
+          </div>
 
           <button
             onClick={() => {
@@ -319,17 +318,49 @@ export function Navbar({ variant = "dark" }: Props) {
       {isLanding && <div style={{ height: LANDING_HEADER_OFFSET }} aria-hidden />}
 
       <style>{`
+        .landing-desktop-cluster {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 0.65rem;
+          flex: 1;
+          min-width: 0;
+          flex-wrap: nowrap;
+        }
+        .landing-nav-links {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 0.05rem;
+          flex: 1;
+          min-width: 0;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .landing-nav-links::-webkit-scrollbar {
+          display: none;
+        }
+        .landing-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          flex-wrap: nowrap;
+          flex-shrink: 0;
+          padding-inline-start: 0.55rem;
+          border-inline-start: 1px solid #e2e8f0;
+        }
         .landing-action-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           white-space: nowrap;
-          padding: 0.42rem 0.9rem;
-          border-radius: 10px;
-          font-size: 0.74rem;
+          padding: 0.38rem 0.78rem;
+          border-radius: 8px;
+          font-size: 0.7rem;
           font-weight: 700;
           font-family: var(--font-cairo), sans-serif;
-          line-height: 1.2;
+          line-height: 1.15;
           text-decoration: none;
           transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
         }
@@ -357,7 +388,7 @@ export function Navbar({ variant = "dark" }: Props) {
           background: #c3152a;
           color: #ffffff;
           font-weight: 800;
-          box-shadow: 0 6px 16px rgba(195, 21, 42, 0.22);
+          box-shadow: 0 4px 12px rgba(195, 21, 42, 0.2);
         }
         .landing-action-primary:hover {
           background: #a71224;
@@ -377,18 +408,22 @@ export function Navbar({ variant = "dark" }: Props) {
           padding: 0.7rem 1rem;
           font-size: 0.88rem;
         }
-        @media (max-width: 1280px) {
-          .landing-header-actions {
-            gap: 0.3rem !important;
-            padding-inline-start: 0.35rem !important;
-          }
+        @media (max-width: 1400px) {
           .landing-action-btn {
-            padding: 0.36rem 0.65rem;
-            font-size: 0.7rem;
+            padding: 0.34rem 0.58rem;
+            font-size: 0.66rem;
+          }
+          .landing-header-actions {
+            gap: 0.28rem;
+          }
+        }
+        @media (max-width: 1200px) {
+          .landing-header-actions .landing-action-soft,
+          .landing-header-actions .landing-action-ghost:not(:last-of-type) {
+            display: none;
           }
         }
         @media (max-width: 1100px) {
-          .landing-header-actions .landing-action-soft,
           .landing-header-actions .landing-action-ghost {
             display: none;
           }

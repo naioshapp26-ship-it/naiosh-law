@@ -28,4 +28,5 @@ export function LandingPromoBar() {
   );
 }
 
-export const LANDING_HEADER_OFFSET = 108;
+/** Promo bar (~36px) + compact single-row navbar (~64px). */
+export const LANDING_HEADER_OFFSET = 100;
