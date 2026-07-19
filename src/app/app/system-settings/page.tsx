@@ -263,6 +263,11 @@ export default function SystemSettingsPage() {
     document.head.appendChild(link);
   }, []);
 
+  useEffect(() => {
+    document.body.classList.add("has-sticky-top-header");
+    return () => document.body.classList.remove("has-sticky-top-header");
+  }, []);
+
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -702,6 +707,7 @@ export default function SystemSettingsPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div id="naiosh-back-slot" style={{ display: "flex", alignItems: "center", marginBottom: 0 }} />
             <div
               style={{
                 background: "#c3152a",
