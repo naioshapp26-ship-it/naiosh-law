@@ -18,15 +18,15 @@ import { isHeroVideoSrc } from "@/lib/hero-media";
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const SIDE_RAIL = [
-  { label: "قضاياي", href: "/app/modules/case-management", active: false },
-  { label: "موكلي", href: "/app/modules/clients-management", active: false },
-  { label: "جلساتي", href: "/app/modules/court-sessions", active: false },
-  { label: "مكتبتي", href: "/app/legal-library", active: false },
-  { label: "أنظمتي", href: "/app/dashboard", active: false },
-  { label: "ماليتي", href: "/app/legal-finance", active: false },
-  { label: "أرشيفي", href: "/app/archive", active: false },
-  { label: "صفحتي", href: "/app/dashboard", active: true },
-  { label: "الفريق", href: "/app/modules/administration", active: false },
+  { label: "قضاياي", href: "/app/specialty/cases", active: false },
+  { label: "موكلي", href: "/app/specialty/clients", active: false },
+  { label: "جلساتي", href: "/app/specialty/sessions", active: false },
+  { label: "مكتبتي", href: "/app/specialty/library", active: false },
+  { label: "أنظمتي", href: "/app/specialty/systems", active: false },
+  { label: "ماليتي", href: "/app/specialty/finance", active: false },
+  { label: "أرشيفي", href: "/app/specialty/archive", active: false },
+  { label: "صفحتي", href: "/app/specialty/profile", active: true },
+  { label: "الفريق", href: "/app/specialty/team", active: false },
 ];
 
 const CTA_BUTTONS = [

@@ -23,7 +23,7 @@ type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
 let toastCounter = 0;
 
-export function ModuleShell({ slug }: { slug: string }) {
+export function ModuleShell({ slug, embedded = false }: { slug: string; embedded?: boolean }) {
   const { user, ready } = useSession(true);
   const config = moduleConfigMap[slug];
   const apiEndpoint = getModuleApiEndpoint(slug);
@@ -103,15 +103,14 @@ export function ModuleShell({ slug }: { slug: string }) {
   }
 
   if (!config) {
-    return (
-      <AppShell>
-        <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-          <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-          <p>الرابط ({slug}) غير معرّف في النظام.</p>
-        </div>
-      </AppShell>
+    const missing = (
+      <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
+        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
+        <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
+        <p>الرابط ({slug}) غير معرّف في النظام.</p>
+      </div>
     );
+    return embedded ? missing : <AppShell>{missing}</AppShell>;
   }
 
   const openAdd = () => { setEditTarget(null); setModalOpen(true); };
@@ -327,8 +326,8 @@ export function ModuleShell({ slug }: { slug: string }) {
     config.entityName === "سجل مالي" ? "💰" :
     config.entityName === "مستخدم" ? "⚙️" : "📌";
 
-  return (
-    <AppShell>
+  const body = (
+      <>
       <div style={{ position: "fixed", bottom: "1.5rem", insetInlineEnd: "1.5rem", zIndex: 9999, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === "success" ? "#0a0a12" : "#c3152a", color: "#fff", borderRadius: "12px", padding: "0.85rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", animation: "fade-in-up 0.25s ease", maxWidth: 320 }}>
@@ -337,7 +336,7 @@ export function ModuleShell({ slug }: { slug: string }) {
         ))}
       </div>
 
-      <div style={{ maxWidth: 1300 }}>
+      <div style={{ maxWidth: embedded ? "100%" : 1300 }}>
         <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
@@ -470,6 +469,9 @@ export function ModuleShell({ slug }: { slug: string }) {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-    </AppShell>
+      </>
   );
+
+  if (embedded) return body;
+  return <AppShell>{body}</AppShell>;
 }
