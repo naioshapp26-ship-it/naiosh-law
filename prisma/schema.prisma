@@ -805,6 +805,8 @@ model HomepageHeroMedia {
   id         String   @id @default(cuid())
   type       String
   url        String
+  /** نسخة دائمة في قاعدة البيانات حتى لا تختفي بعد إعادة نشر Railway */
+  dataUrl    String?  @db.Text
   title      String?
   caption    String?
   isActive   Boolean  @default(true)

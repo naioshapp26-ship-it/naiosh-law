@@ -69,6 +69,7 @@ export function EmpireLandingHero() {
   const { heroBannerSrc, theme } = useSiteTheme();
   const [libraryMedia, setLibraryMedia] = useState<{ type: string; url: string }[]>([]);
   const [slide, setSlide] = useState(0);
+  const [mediaFailed, setMediaFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +78,10 @@ export function EmpireLandingHero() {
       .then((data) => {
         if (cancelled) return;
         const items = Array.isArray(data.items) ? data.items : [];
-        setLibraryMedia(items.map((i: { type: string; url: string }) => ({ type: i.type, url: i.url })));
+        setLibraryMedia(
+          items.map((i: { type: string; url: string }) => ({ type: i.type, url: i.url })),
+        );
+        setMediaFailed(false);
       })
       .catch(() => {
         if (!cancelled) setLibraryMedia([]);
@@ -85,7 +89,7 @@ export function EmpireLandingHero() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [heroBannerSrc]);
 
   useEffect(() => {
     if (!theme.heroAutoplaySlider || libraryMedia.length < 2) return;
@@ -98,10 +102,15 @@ export function EmpireLandingHero() {
   const activeLibrary = libraryMedia[slide] || libraryMedia[0] || null;
   const preferredKind = theme.heroActiveType;
   const preferred = libraryMedia.find((m) => m.type === preferredKind) || activeLibrary;
-  const displaySrc = preferred?.url || heroBannerSrc;
-  const isVideo = preferred
-    ? preferred.type === "video"
-    : isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
+  // لا تعتمد على روابط القرص المؤقت فقط — إن فشلت المكتبة استخدم بنر الإعدادات الدائم
+  const displaySrc = mediaFailed
+    ? heroBannerSrc
+    : preferred?.url || heroBannerSrc;
+  const isVideo = mediaFailed
+    ? isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind)
+    : preferred
+      ? preferred.type === "video"
+      : isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
   const [notes, setNotes] = useState("");
   const [activeRail, setActiveRail] = useState("صفحتي");
   const hasMedia = Boolean(displaySrc);
@@ -280,6 +289,11 @@ export function EmpireLandingHero() {
                     muted
                     loop
                     playsInline
+                    onError={() => {
+                      if (!mediaFailed && heroBannerSrc && displaySrc !== heroBannerSrc) {
+                        setMediaFailed(true);
+                      }
+                    }}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -296,6 +310,11 @@ export function EmpireLandingHero() {
                     key={displaySrc}
                     src={displaySrc}
                     alt="بنر الهيرو"
+                    onError={() => {
+                      if (!mediaFailed && heroBannerSrc && displaySrc !== heroBannerSrc) {
+                        setMediaFailed(true);
+                      }
+                    }}
                     style={{
                       width: "100%",
                       height: "100%",
