@@ -91,8 +91,8 @@ export async function PUT(request: Request) {
   if (body.heroOverlayStrength !== undefined) {
     const n = Number(body.heroOverlayStrength);
     (data as Record<string, unknown>).heroOverlayStrength = Number.isFinite(n)
-      ? Math.min(70, Math.max(50, Math.round(n)))
-      : 62;
+      ? Math.min(70, Math.max(0, Math.round(n)))
+      : 0;
   }
   if (body.heroAutoplaySlider !== undefined) {
     (data as Record<string, unknown>).heroAutoplaySlider = Boolean(body.heroAutoplaySlider);

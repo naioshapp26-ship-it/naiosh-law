@@ -212,10 +212,10 @@ function themeFromApi(data: Partial<SiteTheme>): SiteTheme {
     heroBannerPath: data.heroBannerPath ?? null,
     heroBannerData: data.heroBannerData ?? null,
     heroMediaKind: data.heroMediaKind ?? null,
-    heroImageMode: data.heroImageMode === "center" ? "center" : "cover",
+    heroImageMode: data.heroImageMode === "cover" ? "cover" : "center",
     heroActiveType: data.heroActiveType === "video" ? "video" : "image",
     heroOverlayStrength: Number.isFinite(Number(data.heroOverlayStrength))
-      ? Math.min(70, Math.max(50, Math.round(Number(data.heroOverlayStrength))))
+      ? Math.min(70, Math.max(0, Math.round(Number(data.heroOverlayStrength))))
       : DEFAULT_SITE_THEME.heroOverlayStrength,
     heroAutoplaySlider: data.heroAutoplaySlider !== false,
     heroActiveImageCaption: data.heroActiveImageCaption || "",
@@ -1328,8 +1328,8 @@ export default function SystemSettingsPage() {
                       value={form.heroImageMode}
                       onChange={(e) => patch("heroImageMode", e.target.value === "center" ? "center" : "cover")}
                     >
-                      <option value="cover">Cover (ملء كامل)</option>
-                      <option value="center">Center (توسيط)</option>
+                      <option value="center">إظهار كاملة (بدون قص)</option>
+                      <option value="cover">ملء الإطار (قد يقص الأطراف)</option>
                     </select>
                   </label>
                   <label style={{ display: "block" }}>
@@ -1350,7 +1350,7 @@ export default function SystemSettingsPage() {
                     </span>
                     <input
                       type="range"
-                      min={50}
+                      min={0}
                       max={70}
                       step={1}
                       value={form.heroOverlayStrength}
