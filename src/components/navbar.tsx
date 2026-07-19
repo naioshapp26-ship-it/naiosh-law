@@ -94,65 +94,31 @@ export function Navbar({ variant = "dark" }: Props) {
   ];
 
   const utilityButtons = isLanding ? (
-  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
-      <Link
-        href="/login"
-        style={{
-          padding: "0.42rem 0.85rem",
-          borderRadius: "999px",
-          border: "1px solid #fecaca",
-          background: "#fff1f2",
-          color: "#9f1239",
-          fontSize: "0.76rem",
-          fontWeight: 800,
-        }}
-      >
+    <div
+      className="landing-header-actions"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.45rem",
+        flexWrap: "nowrap",
+        marginInlineStart: "0.35rem",
+        paddingInlineStart: "0.55rem",
+        borderInlineStart: "1px solid #e2e8f0",
+      }}
+    >
+      <Link href="/login" className="landing-action-btn landing-action-soft">
         إنشاء حساب
       </Link>
-      <Link
-        href="/login"
-        style={{
-          padding: "0.42rem 0.85rem",
-          borderRadius: "999px",
-          border: "1px solid #e2e8f0",
-          color: "#475569",
-          fontSize: "0.76rem",
-          fontWeight: 700,
-        }}
-      >
+      <Link href="/login" className="landing-action-btn landing-action-ghost">
         تسجيل الدخول
       </Link>
-      <Link
-        href="/app/dashboard"
-        style={{
-          padding: "0.42rem 0.85rem",
-          borderRadius: "999px",
-          border: "1px solid #e2e8f0",
-          color: "#475569",
-          fontSize: "0.76rem",
-          fontWeight: 700,
-        }}
-      >
+      <Link href="/app/dashboard" className="landing-action-btn landing-action-ghost">
         صفحتي
       </Link>
-      <Link
-        href="/login"
-        className="btn-primary"
-        style={{ padding: "0.45rem 1rem", fontSize: "0.76rem", borderRadius: 999 }}
-      >
+      <Link href="/login" className="landing-action-btn landing-action-primary">
         استأجر النظام الآن
       </Link>
-      <Link
-        href="/app/dashboard"
-        style={{
-          padding: "0.42rem 0.85rem",
-          borderRadius: "999px",
-          border: "1px solid #c3152a",
-          color: "#c3152a",
-          fontSize: "0.76rem",
-          fontWeight: 800,
-        }}
-      >
+      <Link href="/app/dashboard" className="landing-action-btn landing-action-outline">
         أنشئ صفحتك
       </Link>
     </div>
@@ -323,9 +289,29 @@ export function Navbar({ variant = "dark" }: Props) {
                 {l.label}
               </Link>
             ))}
-            <Link href="/login" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display: "block", textAlign: "center", marginTop: "1rem" }}>
-              دخول النظام
-            </Link>
+            {isLanding ? (
+              <div className="landing-header-actions-mobile" style={{ marginTop: "1rem", display: "grid", gap: "0.5rem" }}>
+                <Link href="/login" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-soft">
+                  إنشاء حساب
+                </Link>
+                <Link href="/login" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-ghost">
+                  تسجيل الدخول
+                </Link>
+                <Link href="/app/dashboard" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-ghost">
+                  صفحتي
+                </Link>
+                <Link href="/login" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-primary">
+                  استأجر النظام الآن
+                </Link>
+                <Link href="/app/dashboard" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-outline">
+                  أنشئ صفحتك
+                </Link>
+              </div>
+            ) : (
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display: "block", textAlign: "center", marginTop: "1rem" }}>
+                دخول النظام
+              </Link>
+            )}
           </div>
         )}
       </header>
@@ -333,6 +319,80 @@ export function Navbar({ variant = "dark" }: Props) {
       {isLanding && <div style={{ height: LANDING_HEADER_OFFSET }} aria-hidden />}
 
       <style>{`
+        .landing-action-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
+          padding: 0.42rem 0.9rem;
+          border-radius: 10px;
+          font-size: 0.74rem;
+          font-weight: 700;
+          font-family: var(--font-cairo), sans-serif;
+          line-height: 1.2;
+          text-decoration: none;
+          transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .landing-action-soft {
+          border: 1px solid #fecaca;
+          background: #fff1f2;
+          color: #9f1239;
+        }
+        .landing-action-soft:hover {
+          background: #ffe4e6;
+          border-color: #fda4af;
+        }
+        .landing-action-ghost {
+          border: 1px solid #e2e8f0;
+          background: #ffffff;
+          color: #475569;
+        }
+        .landing-action-ghost:hover {
+          border-color: #cbd5e1;
+          color: #0f172a;
+          background: #f8fafc;
+        }
+        .landing-action-primary {
+          border: 1px solid #c3152a;
+          background: #c3152a;
+          color: #ffffff;
+          font-weight: 800;
+          box-shadow: 0 6px 16px rgba(195, 21, 42, 0.22);
+        }
+        .landing-action-primary:hover {
+          background: #a71224;
+          border-color: #a71224;
+        }
+        .landing-action-outline {
+          border: 1px solid #c3152a;
+          background: #ffffff;
+          color: #c3152a;
+          font-weight: 800;
+        }
+        .landing-action-outline:hover {
+          background: #fff1f2;
+        }
+        .landing-header-actions-mobile .landing-action-btn {
+          width: 100%;
+          padding: 0.7rem 1rem;
+          font-size: 0.88rem;
+        }
+        @media (max-width: 1280px) {
+          .landing-header-actions {
+            gap: 0.3rem !important;
+            padding-inline-start: 0.35rem !important;
+          }
+          .landing-action-btn {
+            padding: 0.36rem 0.65rem;
+            font-size: 0.7rem;
+          }
+        }
+        @media (max-width: 1100px) {
+          .landing-header-actions .landing-action-soft,
+          .landing-header-actions .landing-action-ghost {
+            display: none;
+          }
+        }
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: flex !important; }
