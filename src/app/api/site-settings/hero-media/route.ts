@@ -49,10 +49,17 @@ export async function POST(request: Request) {
     }
 
     const saved = await saveHeroMediaFile(file);
+    if (saved.kind === "image" && !saved.inlineDataUrl) {
+      return NextResponse.json(
+        { error: "تعذر حفظ نسخة دائمة من الصورة — جرّب صورة أصغر قليلاً" },
+        { status: 400 },
+      );
+    }
+
     const current = await getOrCreateSettings();
     await deleteHeroMediaFile(current.heroBannerPath);
 
-    // احفظ مسار الملف دائمًا + نسخة DB للصور الصغيرة (تبقى بعد إعادة النشر)
+    // احفظ مسار الملف + نسخة DB دائمة حتى تبقى بعد إعادة نشر Railway
     const updated = await prisma.siteSettings.upsert({
       where: { id: "default" },
       create: {
@@ -61,13 +68,28 @@ export async function POST(request: Request) {
         heroBannerPath: saved.url,
         heroBannerData: saved.inlineDataUrl,
         heroMediaKind: saved.kind,
+        heroActiveType: saved.kind,
         updatedBy: session!.email,
       },
       update: {
         heroBannerPath: saved.url,
         heroBannerData: saved.inlineDataUrl,
         heroMediaKind: saved.kind,
+        heroActiveType: saved.kind,
         updatedBy: session!.email,
+      },
+    });
+
+    // زامن مكتبة الهيرو أيضاً حتى لا تفضّل الصفحة الرئيسية رابط قرص مكسور
+    const count = await prisma.homepageHeroMedia.count();
+    await prisma.homepageHeroMedia.create({
+      data: {
+        type: saved.kind,
+        url: saved.url,
+        dataUrl: saved.inlineDataUrl,
+        title: file.name || saved.fileName,
+        isActive: true,
+        orderIndex: count,
       },
     });
 
@@ -85,7 +107,7 @@ export async function POST(request: Request) {
       message:
         saved.kind === "video"
           ? "تم رفع فيديو الهيرو بنجاح وظهر على الصفحة الرئيسية"
-          : "تم رفع بنر الهيرو بنجاح وظهر على الصفحة الرئيسية",
+          : "تم رفع بنر الهيرو بنجاح — محفوظ بشكل دائم",
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "فشل رفع الملف";

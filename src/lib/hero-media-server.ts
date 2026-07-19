@@ -7,8 +7,12 @@ import {
 } from "@/lib/hero-media";
 import { prisma } from "@/lib/prisma";
 
-/** صور البنر الأصغر من هذا الحجم تُحفظ في قاعدة البيانات لتعمل فوراً وتبقى بعد إعادة النشر */
-export const HERO_INLINE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+/**
+ * صور البنر تُحفظ دائماً في قاعدة البيانات (مثل الشعار) حتى تبقى بعد إعادة نشر Railway.
+ * للفيديو الكبير نكتفي بالقرص إن تجاوز الحد.
+ */
+export const HERO_INLINE_IMAGE_MAX_BYTES = 25 * 1024 * 1024;
+export const HERO_INLINE_VIDEO_MAX_BYTES = 8 * 1024 * 1024;
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/png": "png",
@@ -88,8 +92,10 @@ export async function saveHeroMediaFile(file: File): Promise<{
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(absPath, buffer);
 
+  const canInlineImage = kind === "image" && file.size <= HERO_INLINE_IMAGE_MAX_BYTES;
+  const canInlineVideo = kind === "video" && file.size <= HERO_INLINE_VIDEO_MAX_BYTES;
   const inlineDataUrl =
-    kind === "image" && file.size <= HERO_INLINE_IMAGE_MAX_BYTES
+    canInlineImage || canInlineVideo
       ? `data:${mimeType};base64,${buffer.toString("base64")}`
       : null;
 
@@ -163,6 +169,61 @@ export function heroMediaResponse(
   });
 }
 
+/** رابط عرض دائم لمكتبة الهيرو — لا يعتمد على قرص مؤقت */
+export function heroLibraryAssetUrl(
+  id: string,
+  cacheKey?: string | number | Date | null,
+) {
+  const base = `/api/homepage-hero-media/asset/${id}`;
+  if (cacheKey == null || cacheKey === "") return base;
+  const v =
+    cacheKey instanceof Date
+      ? cacheKey.getTime()
+      : typeof cacheKey === "string" || typeof cacheKey === "number"
+        ? cacheKey
+        : String(cacheKey);
+  return `${base}?v=${encodeURIComponent(String(v))}`;
+}
+
+export function toPublicHeroMediaItem<T extends {
+  id: string;
+  type: string;
+  url: string;
+  dataUrl?: string | null;
+  title?: string | null;
+  caption?: string | null;
+  isActive: boolean;
+  orderIndex: number;
+  createdAt: Date;
+  updatedAt: Date;
+}>(item: T) {
+  return {
+    id: item.id,
+    type: item.type,
+    url: heroLibraryAssetUrl(item.id, item.updatedAt),
+    title: item.title,
+    caption: item.caption,
+    isActive: item.isActive,
+    orderIndex: item.orderIndex,
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
+    durable: Boolean(item.dataUrl?.trim()),
+  };
+}
+
+export function parseHeroDataUrl(dataUrl: string): { mimeType: string; bytes: Buffer } | null {
+  const match = /^data:([^;,]+)?(?:;charset=[^;,]+)?;base64,(.+)$/i.exec(dataUrl.trim());
+  if (!match) return null;
+  try {
+    return {
+      mimeType: match[1] || "application/octet-stream",
+      bytes: Buffer.from(match[2], "base64"),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteHeroMediaFile(publicUrl: string | null | undefined) {
   const fileName = resolveHeroUploadFileName(publicUrl);
   if (!fileName) return;
@@ -189,7 +250,7 @@ async function localHeroUploadExists(publicUrl: string) {
 
 /**
  * إذا كان مسار البنر المحلي مفقودًا بعد إعادة النشر، امسحه من الإعدادات
- * (مع الإبقاء على heroBannerData إن وُجد).
+ * (مع الإبقاء على heroBannerData و heroMediaKind إن وُجدت بيانات دائمة).
  */
 export async function sanitizeMissingHeroUpload<T extends {
   id: string;
@@ -199,7 +260,8 @@ export async function sanitizeMissingHeroUpload<T extends {
 }>(row: T): Promise<T> {
   const pathValue = row.heroBannerPath?.trim() || null;
   if (!pathValue) return row;
-  // لو عندنا data URL لا نمسحه بسبب مسار مكسور
+
+  // لو عندنا data URL لا نمسحه بسبب مسار مكسور — فقط نظّف المسار المحلي المفقود
   if (row.heroBannerData?.trim()) {
     if (
       pathValue.startsWith("/uploads/hero/") ||
@@ -223,6 +285,33 @@ export async function sanitizeMissingHeroUpload<T extends {
 
   const exists = await localHeroUploadExists(pathValue);
   if (exists) return row;
+
+  // لا تمسح heroMediaKind إن كان المسار أصلاً يشير لمسار العرض الدائم
+  if (pathValue.startsWith("/api/site-settings/hero-banner")) {
+    return row;
+  }
+
+  // حاول إنقاذ البنر من مكتبة الهيرو قبل المسح
+  const library = await prisma.homepageHeroMedia.findFirst({
+    where: { OR: [{ url: pathValue }, { dataUrl: { not: null } }], isActive: true },
+    orderBy: { updatedAt: "desc" },
+  });
+  if (library?.dataUrl?.trim()) {
+    await prisma.siteSettings.update({
+      where: { id: row.id },
+      data: {
+        heroBannerPath: null,
+        heroBannerData: library.dataUrl,
+        heroMediaKind: library.type || row.heroMediaKind,
+      },
+    });
+    return {
+      ...row,
+      heroBannerPath: null,
+      heroBannerData: library.dataUrl,
+      heroMediaKind: library.type || row.heroMediaKind,
+    };
+  }
 
   await prisma.siteSettings.update({
     where: { id: row.id },
