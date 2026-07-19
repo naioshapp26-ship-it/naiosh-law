@@ -67,12 +67,13 @@ export function EmpireLandingHero() {
       aria-label="قسم الهيرو الرئيسي"
       style={{
         position: "relative",
-        minHeight: "calc(100vh - 108px)",
+        minHeight: "auto",
         marginTop: 108,
         overflow: "hidden",
         background:
           "radial-gradient(ellipse 80% 70% at 35% 45%, #e11d2e 0%, #9f1239 38%, #450a0a 68%, #1a0508 100%)",
         color: "#fff",
+        paddingBottom: "0.5rem",
       }}
     >
       {/* شبكة خفيفة + توهج */}
