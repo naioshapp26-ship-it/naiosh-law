@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 import { EmpireSidebarNav } from "@/components/empire-sidebar";
 import { BrandLogo } from "@/components/brand-logo";
+import { DarkModeToggle } from "@/components/color-mode";
 import { useSiteTheme } from "@/components/theme-provider";
 import { PRIMARY_NAV } from "@/lib/empire-routes";
 import type { UserRole } from "@/lib/session";
@@ -214,6 +215,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <DarkModeToggle style={{ width: 36, height: 36, borderRadius: 10 }} />
             <Link
               href="/app/communications"
               style={{
@@ -466,7 +468,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex-1 overflow-auto min-w-0 app-main">
         <div className="p-5 lg:p-8 max-w-[1400px] mx-auto">
-          <div id="naiosh-back-slot" />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              marginBottom: "0.85rem",
+            }}
+          >
+            <div id="naiosh-back-slot" style={{ marginBottom: 0 }} />
+            <DarkModeToggle className="desktop-theme-toggle" />
+          </div>
           {children}
         </div>
       </main>
@@ -546,6 +559,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           .mobile-top-header { display: block !important; }
           .mobile-bottom-nav { display: flex !important; }
           .app-main { padding-bottom: 5rem !important; }
+          .desktop-theme-toggle { display: none !important; }
         }
         @media (min-width: 769px) {
           .mobile-top-header { display: none !important; }

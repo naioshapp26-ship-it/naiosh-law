@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/lib/session";
 import { useSiteTheme } from "@/components/theme-provider";
+import { DarkModeToggle } from "@/components/color-mode";
 import {
   DEFAULT_SITE_THEME,
   getHeroBannerSrc,
@@ -733,6 +734,7 @@ export default function SystemSettingsPage() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <DarkModeToggle />
             <a
               href="/"
               target="_blank"

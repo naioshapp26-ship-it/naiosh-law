@@ -169,7 +169,6 @@ body.has-sticky-top-header .global-back-button--floating {
 #naiosh-back-slot {
   display: flex;
   align-items: center;
-  margin-bottom: 0.85rem;
 }
 
 @media (min-width: 640px) {
