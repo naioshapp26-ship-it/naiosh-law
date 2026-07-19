@@ -3,12 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-helpers";
 import {
   DEFAULT_SITE_THEME,
+  hasCustomLogo,
   hasHeroBannerMedia,
   heroBannerPublicUrl,
+  logoPublicUrl,
   recordToTheme,
   type SiteTheme,
 } from "@/lib/site-settings";
 import { sanitizeMissingHeroUpload } from "@/lib/hero-media-server";
+import { deleteLogoMediaFile, isDefaultLogoPath } from "@/lib/logo-media-server";
 
 async function getOrCreateSettings() {
   let row = await prisma.siteSettings.findUnique({ where: { id: "default" } });
@@ -24,9 +27,12 @@ async function getOrCreateSettings() {
 function toClientSettingsPayload(row: Awaited<ReturnType<typeof getOrCreateSettings>>) {
   const theme = recordToTheme(row);
   const hasBanner = hasHeroBannerMedia(theme);
+  const customLogo = hasCustomLogo(theme);
   return {
     id: row.id,
     ...theme,
+    logoData: null,
+    logoPath: customLogo ? logoPublicUrl(row.updatedAt) : "",
     // لا نرسل قاعدة/ميغابايتات base64 للمتصفح — العرض عبر /api/site-settings/hero-banner
     heroBannerData: null,
     heroBannerPath: hasBanner ? heroBannerPublicUrl(row.updatedAt) : null,
@@ -48,7 +54,7 @@ export async function PUT(request: Request) {
 
   const data: Partial<SiteTheme> & { updatedBy?: string } = {};
 
-  // وسائط الهيرو تُدار حصريًا عبر /api/site-settings/hero-media حتى لا يمسح الحفظ العام البنر
+  // الشعار ووسائط الهيرو تُدار عبر endpoints منفصلة حتى لا يُمسح الرفع عند الحفظ العام
   const fields: (keyof SiteTheme)[] = [
     "primaryColor",
     "primaryDark",
@@ -61,8 +67,6 @@ export async function PUT(request: Request) {
     "brandName",
     "brandNameAr",
     "tagline",
-    "logoPath",
-    "logoData",
     "borderRadius",
   ];
 
@@ -73,7 +77,19 @@ export async function PUT(request: Request) {
     }
   }
 
-  if (body.logoData === "") data.logoData = null;
+  // مسار شعار خارجي اختياري فقط (ليس رفع ملف / وليس الافتراضي القديم)
+  if (typeof body.logoPath === "string") {
+    const nextPath = body.logoPath.trim();
+    if (!nextPath || isDefaultLogoPath(nextPath)) {
+      // لا تُرجع للوجو الثابت من الحفظ العام
+    } else if (
+      !nextPath.startsWith("/api/site-settings/logo") &&
+      !nextPath.startsWith("/api/uploads/logo/")
+    ) {
+      data.logoPath = nextPath;
+      data.logoData = null;
+    }
+  }
 
   const updated = await prisma.siteSettings.upsert({
     where: { id: "default" },
@@ -91,11 +107,15 @@ export async function DELETE() {
   const { error, session } = await requireAdmin();
   if (error) return error;
 
+  const current = await getOrCreateSettings();
+  await deleteLogoMediaFile(current.logoPath);
+
   const updated = await prisma.siteSettings.upsert({
     where: { id: "default" },
     create: { id: "default", ...DEFAULT_SITE_THEME, updatedBy: session!.email },
     update: {
       ...DEFAULT_SITE_THEME,
+      logoPath: "",
       logoData: null,
       heroBannerData: null,
       heroBannerPath: null,

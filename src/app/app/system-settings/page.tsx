@@ -90,6 +90,7 @@ export default function SystemSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
@@ -154,16 +155,60 @@ export default function SystemSettingsPage() {
     updateLocal(next);
   };
 
-  const handleLogoFile = (file: File | null) => {
+  const handleLogoFile = async (file: File | null) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result ?? "");
-      patch("logoData", dataUrl);
-      show("success", "تم تحميل الشعار — اضغط حفظ لتطبيقه");
-    };
-    reader.onerror = () => show("error", "فشل قراءة ملف الشعار");
-    reader.readAsDataURL(file);
+    if (!file.type.startsWith("image/") && !/\.(png|jpe?g|webp|gif|svg)$/i.test(file.name)) {
+      show("error", "ارفع صورة شعار (PNG / JPG / WebP / SVG)");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/site-settings/logo", {
+        method: "POST",
+        credentials: "include",
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل رفع الشعار");
+      const next = {
+        ...form,
+        logoPath: data.logoPath ?? "",
+        logoData: null,
+      };
+      setForm(next);
+      updateLocal(next);
+      await refresh();
+      show("success", data.message ?? "تم استبدال الشعار");
+    } catch (e) {
+      show("error", e instanceof Error ? e.message : "فشل رفع الشعار");
+    } finally {
+      setUploadingLogo(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const removeLogo = async () => {
+    setUploadingLogo(true);
+    try {
+      const res = await fetch("/api/site-settings/logo", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل إزالة الشعار");
+      const next = { ...form, logoPath: "", logoData: null };
+      setForm(next);
+      updateLocal(next);
+      await refresh();
+      show("success", data.message ?? "تم إزالة الشعار");
+    } catch (e) {
+      show("error", e instanceof Error ? e.message : "فشل إزالة الشعار");
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
   const handleHeroMediaFile = async (file: File | null) => {
@@ -375,32 +420,39 @@ export default function SystemSettingsPage() {
                   <input className="input-field" value={form.tagline} onChange={(e) => patch("tagline", e.target.value)} />
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
-                  <label className="input-label">مسار الشعار (URL أو مسار محلي)</label>
+                  <label className="input-label">مسار شعار خارجي (اختياري — رابط فقط)</label>
                   <input
                     className="input-field"
-                    value={form.logoPath}
+                    value={form.logoPath?.startsWith("/api/") ? "" : form.logoPath}
                     onChange={(e) => patch("logoPath", e.target.value)}
                     dir="ltr"
-                    placeholder="/naiosh-logo.png"
+                    placeholder="https://example.com/logo.png"
                   />
+                  <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.35rem" }}>
+                    الرفع بالزر أدناه يستبدل الشعار الثابت فورًا. اترك الحقل فارغًا إن كنت ترفع ملفًا.
+                  </p>
                 </div>
                 <div style={{ marginBottom: "0.75rem" }}>
-                  <label className="input-label">رفع شعار جديد (PNG / JPG / SVG)</label>
+                  <label className="input-label">رفع شعار جديد (يستبدل القديم فورًا)</label>
                   <input
                     ref={fileRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
                     style={{ display: "none" }}
-                    onChange={(e) => handleLogoFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => void handleLogoFile(e.target.files?.[0] ?? null)}
                   />
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <BtnPrimary onClick={() => fileRef.current?.click()}>📤 رفع شعار</BtnPrimary>
-                    {form.logoData && (
-                      <BtnSecondary onClick={() => patch("logoData", null)}>🗑 إزالة الشعار المرفوع</BtnSecondary>
+                    <BtnPrimary onClick={() => fileRef.current?.click()} disabled={uploadingLogo}>
+                      {uploadingLogo ? "⏳ جاري الرفع..." : "📤 رفع واستبدال الشعار"}
+                    </BtnPrimary>
+                    {(form.logoPath || form.logoData) && (
+                      <BtnSecondary onClick={() => void removeLogo()} disabled={uploadingLogo}>
+                        🗑 إزالة الشعار بالكامل
+                      </BtnSecondary>
                     )}
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
-                    يمكن رفع الشعار الأصلي بأي حجم بدون تصغير
+                    الشعار الافتراضي القديم يُزال عند الرفع — يمكنك التغيير بحرية في أي وقت
                   </p>
                 </div>
                 <div>

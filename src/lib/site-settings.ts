@@ -32,7 +32,7 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   brandName: "NAIOSH Law",
   brandNameAr: "نايوش",
   tagline: "النظام القانوني السيادي 360",
-  logoPath: "/naiosh-logo.png?v=exact-20260712",
+  logoPath: "",
   logoData: null,
   heroBannerPath: null,
   heroBannerData: null,
@@ -69,7 +69,51 @@ export function applySiteTheme(theme: SiteTheme) {
 }
 
 export function getLogoSrc(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
-  return theme.logoData?.trim() || theme.logoPath || DEFAULT_SITE_THEME.logoPath;
+  const data = theme.logoData?.trim() || null;
+  if (data) {
+    if (data.startsWith("data:")) return LOGO_SERVE_PATH;
+    return data;
+  }
+
+  const path = theme.logoPath?.trim() || null;
+  if (!path) return "";
+
+  // المسار الثابت للشعار المخصص (رفع ملف / data قديم)
+  if (path.startsWith(LOGO_SERVE_PATH) || path.startsWith("/api/uploads/logo/") || path.startsWith("/uploads/logo/")) {
+    return path.startsWith(LOGO_SERVE_PATH) ? path : LOGO_SERVE_PATH;
+  }
+
+  // تجاهل الشعار الثابت القديم — حتى يستطيع المستخدم استبداله بحرية
+  if (path === "/naiosh-logo.png" || path.split("?")[0] === "/naiosh-logo.png") {
+    return "";
+  }
+
+  return path;
+}
+
+/** مسار ثابت لتقديم الشعار المخصص */
+export const LOGO_SERVE_PATH = "/api/site-settings/logo";
+
+export function logoCacheKey(updatedAt?: string | Date | null) {
+  if (!updatedAt) return null;
+  const t = updatedAt instanceof Date ? updatedAt.getTime() : Date.parse(updatedAt);
+  return Number.isFinite(t) ? t : null;
+}
+
+export function logoPublicUrl(updatedAt?: string | Date | null) {
+  const v = logoCacheKey(updatedAt);
+  return v ? `${LOGO_SERVE_PATH}?v=${v}` : LOGO_SERVE_PATH;
+}
+
+export function hasCustomLogo(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
+  if (theme.logoData?.trim()) return true;
+  const path = theme.logoPath?.trim() || "";
+  if (!path) return false;
+  if (path.startsWith(LOGO_SERVE_PATH) || path.startsWith("/api/uploads/logo/") || path.startsWith("/uploads/logo/")) {
+    return true;
+  }
+  if (path === "/naiosh-logo.png" || path.split("?")[0] === "/naiosh-logo.png") return false;
+  return true;
 }
 
 /** مسار ثابت لتقديم بنر الهيرو (ملف أو نسخة قاعدة البيانات) */
