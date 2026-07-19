@@ -13,6 +13,7 @@ import {
   useToast,
 } from "@/components/domain-page";
 import { Modal } from "@/components/ui/modal";
+import { formatDateTime } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
@@ -926,7 +927,7 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                   <div key={s.id} style={{ marginBottom: "0.75rem", paddingBottom: "0.75rem", borderBottom: "1px solid #dcfce7" }}>
                     {s.notes && <p style={{ fontSize: "0.82rem", lineHeight: 1.7, marginBottom: "0.35rem" }}>{s.notes}</p>}
                     <p style={{ fontSize: "0.72rem", color: "#64748b" }}>
-                      {s.addedBy} — {new Date(s.createdAt).toLocaleString("ar-EG")}
+                      {s.addedBy} — {formatDateTime(s.createdAt)}
                     </p>
                     {s.attachments.length > 0 && (
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.5rem" }}>

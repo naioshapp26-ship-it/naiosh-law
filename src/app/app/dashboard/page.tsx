@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { ModuleCard } from "@/components/module-card";
 import { modules } from "@/data/modules";
+import { formatDate } from "@/lib/format";
 import {
   dashboardTypes,
   empireIntro,
@@ -170,7 +171,7 @@ export default function DashboardPage() {
                 transition={{ delay: 0.55 }}
                 style={{ fontSize: "0.8rem", marginTop: "0.75rem", opacity: 0.75 }}
               >
-                مرحبًا {user.name} — {new Date().toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                مرحبًا {user.name} — {formatDate(new Date(), { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </motion.p>
             </div>
           </div>

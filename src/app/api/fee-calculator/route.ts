@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-helpers";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 export async function POST(request: Request) {
   const { error } = await requireAuth();
@@ -29,23 +30,24 @@ export async function POST(request: Request) {
 
   if (rule.hourlyRate && hours) {
     amount = rule.hourlyRate * Number(hours);
-    method = `ساعات (${hours}) × ${rule.hourlyRate}`;
+    method = `ساعات (${formatNumber(hours)}) × ${formatCurrency(rule.hourlyRate)}`;
   } else if (rule.fixedAmount) {
     amount = rule.fixedAmount;
-    method = `مبلغ ثابت: ${rule.fixedAmount}`;
+    method = `مبلغ ثابت: ${formatCurrency(rule.fixedAmount)}`;
   } else if (rule.percentRate && baseAmount) {
     amount = (Number(baseAmount) * rule.percentRate) / 100;
-    method = `نسبة ${rule.percentRate}% من ${baseAmount}`;
+    method = `نسبة ${formatNumber(rule.percentRate)}% من ${formatCurrency(baseAmount)}`;
   }
 
   if (rule.minAmount && amount < rule.minAmount) amount = rule.minAmount;
   if (rule.maxAmount && amount > rule.maxAmount) amount = rule.maxAmount;
 
+  const rounded = Math.round(amount);
   return NextResponse.json({
     ruleName: rule.name,
-    calculatedAmount: Math.round(amount),
+    calculatedAmount: rounded,
     method,
-    currency: "EGP",
-    displayForClient: `الأتعاب المقدرة: ${Math.round(amount).toLocaleString("ar-EG")} ج.م`,
+    currency: "USD",
+    displayForClient: `الأتعاب المقدرة: ${formatCurrency(rounded)}`,
   });
 }

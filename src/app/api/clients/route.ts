@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { formatDate, formatNumber } from "@/lib/format";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -14,9 +15,9 @@ export async function GET() {
       type: c.type,
       phone: c.phone ?? "—",
       email: c.email ?? "—",
-      cases: String(c.casesCount),
+      cases: formatNumber(c.casesCount, { maximumFractionDigits: 0 }),
       status: c.status,
-      since: c.since.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }),
+      since: formatDate(c.since),
     }))
   );
 }

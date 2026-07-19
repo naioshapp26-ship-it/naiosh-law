@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
 import { useSession, canWriteRole } from "@/lib/session";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 type Tab =
   | "invoices"
@@ -215,10 +216,10 @@ export default function LegalFinancePage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
           {[
-            { label: "إجمالي الفواتير", value: `${totalInvoiced.toLocaleString("ar-EG")} ج.م`, color: "#0a0a12" },
-            { label: "المحصّل", value: `${totalPaid.toLocaleString("ar-EG")} ج.م`, color: "#22c55e" },
-            { label: "المتبقي", value: `${(totalInvoiced - totalPaid).toLocaleString("ar-EG")} ج.م`, color: "#c3152a" },
-            { label: "كفالات نشطة", value: `${totalBail.toLocaleString("ar-EG")} ج.م`, color: "#f59e0b" },
+            { label: "إجمالي الفواتير", value: formatCurrency(totalInvoiced), color: "#0a0a12" },
+            { label: "المحصّل", value: formatCurrency(totalPaid), color: "#22c55e" },
+            { label: "المتبقي", value: formatCurrency(totalInvoiced - totalPaid), color: "#c3152a" },
+            { label: "كفالات نشطة", value: formatCurrency(totalBail), color: "#f59e0b" },
           ].map((s) => (
             <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
               <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
@@ -272,8 +273,8 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{inv.invoiceNo}</td>
                         <td style={tdStyle}>{inv.client}</td>
                         <td style={tdStyle}>{inv.type}</td>
-                        <td style={tdStyle}>{Number(inv.amount).toLocaleString("ar-EG")} ج.م</td>
-                        <td style={tdStyle}>{Number(inv.paid).toLocaleString("ar-EG")} ج.م</td>
+                        <td style={tdStyle}>{formatCurrency(inv.amount)}</td>
+                        <td style={tdStyle}>{formatCurrency(inv.paid)}</td>
                         <td style={tdStyle}>{inv.issueDate}</td>
                         <td style={{ ...tdStyle, color: inv.status.includes("مسدد") ? "#22c55e" : "#c3152a", fontWeight: 600 }}>
                           {inv.status}
@@ -303,9 +304,9 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{r.caseType}</td>
                         <td style={tdStyle}>{r.specialization}</td>
                         <td style={tdStyle}>{r.stage}</td>
-                        <td style={tdStyle}>{r.hourlyRate || "—"}</td>
-                        <td style={tdStyle}>{r.fixedAmount || "—"}</td>
-                        <td style={tdStyle}>{r.percentRate ? `${r.percentRate}%` : "—"}</td>
+                        <td style={tdStyle}>{r.hourlyRate ? formatCurrency(r.hourlyRate) : "—"}</td>
+                        <td style={tdStyle}>{r.fixedAmount ? formatCurrency(r.fixedAmount) : "—"}</td>
+                        <td style={tdStyle}>{r.percentRate ? `${formatNumber(r.percentRate)}%` : "—"}</td>
                         <td style={{ ...tdStyle, color: r.active === "نشط" ? "#22c55e" : "#94a3b8" }}>{r.active}</td>
                       </tr>
                     ))}
@@ -387,7 +388,7 @@ export default function LegalFinancePage() {
                       <tr key={b.id}>
                         <td style={tdStyle}>{b.caseRef}</td>
                         <td style={tdStyle}>{b.client}</td>
-                        <td style={tdStyle}>{Number(b.amount).toLocaleString("ar-EG")} ج.م</td>
+                        <td style={tdStyle}>{formatCurrency(b.amount)}</td>
                         <td style={tdStyle}>{b.court}</td>
                         <td style={tdStyle}>{b.depositDate}</td>
                         <td style={tdStyle}>{b.refundDate}</td>
@@ -468,7 +469,7 @@ export default function LegalFinancePage() {
                       <tr key={p.id}>
                         <td style={tdStyle}>{p.invoiceNo}</td>
                         <td style={tdStyle}>{p.client}</td>
-                        <td style={tdStyle}>{Number(p.amount).toLocaleString("ar-EG")} ج.م</td>
+                        <td style={tdStyle}>{formatCurrency(p.amount)}</td>
                         <td style={tdStyle}>{p.method}</td>
                         <td style={tdStyle}>{p.paidAt}</td>
                       </tr>
