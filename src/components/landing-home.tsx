@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { LandingPromoBar } from "@/components/landing-promo-bar";
@@ -82,12 +83,114 @@ function Reveal({
 
 export default function LandingHome() {
   const reduce = useReducedMotion();
+  const [dynamicSections, setDynamicSections] = useState<
+    { id: string; title: string; description: string | null; link: string | null; iconClass: string; iconUrl: string | null; orderIndex: number }[]
+  >([]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("fa-cdn-landing")) return;
+    const link = document.createElement("link");
+    link.id = "fa-cdn-landing";
+    link.rel = "stylesheet";
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+    document.head.appendChild(link);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/homepage-sections", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const items = Array.isArray(data.items) ? data.items : [];
+        setDynamicSections(
+          [...items].sort((a, b) => (Number(a.orderIndex) || 0) - (Number(b.orderIndex) || 0))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setDynamicSections([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>
       <LandingPromoBar />
       <Navbar variant="landing" />
       <EmpireLandingHero />
+
+      {dynamicSections.length > 0 && (
+        <section id="dynamic-sections" style={{ background: "#fff", padding: "4rem 0" }}>
+          <div className="container-max">
+            <Reveal style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+              <p style={{ color: "#c3152a", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
+                الأقسام الرئيسية
+              </p>
+              <h2 style={{ fontSize: "2.1rem", fontWeight: 900, color: "#0a0a12" }}>محتوى مخصص من إعدادات النظام</h2>
+            </Reveal>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                gap: "1.25rem",
+              }}
+            >
+              {dynamicSections.map((section, i) => {
+                const inner = (
+                  <div
+                    className="card-white"
+                    style={{
+                      padding: "1.35rem",
+                      height: "100%",
+                      borderRight: "3px solid rgba(195,21,42,0.35)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 12,
+                          background: "rgba(195,21,42,0.08)",
+                          display: "grid",
+                          placeItems: "center",
+                          color: "#c3152a",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {section.iconUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={section.iconUrl} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />
+                        ) : (
+                          <i className={section.iconClass || "fas fa-square"} />
+                        )}
+                      </div>
+                      <h3 style={{ fontWeight: 800, fontSize: "1.05rem", color: "#0a0a12", margin: 0 }}>{section.title}</h3>
+                    </div>
+                    {section.description && (
+                      <p style={{ color: "#64748b", fontSize: "0.88rem", lineHeight: 1.75, margin: 0 }}>{section.description}</p>
+                    )}
+                  </div>
+                );
+                return (
+                  <Reveal key={section.id} delay={i * 0.05} y={24}>
+                    {section.link ? (
+                      <Link href={section.link} style={{ textDecoration: "none", display: "block", height: "100%" }}>
+                        {inner}
+                      </Link>
+                    ) : (
+                      inner
+                    )}
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features */}
       <section id="features" style={{ background: "#f8f9fb", padding: "4.5rem 0", position: "relative", overflow: "hidden" }}>

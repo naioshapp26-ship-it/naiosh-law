@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-helpers";
-import { mkdir, writeFile, unlink } from "fs/promises";
-import path from "path";
-import { randomBytes } from "crypto";
 import { deleteHeroMediaFile, saveHeroMediaFile } from "@/lib/hero-media-server";
 
 export const runtime = "nodejs";
@@ -35,7 +32,6 @@ export async function POST(request: Request) {
     const saved = await saveHeroMediaFile(file);
     const count = await prisma.homepageHeroMedia.count();
 
-    // Keep legacy single-banner fields in sync with latest upload
     await prisma.siteSettings.upsert({
       where: { id: "default" },
       create: {
@@ -131,30 +127,4 @@ export async function DELETE(request: Request) {
   await prisma.homepageHeroMedia.delete({ where: { id } });
 
   return NextResponse.json({ items: await listMedia(), message: "تم حذف الوسائط" });
-}
-
-/** helper unused imports guard for section icon uploads shared folder */
-export async function ensureUploadDir(kind: "hero" | "section") {
-  const root = path.join(process.cwd(), ".data", "uploads", kind);
-  await mkdir(root, { recursive: true });
-  return root;
-}
-
-export async function writeUpload(kind: "hero" | "section", file: File) {
-  const root = await ensureUploadDir(kind);
-  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
-  const fileName = `${kind}-${Date.now()}-${randomBytes(3).toString("hex")}.${ext}`;
-  await writeFile(path.join(root, fileName), Buffer.from(await file.arrayBuffer()));
-  return `/api/uploads/${kind}/${fileName}`;
-}
-
-export async function removeUpload(url: string | null | undefined) {
-  if (!url?.startsWith("/api/uploads/")) return;
-  const relative = url.replace("/api/uploads/", "");
-  if (relative.includes("..")) return;
-  try {
-    await unlink(path.join(process.cwd(), ".data", "uploads", relative));
-  } catch {
-    /* ignore */
-  }
 }

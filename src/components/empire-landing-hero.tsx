@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -67,11 +67,46 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
 export function EmpireLandingHero() {
   const reduce = useReducedMotion();
   const { heroBannerSrc, theme, logoSrc } = useSiteTheme();
-  const isVideo = isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
+  const [libraryMedia, setLibraryMedia] = useState<{ type: string; url: string }[]>([]);
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/homepage-hero-media/public", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const items = Array.isArray(data.items) ? data.items : [];
+        setLibraryMedia(items.map((i: { type: string; url: string }) => ({ type: i.type, url: i.url })));
+      })
+      .catch(() => {
+        if (!cancelled) setLibraryMedia([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!theme.heroAutoplaySlider || libraryMedia.length < 2) return;
+    const t = window.setInterval(() => {
+      setSlide((s) => (s + 1) % libraryMedia.length);
+    }, 6000);
+    return () => window.clearInterval(t);
+  }, [theme.heroAutoplaySlider, libraryMedia.length]);
+
+  const activeLibrary = libraryMedia[slide] || libraryMedia[0] || null;
+  const preferredKind = theme.heroActiveType;
+  const preferred = libraryMedia.find((m) => m.type === preferredKind) || activeLibrary;
+  const displaySrc = preferred?.url || heroBannerSrc;
+  const isVideo = preferred
+    ? preferred.type === "video"
+    : isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
   const [notes, setNotes] = useState("");
   const [activeRail, setActiveRail] = useState("صفحتي");
-  const hasMedia = Boolean(heroBannerSrc);
+  const hasMedia = Boolean(displaySrc);
   const words = HEADLINE.split(" ");
+  const overlay = Math.min(70, Math.max(50, Number(theme.heroOverlayStrength) || 62)) / 100;
 
   return (
     <section
@@ -233,22 +268,34 @@ export function EmpireLandingHero() {
                   "0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.12), 0 0 60px rgba(225,29,46,0.35)",
               }}
             >
-              {hasMedia && heroBannerSrc ? (
+              {hasMedia && displaySrc ? (
                 isVideo ? (
                   <video
-                    src={heroBannerSrc}
+                    key={displaySrc}
+                    src={displaySrc}
                     autoPlay
                     muted
                     loop
                     playsInline
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: theme.heroImageMode === "center" ? "contain" : "cover",
+                      display: "block",
+                    }}
                   />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={heroBannerSrc}
+                    key={displaySrc}
+                    src={displaySrc}
                     alt="بنر الهيرو"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: theme.heroImageMode === "center" ? "contain" : "cover",
+                      display: "block",
+                    }}
                   />
                 )
               ) : (
@@ -260,6 +307,17 @@ export function EmpireLandingHero() {
                       ? `linear-gradient(145deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35)), url(${logoSrc}) center/55% no-repeat`
                       : "linear-gradient(145deg, rgba(255,255,255,0.14), rgba(0,0,0,0.4))",
                     backgroundColor: "#7f1d1d",
+                  }}
+                />
+              )}
+              {hasMedia && (
+                <div
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: `rgba(0,0,0,${overlay})`,
+                    pointerEvents: "none",
                   }}
                 />
               )}
