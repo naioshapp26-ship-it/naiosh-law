@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ModuleShell } from "@/components/module-shell";
+import { RolesPermissionsPage } from "@/components/roles-permissions-page";
 import { PageHeader, PageStats, PageLoader } from "@/components/domain-page";
 import { useSession } from "@/lib/session";
 import { moduleMap } from "@/data/modules";
@@ -346,6 +347,10 @@ export function SpecialtyWorkspace({ slug }: Props) {
 
         {specialty.slug === "profile" ? (
           <ProfileHub />
+        ) : specialty.moduleSlug === "administration" ? (
+          <div style={{ marginTop: "0.25rem" }}>
+            <RolesPermissionsPage embedded />
+          </div>
         ) : specialty.moduleSlug ? (
           <div style={{ marginTop: "0.25rem" }}>
             <ModuleShell slug={specialty.moduleSlug} embedded />
