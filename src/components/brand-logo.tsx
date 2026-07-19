@@ -61,11 +61,11 @@ export function BrandLogo({
   );
 
   const content = (
-    <div className={`flex items-center gap-3 min-w-0 ${className}`}>
+    <div className={`flex items-center gap-2.5 min-w-0 ${className}`} style={{ maxWidth: "100%" }}>
       {img}
       {showText && (
-        <div className="min-w-0 leading-tight flex-1">
-          <p className={`font-black text-base truncate tracking-tight ${textColor}`}>{displayName}</p>
+        <div className="min-w-0 leading-tight" style={{ maxWidth: "100%" }}>
+          <p className={`font-black text-sm truncate tracking-tight ${textColor}`}>{displayName}</p>
           {displaySubtitle && (
             <p className={`text-[10px] truncate mt-0.5 ${subColor}`}>{displaySubtitle}</p>
           )}
@@ -76,7 +76,7 @@ export function BrandLogo({
 
   if (href) {
     return (
-      <Link href={href} className="block hover:opacity-95 transition-opacity">
+      <Link href={href} className="block min-w-0 max-w-full hover:opacity-95 transition-opacity">
         {content}
       </Link>
     );

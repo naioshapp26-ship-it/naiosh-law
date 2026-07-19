@@ -130,17 +130,19 @@ export function Navbar({ variant = "dark" }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: isLanding ? "0.75rem" : "1rem",
+            gap: isLanding ? "1.1rem" : "1rem",
             minHeight: isLanding ? 56 : undefined,
           }}
         >
-          <BrandLogo
-            href="/"
-            size={isLanding ? 40 : 48}
-            showText={isLanding}
-            variant={isLanding ? "dark" : "light"}
-            subtitle={isLanding ? "النظام القانوني السيادي 360" : undefined}
-          />
+          <div className={isLanding ? "landing-brand-slot" : undefined}>
+            <BrandLogo
+              href="/"
+              size={isLanding ? 36 : 48}
+              showText={isLanding}
+              variant={isLanding ? "dark" : "light"}
+              subtitle={isLanding ? "القانوني السيادي 360" : undefined}
+            />
+          </div>
 
           <div className={isLanding ? "desktop-nav landing-desktop-cluster" : "desktop-nav"} style={isLanding ? undefined : { display: "flex", alignItems: "center", gap: "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
             <nav className={isLanding ? "landing-nav-links" : undefined} aria-label="التنقل الرئيسي" style={isLanding ? undefined : { display: "contents" }}>
@@ -318,25 +320,44 @@ export function Navbar({ variant = "dark" }: Props) {
       {isLanding && <div style={{ height: LANDING_HEADER_OFFSET }} aria-hidden />}
 
       <style>{`
+        .landing-brand-slot {
+          flex: 0 0 auto;
+          max-width: 188px;
+          overflow: hidden;
+          position: relative;
+          z-index: 2;
+          background: #fff;
+          padding-inline-end: 0.15rem;
+        }
+        .landing-brand-slot a {
+          display: block;
+          max-width: 100%;
+        }
+        .landing-header-row {
+          width: min(1440px, calc(100% - 2rem)) !important;
+        }
         .landing-desktop-cluster {
           display: flex;
           align-items: center;
-          justify-content: flex-end;
-          gap: 0.65rem;
-          flex: 1;
+          justify-content: flex-start;
+          gap: 0.75rem;
+          flex: 1 1 auto;
           min-width: 0;
           flex-wrap: nowrap;
+          position: relative;
+          z-index: 1;
         }
         .landing-nav-links {
           display: flex;
           align-items: center;
-          justify-content: flex-end;
-          gap: 0.05rem;
-          flex: 1;
+          justify-content: flex-start;
+          gap: 0.1rem;
+          flex: 1 1 auto;
           min-width: 0;
           flex-wrap: nowrap;
           overflow-x: auto;
           scrollbar-width: none;
+          padding-inline-start: 0.25rem;
         }
         .landing-nav-links::-webkit-scrollbar {
           display: none;
