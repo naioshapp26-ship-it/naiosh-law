@@ -7,11 +7,11 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
-    // فيديو/بنر الهيرو حتى 100MB — بدون هذا الحد البروكسي يقطع عند 10MB
+    // بدون حد معلن للشعار/الصورة/الفيديو — ارفع سقف البروكسي لاستيعاب الملفات الكبيرة
     serverActions: {
-      bodySizeLimit: "110mb",
+      bodySizeLimit: "2gb",
     },
-    proxyClientMaxBodySize: "110mb",
+    proxyClientMaxBodySize: "2gb",
   },
   async redirects() {
     return [

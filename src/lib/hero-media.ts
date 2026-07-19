@@ -1,5 +1,6 @@
-export const LOGO_MAX_BYTES = 1_000_000; // 1000 KB
-export const HERO_MEDIA_MAX_BYTES = 100 * 1024 * 1024; // 100 MB
+/** لا نفرض حد حجم على الشعار/صورة/فيديو الهيرو في الواجهة */
+export const LOGO_MAX_BYTES = Number.POSITIVE_INFINITY;
+export const HERO_MEDIA_MAX_BYTES = Number.POSITIVE_INFINITY;
 
 export const HERO_IMAGE_TYPES = new Set([
   "image/png",

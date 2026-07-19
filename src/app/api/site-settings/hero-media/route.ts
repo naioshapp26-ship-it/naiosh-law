@@ -10,7 +10,7 @@ import {
 import { deleteHeroMediaFile, saveHeroMediaFile } from "@/lib/hero-media-server";
 
 export const runtime = "nodejs";
-/** رفع فيديو حتى 100MB قد يستغرق وقتًا على الشبكة */
+/** رفع فيديو/صورة الهيرو قد يستغرق وقتًا على الشبكة للملفات الكبيرة */
 export const maxDuration = 300;
 
 async function getOrCreateSettings() {

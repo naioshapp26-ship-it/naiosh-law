@@ -6,7 +6,7 @@ export const maxDuration = 300;
 
 type Params = { params: Promise<{ file: string }> };
 
-/** تقديم بنر/فيديو الهيرو المحفوظ على القرص (حتى 100MB مع Range) */
+/** تقديم بنر/فيديو الهيرو المحفوظ على القرص (مع دعم Range) */
 export async function GET(request: Request, { params }: Params) {
   const { file } = await params;
   const fileName = decodeURIComponent(file || "");

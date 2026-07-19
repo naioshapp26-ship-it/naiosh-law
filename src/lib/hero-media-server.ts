@@ -2,7 +2,6 @@ import { access, mkdir, writeFile, unlink, readFile } from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 import {
-  HERO_MEDIA_MAX_BYTES,
   resolveHeroMediaKind,
   type HeroMediaKind,
 } from "@/lib/hero-media";
@@ -69,9 +68,6 @@ export async function saveHeroMediaFile(file: File): Promise<{
   inlineDataUrl: string | null;
 }> {
   if (file.size <= 0) throw new Error("الملف فارغ");
-  if (file.size > HERO_MEDIA_MAX_BYTES) {
-    throw new Error("حجم الملف كبير جداً — الحد الأقصى 100 ميجابايت");
-  }
 
   const kind = resolveHeroMediaKind(file.type, file.name);
   if (!kind) {
