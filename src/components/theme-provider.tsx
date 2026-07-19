@@ -55,23 +55,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (!res.ok) return;
       const data = (await res.json()) as SiteSettingsRecord;
       apply({
-        primaryColor: data.primaryColor,
-        primaryDark: data.primaryDark,
-        accentColor: data.accentColor,
-        sidebarFrom: data.sidebarFrom,
-        sidebarVia: data.sidebarVia,
-        sidebarTo: data.sidebarTo,
-        backgroundColor: data.backgroundColor,
-        textColor: data.textColor,
-        brandName: data.brandName,
-        brandNameAr: data.brandNameAr,
-        tagline: data.tagline,
-        logoPath: data.logoPath,
-        logoData: data.logoData,
+        ...DEFAULT_SITE_THEME,
+        ...data,
+        logoData: data.logoData ?? null,
         heroBannerPath: data.heroBannerPath ?? null,
         heroBannerData: data.heroBannerData ?? null,
         heroMediaKind: data.heroMediaKind ?? null,
-        borderRadius: data.borderRadius,
       });
     } catch {
       apply(DEFAULT_SITE_THEME);

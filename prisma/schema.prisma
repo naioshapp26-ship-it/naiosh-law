@@ -782,9 +782,47 @@ model SiteSettings {
   heroBannerData String?  @db.Text
   heroMediaKind  String?  // "image" | "video"
   borderRadius   String   @default("12")
+  // ERP homepage identity extras
+  secondaryColor String   @default("#fecaca")
+  buttonColor    String   @default("#a00f20")
+  headerBgColor  String   @default("#ffffff")
+  headingColor   String   @default("#0a0a12")
+  paragraphColor String   @default("#64748b")
+  linkColor      String   @default("#1e3a8a")
+  heroImageMode  String   @default("cover")
+  heroActiveType String   @default("image")
+  heroOverlayStrength Int @default(62)
+  heroAutoplaySlider Boolean @default(true)
+  heroActiveImageCaption String?
+  heroActiveVideoCaption String?
+  heroActiveVideoDescription String? @db.Text
   updatedBy      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model HomepageHeroMedia {
+  id         String   @id @default(cuid())
+  type       String
+  url        String
+  title      String?
+  caption    String?
+  isActive   Boolean  @default(true)
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model HomepageSection {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  link        String?
+  iconClass   String   @default("fas fa-square")
+  iconUrl     String?
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // ─── Archive ────────────────────────────────────────────────
