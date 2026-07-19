@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import {
+  PageHeader,
+  BtnPrimary,
+  BtnSecondary,
+  EmptyState,
+  PageLoader,
+  useSeedDemo,
+  useToast,
+} from "@/components/domain-page";
+import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
+import { formatNumber } from "@/lib/format";
+import type { FormField } from "@/data/module-configs";
 
 type Tab = "branches" | "rules" | "logs" | "integrations" | "send";
 
@@ -52,12 +63,68 @@ type Integration = {
   status: string;
 };
 
-const tabs: { key: Tab; label: string }[] = [
-  { key: "branches", label: "فروع المكتب" },
-  { key: "rules", label: "قواعد الإشعار" },
+const tabs: { key: Tab; label: string; addLabel?: string }[] = [
+  { key: "branches", label: "فروع المكتب", addLabel: "إضافة فرع" },
+  { key: "rules", label: "قواعد الإشعار", addLabel: "إضافة قاعدة إشعار" },
   { key: "logs", label: "سجل الإشعارات" },
-  { key: "integrations", label: "التكاملات" },
+  { key: "integrations", label: "التكاملات", addLabel: "إضافة تكامل" },
   { key: "send", label: "إرسال تجريبي" },
+];
+
+const CHANNEL_MAP: Record<string, string> = {
+  بريد: "email",
+  رسالة: "sms",
+  واتساب: "whatsapp",
+  "داخل النظام": "in_app",
+};
+
+const INTEGRATION_TYPE_MAP: Record<string, string> = {
+  بريد: "email",
+  رسالة: "sms",
+  واتساب: "whatsapp",
+  مدفوعات: "payment",
+  Webhook: "webhook",
+  أخرى: "other",
+};
+
+const branchFields: FormField[] = [
+  { key: "name", label: "اسم الفرع", type: "text", required: true },
+  { key: "code", label: "الرمز", type: "text", placeholder: "RYD" },
+  { key: "city", label: "المدينة", type: "text" },
+  { key: "address", label: "العنوان", type: "text" },
+  { key: "phone", label: "الهاتف", type: "tel" },
+  { key: "email", label: "البريد", type: "email" },
+  { key: "manager", label: "المدير", type: "text" },
+  { key: "status", label: "الحالة", type: "select", options: ["نشط", "موقوف"] },
+  { key: "isMain", label: "فرع رئيسي", type: "select", options: ["نعم", "لا"] },
+];
+
+const ruleFields: FormField[] = [
+  { key: "title", label: "عنوان القاعدة", type: "text", required: true },
+  { key: "trigger", label: "المحرك", type: "text", placeholder: "عند إنشاء قضية" },
+  {
+    key: "channel",
+    label: "القناة",
+    type: "select",
+    options: ["بريد", "رسالة", "واتساب", "داخل النظام"],
+  },
+  { key: "audience", label: "المستقبل", type: "text", placeholder: "الجميع" },
+  { key: "status", label: "الحالة", type: "select", options: ["نشط", "موقف"] },
+  { key: "templateBody", label: "نص القالب", type: "textarea" },
+];
+
+const integrationFields: FormField[] = [
+  { key: "name", label: "اسم التكامل", type: "text", required: true },
+  {
+    key: "type",
+    label: "النوع",
+    type: "select",
+    options: ["بريد", "رسالة", "واتساب", "مدفوعات", "Webhook", "أخرى"],
+  },
+  { key: "provider", label: "المزود", type: "text", placeholder: "Resend / Twilio" },
+  { key: "endpoint", label: "Endpoint", type: "text" },
+  { key: "apiKey", label: "مفتاح API", type: "text" },
+  { key: "status", label: "الحالة", type: "select", options: ["متصل", "مقطوع"] },
 ];
 
 const thStyle: React.CSSProperties = {
@@ -76,10 +143,31 @@ const tdStyle: React.CSSProperties = {
   borderBottom: "1px solid #f1f5f9",
 };
 
+const inputStyle: React.CSSProperties = {
+  padding: "0.65rem 0.85rem",
+  borderRadius: "10px",
+  border: "1px solid #e2e8f0",
+  fontFamily: "var(--font-cairo)",
+  fontSize: "0.85rem",
+  width: "100%",
+};
+
+const btnStyle: React.CSSProperties = {
+  padding: "0.7rem 1rem",
+  borderRadius: "10px",
+  border: "none",
+  background: "#c3152a",
+  color: "#fff",
+  fontWeight: 700,
+  cursor: "pointer",
+  fontFamily: "var(--font-cairo)",
+};
+
 export default function CommunicationsPage() {
   const { user, ready } = useSession(true);
   const [tab, setTab] = useState<Tab>("branches");
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [rules, setRules] = useState<Rule[]>([]);
@@ -94,6 +182,7 @@ export default function CommunicationsPage() {
   });
   const [sendResult, setSendResult] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
+  const { show, Toast: ActionToast } = useToast();
 
   const loadAll = () => {
     setLoading(true);
@@ -104,17 +193,18 @@ export default function CommunicationsPage() {
       fetch("/api/integrations", { credentials: "include" }).then((r) => r.json()),
     ])
       .then(([b, r, l, i]) => {
-        setBranches(b);
-        setRules(r);
-        setNotifLogs(l);
-        setIntegrations(i);
+        setBranches(Array.isArray(b) ? b : []);
+        setRules(Array.isArray(r) ? r : []);
+        setNotifLogs(Array.isArray(l) ? l : []);
+        setIntegrations(Array.isArray(i) ? i : []);
       })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    loadAll();
-  }, []);
+    if (ready && user) loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, user]);
 
   const { seed, seeding, Toast } = useSeedDemo(loadAll);
 
@@ -148,14 +238,69 @@ export default function CommunicationsPage() {
     loadAll();
   };
 
+  const activeTab = tabs.find((t) => t.key === tab)!;
+  const canAdd = Boolean(activeTab.addLabel);
+  const formFields =
+    tab === "branches" ? branchFields : tab === "rules" ? ruleFields : integrationFields;
+
+  const handleAdd = async (data: Record<string, unknown>) => {
+    const endpoint =
+      tab === "branches"
+        ? "/api/office-branches"
+        : tab === "rules"
+          ? "/api/notification-rules"
+          : "/api/integrations";
+
+    const payload =
+      tab === "branches"
+        ? {
+            ...data,
+            status: data.status || "نشط",
+            isMain: data.isMain === "نعم",
+          }
+        : tab === "rules"
+          ? {
+              ...data,
+              channel: CHANNEL_MAP[String(data.channel)] ?? "email",
+              audience: data.audience || "الجميع",
+              status: data.status || "نشط",
+            }
+          : {
+              ...data,
+              type: INTEGRATION_TYPE_MAP[String(data.type)] ?? "other",
+              provider: data.provider || "custom",
+              status: data.status || "متصل",
+            };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        show("error", (err as { error?: string }).error || "فشل الإضافة");
+        return;
+      }
+      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      setAddOpen(false);
+      loadAll();
+    } catch {
+      show("error", "تعذر الاتصال بالخادم");
+    }
+  };
+
   if (!ready || !user) return null;
 
   const canWrite = canWriteRole(user.role);
-  const isEmpty = !loading && branches.length === 0 && rules.length === 0;
+  const isEmpty = !loading && branches.length === 0 && rules.length === 0 && integrations.length === 0;
 
   return (
     <AppShell>
       {Toast}
+      {ActionToast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader
           icon="🛎️"
@@ -163,17 +308,24 @@ export default function CommunicationsPage() {
           subtitle="فروع متعددة، قواعد إشعار، Resend للبريد، Twilio للرسائل والواتساب"
           actions={
             <>
-              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات</BtnPrimary>}
-              {isEmpty && (
-                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
-                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
-                </button>
+              {canWrite && canAdd && (
+                <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
+              )}
+              {canWrite && (
+                <BtnSecondary onClick={seed}>{seeding ? "⏳ ..." : "📦 بيانات تجريبية"}</BtnSecondary>
               )}
             </>
           }
         />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gap: "0.75rem",
+            marginBottom: "1.25rem",
+          }}
+        >
           {[
             { label: "الفروع", value: branches.length, color: "#0a0a12" },
             { label: "قواعد نشطة", value: rules.filter((r) => r.status === "نشط").length, color: "#22c55e" },
@@ -182,7 +334,18 @@ export default function CommunicationsPage() {
           ].map((s) => (
             <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
               <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
-              <p style={{ fontWeight: 800, fontSize: "1.05rem", color: s.color }}>{s.value}</p>
+              <p
+                style={{
+                  fontWeight: 800,
+                  fontSize: "1.05rem",
+                  color: s.color,
+                  fontVariantNumeric: "tabular-nums",
+                  direction: "ltr",
+                  unicodeBidi: "isolate",
+                }}
+              >
+                {formatNumber(s.value, { maximumFractionDigits: 0 })}
+              </p>
             </div>
           ))}
         </div>
@@ -213,7 +376,15 @@ export default function CommunicationsPage() {
         {loading ? (
           <PageLoader />
         ) : isEmpty ? (
-          <EmptyState icon="🛎️" title="لا توجد بيانات اتصالات" description="حمّل البيانات التجريبية لتظهر الفروع وقواعد الإشعار والتكاملات" onSeed={seed} seeding={seeding} canWrite={canWrite} />
+          <EmptyState
+            icon="🛎️"
+            title="لا توجد بيانات اتصالات"
+            description="أضف فرعاً أو قاعدة إشعار، أو حمّل البيانات التجريبية"
+            onSeed={seed}
+            onAdd={canWrite && canAdd ? () => setAddOpen(true) : undefined}
+            seeding={seeding}
+            canWrite={canWrite}
+          />
         ) : (
           <>
             {tab === "branches" && (
@@ -221,17 +392,42 @@ export default function CommunicationsPage() {
                 {branches.map((b) => (
                   <div key={b.id} className="card-white" style={{ padding: "1.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                      <span style={{ fontSize: "0.72rem", fontWeight: 700, color: b.isMain === "رئيسي" ? "#c3152a" : "#64748b" }}>{b.isMain}</span>
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          color: b.isMain === "رئيسي" ? "#c3152a" : "#64748b",
+                        }}
+                      >
+                        {b.isMain}
+                      </span>
                       <span style={{ fontSize: "0.72rem", color: "#64748b" }}>{b.code}</span>
                     </div>
                     <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{b.name}</h3>
-                    <p style={{ fontSize: "0.8rem", color: "#64748b" }}>{b.city} • {b.manager}</p>
+                    <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                      {b.city} • {b.manager}
+                    </p>
                     <p style={{ fontSize: "0.78rem", color: "#475569", marginTop: "0.5rem" }}>📞 {b.phone}</p>
                     <p style={{ fontSize: "0.78rem", color: "#22c55e", marginTop: "0.35rem", fontWeight: 600 }}>
-                      {b.users} مستخدم • {b.status}
+                      {formatNumber(b.users, { maximumFractionDigits: 0 })} مستخدم • {b.status}
                     </p>
                   </div>
                 ))}
+                {branches.length === 0 && (
+                  <p style={{ gridColumn: "1 / -1", textAlign: "center", color: "#64748b", padding: "2rem" }}>
+                    لا توجد فروع{" "}
+                    {canWrite && (
+                      <button
+                        type="button"
+                        onClick={() => setAddOpen(true)}
+                        className="btn-primary"
+                        style={{ marginInlineStart: 8, padding: "0.45rem 1rem", fontSize: "0.8rem" }}
+                      >
+                        ＋ إضافة فرع
+                      </button>
+                    )}
+                  </p>
+                )}
               </div>
             )}
 
@@ -241,7 +437,9 @@ export default function CommunicationsPage() {
                   <thead>
                     <tr>
                       {["العنوان", "المحرك", "القناة", "المستقبل", "الفرع", "مُرسَل", "الحالة"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
+                        <th key={h} style={thStyle}>
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -253,10 +451,33 @@ export default function CommunicationsPage() {
                         <td style={tdStyle}>{r.channel}</td>
                         <td style={tdStyle}>{r.audience}</td>
                         <td style={tdStyle}>{r.branch}</td>
-                        <td style={tdStyle}>{r.sent}</td>
+                        <td style={tdStyle}>{formatNumber(r.sent, { maximumFractionDigits: 0 })}</td>
                         <td style={{ ...tdStyle, color: r.status === "نشط" ? "#22c55e" : "#94a3b8" }}>{r.status}</td>
                       </tr>
                     ))}
+                    {rules.length === 0 && (
+                      <tr>
+                        <td colSpan={7} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
+                          لا توجد قواعد —{" "}
+                          {canWrite && (
+                            <button
+                              type="button"
+                              onClick={() => setAddOpen(true)}
+                              style={{
+                                color: "#c3152a",
+                                fontWeight: 700,
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                fontFamily: "inherit",
+                              }}
+                            >
+                              ＋ إضافة قاعدة إشعار
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -268,7 +489,9 @@ export default function CommunicationsPage() {
                   <thead>
                     <tr>
                       {["القاعدة", "القناة", "المستلم", "المزود", "الحالة", "الوقت"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
+                        <th key={h} style={thStyle}>
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -283,6 +506,13 @@ export default function CommunicationsPage() {
                         <td style={tdStyle}>{l.sentAt}</td>
                       </tr>
                     ))}
+                    {logs.length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
+                          لا توجد سجلات إشعار
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -294,7 +524,9 @@ export default function CommunicationsPage() {
                   <thead>
                     <tr>
                       {["الاسم", "النوع", "المزود", "Endpoint", "استدعاءات", "النجاح", "الحالة", ""].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
+                        <th key={h} style={thStyle}>
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -305,7 +537,7 @@ export default function CommunicationsPage() {
                         <td style={tdStyle}>{i.type}</td>
                         <td style={tdStyle}>{i.provider}</td>
                         <td style={{ ...tdStyle, fontFamily: "monospace", fontSize: "0.75rem" }}>{i.endpoint}</td>
-                        <td style={tdStyle}>{i.callsToday}</td>
+                        <td style={tdStyle}>{formatNumber(i.callsToday, { maximumFractionDigits: 0 })}</td>
                         <td style={tdStyle}>{i.successRate}</td>
                         <td style={{ ...tdStyle, color: i.status === "متصل" ? "#22c55e" : "#f59e0b" }}>{i.status}</td>
                         <td style={tdStyle}>
@@ -328,6 +560,29 @@ export default function CommunicationsPage() {
                         </td>
                       </tr>
                     ))}
+                    {integrations.length === 0 && (
+                      <tr>
+                        <td colSpan={8} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
+                          لا توجد تكاملات —{" "}
+                          {canWrite && (
+                            <button
+                              type="button"
+                              onClick={() => setAddOpen(true)}
+                              style={{
+                                color: "#c3152a",
+                                fontWeight: 700,
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                fontFamily: "inherit",
+                              }}
+                            >
+                              ＋ إضافة تكامل
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -372,7 +627,13 @@ export default function CommunicationsPage() {
                     إرسال
                   </button>
                   {sendResult && (
-                    <p style={{ fontSize: "0.85rem", color: sendResult.includes("فشل") ? "#c3152a" : "#22c55e", fontWeight: 600 }}>
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: sendResult.includes("فشل") ? "#c3152a" : "#22c55e",
+                        fontWeight: 600,
+                      }}
+                    >
                       {sendResult}
                     </p>
                   )}
@@ -385,26 +646,19 @@ export default function CommunicationsPage() {
           </>
         )}
       </div>
+
+      {canAdd && (
+        <Modal
+          open={addOpen}
+          title={activeTab.addLabel || "إضافة"}
+          fields={formFields}
+          onSave={handleAdd}
+          onClose={() => setAddOpen(false)}
+          saveLabel="إضافة"
+          enableParties={false}
+          enableFiles={false}
+        />
+      )}
     </AppShell>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  padding: "0.65rem 0.85rem",
-  borderRadius: "10px",
-  border: "1px solid #e2e8f0",
-  fontFamily: "var(--font-cairo)",
-  fontSize: "0.85rem",
-  width: "100%",
-};
-
-const btnStyle: React.CSSProperties = {
-  padding: "0.7rem 1rem",
-  borderRadius: "10px",
-  border: "none",
-  background: "#c3152a",
-  color: "#fff",
-  fontWeight: 700,
-  cursor: "pointer",
-  fontFamily: "var(--font-cairo)",
-};

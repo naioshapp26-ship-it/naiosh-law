@@ -35,10 +35,32 @@ export async function POST(request: Request) {
   if (error) return error;
   const body = await request.json();
 
+  let receiverId = body.receiverId ? String(body.receiverId) : "";
+
+  // قبول معرف محترف وربطه بمستخدم إن وُجد
+  if (body.professionalId) {
+    const pro = await prisma.professional.findUnique({ where: { id: String(body.professionalId) } });
+    if (!pro?.userId) {
+      return NextResponse.json(
+        { error: "هذا المحترف غير مرتبط بحساب مستخدم — اختر محترفًا آخر أو أضفه كمستخدم أولًا" },
+        { status: 400 }
+      );
+    }
+    receiverId = pro.userId;
+  }
+
+  if (!receiverId) {
+    return NextResponse.json({ error: "المستلم مطلوب" }, { status: 400 });
+  }
+
+  if (receiverId === session!.sub) {
+    return NextResponse.json({ error: "لا يمكن إرسال طلب لنفسك" }, { status: 400 });
+  }
+
   const created = await prisma.professionalNetwork.create({
     data: {
       requesterId: session!.sub,
-      receiverId: String(body.receiverId),
+      receiverId,
       type: body.type ?? "collaboration",
       caseRef: body.caseRef ? String(body.caseRef) : null,
       message: body.message ? String(body.message) : null,
