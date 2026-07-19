@@ -926,7 +926,12 @@ export default function SystemSettingsPage() {
                         borderRadius: 12,
                         border: "1px solid #e2e8f0",
                         objectFit: "contain",
-                        background: "#fff",
+                        /* checkerboard so transparent logos don't look white-backed */
+                        background:
+                          "linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)",
+                        backgroundSize: "12px 12px",
+                        backgroundPosition: "0 0, 0 6px, 6px -6px, -6px 0",
+                        backgroundColor: "#f1f5f9",
                         padding: 8,
                         boxShadow: "0 1px 3px rgba(0,0,0,.06)",
                       }}
