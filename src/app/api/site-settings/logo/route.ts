@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-helpers";
 import {
@@ -18,6 +20,20 @@ import {
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
+
+async function readBundledPublicLogo() {
+  try {
+    const fullPath = path.join(process.cwd(), "public", "naiosh-logo.png");
+    const data = await readFile(fullPath);
+    return { data, mimeType: "image/png" as const };
+  } catch {
+    return null;
+  }
+}
+
+function toDataUrl(mimeType: string, bytes: Buffer) {
+  return `data:${mimeType};base64,${bytes.toString("base64")}`;
+}
 
 async function getOrCreateSettings() {
   let row = await prisma.siteSettings.findUnique({ where: { id: "default" } });
@@ -60,7 +76,20 @@ function parseDataUrl(dataUrl: string): { mimeType: string; bytes: Buffer } | nu
   }
 }
 
-/** تقديم الشعار الحالي — بدون الرجوع للوجو الثابت */
+function logoResponse(bytes: Buffer, mimeType: string, immutable = false) {
+  return new NextResponse(new Uint8Array(bytes), {
+    status: 200,
+    headers: {
+      "Content-Type": mimeType,
+      "Cache-Control": immutable
+        ? "public, max-age=31536000, immutable"
+        : "public, max-age=60, must-revalidate",
+      "Content-Length": String(bytes.byteLength),
+    },
+  });
+}
+
+/** تقديم الشعار الحالي — ملف مرفوع → قاعدة البيانات → الشعار المدمج */
 export async function GET() {
   const row = await getOrCreateSettings();
   const pathValue = row.logoPath?.trim() || null;
@@ -68,36 +97,21 @@ export async function GET() {
 
   if (fileName) {
     const media = await readLogoMediaFile(fileName);
-    if (media) {
-      return new NextResponse(new Uint8Array(media.data), {
-        status: 200,
-        headers: {
-          "Content-Type": media.mimeType,
-          "Cache-Control": "public, max-age=60, must-revalidate",
-          "Content-Length": String(media.data.byteLength),
-        },
-      });
-    }
+    if (media) return logoResponse(media.data, media.mimeType);
   }
 
   const dataUrl = row.logoData?.trim() || null;
   if (dataUrl) {
     const parsed = parseDataUrl(dataUrl);
-    if (parsed) {
-      return new NextResponse(new Uint8Array(parsed.bytes), {
-        status: 200,
-        headers: {
-          "Content-Type": parsed.mimeType,
-          "Cache-Control": "public, max-age=60, must-revalidate",
-          "Content-Length": String(parsed.bytes.byteLength),
-        },
-      });
-    }
+    if (parsed) return logoResponse(parsed.bytes, parsed.mimeType);
   }
 
   if (pathValue && !isDefaultLogoPath(pathValue) && /^https?:\/\//i.test(pathValue)) {
     return NextResponse.redirect(pathValue);
   }
+
+  const bundled = await readBundledPublicLogo();
+  if (bundled) return logoResponse(bundled.data, bundled.mimeType, true);
 
   return NextResponse.json({ error: "لا يوجد شعار مرفوع" }, { status: 404 });
 }
@@ -118,18 +132,21 @@ export async function POST(request: Request) {
     const current = await getOrCreateSettings();
     await deleteLogoMediaFile(current.logoPath);
 
+    // احتفظ بنسخة في قاعدة البيانات حتى لا يختفي الشعار بعد إعادة نشر Railway
+    const durableData = toDataUrl(saved.mimeType, saved.buffer);
+
     const updated = await prisma.siteSettings.upsert({
       where: { id: "default" },
       create: {
         id: "default",
         ...DEFAULT_SITE_THEME,
         logoPath: saved.url,
-        logoData: null,
+        logoData: durableData,
         updatedBy: session!.email,
       },
       update: {
         logoPath: saved.url,
-        logoData: null,
+        logoData: durableData,
         updatedBy: session!.email,
       },
     });
