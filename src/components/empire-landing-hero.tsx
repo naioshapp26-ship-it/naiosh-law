@@ -146,6 +146,8 @@ export function EmpireLandingHero() {
           className="empire-hero-grid"
           style={{
             display: "grid",
+            // اتجاه LTR ثابت للشبكة حتى يطابق مرجع الإمبراطورية: وسائط يسار / نص وسط / قائمة يمين
+            direction: "ltr",
             gridTemplateColumns: "minmax(280px, 1.05fr) minmax(320px, 1.15fr) 168px",
             gap: "1.75rem",
             alignItems: "center",
@@ -157,7 +159,7 @@ export function EmpireLandingHero() {
             initial={reduce ? false : { opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, ease: EASE }}
-            style={{ position: "relative", order: 1 }}
+            style={{ position: "relative", direction: "rtl" }}
           >
             <div
               style={{
@@ -301,9 +303,9 @@ export function EmpireLandingHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.08, ease: EASE }}
             style={{
-              order: 2,
               textAlign: "center",
               paddingInline: "0.35rem",
+              direction: "rtl",
             }}
           >
             <h1
@@ -401,11 +403,11 @@ export function EmpireLandingHero() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
             style={{
-              order: 3,
               display: "flex",
               flexDirection: "column",
               gap: 8,
               alignItems: "stretch",
+              direction: "rtl",
             }}
           >
             {SIDE_RAIL.map((item) => {
@@ -470,10 +472,7 @@ export function EmpireLandingHero() {
           .empire-hero-grid {
             grid-template-columns: 1fr !important;
           }
-          .empire-media-col { order: 1 !important; }
-          .empire-copy-col { order: 2 !important; }
           .empire-side-rail {
-            order: 3 !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
             justify-content: center !important;
