@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
@@ -161,6 +161,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
     </>
   );
+
+  useEffect(() => {
+    document.body.classList.add("has-app-shell", "has-sticky-top-header");
+    return () => {
+      document.body.classList.remove("has-app-shell", "has-sticky-top-header");
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row" style={{ background: "var(--site-bg, #f8fafc)" }} dir="rtl">
@@ -458,7 +465,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className="flex-1 overflow-auto min-w-0 app-main">
-        <div className="p-5 lg:p-8 max-w-[1400px] mx-auto">{children}</div>
+        <div className="p-5 lg:p-8 max-w-[1400px] mx-auto">
+          <div id="naiosh-back-slot" />
+          {children}
+        </div>
       </main>
 
       {/* Mobile bottom nav — restored previous phone navigation */}
