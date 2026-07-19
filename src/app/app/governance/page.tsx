@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import {
+  PageHeader,
+  BtnPrimary,
+  BtnSecondary,
+  EmptyState,
+  PageLoader,
+  useSeedDemo,
+  useToast,
+} from "@/components/domain-page";
+import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
+import { formatNumber } from "@/lib/format";
+import type { FormField } from "@/data/module-configs";
 
 type Tab = "approvals" | "policies" | "signatures" | "audit";
 
@@ -51,11 +62,51 @@ type AuditEntry = {
   time: string;
 };
 
-const tabs: { key: Tab; label: string }[] = [
-  { key: "approvals", label: "طلبات الاعتماد" },
-  { key: "policies", label: "سياسات الحوكمة" },
-  { key: "signatures", label: "التوقيع الإلكتروني" },
+const tabs: { key: Tab; label: string; addLabel?: string }[] = [
+  { key: "approvals", label: "طلبات الاعتماد", addLabel: "إضافة طلب اعتماد" },
+  { key: "policies", label: "سياسات الحوكمة", addLabel: "إضافة سياسة" },
+  { key: "signatures", label: "التوقيع الإلكتروني", addLabel: "إضافة طلب توقيع" },
   { key: "audit", label: "سجل التدقيق" },
+];
+
+const APPROVAL_TYPE_MAP: Record<string, string> = {
+  "فتح قضية": "case_opening",
+  "إعفاء رسوم": "fee_waiver",
+  "إصدار مستند": "document_release",
+  "صلاحية مستخدم": "user_access",
+  "توقيع عقد": "contract_signing",
+  أخرى: "other",
+};
+
+const approvalFields: FormField[] = [
+  { key: "title", label: "عنوان الطلب", type: "text", required: true },
+  {
+    key: "type",
+    label: "النوع",
+    type: "select",
+    required: true,
+    options: ["فتح قضية", "إعفاء رسوم", "إصدار مستند", "صلاحية مستخدم", "توقيع عقد", "أخرى"],
+  },
+  { key: "priority", label: "الأولوية", type: "select", options: ["عاجل", "عالٍ", "متوسط", "منخفض"] },
+  { key: "description", label: "الوصف", type: "textarea" },
+];
+
+const policyFields: FormField[] = [
+  { key: "title", label: "عنوان السياسة", type: "text", required: true },
+  { key: "category", label: "التصنيف", type: "text", required: true, placeholder: "عام / أمن / مالي" },
+  { key: "description", label: "الوصف", type: "textarea", required: true },
+  { key: "version", label: "الإصدار", type: "text", placeholder: "1.0" },
+  { key: "status", label: "الحالة", type: "select", options: ["ساري", "مسودة", "موقوف"] },
+  { key: "effectiveDate", label: "تاريخ السريان", type: "date" },
+];
+
+const signatureFields: FormField[] = [
+  { key: "documentTitle", label: "عنوان المستند", type: "text", required: true },
+  { key: "documentRef", label: "مرجع المستند", type: "text" },
+  { key: "signerName", label: "اسم الموقّع", type: "text", required: true },
+  { key: "signerEmail", label: "بريد الموقّع", type: "email" },
+  { key: "signerRole", label: "صفة الموقّع", type: "text" },
+  { key: "expiresAt", label: "ينتهي في", type: "date" },
 ];
 
 const thStyle: React.CSSProperties = {
@@ -78,12 +129,14 @@ export default function GovernancePage() {
   const { user, ready } = useSession(true);
   const [tab, setTab] = useState<Tab>("approvals");
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
 
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [signatures, setSignatures] = useState<Signature[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const { show, Toast: ActionToast } = useToast();
 
   const canApprove = user?.role === "admin" || user?.role === "industrial_agent";
 
@@ -98,10 +151,10 @@ export default function GovernancePage() {
         : Promise.resolve([] as AuditEntry[]),
     ])
       .then(([a, p, s, aud]) => {
-        setApprovals(a);
-        setPolicies(p);
-        setSignatures(s);
-        setAudit(aud);
+        setApprovals(Array.isArray(a) ? a : []);
+        setPolicies(Array.isArray(p) ? p : []);
+        setSignatures(Array.isArray(s) ? s : []);
+        setAudit(Array.isArray(aud) ? aud : []);
       })
       .finally(() => setLoading(false));
   };
@@ -123,6 +176,8 @@ export default function GovernancePage() {
     if (res.ok) {
       setActionMsg(status === "approved" ? "تم الاعتماد" : "تم الرفض");
       loadAll();
+    } else {
+      show("error", "فشل تحديث طلب الاعتماد");
     }
   };
 
@@ -133,10 +188,60 @@ export default function GovernancePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      setActionMsg(data.message ?? (action === "sign" ? "تم التوقيع" : "تم الرفض"));
+      setActionMsg((data as { message?: string }).message ?? (action === "sign" ? "تم التوقيع" : "تم الرفض"));
       loadAll();
+    } else {
+      show("error", "فشل إجراء التوقيع");
+    }
+  };
+
+  const activeTab = tabs.find((t) => t.key === tab)!;
+  const canAdd = Boolean(activeTab.addLabel);
+  const formFields =
+    tab === "approvals" ? approvalFields : tab === "policies" ? policyFields : signatureFields;
+
+  const handleAdd = async (data: Record<string, unknown>) => {
+    const endpoint =
+      tab === "approvals"
+        ? "/api/approval-requests"
+        : tab === "policies"
+          ? "/api/governance-policies"
+          : "/api/e-signatures";
+
+    const payload =
+      tab === "approvals"
+        ? {
+            ...data,
+            type: APPROVAL_TYPE_MAP[String(data.type)] ?? "other",
+            priority: data.priority || "متوسط",
+          }
+        : tab === "policies"
+          ? {
+              ...data,
+              version: data.version || "1.0",
+              status: data.status || "ساري",
+            }
+          : data;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        show("error", (err as { error?: string }).error || "فشل الإضافة");
+        return;
+      }
+      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      setAddOpen(false);
+      loadAll();
+    } catch {
+      show("error", "تعذر الاتصال بالخادم");
     }
   };
 
@@ -145,11 +250,12 @@ export default function GovernancePage() {
   const pendingApprovals = approvals.filter((a) => a.statusRaw === "pending").length;
   const pendingSignatures = signatures.filter((s) => s.statusRaw === "pending").length;
   const canWrite = canWriteRole(user.role);
-  const isEmpty = !loading && approvals.length === 0 && policies.length === 0;
+  const isEmpty = !loading && approvals.length === 0 && policies.length === 0 && signatures.length === 0;
 
   return (
     <AppShell>
       {Toast}
+      {ActionToast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader
           icon="⚙️"
@@ -157,23 +263,38 @@ export default function GovernancePage() {
           subtitle="اعتمادات الوكيل الصناعي، سياسات الحوكمة، التوقيع الإلكتروني، وسجل التدقيق"
           actions={
             <>
-              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات</BtnPrimary>}
-              {isEmpty && (
-                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
-                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
-                </button>
+              {canWrite && canAdd && (
+                <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
               )}
+              {canWrite && <BtnSecondary onClick={seed}>{seeding ? "⏳ ..." : "📦 بيانات تجريبية"}</BtnSecondary>}
             </>
           }
         />
 
         {actionMsg && (
-          <p style={{ background: "rgba(34,197,94,0.1)", color: "#16a34a", padding: "0.65rem 1rem", borderRadius: "10px", marginBottom: "1rem", fontWeight: 600, fontSize: "0.85rem" }}>
+          <p
+            style={{
+              background: "rgba(34,197,94,0.1)",
+              color: "#16a34a",
+              padding: "0.65rem 1rem",
+              borderRadius: "10px",
+              marginBottom: "1rem",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+            }}
+          >
             {actionMsg}
           </p>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gap: "0.75rem",
+            marginBottom: "1.25rem",
+          }}
+        >
           {[
             { label: "طلبات معلقة", value: pendingApprovals, color: "#f59e0b" },
             { label: "توقيعات معلقة", value: pendingSignatures, color: "#c3152a" },
@@ -182,7 +303,18 @@ export default function GovernancePage() {
           ].map((s) => (
             <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
               <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
-              <p style={{ fontWeight: 800, fontSize: "1.05rem", color: s.color }}>{s.value}</p>
+              <p
+                style={{
+                  fontWeight: 800,
+                  fontSize: "1.05rem",
+                  color: s.color,
+                  fontVariantNumeric: "tabular-nums",
+                  direction: "ltr",
+                  unicodeBidi: "isolate",
+                }}
+              >
+                {formatNumber(s.value, { maximumFractionDigits: 0 })}
+              </p>
             </div>
           ))}
         </div>
@@ -192,7 +324,10 @@ export default function GovernancePage() {
             <button
               key={t.key}
               type="button"
-              onClick={() => { setTab(t.key); setActionMsg(null); }}
+              onClick={() => {
+                setTab(t.key);
+                setActionMsg(null);
+              }}
               style={{
                 padding: "0.5rem 0.95rem",
                 borderRadius: "10px",
@@ -213,7 +348,15 @@ export default function GovernancePage() {
         {loading ? (
           <PageLoader />
         ) : isEmpty ? (
-          <EmptyState icon="⚙️" title="لا توجد بيانات حوكمة" description="حمّل البيانات التجريبية لتظهر طلبات الاعتماد والسياسات والتوقيعات" onSeed={seed} seeding={seeding} canWrite={canWrite} />
+          <EmptyState
+            icon="⚙️"
+            title="لا توجد بيانات حوكمة"
+            description="أضف طلب اعتماد أو سياسة، أو حمّل البيانات التجريبية"
+            onSeed={seed}
+            onAdd={canWrite && canAdd ? () => setAddOpen(true) : undefined}
+            seeding={seeding}
+            canWrite={canWrite}
+          />
         ) : (
           <>
             {tab === "approvals" && (
@@ -221,9 +364,13 @@ export default function GovernancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["المرجع", "النوع", "العنوان", "مقدم الطلب", "الأولوية", "الحالة", canApprove ? "إجراء" : ""].filter(Boolean).map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
-                      ))}
+                      {["المرجع", "النوع", "العنوان", "مقدم الطلب", "الأولوية", "الحالة", canApprove ? "إجراء" : ""]
+                        .filter(Boolean)
+                        .map((h) => (
+                          <th key={h} style={thStyle}>
+                            {h}
+                          </th>
+                        ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -234,21 +381,48 @@ export default function GovernancePage() {
                         <td style={tdStyle}>{a.title}</td>
                         <td style={tdStyle}>{a.requester}</td>
                         <td style={tdStyle}>{a.priority}</td>
-                        <td style={{ ...tdStyle, color: a.statusRaw === "pending" ? "#f59e0b" : a.statusRaw === "approved" ? "#22c55e" : "#c3152a", fontWeight: 600 }}>
+                        <td
+                          style={{
+                            ...tdStyle,
+                            color:
+                              a.statusRaw === "pending"
+                                ? "#f59e0b"
+                                : a.statusRaw === "approved"
+                                  ? "#22c55e"
+                                  : "#c3152a",
+                            fontWeight: 600,
+                          }}
+                        >
                           {a.status}
                         </td>
                         {canApprove && (
                           <td style={tdStyle}>
                             {a.statusRaw === "pending" && (
                               <div style={{ display: "flex", gap: "0.35rem" }}>
-                                <button type="button" onClick={() => resolveApproval(a.id, "approved")} style={btnSmall("#22c55e")}>اعتماد</button>
-                                <button type="button" onClick={() => resolveApproval(a.id, "rejected")} style={btnSmall("#c3152a")}>رفض</button>
+                                <button type="button" onClick={() => resolveApproval(a.id, "approved")} style={btnSmall("#22c55e")}>
+                                  اعتماد
+                                </button>
+                                <button type="button" onClick={() => resolveApproval(a.id, "rejected")} style={btnSmall("#c3152a")}>
+                                  رفض
+                                </button>
                               </div>
                             )}
                           </td>
                         )}
                       </tr>
                     ))}
+                    {approvals.length === 0 && (
+                      <tr>
+                        <td colSpan={7} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
+                          لا توجد طلبات —{" "}
+                          {canWrite && (
+                            <button type="button" onClick={() => setAddOpen(true)} style={{ color: "#c3152a", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                              ＋ إضافة طلب
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -269,6 +443,16 @@ export default function GovernancePage() {
                     </p>
                   </div>
                 ))}
+                {policies.length === 0 && (
+                  <p style={{ gridColumn: "1 / -1", textAlign: "center", color: "#64748b", padding: "2rem" }}>
+                    لا توجد سياسات{" "}
+                    {canWrite && (
+                      <button type="button" onClick={() => setAddOpen(true)} className="btn-primary" style={{ marginInlineStart: 8, padding: "0.45rem 1rem", fontSize: "0.8rem" }}>
+                        ＋ إضافة سياسة
+                      </button>
+                    )}
+                  </p>
+                )}
               </div>
             )}
 
@@ -278,7 +462,9 @@ export default function GovernancePage() {
                   <thead>
                     <tr>
                       {["المرجع", "المستند", "الموقّع", "الحالة", "التاريخ", "إجراء"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
+                        <th key={h} style={thStyle}>
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -288,33 +474,57 @@ export default function GovernancePage() {
                         <td style={tdStyle}>{s.refNo}</td>
                         <td style={tdStyle}>{s.documentTitle}</td>
                         <td style={tdStyle}>{s.signer}</td>
-                        <td style={{ ...tdStyle, color: s.statusRaw === "signed" ? "#22c55e" : s.statusRaw === "pending" ? "#f59e0b" : "#94a3b8" }}>
+                        <td
+                          style={{
+                            ...tdStyle,
+                            color:
+                              s.statusRaw === "signed" ? "#22c55e" : s.statusRaw === "pending" ? "#f59e0b" : "#94a3b8",
+                          }}
+                        >
                           {s.status}
                         </td>
                         <td style={tdStyle}>{s.signedAt}</td>
                         <td style={tdStyle}>
                           {s.statusRaw === "pending" && (
                             <div style={{ display: "flex", gap: "0.35rem" }}>
-                              <button type="button" onClick={() => signDocument(s.id, "sign")} style={btnSmall("#c3152a")}>توقيع</button>
-                              <button type="button" onClick={() => signDocument(s.id, "reject")} style={btnSmall("#94a3b8")}>رفض</button>
+                              <button type="button" onClick={() => signDocument(s.id, "sign")} style={btnSmall("#c3152a")}>
+                                توقيع
+                              </button>
+                              <button type="button" onClick={() => signDocument(s.id, "reject")} style={btnSmall("#94a3b8")}>
+                                رفض
+                              </button>
                             </div>
                           )}
                         </td>
                       </tr>
                     ))}
+                    {signatures.length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
+                          لا توجد طلبات توقيع —{" "}
+                          {canWrite && (
+                            <button type="button" onClick={() => setAddOpen(true)} style={{ color: "#c3152a", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                              ＋ إضافة طلب توقيع
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             )}
 
-            {tab === "audit" && (
-              canApprove ? (
+            {tab === "audit" &&
+              (canApprove ? (
                 <div className="card-white" style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr>
                         {["المستخدم", "الإجراء", "الكيان", "التفاصيل", "الخطورة", "الوقت"].map((h) => (
-                          <th key={h} style={thStyle}>{h}</th>
+                          <th key={h} style={thStyle}>
+                            {h}
+                          </th>
                         ))}
                       </tr>
                     </thead>
@@ -324,8 +534,25 @@ export default function GovernancePage() {
                           <td style={tdStyle}>{l.user}</td>
                           <td style={tdStyle}>{l.action}</td>
                           <td style={tdStyle}>{l.entity}</td>
-                          <td style={{ ...tdStyle, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.details}</td>
-                          <td style={{ ...tdStyle, color: l.severity === "critical" ? "#c3152a" : l.severity === "warning" ? "#f59e0b" : "#64748b" }}>{l.severity}</td>
+                          <td
+                            style={{
+                              ...tdStyle,
+                              maxWidth: 220,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {l.details}
+                          </td>
+                          <td
+                            style={{
+                              ...tdStyle,
+                              color: l.severity === "critical" ? "#c3152a" : l.severity === "warning" ? "#f59e0b" : "#64748b",
+                            }}
+                          >
+                            {l.severity}
+                          </td>
                           <td style={tdStyle}>{l.time}</td>
                         </tr>
                       ))}
@@ -333,12 +560,26 @@ export default function GovernancePage() {
                   </table>
                 </div>
               ) : (
-                <p style={{ color: "#64748b", textAlign: "center", padding: "2rem" }}>سجل التدقيق متاح للمدير والوكيل الصناعي فقط</p>
-              )
-            )}
+                <p style={{ color: "#64748b", textAlign: "center", padding: "2rem" }}>
+                  سجل التدقيق متاح للمدير والوكيل الصناعي فقط
+                </p>
+              ))}
           </>
         )}
       </div>
+
+      {canAdd && (
+        <Modal
+          open={addOpen}
+          title={activeTab.addLabel || "إضافة"}
+          fields={formFields}
+          onSave={handleAdd}
+          onClose={() => setAddOpen(false)}
+          saveLabel="إضافة"
+          enableParties={false}
+          enableFiles={false}
+        />
+      )}
     </AppShell>
   );
 }
