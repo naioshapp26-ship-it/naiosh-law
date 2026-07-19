@@ -62,14 +62,29 @@ export function Navbar({ variant = "dark" }: Props) {
   const linkHoverBg = isLanding ? "rgba(195,21,42,0.06)" : "rgba(255,255,255,0.06)";
   const linkHoverColor = isLanding ? "#c3152a" : "#ffffff";
 
-  const links = [
-    { href: "/#modules", label: "المنتجات" },
-    { href: "/#footer-support", label: "الدعم الفني" },
-    { href: "/#demo-request", label: "طلب تجريبي" },
-    { href: "/#features", label: "المميزات" },
-    { href: "/#modules", label: "الوحدات" },
-    { href: "/app/dashboard", label: "عرض تجريبي" },
-  ];
+  const links = isLanding
+    ? [
+        { href: "/", label: "الرئيسية" },
+        { href: "/#modules", label: "منتجاتنا" },
+        { href: "/#features", label: "خدماتنا" },
+        { href: "/app/modules/administration", label: "الفروع" },
+        { href: "/app/dashboard", label: "المنصات" },
+        { href: "/#demo-request", label: "الإعلانات" },
+        { href: "/login", label: "العضوية" },
+        { href: "/#features", label: "المدونة" },
+        { href: "/#modules", label: "الأسعار" },
+        { href: "/#footer-support", label: "اتصل بنا" },
+        { href: "/#footer-support", label: "مركز المعلومات" },
+        { href: "/login", label: "سجل معانا" },
+      ]
+    : [
+        { href: "/#modules", label: "المنتجات" },
+        { href: "/#footer-support", label: "الدعم الفني" },
+        { href: "/#demo-request", label: "طلب تجريبي" },
+        { href: "/#features", label: "المميزات" },
+        { href: "/#modules", label: "الوحدات" },
+        { href: "/app/dashboard", label: "عرض تجريبي" },
+      ];
 
   const solutionItems = [
     { href: "/app/modules/case-management", label: "حل إدارة القضايا" },
@@ -79,26 +94,66 @@ export function Navbar({ variant = "dark" }: Props) {
   ];
 
   const utilityButtons = isLanding ? (
-  <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
       <Link
         href="/login"
         style={{
-          padding: "0.45rem 0.9rem",
+          padding: "0.42rem 0.85rem",
+          borderRadius: "999px",
+          border: "1px solid #fecaca",
+          background: "#fff1f2",
+          color: "#9f1239",
+          fontSize: "0.76rem",
+          fontWeight: 800,
+        }}
+      >
+        إنشاء حساب
+      </Link>
+      <Link
+        href="/login"
+        style={{
+          padding: "0.42rem 0.85rem",
           borderRadius: "999px",
           border: "1px solid #e2e8f0",
           color: "#475569",
-          fontSize: "0.8rem",
+          fontSize: "0.76rem",
           fontWeight: 700,
         }}
       >
         تسجيل الدخول
       </Link>
       <Link
+        href="/app/dashboard"
+        style={{
+          padding: "0.42rem 0.85rem",
+          borderRadius: "999px",
+          border: "1px solid #e2e8f0",
+          color: "#475569",
+          fontSize: "0.76rem",
+          fontWeight: 700,
+        }}
+      >
+        صفحتي
+      </Link>
+      <Link
         href="/login"
         className="btn-primary"
-        style={{ padding: "0.5rem 1.15rem", fontSize: "0.8rem" }}
+        style={{ padding: "0.45rem 1rem", fontSize: "0.76rem", borderRadius: 999 }}
       >
-        دخول النظام
+        استأجر النظام الآن
+      </Link>
+      <Link
+        href="/app/dashboard"
+        style={{
+          padding: "0.42rem 0.85rem",
+          borderRadius: "999px",
+          border: "1px solid #c3152a",
+          color: "#c3152a",
+          fontSize: "0.76rem",
+          fontWeight: 800,
+        }}
+      >
+        أنشئ صفحتك
       </Link>
     </div>
   ) : (
@@ -113,26 +168,6 @@ export function Navbar({ variant = "dark" }: Props) {
 
   return (
     <>
-      {isLanding && (
-        <div style={{ position: "fixed", top: 0, insetInline: 0, zIndex: 110 }}>
-          <div
-            style={{
-              background: "linear-gradient(90deg, #3b0a10 0%, #1a0508 50%, #3b0a10 100%)",
-              color: "#fecaca",
-              fontSize: "0.78rem",
-              fontWeight: 600,
-              padding: "0.55rem 1rem",
-              textAlign: "center",
-            }}
-          >
-            عروض محدودة على منظومة نايوش 360 —{" "}
-            <Link href="/login" style={{ color: "#fff", fontWeight: 800, textDecoration: "underline" }}>
-              ابدأ الآن
-            </Link>
-          </div>
-        </div>
-      )}
-
       <header style={navStyle}>
         <div
           className="container-max"
@@ -146,7 +181,8 @@ export function Navbar({ variant = "dark" }: Props) {
             subtitle={isLanding ? "النظام القانوني السيادي 360" : undefined}
           />
 
-          <nav style={{ display: "flex", alignItems: "center", gap: "0.15rem" }} className="desktop-nav">
+          <nav style={{ display: "flex", alignItems: "center", gap: isLanding ? "0.05rem" : "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }} className="desktop-nav">
+            {!isLanding && (
             <div ref={solutionsMenuRef} style={{ position: "relative" }}>
               <button
                 type="button"
@@ -203,15 +239,16 @@ export function Navbar({ variant = "dark" }: Props) {
                 </div>
               )}
             </div>
+            )}
             {links.map((l) => (
               <Link
                 key={`${l.href}-${l.label}`}
                 href={l.href}
                 style={{
-                  color: linkColor,
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  padding: "0.45rem 0.75rem",
+                  color: isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor,
+                  fontSize: isLanding ? "0.78rem" : "0.875rem",
+                  fontWeight: isLanding && l.label === "الرئيسية" ? 800 : 600,
+                  padding: isLanding ? "0.35rem 0.48rem" : "0.45rem 0.75rem",
                   borderRadius: "8px",
                   transition: "color 0.2s, background 0.2s",
                 }}
@@ -220,7 +257,8 @@ export function Navbar({ variant = "dark" }: Props) {
                   (e.currentTarget as HTMLElement).style.background = linkHoverBg;
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = linkColor;
+                  (e.currentTarget as HTMLElement).style.color =
+                    isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor;
                   (e.currentTarget as HTMLElement).style.background = "transparent";
                 }}
               >
