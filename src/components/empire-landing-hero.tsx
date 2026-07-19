@@ -106,7 +106,10 @@ export function EmpireLandingHero() {
   const [activeRail, setActiveRail] = useState("صفحتي");
   const hasMedia = Boolean(displaySrc);
   const words = HEADLINE.split(" ");
-  const overlay = Math.min(70, Math.max(50, Number(theme.heroOverlayStrength) || 62)) / 100;
+  const fitContain = theme.heroImageMode !== "cover";
+  const overlayPct = Math.min(70, Math.max(0, Number(theme.heroOverlayStrength) || 0));
+  // لا نغطّي الاسم على الصور: التراكب للفيديو/وضع الملء فقط إن طُلب
+  const overlay = !hasMedia || (!isVideo && fitContain) ? 0 : overlayPct / 100;
 
   return (
     <section
@@ -262,8 +265,8 @@ export function EmpireLandingHero() {
                 position: "relative",
                 borderRadius: 22,
                 overflow: "hidden",
-                aspectRatio: "16 / 10",
-                background: "#111827",
+                aspectRatio: fitContain ? "1 / 1" : "16 / 10",
+                background: "#0b1220",
                 boxShadow:
                   "0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.12), 0 0 60px rgba(225,29,46,0.35)",
               }}
@@ -280,8 +283,11 @@ export function EmpireLandingHero() {
                     style={{
                       width: "100%",
                       height: "100%",
-                      objectFit: theme.heroImageMode === "center" ? "contain" : "cover",
+                      objectFit: fitContain ? "contain" : "cover",
+                      objectPosition: "center",
                       display: "block",
+                      padding: fitContain ? 12 : 0,
+                      boxSizing: "border-box",
                     }}
                   />
                 ) : (
@@ -293,8 +299,11 @@ export function EmpireLandingHero() {
                     style={{
                       width: "100%",
                       height: "100%",
-                      objectFit: theme.heroImageMode === "center" ? "contain" : "cover",
+                      objectFit: fitContain ? "contain" : "cover",
+                      objectPosition: "center",
                       display: "block",
+                      padding: fitContain ? 12 : 0,
+                      boxSizing: "border-box",
                     }}
                   />
                 )
@@ -329,7 +338,7 @@ export function EmpireLandingHero() {
                   </div>
                 </div>
               )}
-              {hasMedia && (
+              {hasMedia && overlay > 0 && (
                 <div
                   aria-hidden
                   style={{
@@ -341,7 +350,7 @@ export function EmpireLandingHero() {
                 />
               )}
 
-              {hasMedia && (
+              {hasMedia && isVideo && (
                 <motion.div
                   initial={reduce ? false : { opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}

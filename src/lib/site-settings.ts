@@ -57,9 +57,9 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   headingColor: "#0a0a12",
   paragraphColor: "#64748b",
   linkColor: "#1e3a8a",
-  heroImageMode: "cover",
+  heroImageMode: "center",
   heroActiveType: "image",
-  heroOverlayStrength: 62,
+  heroOverlayStrength: 0,
   heroAutoplaySlider: true,
   heroActiveImageCaption: "",
   heroActiveVideoCaption: "",
@@ -257,10 +257,10 @@ export function recordToTheme(row: {
     headingColor: row.headingColor || DEFAULT_SITE_THEME.headingColor,
     paragraphColor: row.paragraphColor || DEFAULT_SITE_THEME.paragraphColor,
     linkColor: row.linkColor || DEFAULT_SITE_THEME.linkColor,
-    heroImageMode: row.heroImageMode === "center" ? "center" : "cover",
+    heroImageMode: row.heroImageMode === "cover" ? "cover" : "center",
     heroActiveType: row.heroActiveType === "video" ? "video" : "image",
     heroOverlayStrength: Number.isFinite(Number(row.heroOverlayStrength))
-      ? Number(row.heroOverlayStrength)
+      ? Math.min(70, Math.max(0, Math.round(Number(row.heroOverlayStrength))))
       : DEFAULT_SITE_THEME.heroOverlayStrength,
     heroAutoplaySlider: row.heroAutoplaySlider !== false,
     heroActiveImageCaption: row.heroActiveImageCaption || "",
