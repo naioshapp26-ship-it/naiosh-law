@@ -66,7 +66,7 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
  */
 export function EmpireLandingHero() {
   const reduce = useReducedMotion();
-  const { heroBannerSrc, theme, logoSrc } = useSiteTheme();
+  const { heroBannerSrc, theme } = useSiteTheme();
   const [libraryMedia, setLibraryMedia] = useState<{ type: string; url: string }[]>([]);
   const [slide, setSlide] = useState(0);
 
@@ -299,16 +299,35 @@ export function EmpireLandingHero() {
                   />
                 )
               ) : (
+                /* لا نعرض الشعار هنا — الشعار للهيدر فقط؛ ارفع صورة/فيديو من إعدادات النظام */
                 <div
                   style={{
                     width: "100%",
                     height: "100%",
-                    background: logoSrc
-                      ? `linear-gradient(145deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35)), url(${logoSrc}) center/55% no-repeat`
-                      : "linear-gradient(145deg, rgba(255,255,255,0.14), rgba(0,0,0,0.4))",
-                    backgroundColor: "#7f1d1d",
+                    background:
+                      "radial-gradient(ellipse 70% 80% at 50% 40%, rgba(255,255,255,0.12) 0%, transparent 55%), linear-gradient(145deg, #9f1239 0%, #450a0a 55%, #1a0508 100%)",
+                    display: "grid",
+                    placeItems: "center",
+                    padding: "1.5rem",
+                    textAlign: "center",
                   }}
-                />
+                >
+                  <div>
+                    <p
+                      style={{
+                        fontSize: "1.05rem",
+                        fontWeight: 800,
+                        marginBottom: "0.35rem",
+                        letterSpacing: "-0.02em",
+                      }}
+                    >
+                      مساحة عرض النظام
+                    </p>
+                    <p style={{ fontSize: "0.8rem", opacity: 0.78, lineHeight: 1.55, maxWidth: 260, margin: "0 auto" }}>
+                      ارفع صورة أو فيديو للهيرو من إعدادات النظام ليظهر هنا
+                    </p>
+                  </div>
+                </div>
               )}
               {hasMedia && (
                 <div
@@ -322,45 +341,47 @@ export function EmpireLandingHero() {
                 />
               )}
 
-              <motion.div
-                initial={reduce ? false : { opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.55, duration: 0.55, ease: EASE }}
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  bottom: 14,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  background: "#fff",
-                  color: "#0a0a12",
-                  borderRadius: 14,
-                  padding: "8px 12px 8px 8px",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-                  maxWidth: "78%",
-                }}
-              >
-                <motion.span
-                  animate={reduce ? undefined : { scale: [1, 1.08, 1] }}
-                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+              {hasMedia && (
+                <motion.div
+                  initial={reduce ? false : { opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55, duration: 0.55, ease: EASE }}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    background: "#c3152a",
-                    color: "#fff",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
+                    position: "absolute",
+                    left: 14,
+                    bottom: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    background: "#fff",
+                    color: "#0a0a12",
+                    borderRadius: 14,
+                    padding: "8px 12px 8px 8px",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+                    maxWidth: "78%",
                   }}
                 >
-                  <Play size={16} fill="currentColor" />
-                </motion.span>
-                <span style={{ fontSize: "0.78rem", fontWeight: 700, lineHeight: 1.35 }}>
-                  الذكاء القانوني في مكتبك — شاهد العرض
-                </span>
-              </motion.div>
+                  <motion.span
+                    animate={reduce ? undefined : { scale: [1, 1.08, 1] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: "#c3152a",
+                      color: "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Play size={16} fill="currentColor" />
+                  </motion.span>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, lineHeight: 1.35 }}>
+                    الذكاء القانوني في مكتبك — شاهد العرض
+                  </span>
+                </motion.div>
+              )}
             </motion.div>
 
             <motion.div {...fadeUp(reduce, 0.28)} style={{ marginTop: "1rem" }}>
