@@ -7,13 +7,7 @@ import { useSession } from "@/lib/session";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DEFAULT_SITE_THEME, getHeroBannerSrc, getLogoSrc, type SiteTheme } from "@/lib/site-settings";
 import { BrandLogo } from "@/components/brand-logo";
-import {
-  HERO_MEDIA_MAX_BYTES,
-  LOGO_MAX_BYTES,
-  isHeroVideoSrc,
-  type HeroMediaKind,
-} from "@/lib/hero-media";
-import { formatFileSize } from "@/lib/file-upload";
+import { isHeroVideoSrc, type HeroMediaKind } from "@/lib/hero-media";
 
 type ColorField = { key: keyof SiteTheme; label: string; hint?: string };
 
@@ -162,25 +156,18 @@ export default function SystemSettingsPage() {
 
   const handleLogoFile = (file: File | null) => {
     if (!file) return;
-    if (file.size > LOGO_MAX_BYTES) {
-      show("error", `حجم الشعار كبير جداً — الحد الأقصى ${Math.round(LOGO_MAX_BYTES / 1000)} كيلوبايت`);
-      return;
-    }
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = String(reader.result ?? "");
       patch("logoData", dataUrl);
       show("success", "تم تحميل الشعار — اضغط حفظ لتطبيقه");
     };
+    reader.onerror = () => show("error", "فشل قراءة ملف الشعار");
     reader.readAsDataURL(file);
   };
 
   const handleHeroMediaFile = async (file: File | null) => {
     if (!file) return;
-    if (file.size > HERO_MEDIA_MAX_BYTES) {
-      show("error", `حجم الملف كبير جداً — الحد الأقصى ${formatFileSize(HERO_MEDIA_MAX_BYTES)}`);
-      return;
-    }
     const isImage = file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(file.name);
     const isVideo = file.type.startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(file.name);
     if (!isImage && !isVideo) {
@@ -413,7 +400,7 @@ export default function SystemSettingsPage() {
                     )}
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
-                    الحد الأقصى {Math.round(LOGO_MAX_BYTES / 1000)} كيلوبايت — يمكن رفع الشعار الأصلي بدون تصغير زائد
+                    يمكن رفع الشعار الأصلي بأي حجم بدون تصغير
                   </p>
                 </div>
                 <div>
@@ -434,9 +421,8 @@ export default function SystemSettingsPage() {
               <div className="card-white" style={{ padding: "1.35rem" }}>
                 <h2 style={{ fontWeight: 800, marginBottom: "0.4rem", fontSize: "1rem" }}>🖼️ بنر / فيديو واجهة الهيرو</h2>
                 <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "1rem", lineHeight: 1.7 }}>
-                  ارفع صورة بنر أو فيديو تظهر في لوحة بارزة على يسار قسم الهيرو (الصفحة الرئيسية). الحد الأقصى للفيديو
-                  والصورة <strong>100 ميجابايت</strong> ({formatFileSize(HERO_MEDIA_MAX_BYTES)}) — الرفع يُحفظ فورًا ولا
-                  يُمسح عند حفظ باقي الإعدادات.
+                  ارفع صورة بنر أو فيديو تظهر في لوحة بارزة على يسار قسم الهيرو (الصفحة الرئيسية) — بدون حد لحجم الملف.
+                  الرفع يُحفظ فورًا ولا يُمسح عند حفظ باقي الإعدادات.
                 </p>
                 <div style={{ marginBottom: "1rem" }}>
                   <label className="input-label">مسار البنر/الفيديو (اختياري — رابط أو مسار محلي)</label>
@@ -478,7 +464,7 @@ export default function SystemSettingsPage() {
                     )}
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.4rem" }}>
-                    يدعم فيديو الهيرو حتى 100 ميجابايت ويظهر فورًا على الصفحة الرئيسية
+                    ارفع أي صورة أو فيديو للهيرو بأي حجم — يظهر فورًا على الصفحة الرئيسية
                   </p>
                 </div>
                 {bannerPreview ? (

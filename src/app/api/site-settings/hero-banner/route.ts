@@ -24,7 +24,7 @@ function parseDataUrl(dataUrl: string): { mimeType: string; bytes: Buffer } | nu
   }
 }
 
-/** تقديم بنر/فيديو الهيرو الحالي من الملف أو من قاعدة البيانات (حتى 100MB) */
+/** تقديم بنر/فيديو الهيرو الحالي من الملف أو من قاعدة البيانات */
 export async function GET(request: Request) {
   let row = await prisma.siteSettings.findUnique({ where: { id: "default" } });
   if (!row) {
