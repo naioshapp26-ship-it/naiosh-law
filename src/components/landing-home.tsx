@@ -92,21 +92,38 @@ export default function LandingHome() {
       {/* Features */}
       <section id="features" style={{ background: "#f8f9fb", padding: "4.5rem 0", position: "relative", overflow: "hidden" }}>
         {!reduce && (
-          <motion.div
-            aria-hidden
-            style={{
-              position: "absolute",
-              width: 420,
-              height: 420,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(195,21,42,0.08) 0%, transparent 70%)",
-              top: -80,
-              right: -60,
-              pointerEvents: "none",
-            }}
-            animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.85, 0.5] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <>
+            <motion.div
+              aria-hidden
+              style={{
+                position: "absolute",
+                width: 420,
+                height: 420,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(195,21,42,0.08) 0%, transparent 70%)",
+                top: -80,
+                right: -60,
+                pointerEvents: "none",
+              }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.85, 0.5] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              aria-hidden
+              style={{
+                position: "absolute",
+                width: 280,
+                height: 280,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(195,21,42,0.06) 0%, transparent 70%)",
+                bottom: -40,
+                left: -40,
+                pointerEvents: "none",
+              }}
+              animate={{ scale: [1, 1.2, 1], x: [0, 24, 0] }}
+              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </>
         )}
 
         <div className="container-max" style={{ position: "relative" }}>
@@ -393,6 +410,17 @@ export default function LandingHome() {
         }
         .landing-feature-card:hover {
           box-shadow: 0 18px 40px rgba(195, 21, 42, 0.12);
+          border-color: rgba(195, 21, 42, 0.18);
+        }
+        .btn-pulse-glow {
+          animation: landing-btn-pulse 2.6s ease-in-out infinite;
+        }
+        @keyframes landing-btn-pulse {
+          0%, 100% { box-shadow: 0 8px 24px rgba(195, 21, 42, 0.28); }
+          50% { box-shadow: 0 12px 36px rgba(195, 21, 42, 0.5); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .btn-pulse-glow { animation: none !important; }
         }
       `}</style>
     </>
