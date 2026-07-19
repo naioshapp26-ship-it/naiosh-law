@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { LandingPromoBar } from "@/components/landing-promo-bar";
-import { HeroSection } from "@/components/hero";
+import { EmpireLandingHero } from "@/components/empire-landing-hero";
 import { ModuleCard } from "@/components/module-card";
 import { BrandLogo } from "@/components/brand-logo";
 import { modules } from "@/data/modules";
@@ -87,7 +87,7 @@ export default function LandingHome() {
     <>
       <LandingPromoBar />
       <Navbar variant="landing" />
-      <HeroSection variant="landing" />
+      <EmpireLandingHero />
 
       {/* Features */}
       <section id="features" style={{ background: "#f8f9fb", padding: "6rem 0", position: "relative", overflow: "hidden" }}>

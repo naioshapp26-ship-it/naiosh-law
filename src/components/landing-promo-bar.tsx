@@ -10,21 +10,20 @@ export function LandingPromoBar() {
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 60,
-        background: "linear-gradient(90deg, #3b0a10 0%, #1a0508 50%, #3b0a10 100%)",
-        color: "#fecaca",
-        fontSize: "0.78rem",
-        fontWeight: 600,
+        zIndex: 110,
+        background: "linear-gradient(90deg, #7f1d1d 0%, #450a0a 50%, #7f1d1d 100%)",
+        color: "#fff",
+        fontSize: "0.8rem",
+        fontWeight: 700,
         padding: "0.55rem 1rem",
         textAlign: "center",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
       }}
     >
-      <span>عروض محدودة على منظومة نايوش 360 القانونية — </span>
-      <Link href="/login" style={{ color: "#fff", fontWeight: 800, textDecoration: "underline" }}>
-        ابدأ الآن
+      <span>ابدأ الآن | عروض محدودة على منظومة نايوش القانونية 360 — </span>
+      <Link href="/login" style={{ color: "#fecaca", fontWeight: 900, textDecoration: "underline" }}>
+        سجّل مجانًا
       </Link>
-      <span> — خصومات على الاشتراك السنوي لفترة محدودة</span>
     </div>
   );
 }
