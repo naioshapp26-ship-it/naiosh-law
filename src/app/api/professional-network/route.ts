@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
 import { getSessionFromCookies } from "@/lib/auth";
+import { formatDate } from "@/lib/format";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -24,7 +25,7 @@ export async function GET() {
       message: n.message ?? "",
       from: n.requester.name,
       to: n.receiver.name,
-      date: n.createdAt.toLocaleDateString("ar-EG"),
+      date: formatDate(n.createdAt, { month: "numeric", day: "numeric", year: "numeric" }),
     }))
   );
 }

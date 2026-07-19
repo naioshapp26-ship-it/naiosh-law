@@ -774,7 +774,7 @@ async function main() {
         refNo: "APR-2026-0001",
         type: "case_opening",
         title: "اعتماد فتح قضية تجارية #2024-0548",
-        description: "طلب اعتماد فتح ملف قضية نزاع عقاري بقيمة 45000 ج.م",
+        description: "طلب اعتماد فتح ملف قضية نزاع عقاري بقيمة $45,000",
         requesterId: lawyer.id,
         status: "pending",
         priority: "عالٍ",

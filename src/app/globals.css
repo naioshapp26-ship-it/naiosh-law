@@ -29,6 +29,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* أرقام لاتينية (إنجليزية) في كل الواجهة حتى مع lang=ar */
+  font-variant-numeric: lining-nums tabular-nums;
+  -webkit-locale: "en";
 }
 
 body {
@@ -38,6 +41,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 a {

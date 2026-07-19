@@ -10,6 +10,7 @@ import { useSession, canWriteRole } from "@/lib/session";
 import type { ArchiveRecordDto } from "@/lib/archive-types";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { upsertRecordParties } from "@/lib/record-parties-client";
+import { formatDate } from "@/lib/format";
 
 const th: React.CSSProperties = {
   textAlign: "right",
@@ -279,7 +280,7 @@ export function ArchivePanel() {
                     <td style={td}>{row.sourceModuleLabel}</td>
                     <td style={td}>{row.sourceRef}</td>
                     <td style={td}>{row.attachments.length ? `📎 ${row.attachments.length}` : "—"}</td>
-                    <td style={td}>{new Date(row.createdAt).toLocaleDateString("ar-EG")}</td>
+                    <td style={td}>{formatDate(row.createdAt, { year: "numeric", month: "numeric", day: "numeric" })}</td>
                     <td style={td}>
                       <div style={{ display: "flex", gap: "0.35rem", flexWrap: "nowrap" }}>
                         <button type="button" style={actionBtn} onClick={() => setViewTarget(row)}>👁 عرض</button>

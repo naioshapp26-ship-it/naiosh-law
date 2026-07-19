@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={cairo.variable}>
+    <html lang="ar" dir="rtl" className={cairo.variable} style={{ fontVariantNumeric: "lining-nums tabular-nums" }}>
       <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <AppProviders>{children}</AppProviders>
       </body>

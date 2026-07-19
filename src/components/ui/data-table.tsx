@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { StatusBadge } from "./status-badge";
 import type { Column } from "@/data/module-configs";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 type Props = {
   columns: Column[];
@@ -58,13 +59,17 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
     }
     if (col.type === "currency") {
       return (
-        <span style={{ fontWeight: 700, color: "#0a0a12" }}>
-          {Number(String(val).replace(/,/g, "")).toLocaleString("ar-EG")} ج.م
+        <span style={{ fontWeight: 700, color: "#0a0a12", fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+          {formatCurrency(val)}
         </span>
       );
     }
     if (col.type === "number") {
-      return <span style={{ fontWeight: 600 }}>{String(val)}</span>;
+      return (
+        <span style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+          {formatNumber(val)}
+        </span>
+      );
     }
     return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
   };
