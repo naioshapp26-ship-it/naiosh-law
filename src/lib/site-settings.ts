@@ -18,6 +18,19 @@ export type SiteTheme = {
   heroBannerData: string | null;
   heroMediaKind: "image" | "video" | null;
   borderRadius: string;
+  secondaryColor: string;
+  buttonColor: string;
+  headerBgColor: string;
+  headingColor: string;
+  paragraphColor: string;
+  linkColor: string;
+  heroImageMode: "cover" | "center";
+  heroActiveType: "image" | "video";
+  heroOverlayStrength: number;
+  heroAutoplaySlider: boolean;
+  heroActiveImageCaption: string;
+  heroActiveVideoCaption: string;
+  heroActiveVideoDescription: string;
 };
 
 export const DEFAULT_SITE_THEME: SiteTheme = {
@@ -38,6 +51,19 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   heroBannerData: null,
   heroMediaKind: null,
   borderRadius: "12",
+  secondaryColor: "#fecaca",
+  buttonColor: "#a00f20",
+  headerBgColor: "#ffffff",
+  headingColor: "#0a0a12",
+  paragraphColor: "#64748b",
+  linkColor: "#1e3a8a",
+  heroImageMode: "cover",
+  heroActiveType: "image",
+  heroOverlayStrength: 62,
+  heroAutoplaySlider: true,
+  heroActiveImageCaption: "",
+  heroActiveVideoCaption: "",
+  heroActiveVideoDescription: "",
 };
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -61,6 +87,12 @@ export function applySiteTheme(theme: SiteTheme) {
   root.style.setProperty("--site-bg", theme.backgroundColor);
   root.style.setProperty("--dark", theme.textColor);
   root.style.setProperty("--radius-base", `${theme.borderRadius}px`);
+  root.style.setProperty("--secondary", theme.secondaryColor);
+  root.style.setProperty("--button-color", theme.buttonColor);
+  root.style.setProperty("--header-bg", theme.headerBgColor);
+  root.style.setProperty("--heading-color", theme.headingColor);
+  root.style.setProperty("--paragraph-color", theme.paragraphColor);
+  root.style.setProperty("--link-color", theme.linkColor);
 
   if (rgb) {
     root.style.setProperty("--primary-glow", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`);
@@ -78,12 +110,10 @@ export function getLogoSrc(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
   const path = theme.logoPath?.trim() || null;
   if (!path) return "";
 
-  // المسار الثابت للشعار المخصص (رفع ملف / data قديم)
   if (path.startsWith(LOGO_SERVE_PATH) || path.startsWith("/api/uploads/logo/") || path.startsWith("/uploads/logo/")) {
     return path.startsWith(LOGO_SERVE_PATH) ? path : LOGO_SERVE_PATH;
   }
 
-  // تجاهل الشعار الثابت القديم — حتى يستطيع المستخدم استبداله بحرية
   if (path === "/naiosh-logo.png" || path.split("?")[0] === "/naiosh-logo.png") {
     return "";
   }
@@ -91,7 +121,6 @@ export function getLogoSrc(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
   return path;
 }
 
-/** مسار ثابت لتقديم الشعار المخصص */
 export const LOGO_SERVE_PATH = "/api/site-settings/logo";
 
 export function logoCacheKey(updatedAt?: string | Date | null) {
@@ -116,7 +145,6 @@ export function hasCustomLogo(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
   return true;
 }
 
-/** مسار ثابت لتقديم بنر الهيرو (ملف أو نسخة قاعدة البيانات) */
 export const HERO_BANNER_SERVE_PATH = "/api/site-settings/hero-banner";
 
 export function heroBannerCacheKey(updatedAt?: string | Date | null) {
@@ -125,13 +153,11 @@ export function heroBannerCacheKey(updatedAt?: string | Date | null) {
   return Number.isFinite(t) ? t : null;
 }
 
-/** رابط العرض الثابت لبنر الهيرو مع كسر للكاش بعد التحديث */
 export function heroBannerPublicUrl(updatedAt?: string | Date | null) {
   const v = heroBannerCacheKey(updatedAt);
   return v ? `${HERO_BANNER_SERVE_PATH}?v=${v}` : HERO_BANNER_SERVE_PATH;
 }
 
-/** هل الإعدادات تحتوي وسائط هيرو محفوظة؟ */
 export function hasHeroBannerMedia(
   theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData" | "heroMediaKind">
 ) {
@@ -140,10 +166,6 @@ export function hasHeroBannerMedia(
   );
 }
 
-/**
- * بنر الهيرو للعرض في الواجهة.
- * يفضّل المسار القصير/الثابت — لا يُمرَّر data URL الضخم إلى <img>.
- */
 export function getHeroBannerSrc(
   theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData" | "heroMediaKind">,
   cacheKey?: string | number | null
@@ -156,7 +178,6 @@ export function getHeroBannerSrc(
   if (path) {
     if (path.startsWith(HERO_BANNER_SERVE_PATH)) return path;
     if (/^https?:\/\//i.test(path)) return path;
-    // مسارات الرفع المحلية تُقدَّم عبر endpoint ثابت (مع رجوع لقاعدة البيانات)
     if (path.startsWith("/api/uploads/hero/") || path.startsWith("/uploads/hero/")) {
       return `${HERO_BANNER_SERVE_PATH}${version}`;
     }
@@ -164,7 +185,6 @@ export function getHeroBannerSrc(
   }
 
   if (data) {
-    // data URL تُخدم عبر المسار الثابت حتى لا تُحمَّل داخل JSON الواجهة
     if (data.startsWith("data:")) return `${HERO_BANNER_SERVE_PATH}${version}`;
     return data;
   }
@@ -196,6 +216,19 @@ export function recordToTheme(row: {
   heroBannerData?: string | null;
   heroMediaKind?: string | null;
   borderRadius: string;
+  secondaryColor?: string | null;
+  buttonColor?: string | null;
+  headerBgColor?: string | null;
+  headingColor?: string | null;
+  paragraphColor?: string | null;
+  linkColor?: string | null;
+  heroImageMode?: string | null;
+  heroActiveType?: string | null;
+  heroOverlayStrength?: number | null;
+  heroAutoplaySlider?: boolean | null;
+  heroActiveImageCaption?: string | null;
+  heroActiveVideoCaption?: string | null;
+  heroActiveVideoDescription?: string | null;
 }): SiteTheme {
   const kind = row.heroMediaKind === "video" || row.heroMediaKind === "image" ? row.heroMediaKind : null;
   return {
@@ -216,5 +249,20 @@ export function recordToTheme(row: {
     heroBannerData: row.heroBannerData ?? null,
     heroMediaKind: kind,
     borderRadius: row.borderRadius,
+    secondaryColor: row.secondaryColor || DEFAULT_SITE_THEME.secondaryColor,
+    buttonColor: row.buttonColor || DEFAULT_SITE_THEME.buttonColor,
+    headerBgColor: row.headerBgColor || DEFAULT_SITE_THEME.headerBgColor,
+    headingColor: row.headingColor || DEFAULT_SITE_THEME.headingColor,
+    paragraphColor: row.paragraphColor || DEFAULT_SITE_THEME.paragraphColor,
+    linkColor: row.linkColor || DEFAULT_SITE_THEME.linkColor,
+    heroImageMode: row.heroImageMode === "center" ? "center" : "cover",
+    heroActiveType: row.heroActiveType === "video" ? "video" : "image",
+    heroOverlayStrength: Number.isFinite(Number(row.heroOverlayStrength))
+      ? Number(row.heroOverlayStrength)
+      : DEFAULT_SITE_THEME.heroOverlayStrength,
+    heroAutoplaySlider: row.heroAutoplaySlider !== false,
+    heroActiveImageCaption: row.heroActiveImageCaption || "",
+    heroActiveVideoCaption: row.heroActiveVideoCaption || "",
+    heroActiveVideoDescription: row.heroActiveVideoDescription || "",
   };
 }
