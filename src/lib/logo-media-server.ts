@@ -56,6 +56,7 @@ export async function saveLogoMediaFile(file: File): Promise<{
   mimeType: string;
   size: number;
   fileName: string;
+  buffer: Buffer;
 }> {
   if (file.size <= 0) throw new Error("الملف فارغ");
 
@@ -81,6 +82,7 @@ export async function saveLogoMediaFile(file: File): Promise<{
     mimeType,
     size: file.size,
     fileName,
+    buffer,
   };
 }
 

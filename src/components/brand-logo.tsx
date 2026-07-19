@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { BRAND } from "@/lib/brand";
 import { useSiteTheme } from "@/components/theme-provider";
+import { DEFAULT_PUBLIC_LOGO } from "@/lib/site-settings";
 
 type Props = {
   size?: number;
@@ -30,15 +32,24 @@ export function BrandLogo({
   const textColor = variant === "light" ? "text-white" : "text-slate-900";
   const subColor = variant === "light" ? "text-white/80" : "text-slate-500";
   const dimension = size;
-  const hasLogo = Boolean(logoSrc?.trim());
-  const isDataUrl = hasLogo && logoSrc.startsWith("data:");
-  const isRemoteApi = hasLogo && (logoSrc.startsWith("/api/") || logoSrc.startsWith("http"));
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const resolvedSrc =
+    failedSrc && logoSrc === failedSrc
+      ? DEFAULT_PUBLIC_LOGO
+      : logoSrc?.trim() || DEFAULT_PUBLIC_LOGO;
+  const hasLogo = Boolean(resolvedSrc);
+  const isDataUrl = hasLogo && resolvedSrc.startsWith("data:");
+  const isRemoteApi = hasLogo && (resolvedSrc.startsWith("/api/") || resolvedSrc.startsWith("http"));
 
   const imgStyle: React.CSSProperties = {
     width: dimension,
     height: dimension,
     objectFit: "contain",
     filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
+  };
+
+  const onImgError = () => {
+    if (resolvedSrc !== DEFAULT_PUBLIC_LOGO) setFailedSrc(logoSrc || resolvedSrc);
   };
 
   const placeholder = (
@@ -68,16 +79,17 @@ export function BrandLogo({
   ) : isDataUrl || isRemoteApi ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      key={logoSrc}
-      src={logoSrc}
+      key={resolvedSrc}
+      src={resolvedSrc}
       alt={BRAND.logoAlt}
       className={`shrink-0 ${animated ? "logo-float" : ""}`}
       style={imgStyle}
+      onError={onImgError}
     />
   ) : (
     <Image
-      key={logoSrc}
-      src={logoSrc}
+      key={resolvedSrc}
+      src={resolvedSrc}
       alt={BRAND.logoAlt}
       width={dimension}
       height={dimension}
@@ -85,6 +97,7 @@ export function BrandLogo({
       unoptimized
       className={`shrink-0 ${animated ? "logo-float" : ""}`}
       style={imgStyle}
+      onError={onImgError}
     />
   );
 
