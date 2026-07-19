@@ -32,7 +32,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   loading: true,
   refresh: async () => {},
   updateLocal: () => {},
-  logoSrc: DEFAULT_SITE_THEME.logoPath,
+  logoSrc: "",
   heroBannerSrc: null,
 });
 

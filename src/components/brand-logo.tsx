@@ -30,7 +30,9 @@ export function BrandLogo({
   const textColor = variant === "light" ? "text-white" : "text-slate-900";
   const subColor = variant === "light" ? "text-white/80" : "text-slate-500";
   const dimension = size;
-  const isDataUrl = logoSrc.startsWith("data:");
+  const hasLogo = Boolean(logoSrc?.trim());
+  const isDataUrl = hasLogo && logoSrc.startsWith("data:");
+  const isRemoteApi = hasLogo && (logoSrc.startsWith("/api/") || logoSrc.startsWith("http"));
 
   const imgStyle: React.CSSProperties = {
     width: dimension,
@@ -39,9 +41,34 @@ export function BrandLogo({
     filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
   };
 
-  const img = isDataUrl ? (
+  const placeholder = (
+    <div
+      className={`shrink-0 ${animated ? "logo-float" : ""}`}
+      style={{
+        width: dimension,
+        height: dimension,
+        borderRadius: "14px",
+        background: variant === "light" ? "rgba(255,255,255,0.14)" : "rgba(195,21,42,0.1)",
+        border: variant === "light" ? "1px solid rgba(255,255,255,0.2)" : "1px solid rgba(195,21,42,0.2)",
+        display: "grid",
+        placeItems: "center",
+        color: variant === "light" ? "#fff" : "#c3152a",
+        fontWeight: 900,
+        fontSize: Math.max(12, dimension * 0.34),
+        fontFamily: "var(--font-cairo)",
+      }}
+      aria-label={BRAND.logoAlt}
+    >
+      {(displayName || "N").trim().charAt(0)}
+    </div>
+  );
+
+  const img = !hasLogo ? (
+    placeholder
+  ) : isDataUrl || isRemoteApi ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      key={logoSrc}
       src={logoSrc}
       alt={BRAND.logoAlt}
       className={`shrink-0 ${animated ? "logo-float" : ""}`}
@@ -49,6 +76,7 @@ export function BrandLogo({
     />
   ) : (
     <Image
+      key={logoSrc}
       src={logoSrc}
       alt={BRAND.logoAlt}
       width={dimension}

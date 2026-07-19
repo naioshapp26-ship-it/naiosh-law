@@ -66,7 +66,7 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
  */
 export function EmpireLandingHero() {
   const reduce = useReducedMotion();
-  const { heroBannerSrc, theme } = useSiteTheme();
+  const { heroBannerSrc, theme, logoSrc } = useSiteTheme();
   const isVideo = isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
   const [notes, setNotes] = useState("");
   const [activeRail, setActiveRail] = useState("صفحتي");
@@ -256,8 +256,9 @@ export function EmpireLandingHero() {
                   style={{
                     width: "100%",
                     height: "100%",
-                    background:
-                      "linear-gradient(145deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35)), url(/naiosh-logo.png) center/55% no-repeat",
+                    background: logoSrc
+                      ? `linear-gradient(145deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35)), url(${logoSrc}) center/55% no-repeat`
+                      : "linear-gradient(145deg, rgba(255,255,255,0.14), rgba(0,0,0,0.4))",
                     backgroundColor: "#7f1d1d",
                   }}
                 />
