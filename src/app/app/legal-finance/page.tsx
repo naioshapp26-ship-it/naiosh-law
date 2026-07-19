@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { PageHeader, BtnPrimary, EmptyState, PageLoader, useSeedDemo } from "@/components/domain-page";
+import {
+  PageHeader,
+  BtnPrimary,
+  BtnSecondary,
+  EmptyState,
+  PageLoader,
+  useSeedDemo,
+  useToast,
+} from "@/components/domain-page";
+import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import type { FormField } from "@/data/module-configs";
 
 type Tab =
   | "invoices"
@@ -79,14 +89,124 @@ type PaymentItem = {
 
 type Spec = { id: string; name: string };
 
-const tabs: { key: Tab; label: string }[] = [
-  { key: "invoices", label: "الفواتير" },
-  { key: "fee-rules", label: "قواعد الأتعاب" },
+const tabs: { key: Tab; label: string; addLabel?: string }[] = [
+  { key: "invoices", label: "الفواتير", addLabel: "إضافة فاتورة" },
+  { key: "fee-rules", label: "قواعد الأتعاب", addLabel: "إضافة قاعدة أتعاب" },
   { key: "calculator", label: "حاسبة الأتعاب" },
-  { key: "bail", label: "كفالات مالية" },
-  { key: "personal", label: "ضمانات شخصية" },
-  { key: "notifications", label: "إشعارات رسمية" },
-  { key: "payments", label: "المدفوعات" },
+  { key: "bail", label: "كفالات مالية", addLabel: "إضافة كفالة" },
+  { key: "personal", label: "ضمانات شخصية", addLabel: "إضافة ضمان شخصي" },
+  { key: "notifications", label: "إشعارات رسمية", addLabel: "إضافة إشعار رسمي" },
+  { key: "payments", label: "المدفوعات", addLabel: "إضافة دفعة" },
+];
+
+const NOTIFICATION_TYPE_MAP: Record<string, string> = {
+  "استدعاء محكمة": "court_summons",
+  "موعد كفالة": "bail_deadline",
+  "تقديم مستند": "document_submission",
+  "تبليغ حكم": "judgment_delivery",
+  أخرى: "other",
+};
+
+const PAYMENT_METHOD_MAP: Record<string, string> = {
+  "نقداً": "cash",
+  تحويل: "transfer",
+  شيك: "check",
+  "بوابة دفع": "payment_gateway",
+};
+
+const invoiceFields: FormField[] = [
+  { key: "client", label: "الموكل", type: "text", required: true },
+  {
+    key: "type",
+    label: "النوع",
+    type: "select",
+    options: ["رسوم قضية", "رسوم استشارة", "رسوم تحكيم", "رسوم سنوية", "مصروفات قضائية"],
+  },
+  { key: "amount", label: "المبلغ", type: "number", required: true },
+  { key: "paid", label: "المسدد", type: "number" },
+  { key: "issueDate", label: "تاريخ الإصدار", type: "date" },
+  {
+    key: "status",
+    label: "الحالة",
+    type: "select",
+    options: ["غير مسدد", "جزئي", "مسدد"],
+  },
+  { key: "notes", label: "ملاحظات", type: "textarea" },
+];
+
+const feeRuleFields: FormField[] = [
+  { key: "name", label: "اسم القاعدة", type: "text", required: true },
+  { key: "caseType", label: "نوع القضية", type: "text" },
+  { key: "stage", label: "المرحلة", type: "text" },
+  { key: "hourlyRate", label: "الأجر بالساعة", type: "number" },
+  { key: "fixedAmount", label: "مبلغ ثابت", type: "number" },
+  { key: "percentRate", label: "نسبة مئوية", type: "number" },
+  { key: "minAmount", label: "الحد الأدنى", type: "number" },
+  { key: "maxAmount", label: "الحد الأقصى", type: "number" },
+  { key: "description", label: "الوصف", type: "textarea" },
+];
+
+const bailFields: FormField[] = [
+  { key: "caseRef", label: "مرجع القضية", type: "text" },
+  { key: "client", label: "الموكل", type: "text" },
+  { key: "amount", label: "المبلغ", type: "number" },
+  { key: "court", label: "المحكمة", type: "text" },
+  { key: "depositDate", label: "تاريخ الإيداع", type: "date" },
+  {
+    key: "status",
+    label: "الحالة",
+    type: "select",
+    options: ["نشط", "مسترد", "موقوف"],
+  },
+  { key: "notes", label: "ملاحظات", type: "textarea" },
+];
+
+const personalFields: FormField[] = [
+  { key: "caseRef", label: "مرجع القضية", type: "text" },
+  { key: "client", label: "الموكل", type: "text" },
+  { key: "guarantor", label: "الضامن", type: "text" },
+  { key: "relationship", label: "العلاقة", type: "text" },
+  {
+    key: "status",
+    label: "الحالة",
+    type: "select",
+    options: ["ساري", "منتهي"],
+  },
+  { key: "notes", label: "ملاحظات", type: "textarea" },
+];
+
+const notificationFields: FormField[] = [
+  { key: "title", label: "العنوان", type: "text", required: true },
+  {
+    key: "type",
+    label: "النوع",
+    type: "select",
+    options: ["استدعاء محكمة", "موعد كفالة", "تقديم مستند", "تبليغ حكم", "أخرى"],
+  },
+  { key: "entity", label: "الجهة", type: "text" },
+  { key: "caseRef", label: "مرجع القضية", type: "text" },
+  { key: "dueDate", label: "الموعد", type: "date" },
+  {
+    key: "status",
+    label: "الحالة",
+    type: "select",
+    options: ["قيد المتابعة", "مكتمل", "متأخر"],
+  },
+  { key: "notes", label: "ملاحظات", type: "textarea" },
+];
+
+const paymentFields: FormField[] = [
+  { key: "amount", label: "المبلغ", type: "number", required: true },
+  {
+    key: "method",
+    label: "طريقة الدفع",
+    type: "select",
+    options: ["نقداً", "تحويل", "شيك", "بوابة دفع"],
+  },
+  { key: "reference", label: "المرجع", type: "text" },
+  { key: "paidAt", label: "تاريخ الدفع", type: "date" },
+  { key: "notes", label: "ملاحظات", type: "textarea" },
+  { key: "recordId", label: "معرّف الفاتورة", type: "text", placeholder: "id فاتورة (اختياري)" },
 ];
 
 const thStyle: React.CSSProperties = {
@@ -105,10 +225,17 @@ const tdStyle: React.CSSProperties = {
   borderBottom: "1px solid #f1f5f9",
 };
 
+function numOrNull(v: unknown): number | null {
+  if (v === "" || v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 export default function LegalFinancePage() {
   const { user, ready } = useSession(true);
   const [tab, setTab] = useState<Tab>("invoices");
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [feeRules, setFeeRules] = useState<FeeRule[]>([]);
@@ -132,6 +259,7 @@ export default function LegalFinancePage() {
     displayForClient: string;
   } | null>(null);
   const [calcError, setCalcError] = useState("");
+  const { show, Toast: ActionToast } = useToast();
 
   const loadAll = () => {
     setLoading(true);
@@ -145,13 +273,17 @@ export default function LegalFinancePage() {
       fetch("/api/legal-specializations", { credentials: "include" }).then((r) => r.json()),
     ])
       .then(([inv, rules, bail, personal, notif, pay, specList]) => {
-        setInvoices(inv);
-        setFeeRules(rules);
-        setBailItems(bail);
-        setPersonalItems(personal);
-        setNotifications(notif);
-        setPayments(pay);
-        setSpecs(specList.map((s: Spec) => ({ id: s.id, name: s.name })));
+        setInvoices(Array.isArray(inv) ? inv : []);
+        setFeeRules(Array.isArray(rules) ? rules : []);
+        setBailItems(Array.isArray(bail) ? bail : []);
+        setPersonalItems(Array.isArray(personal) ? personal : []);
+        setNotifications(Array.isArray(notif) ? notif : []);
+        setPayments(Array.isArray(pay) ? pay : []);
+        setSpecs(
+          Array.isArray(specList)
+            ? specList.map((s: Spec) => ({ id: s.id, name: s.name }))
+            : []
+        );
       })
       .finally(() => setLoading(false));
   };
@@ -185,6 +317,117 @@ export default function LegalFinancePage() {
     setCalcResult(data);
   };
 
+  const activeTab = tabs.find((t) => t.key === tab)!;
+  const canAdd = Boolean(activeTab.addLabel);
+
+  const formFields =
+    tab === "invoices"
+      ? invoiceFields
+      : tab === "fee-rules"
+        ? feeRuleFields
+        : tab === "bail"
+          ? bailFields
+          : tab === "personal"
+            ? personalFields
+            : tab === "notifications"
+              ? notificationFields
+              : paymentFields;
+
+  const handleAdd = async (data: Record<string, unknown>) => {
+    const endpoint =
+      tab === "invoices"
+        ? "/api/financial-records"
+        : tab === "fee-rules"
+          ? "/api/fee-rules"
+          : tab === "bail"
+            ? "/api/bail-guarantees"
+            : tab === "personal"
+              ? "/api/personal-guarantees"
+              : tab === "notifications"
+                ? "/api/official-notifications"
+                : "/api/payments";
+
+    const payload =
+      tab === "invoices"
+        ? {
+            client: data.client,
+            type: data.type || "رسوم قضية",
+            amount: Number(data.amount ?? 0),
+            paid: Number(data.paid ?? 0),
+            issueDate: data.issueDate || undefined,
+            status: data.status || "غير مسدد",
+            notes: data.notes || undefined,
+          }
+        : tab === "fee-rules"
+          ? {
+              name: data.name,
+              caseType: data.caseType || undefined,
+              stage: data.stage || undefined,
+              hourlyRate: numOrNull(data.hourlyRate),
+              fixedAmount: numOrNull(data.fixedAmount),
+              percentRate: numOrNull(data.percentRate),
+              minAmount: numOrNull(data.minAmount),
+              maxAmount: numOrNull(data.maxAmount),
+              description: data.description || undefined,
+            }
+          : tab === "bail"
+            ? {
+                caseRef: data.caseRef,
+                client: data.client,
+                amount: Number(data.amount ?? 0),
+                court: data.court,
+                depositDate: data.depositDate,
+                status: data.status || "نشط",
+                notes: data.notes || undefined,
+              }
+            : tab === "personal"
+              ? {
+                  caseRef: data.caseRef,
+                  client: data.client,
+                  guarantor: data.guarantor,
+                  relationship: data.relationship || undefined,
+                  status: data.status || "ساري",
+                  notes: data.notes || undefined,
+                }
+              : tab === "notifications"
+                ? {
+                    title: data.title,
+                    type: NOTIFICATION_TYPE_MAP[String(data.type)] ?? "other",
+                    entity: data.entity,
+                    caseRef: data.caseRef || undefined,
+                    dueDate: data.dueDate || undefined,
+                    status: data.status || "قيد المتابعة",
+                    notes: data.notes || undefined,
+                  }
+                : {
+                    amount: Number(data.amount ?? 0),
+                    method: PAYMENT_METHOD_MAP[String(data.method)] ?? "cash",
+                    reference: data.reference || undefined,
+                    paidAt: data.paidAt || undefined,
+                    notes: data.notes || undefined,
+                    recordId: data.recordId ? String(data.recordId) : undefined,
+                  };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        show("error", (err as { error?: string }).error || "فشل الإضافة");
+        return;
+      }
+      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      setAddOpen(false);
+      loadAll();
+    } catch {
+      show("error", "تعذر الاتصال بالخادم");
+    }
+  };
+
   const totalInvoiced = invoices.reduce((s, i) => s + Number(i.amount), 0);
   const totalPaid = invoices.reduce((s, i) => s + Number(i.paid), 0);
   const totalBail = bailItems.reduce((s, b) => s + Number(b.amount), 0);
@@ -197,6 +440,7 @@ export default function LegalFinancePage() {
   return (
     <AppShell>
       {Toast}
+      {ActionToast}
       <div style={{ maxWidth: 1200 }}>
         <PageHeader
           icon="💰"
@@ -204,11 +448,11 @@ export default function LegalFinancePage() {
           subtitle="الفواتير، قواعد الأتعاب، الكفالات، الضمانات، الإشعارات الرسمية والمدفوعات"
           actions={
             <>
-              {canWrite && <BtnPrimary onClick={seed}>➕ تحميل بيانات مالية</BtnPrimary>}
-              {isEmpty && (
-                <button type="button" onClick={seed} disabled={seeding} style={{ padding: "0.6rem 1.15rem", borderRadius: "12px", border: "1px solid #c3152a", background: "rgba(195,21,42,0.06)", color: "#c3152a", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-cairo)" }}>
-                  {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
-                </button>
+              {canWrite && canAdd && (
+                <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
+              )}
+              {canWrite && (
+                <BtnSecondary onClick={seed}>{seeding ? "⏳ ..." : "📦 بيانات تجريبية"}</BtnSecondary>
               )}
             </>
           }
@@ -254,7 +498,15 @@ export default function LegalFinancePage() {
         {loading ? (
           <PageLoader />
         ) : isEmpty ? (
-          <EmptyState icon="💰" title="لا توجد بيانات مالية" description="حمّل البيانات التجريبية لتظهر الفواتير وقواعد الأتعاب والكفالات" onSeed={seed} seeding={seeding} canWrite={canWrite} />
+          <EmptyState
+            icon="💰"
+            title="لا توجد بيانات مالية"
+            description="أضف فاتورة أو قاعدة أتعاب، أو حمّل البيانات التجريبية"
+            onSeed={seed}
+            onAdd={canWrite && canAdd ? () => setAddOpen(true) : undefined}
+            seeding={seeding}
+            canWrite={canWrite}
+          />
         ) : (
           <>
             {tab === "invoices" && (
@@ -482,6 +734,19 @@ export default function LegalFinancePage() {
           </>
         )}
       </div>
+
+      {canAdd && (
+        <Modal
+          open={addOpen}
+          title={activeTab.addLabel || "إضافة"}
+          fields={formFields}
+          onSave={handleAdd}
+          onClose={() => setAddOpen(false)}
+          saveLabel="إضافة"
+          enableParties={false}
+          enableFiles={false}
+        />
+      )}
     </AppShell>
   );
 }
