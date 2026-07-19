@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
+import { DarkModeToggle } from "@/components/color-mode";
 import { LANDING_HEADER_OFFSET } from "@/components/landing-promo-bar";
 
 type Props = {
@@ -95,6 +96,7 @@ export function Navbar({ variant = "dark" }: Props) {
 
   const utilityButtons = isLanding ? (
     <div className="landing-header-actions">
+      <DarkModeToggle />
       <Link href="/login" className="landing-action-btn landing-action-soft">
         إنشاء حساب
       </Link>
@@ -112,13 +114,16 @@ export function Navbar({ variant = "dark" }: Props) {
       </Link>
     </div>
   ) : (
-    <Link
-      href="/login"
-      className="btn-primary"
-      style={{ padding: "0.55rem 1.4rem", fontSize: "0.875rem", marginInlineStart: "0.5rem" }}
-    >
-      دخول النظام
-    </Link>
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <DarkModeToggle />
+      <Link
+        href="/login"
+        className="btn-primary"
+        style={{ padding: "0.55rem 1.4rem", fontSize: "0.875rem" }}
+      >
+        دخول النظام
+      </Link>
+    </div>
   );
 
   return (

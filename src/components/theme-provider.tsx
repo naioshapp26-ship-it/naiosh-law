@@ -43,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const apply = useCallback((t: SiteTheme) => {
     setTheme(t);
     applySiteTheme(t);
-    if (typeof document !== "undefined") {
+    if (typeof document !== "undefined" && !document.body.classList.contains("dark-mode")) {
       document.body.style.background = t.backgroundColor;
       document.body.style.color = t.textColor;
     }
@@ -78,7 +78,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme((prev) => {
       const next = { ...prev, ...patch };
       applySiteTheme(next);
-      if (typeof document !== "undefined") {
+      if (typeof document !== "undefined" && !document.body.classList.contains("dark-mode")) {
         document.body.style.background = next.backgroundColor;
         document.body.style.color = next.textColor;
       }

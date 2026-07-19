@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import { demoUsers } from "@/data/auth";
 import { BrandLogo } from "@/components/brand-logo";
+import { DarkModeToggle } from "@/components/color-mode";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -74,6 +75,9 @@ export default function LoginPage() {
       style={{ minHeight: "100vh", display: "flex", background: "#0a0a12" }}
       className="login-wrap"
     >
+      <div style={{ position: "fixed", top: "0.85rem", left: "1rem", zIndex: 50 }}>
+        <DarkModeToggle />
+      </div>
       {/* ── Left: Branding panel ── */}
       <div
         style={{

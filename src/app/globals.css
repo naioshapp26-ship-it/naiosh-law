@@ -278,3 +278,188 @@ a {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ── Dark / Light mode (ERP-style body.dark-mode) ── */
+.dark-mode-toggle {
+  background: none;
+  border: 1px solid #d0d4de;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: #171a20;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.15s ease;
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode-toggle:active {
+  transform: scale(0.96);
+}
+
+body.dark-mode .dark-mode-toggle {
+  border-color: #3a3a3a;
+  color: #f0f2f7;
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.dark-mode,
+body.dark-mode {
+  --site-bg: #0f0f0f;
+  --light: #0f0f0f;
+  --light-soft: #1a1a1a;
+  --dark: #f5f5f5;
+  --dark-2: #1e1e1e;
+  --border: #2a2a2a;
+  --muted: #bbbbbb;
+  --dark-border: rgba(255, 255, 255, 0.1);
+  color-scheme: dark;
+}
+
+body.dark-mode {
+  background: #0f0f0f !important;
+  color: #f5f5f5 !important;
+}
+
+body.dark-mode .card-white,
+body.dark-mode .rp-card,
+body.dark-mode .rp-kpi,
+body.dark-mode .section-card {
+  background: #1e1e1e !important;
+  border-color: #2a2a2a !important;
+  color: #f5f5f5;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.dark-mode .card-white:hover {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .input-field {
+  background: #1a1a1a !important;
+  color: #f5f5f5 !important;
+  border-color: #2a2a2a !important;
+}
+
+body.dark-mode .mobile-top-header > div,
+body.dark-mode .mobile-bottom-nav {
+  background: #141414 !important;
+  border-color: #2a2a2a !important;
+}
+
+body.dark-mode .app-main,
+body.dark-mode .rp-page,
+body.dark-mode .ss-page {
+  background: #0f0f0f !important;
+  color: #f5f5f5;
+}
+
+body.dark-mode .rp-title,
+body.dark-mode .rp-h2,
+body.dark-mode .rp-center-block h2,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3 {
+  color: #f5f5f5 !important;
+}
+
+body.dark-mode .rp-sub,
+body.dark-mode .rp-muted,
+body.dark-mode p {
+  color: #bbbbbb;
+}
+
+body.dark-mode .rp-tabs-wrap,
+body.dark-mode .rp-table th,
+body.dark-mode .rp-soft-box,
+body.dark-mode .rp-ats-grid,
+body.dark-mode .rp-modal,
+body.dark-mode .rp-modal-foot {
+  background: #1e1e1e !important;
+  border-color: #2a2a2a !important;
+  color: #f5f5f5;
+}
+
+body.dark-mode .rp-table td,
+body.dark-mode .rp-tab {
+  border-color: #2a2a2a !important;
+  color: #e5e7eb;
+}
+
+body.dark-mode .rp-table tr:hover td,
+body.dark-mode .rp-tab:hover {
+  background: #252525 !important;
+}
+
+body.dark-mode .rp-btn-ghost,
+body.dark-mode .global-back-button {
+  background: #1e1e1e !important;
+  border-color: #3a3a3a !important;
+  color: #e5e7eb !important;
+}
+
+body.dark-mode .global-back-button--floating {
+  background: rgba(30, 30, 30, 0.96) !important;
+  color: #ff8a8a !important;
+  border-color: rgba(255, 80, 80, 0.25) !important;
+}
+
+body.dark-mode .badge.slate {
+  background: #2a2a2a;
+  color: #e5e7eb;
+  border-color: #3a3a3a;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #525252;
+}
+
+body.dark-mode header[style],
+body.dark-mode .landing-header-actions {
+  color: #e5e7eb;
+}
+
+body.dark-mode .landing-action-btn,
+body.dark-mode .landing-action-soft,
+body.dark-mode .landing-action-ghost,
+body.dark-mode .landing-action-outline {
+  border-color: #3a3a3a !important;
+  color: #f5f5f5 !important;
+  background: #1e1e1e !important;
+}
+
+body.dark-mode .landing-action-primary {
+  background: #c3152a !important;
+  border-color: #c3152a !important;
+  color: #fff !important;
+}
+
+body,
+.card-white,
+.dark-mode-toggle,
+input,
+select,
+textarea,
+.rp-card,
+.mobile-top-header,
+.mobile-bottom-nav {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}

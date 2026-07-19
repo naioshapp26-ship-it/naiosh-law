@@ -23,7 +23,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable} style={{ fontVariantNumeric: "lining-nums tabular-nums" }}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark-mode');document.documentElement.style.colorScheme='dark'}}catch(_){}`,
+          }}
+        />
+      </head>
       <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-mode')}catch(_){}`,
+          }}
+        />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
