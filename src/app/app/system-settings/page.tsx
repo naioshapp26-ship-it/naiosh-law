@@ -234,6 +234,7 @@ export default function SystemSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [localLogoPreview, setLocalLogoPreview] = useState<string>("");
   const [uploadingHeroImg, setUploadingHeroImg] = useState(false);
   const [uploadingHeroVid, setUploadingHeroVid] = useState(false);
   const [sectionBusyId, setSectionBusyId] = useState<string | null>(null);
@@ -338,8 +339,10 @@ export default function SystemSettingsPage() {
       setForm(next);
       updateLocal(next);
       await refresh();
+      if (localLogoPreview) URL.revokeObjectURL(localLogoPreview);
+      setLocalLogoPreview("");
       if (logoFileRef.current) logoFileRef.current.value = "";
-      showToast("success", data.message ?? "تم رفع الشعار");
+      showToast("success", data.message ?? "تم استبدال الشعار");
     } catch (e) {
       showToast("error", e instanceof Error ? e.message : "فشل رفع الشعار");
     } finally {
@@ -360,12 +363,24 @@ export default function SystemSettingsPage() {
       setForm(next);
       updateLocal(next);
       await refresh();
+      if (localLogoPreview) URL.revokeObjectURL(localLogoPreview);
+      setLocalLogoPreview("");
+      if (logoFileRef.current) logoFileRef.current.value = "";
       showToast("success", data.message ?? "تم إزالة الشعار");
     } catch (e) {
       showToast("error", e instanceof Error ? e.message : "فشل إزالة الشعار");
     } finally {
       setUploadingLogo(false);
     }
+  };
+
+  const onLogoFilePicked = (file: File | null) => {
+    if (localLogoPreview) URL.revokeObjectURL(localLogoPreview);
+    if (!file) {
+      setLocalLogoPreview("");
+      return;
+    }
+    setLocalLogoPreview(URL.createObjectURL(file));
   };
 
   const uploadHeroMedia = async (kind: "image" | "video") => {
@@ -850,9 +865,10 @@ export default function SystemSettingsPage() {
                     <input
                       ref={logoFileRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
                       className="ss-input"
                       style={{ flex: 1, minWidth: 180, background: "#f8fafc" }}
+                      onChange={(e) => onLogoFilePicked(e.target.files?.[0] ?? null)}
                     />
                     <button
                       type="button"
@@ -898,21 +914,49 @@ export default function SystemSettingsPage() {
                 </div>
                 <div style={{ flexShrink: 0 }}>
                   <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.375rem" }}>الشعار الحالي</p>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={logoPreview || "/naiosh-logo.png"}
-                    alt="الشعار"
-                    style={{
-                      width: 96,
-                      height: 96,
-                      borderRadius: 12,
-                      border: "1px solid #e2e8f0",
-                      objectFit: "contain",
-                      background: "#f8fafc",
-                      padding: 8,
-                      boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-                    }}
-                  />
+                  {logoPreview || localLogoPreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={localLogoPreview || logoPreview}
+                      src={localLogoPreview || logoPreview}
+                      alt="الشعار"
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: 12,
+                        border: "1px solid #e2e8f0",
+                        objectFit: "contain",
+                        background: "#fff",
+                        padding: 8,
+                        boxShadow: "0 1px 3px rgba(0,0,0,.06)",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: 12,
+                        border: "1px dashed #cbd5e1",
+                        background: "#f8fafc",
+                        display: "grid",
+                        placeItems: "center",
+                        textAlign: "center",
+                        padding: 8,
+                        color: "#94a3b8",
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      لا يوجد شعار
+                      <br />
+                      ارفع واحدًا
+                    </div>
+                  )}
+                  <p style={{ fontSize: "0.68rem", color: "#94a3b8", marginTop: "0.4rem", maxWidth: 120, lineHeight: 1.45 }}>
+                    اختر ملفًا ثم اضغط «رفع» — يتبدل فورًا
+                  </p>
                 </div>
               </div>
             </div>
