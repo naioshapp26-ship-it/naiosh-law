@@ -293,20 +293,7 @@ export function EmpireLandingHero() {
 
         <nav className="hero-sidebar" data-hero-sidebar aria-label="قائمة الصفحات الجانبية في الهيرو">
           {SIDE_RAIL.map((item) => (
-            <Link
-              key={item.label}
-              className={`hero-sidebar-item${item.active ? " is-active" : ""}`}
-              href={item.href}
-              style={
-                item.active
-                  ? {
-                      background: "#c3152a",
-                      borderColor: "rgba(255,255,255,0.25)",
-                      boxShadow: "0 10px 24px rgba(195,21,42,0.45)",
-                    }
-                  : undefined
-              }
-            >
+            <Link key={item.label} className="hero-sidebar-item" href={item.href}>
               {item.label}
             </Link>
           ))}
