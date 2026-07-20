@@ -19,7 +19,10 @@ export async function PATCH(request: Request, { params }: Params) {
       hourlyRate: body.hourlyRate !== undefined ? Number(body.hourlyRate) : undefined,
       fixedAmount: body.fixedAmount !== undefined ? Number(body.fixedAmount) : undefined,
       percentRate: body.percentRate !== undefined ? Number(body.percentRate) : undefined,
+      minAmount: body.minAmount !== undefined ? Number(body.minAmount) : undefined,
+      maxAmount: body.maxAmount !== undefined ? Number(body.maxAmount) : undefined,
       active: body.active !== undefined ? Boolean(body.active) : undefined,
+      description: body.description !== undefined ? String(body.description) : undefined,
     },
   });
   return NextResponse.json(updated);

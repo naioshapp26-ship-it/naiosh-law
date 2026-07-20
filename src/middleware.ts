@@ -25,15 +25,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname === "/login" && token) {
-    try {
-      await jwtVerify(token, secret);
-      return NextResponse.redirect(new URL("/app/dashboard", request.url));
-    } catch {
-      // invalid token — allow login page
-    }
-  }
-
+  // Always allow /login to render so users can switch accounts or re-authenticate.
+  // (Previously a valid cookie redirected straight into /app and hid the login page.)
   return NextResponse.next();
 }
 

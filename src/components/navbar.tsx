@@ -31,6 +31,22 @@ export function Navbar({ variant = "dark" }: Props) {
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sessionName, setSessionName] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(async (res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled) setSessionName(data?.user?.name ? String(data.user.name) : null);
+      })
+      .catch(() => {
+        if (!cancelled) setSessionName(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (isLanding) return;
@@ -38,6 +54,15 @@ export function Navbar({ variant = "dark" }: Props) {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, [isLanding]);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch {
+      /* ignore */
+    }
+    window.location.assign("/login");
+  };
 
   const darkNavStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -99,18 +124,34 @@ export function Navbar({ variant = "dark" }: Props) {
           <div className="auth-actions-shell" aria-label="إجراءات الحساب">
             <div className="auth-actions">
               <DarkModeToggle />
-              <Link href="/login" className="auth-btn magnetic-btn">
-                تسجيل الدخول
-              </Link>
-              <Link href="/login" className="auth-btn magnetic-btn">
-                إنشاء حساب
-              </Link>
-              <Link href="/login" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
-                استأجر النظام الآن
-              </Link>
-              <Link href="/app/dashboard" className="auth-btn magnetic-btn">
-                أنشئ صفحتك
-              </Link>
+              {sessionName ? (
+                <>
+                  <Link href="/app/dashboard" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
+                    لوحة التحكم
+                  </Link>
+                  <Link href="/login" className="auth-btn magnetic-btn">
+                    تبديل الحساب
+                  </Link>
+                  <button type="button" className="auth-btn magnetic-btn" onClick={logout} style={{ cursor: "pointer", fontFamily: "inherit" }}>
+                    تسجيل الخروج
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="auth-btn magnetic-btn">
+                    تسجيل الدخول
+                  </Link>
+                  <Link href="/login" className="auth-btn magnetic-btn">
+                    إنشاء حساب
+                  </Link>
+                  <Link href="/login" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
+                    استأجر النظام الآن
+                  </Link>
+                  <Link href="/login" className="auth-btn magnetic-btn">
+                    أنشئ صفحتك
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

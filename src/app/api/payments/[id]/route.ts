@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWrite } from "@/lib/api-helpers";
+import type { PaymentMethod } from "@/generated/prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -10,17 +11,15 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
 
-  const updated = await prisma.bailGuarantee.update({
+  const updated = await prisma.payment.update({
     where: { id },
     data: {
-      caseRef: body.caseRef !== undefined ? String(body.caseRef) : undefined,
-      clientName: body.client !== undefined ? String(body.client) : undefined,
       amount: body.amount !== undefined ? Number(body.amount) : undefined,
-      court: body.court !== undefined ? String(body.court) : undefined,
-      status: body.status !== undefined ? String(body.status) : undefined,
-      depositDate: body.depositDate !== undefined ? String(body.depositDate) : undefined,
-      refundDate: body.refundDate !== undefined ? String(body.refundDate) : undefined,
+      method: body.method !== undefined ? (body.method as PaymentMethod) : undefined,
+      reference: body.reference !== undefined ? String(body.reference) : undefined,
+      paidAt: body.paidAt !== undefined ? String(body.paidAt) : undefined,
       notes: body.notes !== undefined ? String(body.notes) : undefined,
+      recordId: body.recordId !== undefined ? (body.recordId ? String(body.recordId) : null) : undefined,
     },
   });
   return NextResponse.json(updated);
@@ -30,6 +29,6 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { error } = await requireWrite();
   if (error) return error;
   const { id } = await params;
-  await prisma.bailGuarantee.delete({ where: { id } });
+  await prisma.payment.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

@@ -1,11 +1,13 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { demoUsers } from "@/data/auth";
 import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
 import { BRAND } from "@/lib/brand";
+
+type ExistingUser = { name: string; email: string; role: string };
 
 export default function LoginPage() {
   const [email, setEmail] = useState("admin@naioshlaw.com");
@@ -14,6 +16,38 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [existingUser, setExistingUser] = useState<ExistingUser | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const data = await res.json();
+        return (data.user as ExistingUser) ?? null;
+      })
+      .then((user) => {
+        if (!cancelled) setExistingUser(user);
+      })
+      .catch(() => {
+        if (!cancelled) setExistingUser(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const logoutExisting = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch {
+      /* ignore */
+    }
+    setExistingUser(null);
+    setLoggingOut(false);
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -81,6 +115,22 @@ export default function LoginPage() {
         </div>
 
         <div className="erp-login-body">
+          {existingUser ? (
+            <div className="erp-login-session" role="status">
+              <p>
+                أنت مسجّل دخولًا كـ <strong>{existingUser.name}</strong>
+              </p>
+              <div className="erp-login-session-actions">
+                <Link href="/app/dashboard" className="erp-login-submit" style={{ textDecoration: "none" }}>
+                  الدخول للوحة التحكم
+                </Link>
+                <button type="button" className="erp-login-session-logout" onClick={logoutExisting} disabled={loggingOut}>
+                  {loggingOut ? "جاري الخروج..." : "تسجيل الخروج والدخول بحساب آخر"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {error ? (
             <div className="erp-login-alert" role="alert">
               {error}
@@ -303,6 +353,35 @@ export default function LoginPage() {
           margin-top: 0.25rem;
         }
         .erp-login-body { padding: 2rem; }
+        .erp-login-session {
+          margin-bottom: 1.25rem;
+          padding: 1rem;
+          border-radius: 0.75rem;
+          background: rgba(34, 197, 94, 0.08);
+          border: 1px solid rgba(34, 197, 94, 0.25);
+          color: #166534;
+          font-size: 0.875rem;
+          font-weight: 600;
+        }
+        .erp-login-session-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+          margin-top: 0.85rem;
+        }
+        .erp-login-session-logout {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid #e5e7eb;
+          background: #fff;
+          color: #374151;
+          font-family: var(--font);
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .erp-login-session-logout:hover { border-color: var(--primary); color: var(--primary); }
         .erp-login-alert {
           margin-bottom: 1.25rem;
           padding: 0.85rem 1rem;
