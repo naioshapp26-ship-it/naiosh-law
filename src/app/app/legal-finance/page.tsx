@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   PageHeader,
@@ -12,6 +12,7 @@ import {
   useToast,
 } from "@/components/domain-page";
 import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
@@ -209,7 +210,66 @@ const paymentFields: FormField[] = [
   { key: "recordId", label: "معرّف الفاتورة", type: "text", placeholder: "id فاتورة (اختياري)" },
 ];
 
-const thStyle: React.CSSProperties = {
+
+const assignFields: FormField[] = [
+  { key: "assignee", label: "المسؤول المعين", type: "text", required: true, placeholder: "اسم المحامي / الموظف" },
+  {
+    key: "assignRole",
+    label: "الدور",
+    type: "select",
+    options: ["محامٍ مسؤول", "محاسب", "مساعد قانوني", "مدير مالي", "أخرى"],
+  },
+  { key: "assignNote", label: "ملاحظة التعيين", type: "textarea" },
+];
+
+const actionBtnBase: CSSProperties = {
+  border: "none",
+  borderRadius: "8px",
+  padding: "0.35rem 0.65rem",
+  cursor: "pointer",
+  fontSize: "0.72rem",
+  fontWeight: 600,
+  fontFamily: "var(--font-cairo)",
+};
+
+function FinanceRowActions({
+  canWrite,
+  onView,
+  onEdit,
+  onAssign,
+  onDelete,
+}: {
+  canWrite: boolean;
+  onView: () => void;
+  onEdit: () => void;
+  onAssign: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+      <button type="button" onClick={onView} style={{ ...actionBtnBase, background: "#f1f5f9", color: "#475569" }}>
+        👁 عرض
+      </button>
+      {canWrite && (
+        <button type="button" onClick={onEdit} style={{ ...actionBtnBase, background: "rgba(195,21,42,0.07)", color: "#c3152a" }}>
+          ✏️ تعديل
+        </button>
+      )}
+      {canWrite && (
+        <button type="button" onClick={onAssign} style={{ ...actionBtnBase, background: "rgba(14,165,233,0.1)", color: "#0284c7" }}>
+          🏷️ تعيين
+        </button>
+      )}
+      {canWrite && (
+        <button type="button" onClick={onDelete} style={{ ...actionBtnBase, background: "rgba(239,68,68,0.08)", color: "#dc2626" }}>
+          🗑 حذف
+        </button>
+      )}
+    </div>
+  );
+}
+
+const thStyle: CSSProperties = {
   textAlign: "right",
   padding: "0.65rem 0.75rem",
   fontSize: "0.78rem",
@@ -218,7 +278,7 @@ const thStyle: React.CSSProperties = {
   borderBottom: "1px solid #e2e8f0",
 };
 
-const tdStyle: React.CSSProperties = {
+const tdStyle: CSSProperties = {
   padding: "0.75rem",
   fontSize: "0.82rem",
   color: "#0a0a12",
@@ -236,6 +296,11 @@ export default function LegalFinancePage() {
   const [tab, setTab] = useState<Tab>("invoices");
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Record<string, unknown> | null>(null);
+  const [viewTarget, setViewTarget] = useState<Record<string, unknown> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null);
+  const [assignTarget, setAssignTarget] = useState<Record<string, unknown> | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [feeRules, setFeeRules] = useState<FeeRule[]>([]);
@@ -333,99 +398,178 @@ export default function LegalFinancePage() {
               ? notificationFields
               : paymentFields;
 
-  const handleAdd = async (data: Record<string, unknown>) => {
-    const endpoint =
-      tab === "invoices"
-        ? "/api/financial-records"
-        : tab === "fee-rules"
-          ? "/api/fee-rules"
-          : tab === "bail"
-            ? "/api/bail-guarantees"
-            : tab === "personal"
-              ? "/api/personal-guarantees"
-              : tab === "notifications"
-                ? "/api/official-notifications"
-                : "/api/payments";
+  const endpointForTab = (t: Tab = tab) =>
+    t === "invoices"
+      ? "/api/financial-records"
+      : t === "fee-rules"
+        ? "/api/fee-rules"
+        : t === "bail"
+          ? "/api/bail-guarantees"
+          : t === "personal"
+            ? "/api/personal-guarantees"
+            : t === "notifications"
+              ? "/api/official-notifications"
+              : "/api/payments";
 
-    const payload =
-      tab === "invoices"
-        ? {
-            client: data.client,
-            type: data.type || "رسوم قضية",
-            amount: Number(data.amount ?? 0),
-            paid: Number(data.paid ?? 0),
-            issueDate: data.issueDate || undefined,
-            status: data.status || "غير مسدد",
-            notes: data.notes || undefined,
-          }
-        : tab === "fee-rules"
-          ? {
-              name: data.name,
-              caseType: data.caseType || undefined,
-              stage: data.stage || undefined,
-              hourlyRate: numOrNull(data.hourlyRate),
-              fixedAmount: numOrNull(data.fixedAmount),
-              percentRate: numOrNull(data.percentRate),
-              minAmount: numOrNull(data.minAmount),
-              maxAmount: numOrNull(data.maxAmount),
-              description: data.description || undefined,
-            }
-          : tab === "bail"
-            ? {
-                caseRef: data.caseRef,
-                client: data.client,
-                amount: Number(data.amount ?? 0),
-                court: data.court,
-                depositDate: data.depositDate,
-                status: data.status || "نشط",
-                notes: data.notes || undefined,
-              }
-            : tab === "personal"
-              ? {
-                  caseRef: data.caseRef,
-                  client: data.client,
-                  guarantor: data.guarantor,
-                  relationship: data.relationship || undefined,
-                  status: data.status || "ساري",
-                  notes: data.notes || undefined,
-                }
-              : tab === "notifications"
-                ? {
-                    title: data.title,
-                    type: NOTIFICATION_TYPE_MAP[String(data.type)] ?? "other",
-                    entity: data.entity,
-                    caseRef: data.caseRef || undefined,
-                    dueDate: data.dueDate || undefined,
-                    status: data.status || "قيد المتابعة",
-                    notes: data.notes || undefined,
-                  }
-                : {
-                    amount: Number(data.amount ?? 0),
-                    method: PAYMENT_METHOD_MAP[String(data.method)] ?? "cash",
-                    reference: data.reference || undefined,
-                    paidAt: data.paidAt || undefined,
-                    notes: data.notes || undefined,
-                    recordId: data.recordId ? String(data.recordId) : undefined,
-                  };
+  const buildPayload = (data: Record<string, unknown>) => {
+    if (tab === "invoices") {
+      return {
+        client: data.client,
+        type: data.type || "رسوم قضية",
+        amount: Number(data.amount ?? 0),
+        paid: Number(data.paid ?? 0),
+        issueDate: data.issueDate || undefined,
+        status: data.status || "غير مسدد",
+        notes: data.notes || undefined,
+      };
+    }
+    if (tab === "fee-rules") {
+      return {
+        name: data.name,
+        caseType: data.caseType || undefined,
+        stage: data.stage || undefined,
+        hourlyRate: numOrNull(data.hourlyRate),
+        fixedAmount: numOrNull(data.fixedAmount),
+        percentRate: numOrNull(data.percentRate),
+        minAmount: numOrNull(data.minAmount),
+        maxAmount: numOrNull(data.maxAmount),
+        description: data.description || undefined,
+      };
+    }
+    if (tab === "bail") {
+      return {
+        caseRef: data.caseRef,
+        client: data.client,
+        amount: Number(data.amount ?? 0),
+        court: data.court,
+        depositDate: data.depositDate,
+        status: data.status || "نشط",
+        notes: data.notes || undefined,
+      };
+    }
+    if (tab === "personal") {
+      return {
+        caseRef: data.caseRef,
+        client: data.client,
+        guarantor: data.guarantor,
+        relationship: data.relationship || undefined,
+        status: data.status || "ساري",
+        notes: data.notes || undefined,
+      };
+    }
+    if (tab === "notifications") {
+      return {
+        title: data.title,
+        type: NOTIFICATION_TYPE_MAP[String(data.type)] ?? data.type ?? "other",
+        entity: data.entity,
+        caseRef: data.caseRef || undefined,
+        dueDate: data.dueDate || undefined,
+        status: data.status || "قيد المتابعة",
+        notes: data.notes || undefined,
+      };
+    }
+    return {
+      amount: Number(data.amount ?? 0),
+      method: PAYMENT_METHOD_MAP[String(data.method)] ?? data.method ?? "cash",
+      reference: data.reference || undefined,
+      paidAt: data.paidAt || undefined,
+      notes: data.notes || undefined,
+      recordId: data.recordId ? String(data.recordId) : undefined,
+    };
+  };
+
+  const handleSave = async (data: Record<string, unknown>) => {
+    const endpoint = endpointForTab();
+    const payload = buildPayload(data);
+    const isEdit = Boolean(editTarget?.id);
+    const url = isEdit ? `${endpoint}/${editTarget!.id}` : endpoint;
 
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
+      const res = await fetch(url, {
+        method: isEdit ? "PATCH" : "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        show("error", (err as { error?: string }).error || "فشل الإضافة");
+        show("error", (err as { error?: string }).error || (isEdit ? "فشل التعديل" : "فشل الإضافة"));
         return;
       }
-      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      show("success", isEdit ? "✅ تم حفظ التعديلات" : `✅ تمت ${activeTab.addLabel} بنجاح`);
       setAddOpen(false);
+      setEditTarget(null);
       loadAll();
     } catch {
       show("error", "تعذر الاتصال بالخادم");
     }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget?.id) return;
+    setActionBusy(true);
+    try {
+      const res = await fetch(`${endpointForTab()}/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        show("error", (err as { error?: string }).error || "فشل الحذف");
+        return;
+      }
+      show("success", "🗑️ تم الحذف بنجاح");
+      setDeleteTarget(null);
+      loadAll();
+    } catch {
+      show("error", "تعذر الاتصال بالخادم");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleAssignSave = async (data: Record<string, unknown>) => {
+    if (!assignTarget?.id) return;
+    const assignee = String(data.assignee ?? "").trim();
+    if (!assignee) {
+      show("error", "أدخل اسم المسؤول المعين");
+      return;
+    }
+    const role = String(data.assignRole ?? "محامٍ مسؤول");
+    const note = String(data.assignNote ?? "").trim();
+    const stamp = `المسؤول المعين: ${assignee} (${role})${note ? ` — ${note}` : ""}`;
+    const prevNotes = String(assignTarget.notes ?? "").replace(/المسؤول المعين:.*$/m, "").trim();
+    const notes = prevNotes ? `${prevNotes}
+${stamp}` : stamp;
+
+    const payload =
+      tab === "fee-rules"
+        ? { description: notes }
+        : { notes };
+
+    try {
+      const res = await fetch(`${endpointForTab()}/${assignTarget.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        show("error", (err as { error?: string }).error || "فشل التعيين");
+        return;
+      }
+      show("success", `🏷️ تم تعيين ${assignee}`);
+      setAssignTarget(null);
+      loadAll();
+    } catch {
+      show("error", "تعذر الاتصال بالخادم");
+    }
+  };
+
+  const openEdit = (row: Record<string, unknown>) => {
+    setEditTarget(row);
+    setAddOpen(true);
   };
 
   const totalInvoiced = invoices.reduce((s, i) => s + Number(i.amount), 0);
@@ -514,7 +658,7 @@ export default function LegalFinancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["رقم الفاتورة", "الموكل", "النوع", "المبلغ", "المسدد", "التاريخ", "الحالة"].map((h) => (
+                      {["رقم الفاتورة", "الموكل", "النوع", "المبلغ", "المسدد", "التاريخ", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -531,6 +675,15 @@ export default function LegalFinancePage() {
                         <td style={{ ...tdStyle, color: inv.status.includes("مسدد") ? "#22c55e" : "#c3152a", fontWeight: 600 }}>
                           {inv.status}
                         </td>
+                        <td style={tdStyle}>
+                          <FinanceRowActions
+                            canWrite={canWrite}
+                            onView={() => setViewTarget(inv as unknown as Record<string, unknown>)}
+                            onEdit={() => openEdit(inv as unknown as Record<string, unknown>)}
+                            onAssign={() => setAssignTarget(inv as unknown as Record<string, unknown>)}
+                            onDelete={() => setDeleteTarget(inv as unknown as Record<string, unknown>)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -544,7 +697,7 @@ export default function LegalFinancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["القاعدة", "نوع القضية", "التخصص", "المرحلة", "ساعة", "ثابت", "نسبة", "الحالة"].map((h) => (
+                      {["القاعدة", "نوع القضية", "التخصص", "المرحلة", "ساعة", "ثابت", "نسبة", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -560,6 +713,15 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{r.fixedAmount ? formatCurrency(r.fixedAmount) : "—"}</td>
                         <td style={tdStyle}>{r.percentRate ? `${formatNumber(r.percentRate)}%` : "—"}</td>
                         <td style={{ ...tdStyle, color: r.active === "نشط" ? "#22c55e" : "#94a3b8" }}>{r.active}</td>
+                        <td style={tdStyle}>
+                          <FinanceRowActions
+                            canWrite={canWrite}
+                            onView={() => setViewTarget(r as unknown as Record<string, unknown>)}
+                            onEdit={() => openEdit(r as unknown as Record<string, unknown>)}
+                            onAssign={() => setAssignTarget(r as unknown as Record<string, unknown>)}
+                            onDelete={() => setDeleteTarget(r as unknown as Record<string, unknown>)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -630,7 +792,7 @@ export default function LegalFinancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["القضية", "الموكل", "المبلغ", "المحكمة", "تاريخ الإيداع", "الاسترداد", "الحالة"].map((h) => (
+                      {["القضية", "الموكل", "المبلغ", "المحكمة", "تاريخ الإيداع", "الاسترداد", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -645,6 +807,15 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{b.depositDate}</td>
                         <td style={tdStyle}>{b.refundDate}</td>
                         <td style={tdStyle}>{b.status}</td>
+                        <td style={tdStyle}>
+                          <FinanceRowActions
+                            canWrite={canWrite}
+                            onView={() => setViewTarget(b as unknown as Record<string, unknown>)}
+                            onEdit={() => openEdit(b as unknown as Record<string, unknown>)}
+                            onAssign={() => setAssignTarget(b as unknown as Record<string, unknown>)}
+                            onDelete={() => setDeleteTarget(b as unknown as Record<string, unknown>)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -658,7 +829,7 @@ export default function LegalFinancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["القضية", "الموكل", "الضامن", "العلاقة", "الحالة"].map((h) => (
+                      {["القضية", "الموكل", "الضامن", "العلاقة", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -671,6 +842,15 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{g.guarantor}</td>
                         <td style={tdStyle}>{g.relationship}</td>
                         <td style={tdStyle}>{g.status}</td>
+                        <td style={tdStyle}>
+                          <FinanceRowActions
+                            canWrite={canWrite}
+                            onView={() => setViewTarget(g as unknown as Record<string, unknown>)}
+                            onEdit={() => openEdit(g as unknown as Record<string, unknown>)}
+                            onAssign={() => setAssignTarget(g as unknown as Record<string, unknown>)}
+                            onDelete={() => setDeleteTarget(g as unknown as Record<string, unknown>)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -684,7 +864,7 @@ export default function LegalFinancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["النوع", "العنوان", "الجهة", "القضية", "الموعد", "الحالة"].map((h) => (
+                      {["النوع", "العنوان", "الجهة", "القضية", "الموعد", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -698,6 +878,15 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{n.caseRef}</td>
                         <td style={tdStyle}>{n.dueDate}</td>
                         <td style={tdStyle}>{n.status}</td>
+                        <td style={tdStyle}>
+                          <FinanceRowActions
+                            canWrite={canWrite}
+                            onView={() => setViewTarget(n as unknown as Record<string, unknown>)}
+                            onEdit={() => openEdit(n as unknown as Record<string, unknown>)}
+                            onAssign={() => setAssignTarget(n as unknown as Record<string, unknown>)}
+                            onDelete={() => setDeleteTarget(n as unknown as Record<string, unknown>)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -711,7 +900,7 @@ export default function LegalFinancePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["الفاتورة", "الموكل", "المبلغ", "طريقة الدفع", "التاريخ"].map((h) => (
+                      {["الفاتورة", "الموكل", "المبلغ", "طريقة الدفع", "التاريخ", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -724,6 +913,15 @@ export default function LegalFinancePage() {
                         <td style={tdStyle}>{formatCurrency(p.amount)}</td>
                         <td style={tdStyle}>{p.method}</td>
                         <td style={tdStyle}>{p.paidAt}</td>
+                        <td style={tdStyle}>
+                          <FinanceRowActions
+                            canWrite={canWrite}
+                            onView={() => setViewTarget(p as unknown as Record<string, unknown>)}
+                            onEdit={() => openEdit(p as unknown as Record<string, unknown>)}
+                            onAssign={() => setAssignTarget(p as unknown as Record<string, unknown>)}
+                            onDelete={() => setDeleteTarget(p as unknown as Record<string, unknown>)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -738,20 +936,72 @@ export default function LegalFinancePage() {
       {canAdd && (
         <Modal
           open={addOpen}
-          title={activeTab.addLabel || "إضافة"}
+          title={editTarget ? `تعديل — ${activeTab.label}` : (activeTab.addLabel || "إضافة")}
           fields={formFields}
-          onSave={handleAdd}
-          onClose={() => setAddOpen(false)}
-          saveLabel="إضافة"
+          initial={editTarget ?? undefined}
+          onSave={handleSave}
+          onClose={() => { setAddOpen(false); setEditTarget(null); }}
+          saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
           enableParties={false}
           enableFiles={false}
         />
+      )}
+
+      <Modal
+        open={!!assignTarget}
+        title="تعيين مسؤول"
+        fields={assignFields}
+        onSave={handleAssignSave}
+        onClose={() => setAssignTarget(null)}
+        saveLabel="تأكيد التعيين"
+        enableParties={false}
+        enableFiles={false}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        message="هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء."
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+        loading={actionBusy}
+      />
+
+      {viewTarget && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
+          onClick={() => setViewTarget(null)}
+        >
+          <div
+            className="card-white"
+            style={{ padding: "1.5rem", width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h3 style={{ fontWeight: 900, fontSize: "1.05rem" }}>تفاصيل السجل</h3>
+              <button type="button" onClick={() => setViewTarget(null)} style={{ border: "1px solid #e2e8f0", background: "#f8f9fb", borderRadius: 8, width: 32, height: 32, cursor: "pointer" }}>✕</button>
+            </div>
+            <div style={{ display: "grid", gap: "0.65rem" }}>
+              {Object.entries(viewTarget).filter(([k]) => k !== "id").map(([key, val]) => (
+                <div key={key} style={{ background: "#f8f9fb", borderRadius: 10, padding: "0.75rem 0.9rem" }}>
+                  <p style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 700, marginBottom: 4 }}>{key}</p>
+                  <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#0a0a12" }}>{String(val ?? "—")}</p>
+                </div>
+              ))}
+            </div>
+            {canWrite && (
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.25rem", justifyContent: "flex-end" }}>
+                <button type="button" className="btn-primary" style={{ padding: "0.55rem 1.1rem", fontSize: "0.85rem" }} onClick={() => { const row = viewTarget; setViewTarget(null); openEdit(row); }}>✏️ تعديل</button>
+                <button type="button" style={{ padding: "0.55rem 1.1rem", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 700, fontSize: "0.85rem", color: "#0284c7" }} onClick={() => { const row = viewTarget; setViewTarget(null); setAssignTarget(row); }}>🏷️ تعيين</button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </AppShell>
   );
 }
 
-const inputStyle: React.CSSProperties = {
+const inputStyle: CSSProperties = {
   padding: "0.65rem 0.85rem",
   borderRadius: "10px",
   border: "1px solid #e2e8f0",
@@ -760,7 +1010,7 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
 };
 
-const btnStyle: React.CSSProperties = {
+const btnStyle: CSSProperties = {
   padding: "0.7rem 1rem",
   borderRadius: "10px",
   border: "none",
