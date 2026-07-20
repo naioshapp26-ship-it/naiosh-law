@@ -4,58 +4,52 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSiteTheme } from "@/components/theme-provider";
 import { isHeroVideoSrc } from "@/lib/hero-media";
+import { LANDING_SPECIALTIES, specialtyHref } from "@/data/landing-specialties";
 
-const SIDE_RAIL = [
-  { label: "فرعي", href: "/app/specialty/cases" },
-  { label: "حاضنتي", href: "/app/specialty/clients" },
-  { label: "منصتي", href: "/app/specialty/sessions" },
-  { label: "مكتبي", href: "/app/specialty/library" },
-  { label: "أنظمتي", href: "/app/specialty/systems" },
-  { label: "شركاتي", href: "/app/specialty/finance" },
-  { label: "إعلاناتي", href: "/app/specialty/archive" },
-  { label: "صفحتي", href: "/app/specialty/profile", active: true },
-  { label: "الأعضاء", href: "/app/specialty/team" },
-];
+const SIDE_RAIL = LANDING_SPECIALTIES.map((item) => ({
+  label: item.label,
+  href: specialtyHref(item.slug),
+  active: item.slug === "profile",
+}));
 
-const EMPRESS_PAGES = [
-  { label: "استشارات", href: "/#features" },
-  { label: "دراسات", href: "/#modules" },
-  { label: "تواصل مع الإمبراطورة", href: "/#footer-support" },
-  { label: "اشتراك", href: "/login", nested: true },
-  { label: "استشارة مجانية", href: "/#demo-request", nested: true },
+const OFFICE_PAGES = [
+  { label: "لوحة التحكم", href: "/app/dashboard" },
+  { label: "المكتبة القانونية", href: "/app/legal-library" },
+  { label: "المالية القانونية", href: "/app/legal-finance" },
+  { label: "الأرشيف", href: "/app/archive", nested: true },
+  { label: "الإدارة والصلاحيات", href: "/app/modules/administration", nested: true },
 ];
 
 const CTA_BUTTONS = [
-  { label: "استأجر نظام الآن", href: "/login" },
-  { label: "الدفع وشحن الرصيد", href: "/login" },
-  { label: "استكشف المساحات", href: "/#modules" },
-  { label: "احجز جولة", href: "/#demo-request" },
+  { label: "ابدأ الآن مجانًا", href: "/login", primary: true },
+  { label: "دخول النظام", href: "/login", primary: false },
+  { label: "عرض الوحدات", href: "/#modules", primary: false },
+  { label: "طلب عرض تجريبي", href: "/#demo-request", primary: false },
 ];
 
 const STATS = [
-  { value: 20000, label: "أعضاء نايوش" },
-  { value: 200, label: "منصات" },
-  { value: 50, label: "حاضنة أعمال" },
+  { value: "99.9%", label: "وقت التشغيل" },
+  { value: "+500", label: "موكل مسجل" },
+  { value: "17", label: "وحدة تشغيلية" },
 ];
 
-function StatBox({ value, label }: { value: number; label: string }) {
+function StatBox({ value, label }: { value: string; label: string }) {
   return (
     <div className="stat">
-      <strong data-count={value}>{value.toLocaleString("en-US")}</strong>
+      <strong>{value}</strong>
       <span>{label}</span>
     </div>
   );
 }
 
 /**
- * Hero matching NAIOSH ERP `/newhome` structure, classes, and motion chrome.
- * Content slots keep Law routes while the layout/CSS is an ERP copy-paste.
+ * Hero matching NAIOSH ERP `/newhome` chrome with NAIOSH Law content/data.
  */
 export function EmpireLandingHero() {
   const { heroBannerSrc, theme, logoSrc } = useSiteTheme();
   const [libraryMedia, setLibraryMedia] = useState<{ type: string; url: string }[]>([]);
   const [slide, setSlide] = useState(0);
-  const [empressOpen, setEmpressOpen] = useState(false);
+  const [officeOpen, setOfficeOpen] = useState(false);
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -96,7 +90,7 @@ export function EmpireLandingHero() {
   const floatTitle = useMemo(() => {
     if (isVideo && theme.heroActiveVideoCaption) return theme.heroActiveVideoCaption;
     if (!isVideo && theme.heroActiveImageCaption) return theme.heroActiveImageCaption;
-    return "التكنولوجيا في حياتنا اليومية";
+    return "الذكاء القانوني في مكتبك — شاهد العرض";
   }, [isVideo, theme.heroActiveImageCaption, theme.heroActiveVideoCaption]);
 
   const floatDesc = theme.heroActiveVideoDescription || "";
@@ -146,14 +140,27 @@ export function EmpireLandingHero() {
 
       <main className="container hero-inner">
         <div className="hero-content">
-          <h1 className="hero-heading-white">أنظمة ذكية تدير الأعمال وتسرّع النمو</h1>
+          <h1 className="hero-heading-white">إدارة القضايا والموكلين بذكاء لا مثيل له</h1>
           <p>
-            إمبراطورية نايوش تقدم حلولاً متكاملة من حاضنات أعمال، مسرعات، ومكاتب عمل مصممة لدعم رواد
-            الأعمال والشركات الناشئة.
+            منصة احترافية لمكاتب المحاماة تضم 17 وحدة تشغيلية مترابطة — من إدارة القضايا والجلسات
+            وحتى المحاسبة القانونية والذكاء الاصطناعي.
           </p>
           <div className="hero-ctas">
             {CTA_BUTTONS.map((btn) => (
-              <Link key={btn.label} className="btn btn-primary hero-cta-pill magnetic-btn" href={btn.href}>
+              <Link
+                key={btn.label}
+                className={`btn hero-cta-pill magnetic-btn${btn.primary ? " btn-primary" : " btn-secondary"}`}
+                href={btn.href}
+                style={
+                  btn.primary
+                    ? undefined
+                    : {
+                        background: "rgba(0,0,0,0.28)",
+                        border: "1px solid rgba(255,255,255,0.55)",
+                        color: "#fff",
+                      }
+                }
+              >
                 {btn.label}
               </Link>
             ))}
@@ -199,7 +206,7 @@ export function EmpireLandingHero() {
                 <article className="hero-panel hero-panel-main">
                   <header>
                     <span className="hero-dot" />
-                    <span>لوحة التحكم الذكية</span>
+                    <span>لوحة التحكم القانونية</span>
                     <i className="fas fa-chart-line" />
                   </header>
                   <div className="hero-chart-bars">
@@ -210,24 +217,24 @@ export function EmpireLandingHero() {
                     <div className="progress-track"><div className="progress-fill" /></div>
                   </div>
                   <div className="hero-panel-grid">
-                    <span>الإشغال</span>
+                    <span>القضايا النشطة</span>
                     <strong>86%</strong>
-                    <span>الطلبات الجديدة</span>
+                    <span>الجلسات القادمة</span>
                     <strong>+24</strong>
                   </div>
                 </article>
                 <article className="hero-panel hero-panel-metrics">
-                  <p><i className="fas fa-bolt" /> أداء المنصة</p>
+                  <p><i className="fas fa-bolt" /> أداء المكتب</p>
                   <strong>+31%</strong>
                 </article>
                 <article className="hero-panel hero-panel-status">
-                  <span><i className="fas fa-circle-check" /> المكاتب الذكية</span>
-                  <strong>جاهزة الآن</strong>
+                  <span><i className="fas fa-circle-check" /> النظام القانوني</span>
+                  <strong>جاهز الآن</strong>
                 </article>
               </div>
               <div className="hero-glass-search" aria-hidden="true">
                 <i className="fas fa-magnifying-glass" />
-                <span>ابحث عن مساحتك المثالية...</span>
+                <span>ابحث في القضايا والموكلين...</span>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img id="site-logo-hero-badge" src={logo} alt="شعار نايوش" />
@@ -270,7 +277,20 @@ export function EmpireLandingHero() {
 
         <nav className="hero-sidebar" data-hero-sidebar aria-label="قائمة الصفحات الجانبية في الهيرو">
           {SIDE_RAIL.map((item) => (
-            <Link key={item.label} className="hero-sidebar-item" href={item.href}>
+            <Link
+              key={item.label}
+              className="hero-sidebar-item"
+              href={item.href}
+              style={
+                item.active
+                  ? {
+                      background: "#d70000",
+                      borderColor: "rgba(255,255,255,0.28)",
+                      boxShadow: "0 10px 24px rgba(215,0,0,0.45)",
+                    }
+                  : undefined
+              }
+            >
               {item.label}
             </Link>
           ))}
@@ -278,19 +298,19 @@ export function EmpireLandingHero() {
             <button
               className="hero-sidebar-item hero-sidebar-toggle"
               type="button"
-              aria-expanded={empressOpen}
-              aria-controls="empress-submenu"
-              onClick={() => setEmpressOpen((v) => !v)}
+              aria-expanded={officeOpen}
+              aria-controls="office-submenu"
+              onClick={() => setOfficeOpen((v) => !v)}
             >
-              <span>الإمبراطورة</span>
+              <span>المكتب</span>
               <i className="fas fa-chevron-down hero-sidebar-arrow" aria-hidden="true" />
             </button>
             <div
-              className={`hero-sidebar-submenu${empressOpen ? " open" : ""}`}
-              id="empress-submenu"
-              aria-hidden={!empressOpen}
+              className={`hero-sidebar-submenu${officeOpen ? " open" : ""}`}
+              id="office-submenu"
+              aria-hidden={!officeOpen}
             >
-              {EMPRESS_PAGES.map((item) => (
+              {OFFICE_PAGES.map((item) => (
                 <Link
                   key={item.label}
                   className={`hero-sidebar-subitem${item.nested ? " hero-sidebar-subsubitem" : ""}`}

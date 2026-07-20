@@ -1,13 +1,16 @@
 "use client";
 
 /**
- * ERP announcement bar — identical to NAIOSH ERP /newhome.
+ * شريط العروض — بيانات منظومة نايوش القانونية.
  */
 export function LandingPromoBar() {
   return (
     <div className="announcement-bar" id="announcement-bar" role="status" aria-live="polite">
       <div className="announcement-track" id="announcement-track">
-        🔥 خصومات على الخدمات 🔥 | 🚀 ابدأ الآن | 📢 عروض محدودة
+        ابدأ الآن | عروض محدودة على منظومة نايوش القانونية 360 —{" "}
+        <a href="/login" style={{ color: "#fecaca", fontWeight: 900, textDecoration: "underline" }}>
+          سجّل مجانًا
+        </a>
       </div>
     </div>
   );

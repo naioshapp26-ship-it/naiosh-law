@@ -161,7 +161,7 @@ export default function LandingHome() {
         <section className="section-head" id="features">
           <div>
             <h2>لماذا تختار NAIOSH Law؟</h2>
-            <p>نظام قانوني متكامل بنفس هوية إمبراطورية نايوش البصرية والحركية.</p>
+            <p>نظام قانوني متكامل لإدارة القضايا والموكلين والجلسات والمحاسبة القانونية.</p>
           </div>
         </section>
 
@@ -199,7 +199,7 @@ export default function LandingHome() {
         <section className="newsletter-section" aria-label="ابدأ الآن">
           <div className="newsletter-inner">
             <h2>جاهز لإدارة مكتبك القانوني؟</h2>
-            <p>ادخل النظام الآن وابدأ بإدارة القضايا والموكلين بنفس تجربة إمبراطورية نايوش.</p>
+            <p>ادخل النظام الآن وابدأ بإدارة القضايا والموكلين من منصة واحدة متكاملة.</p>
             <div className="newsletter-form" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link className="btn btn-primary" href="/login">
                 ابدأ الآن مجانًا
@@ -237,7 +237,7 @@ export default function LandingHome() {
         <div className="container site-footer-inner">
           <section className="site-footer-brand" aria-label="هوية نايوش">
             <BrandLogo href="/" size={56} showText={false} variant="dark" />
-            <p>أنظمة ذكية تدير الأعمال وتسرّع النمو</p>
+            <p>إدارة القضايا والموكلين بذكاء لا مثيل له</p>
           </section>
 
           <section className="site-footer-col" aria-label="روابط سريعة">
