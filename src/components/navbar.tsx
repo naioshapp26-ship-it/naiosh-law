@@ -20,7 +20,7 @@ const LANDING_LINKS = [
   { href: "/#modules", label: "الأسعار" },
   { href: "/#footer-support", label: "اتصل بنا" },
   { href: "/#footer-support", label: "مركز المعلومات", icon: "fa-info-circle", className: "nav-info-center" },
-  { href: "/login", label: "سجل معانا", icon: "fa-user-plus", className: "nav-register-with-us" },
+  { href: "/login", label: "سجل مجانًا", icon: "fa-user-plus", className: "nav-register-with-us" },
 ];
 
 /**
@@ -63,7 +63,7 @@ export function Navbar({ variant = "dark" }: Props) {
             <Link className="brand" href="/">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img id="site-logo-header" src="/naiosh-logo.png" alt="شعار نايوش" />
-              <span className="logo-text">إمبراطورية نايوش</span>
+              <span className="logo-text">NAIOSH Law</span>
             </Link>
             <nav className="nav-links" aria-label="روابط الصفحات">
               <span className="nav-active-indicator" id="nav-active-indicator" aria-hidden="true" />
@@ -98,22 +98,19 @@ export function Navbar({ variant = "dark" }: Props) {
 
           <div className="auth-actions-shell" aria-label="إجراءات الحساب">
             <div className="auth-actions">
-              <Link href="/app/dashboard" className="auth-btn magnetic-btn">
-                أنشئ صفحتك
-              </Link>
-              <Link href="/login" className="auth-btn magnetic-btn">
-                استأجر نظام الآن
-              </Link>
-              <Link href="/app/dashboard" className="auth-btn magnetic-btn" id="my-page-nav-btn">
-                صفحتي
-              </Link>
+              <DarkModeToggle />
               <Link href="/login" className="auth-btn magnetic-btn">
                 تسجيل الدخول
               </Link>
               <Link href="/login" className="auth-btn magnetic-btn">
                 إنشاء حساب
               </Link>
-              <DarkModeToggle />
+              <Link href="/login" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
+                استأجر النظام الآن
+              </Link>
+              <Link href="/app/dashboard" className="auth-btn magnetic-btn">
+                أنشئ صفحتك
+              </Link>
             </div>
           </div>
         </div>
