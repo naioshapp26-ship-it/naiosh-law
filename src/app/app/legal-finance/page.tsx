@@ -441,7 +441,7 @@ export default function LegalFinancePage() {
     <AppShell>
       {Toast}
       {ActionToast}
-      <div style={{ maxWidth: 1200 }}>
+      <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="💰"
           title="المالية القانونية المتقدمة"

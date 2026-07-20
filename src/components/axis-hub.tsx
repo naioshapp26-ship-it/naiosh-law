@@ -87,7 +87,7 @@ export function AxisHubPage({ axis, userName }: Props) {
   const itemCount = axis.items?.length ?? axis.dropdowns?.reduce((n, d) => n + d.items.length, 0) ?? 0;
 
   return (
-    <div style={{ maxWidth: 1180 }}>
+    <div className="erp-page" style={{ width: "100%" }}>
       {/* Hero banner */}
       <div
         style={{

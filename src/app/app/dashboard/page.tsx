@@ -100,21 +100,25 @@ export default function DashboardPage() {
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
-        style={{ maxWidth: 1240 }}
+        className="erp-page hq-dashboard"
+        style={{ width: "100%" }}
       >
         {/* Imperial hero + animated logo */}
         <motion.div
           variants={fadeUp}
           custom={0}
           style={{
-            background: "linear-gradient(135deg, #c3152a 0%, #7f0d1a 50%, #0a0a12 100%)",
-            borderRadius: "22px",
+            background: "linear-gradient(145deg, #1a0505 0%, #450a0a 22%, #7f1d1d 48%, #991b1b 72%, #2d0a0a 100%)",
+            borderRadius: "1.75rem",
             padding: "1.75rem 2rem",
-            marginBottom: "1.75rem",
+            marginBottom: "1.5rem",
             color: "#fff",
             position: "relative",
             overflow: "hidden",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.08), 0 25px 60px -12px rgba(69,10,10,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
+            border: "1px solid rgba(251,191,36,0.15)",
           }}
+          className="hq-hero"
         >
           <div className="glow-pulse" style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)" }} />
           <div className="glow-pulse" style={{ position: "absolute", bottom: -80, left: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
@@ -220,7 +224,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.35 }}
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1.75rem" }}
+            style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem", marginBottom: "1.75rem" }}
             className="kpi-grid"
           >
             {kpis.map((k, i) => (
@@ -230,8 +234,8 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
                 whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.08)" }}
-                className="card-white"
-                style={{ padding: "1.25rem 1.4rem", transition: "box-shadow 0.25s" }}
+                className="card-white hq-kpi-card"
+                style={{ padding: "1.25rem 1.4rem", transition: "box-shadow 0.25s", opacity: 1, animation: "none" }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                   <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>{k.label}</span>
@@ -251,7 +255,7 @@ export default function DashboardPage() {
             <h2 style={{ fontSize: "1rem", fontWeight: 800, color: "#0a0a12" }}>المحاور القانونية الثمانية</h2>
             <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{totalEmpireItems()} عنصر في الهيكل السيادي</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.85rem" }} className="axis-grid">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.85rem" }} className="axis-grid">
             {imperialAxes.filter((a) => a.id <= 8).map((axis, i) => (
               <motion.div
                 key={axis.slug}
@@ -341,7 +345,7 @@ export default function DashboardPage() {
             <h2 style={{ fontSize: "0.95rem", fontWeight: 800 }}>الوحدات التشغيلية</h2>
             <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{modules.length} وحدة</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }} className="mod-grid">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }} className="mod-grid">
             {modules.map((item, i) => (
               <motion.div
                 key={item.slug}
@@ -358,17 +362,11 @@ export default function DashboardPage() {
       </motion.div>
 
       <style>{`
-        @media (max-width: 1000px) {
-          .axis-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
         @media (max-width: 900px) {
-          .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .two-col { grid-template-columns: 1fr !important; }
-          .mod-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 600px) {
-          .kpi-grid { grid-template-columns: 1fr !important; }
-          .axis-grid { grid-template-columns: 1fr !important; }
+          .kpi-grid, .axis-grid, .mod-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </AppShell>

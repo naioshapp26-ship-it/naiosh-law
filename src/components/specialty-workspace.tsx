@@ -269,7 +269,7 @@ export function SpecialtyWorkspace({ slug }: Props) {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 1240 }}>
+      <div className="erp-page" style={{ width: "100%" }}>
         <SpecialtyRail activeSlug={specialty.slug} />
 
         <PageHeader

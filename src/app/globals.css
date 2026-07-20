@@ -9,8 +9,8 @@
   --sidebar-from: #450a0a;
   --sidebar-via: #7f1d1d;
   --sidebar-to: #450a0a;
-  --site-bg: #f8fafc;
-  --radius-base: 12px;
+  --site-bg: #f4f7f6;
+  --radius-base: 14px;
   --dark: #0a0a12;
   --dark-2: #12121e;
   --dark-border: rgba(255, 255, 255, 0.08);
@@ -58,9 +58,26 @@ a {
 .card-white {
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 16px 40px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
   transition: box-shadow 0.25s, transform 0.25s;
+}
+
+/* ERP app shell: fill the main pane (no narrow centered column) */
+.app-main {
+  background: var(--site-bg);
+}
+
+.erp-app-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.erp-page {
+  width: 100%;
+  max-width: none;
 }
 
 .card-white:hover {
