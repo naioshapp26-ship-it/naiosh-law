@@ -76,6 +76,11 @@ export default function LandingHome() {
 
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try{document.body.classList.add('homepage')}catch(_){}`,
+        }}
+      />
       <ErpHomepageStyles />
       <LandingPromoBar />
       <Navbar variant="landing" />

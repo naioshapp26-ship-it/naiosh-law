@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
 
 type Props = {
@@ -62,8 +61,9 @@ export function Navbar({ variant = "dark" }: Props) {
         <div className="container inner">
           <div className="nav-main">
             <Link className="brand" href="/">
-              <BrandLogo size={45} showText={false} variant="dark" />
-              <span className="logo-text">NAIOSH Law</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img id="site-logo-header" src="/naiosh-logo.png" alt="شعار نايوش" />
+              <span className="logo-text">إمبراطورية نايوش</span>
             </Link>
             <nav className="nav-links" aria-label="روابط الصفحات">
               <span className="nav-active-indicator" id="nav-active-indicator" aria-hidden="true" />
@@ -98,14 +98,13 @@ export function Navbar({ variant = "dark" }: Props) {
 
           <div className="auth-actions-shell" aria-label="إجراءات الحساب">
             <div className="auth-actions">
-              <DarkModeToggle />
               <Link href="/app/dashboard" className="auth-btn magnetic-btn">
                 أنشئ صفحتك
               </Link>
               <Link href="/login" className="auth-btn magnetic-btn">
                 استأجر نظام الآن
               </Link>
-              <Link href="/app/dashboard" className="auth-btn magnetic-btn">
+              <Link href="/app/dashboard" className="auth-btn magnetic-btn" id="my-page-nav-btn">
                 صفحتي
               </Link>
               <Link href="/login" className="auth-btn magnetic-btn">
@@ -114,6 +113,7 @@ export function Navbar({ variant = "dark" }: Props) {
               <Link href="/login" className="auth-btn magnetic-btn">
                 إنشاء حساب
               </Link>
+              <DarkModeToggle />
             </div>
           </div>
         </div>
@@ -132,7 +132,10 @@ export function Navbar({ variant = "dark" }: Props) {
           gap: "1rem",
         }}
       >
-        <BrandLogo href="/" size={48} showText={false} variant="light" />
+        <Link href="/" className="brand" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/naiosh-logo.png" alt="شعار نايوش" style={{ height: 48, width: "auto" }} />
+        </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <DarkModeToggle />
           <Link

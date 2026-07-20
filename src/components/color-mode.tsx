@@ -112,7 +112,7 @@ export function DarkModeToggle({ className = "", style }: ToggleProps) {
       title={isDark ? "الوضع النهاري" : "الوضع الليلي"}
       style={style}
     >
-      <span aria-hidden="true">{isDark ? "☀️" : "🌙"}</span>
+      <i className={`fas ${isDark ? "fa-sun" : "fa-moon"}`} aria-hidden="true" />
     </button>
   );
 }

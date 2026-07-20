@@ -38,33 +38,10 @@ const STATS = [
   { value: 50, label: "حاضنة أعمال" },
 ];
 
-function useCountUp(target: number, enabled: boolean) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!enabled) {
-      setValue(target);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now();
-    const duration = 1200;
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(target * eased));
-      if (progress < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, enabled]);
-  return value;
-}
-
 function StatBox({ value, label }: { value: number; label: string }) {
-  const display = useCountUp(value, true);
   return (
     <div className="stat">
-      <strong data-count={value}>{display.toLocaleString("en-US")}</strong>
+      <strong data-count={value}>{value.toLocaleString("en-US")}</strong>
       <span>{label}</span>
     </div>
   );
@@ -172,7 +149,7 @@ export function EmpireLandingHero() {
           <h1 className="hero-heading-white">أنظمة ذكية تدير الأعمال وتسرّع النمو</h1>
           <p>
             إمبراطورية نايوش تقدم حلولاً متكاملة من حاضنات أعمال، مسرعات، ومكاتب عمل مصممة لدعم رواد
-            الأعمال والشركات الناشئة — ومنظومة قانونية سيادية لإدارة القضايا والموكلين.
+            الأعمال والشركات الناشئة.
           </p>
           <div className="hero-ctas">
             {CTA_BUTTONS.map((btn) => (
