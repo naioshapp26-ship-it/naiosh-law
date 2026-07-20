@@ -2,100 +2,58 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { LandingPromoBar } from "@/components/landing-promo-bar";
 import { EmpireLandingHero } from "@/components/empire-landing-hero";
-import { ModuleCard } from "@/components/module-card";
+import { ErpHomepageStyles } from "@/components/erp-homepage-styles";
 import { BrandLogo } from "@/components/brand-logo";
 import { modules } from "@/data/modules";
 
 const features = [
   {
-    icon: "⚖️",
+    icon: "fa-scale-balanced",
     title: "إدارة قضايا متكاملة",
     desc: "تتبع كل مرحلة من مراحل القضية بدقة وتوثيق شامل من الفتح حتى الإغلاق",
   },
   {
-    icon: "🏛️",
+    icon: "fa-landmark",
     title: "جلسات وتذكيرات ذكية",
     desc: "جدولة آلية مع تنبيهات تصل قبل الجلسة بوقت كافٍ عبر قنوات متعددة",
   },
   {
-    icon: "💰",
+    icon: "fa-coins",
     title: "محاسبة قانونية دقيقة",
     desc: "رسوم وفواتير وتقارير مالية منفصلة لكل قضية وموكل مع تتبع المدفوعات",
   },
   {
-    icon: "📊",
+    icon: "fa-chart-line",
     title: "تقارير تنفيذية فورية",
     desc: "تحليلات أداء الفريق والقضايا والمالية بفلاتر متقدمة وتصدير فوري",
   },
   {
-    icon: "🧠",
+    icon: "fa-brain",
     title: "ذكاء اصطناعي قانوني",
     desc: "تحليل المستندات وتلخيص القضايا واقتراح الصياغات القانونية تلقائيًا",
   },
   {
-    icon: "🔐",
+    icon: "fa-shield-halved",
     title: "صلاحيات متعددة المستويات",
     desc: "تحكم كامل في صلاحيات كل مستخدم وفريق مع سجل تدقيق شامل",
   },
 ];
 
-const EASE = [0.22, 1, 0.36, 1] as const;
-
-function Reveal({
-  children,
-  className = "",
-  delay = 0,
-  y = 40,
-  style,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-  y?: number;
-  style?: React.CSSProperties;
-}) {
-  const reduce = useReducedMotion();
-  if (reduce) {
-    return (
-      <div className={className} style={style}>
-        {children}
-      </div>
-    );
-  }
-
-  return (
-    <motion.div
-      className={className}
-      style={style}
-      initial={{ opacity: 0, y: Math.min(y, 28) }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.08, margin: "0px 0px 120px 0px" }}
-      transition={{ duration: 0.55, delay, ease: EASE }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 export default function LandingHome() {
-  const reduce = useReducedMotion();
   const [dynamicSections, setDynamicSections] = useState<
-    { id: string; title: string; description: string | null; link: string | null; iconClass: string; iconUrl: string | null; orderIndex: number }[]
+    {
+      id: string;
+      title: string;
+      description: string | null;
+      link: string | null;
+      iconClass: string;
+      iconUrl: string | null;
+      orderIndex: number;
+    }[]
   >([]);
-
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    if (document.getElementById("fa-cdn-landing")) return;
-    const link = document.createElement("link");
-    link.id = "fa-cdn-landing";
-    link.rel = "stylesheet";
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    document.head.appendChild(link);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,414 +76,206 @@ export default function LandingHome() {
 
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try{document.body.classList.add('homepage')}catch(_){}`,
+        }}
+      />
+      <ErpHomepageStyles />
       <LandingPromoBar />
       <Navbar variant="landing" />
       <EmpireLandingHero />
 
-      {dynamicSections.length > 0 && (
-        <section id="dynamic-sections" style={{ background: "#fff", padding: "4rem 0" }}>
-          <div className="container-max">
-            <Reveal style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-              <p style={{ color: "#c3152a", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
-                الأقسام الرئيسية
-              </p>
-              <h2 style={{ fontSize: "2.1rem", fontWeight: 900, color: "#0a0a12" }}>محتوى مخصص من إعدادات النظام</h2>
-            </Reveal>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                gap: "1.25rem",
-              }}
-            >
-              {dynamicSections.map((section, i) => {
+      <section className="container" style={{ padding: "2rem 1rem 0", maxWidth: 1100, margin: "0 auto" }} aria-label="الدفع وشحن الرصيد">
+        <div
+          style={{
+            borderRadius: "1rem",
+            border: "1px solid #fecaca",
+            background: "rgba(255,255,255,.95)",
+            boxShadow: "0 4px 24px rgba(185,28,28,.08)",
+            padding: "1.25rem 1.5rem",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <p style={{ fontSize: ".875rem", fontWeight: 600, color: "#4b5563", margin: 0 }}>الأرصدة المتاحة</p>
+            <p style={{ fontSize: "2rem", fontWeight: 800, color: "#b91c1c", margin: ".25rem 0 0" }}>شحن فوري وآمن</p>
+            <p style={{ fontSize: ".75rem", color: "#6b7280", margin: ".35rem 0 0" }}>
+              الرصيد جيد — اشترِ باقات الرصيد واستخدمها في خدماتك
+            </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem", alignItems: "center" }}>
+            <Link href="/login" style={{ fontSize: ".875rem", fontWeight: 700, color: "#b91c1c", textDecoration: "underline", textUnderlineOffset: 4 }}>
+              شحن الأرصدة
+            </Link>
+            <Link href="/login" style={{ fontSize: ".875rem", fontWeight: 700, color: "#991b1b", marginInlineStart: "1rem" }}>
+              كل خيارات الدفع ←
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <main id="modules">
+        {dynamicSections.length > 0 && (
+          <>
+            <section className="section-head">
+              <div>
+                <h2>الأقسام الرئيسية</h2>
+                <p>محتوى مخصص من إعدادات النظام بنفس هوية ERP.</p>
+              </div>
+            </section>
+            <section className="cards" id="main-sections-grid">
+              {dynamicSections.map((section) => {
                 const inner = (
-                  <div
-                    className="card-white"
-                    style={{
-                      padding: "1.35rem",
-                      height: "100%",
-                      borderRight: "3px solid rgba(195,21,42,0.35)",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 12,
-                          background: "rgba(195,21,42,0.08)",
-                          display: "grid",
-                          placeItems: "center",
-                          color: "#c3152a",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {section.iconUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={section.iconUrl} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />
-                        ) : (
-                          <i className={section.iconClass || "fas fa-square"} />
-                        )}
-                      </div>
-                      <h3 style={{ fontWeight: 800, fontSize: "1.05rem", color: "#0a0a12", margin: 0 }}>{section.title}</h3>
+                  <>
+                    <div className="icon-box">
+                      {section.iconUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={section.iconUrl} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />
+                      ) : (
+                        <i className={section.iconClass || "fas fa-layer-group"} />
+                      )}
                     </div>
-                    {section.description && (
-                      <p style={{ color: "#64748b", fontSize: "0.88rem", lineHeight: 1.75, margin: 0 }}>{section.description}</p>
-                    )}
-                  </div>
+                    <h3>{section.title}</h3>
+                    <p>{section.description || ""}</p>
+                  </>
                 );
-                return (
-                  <Reveal key={section.id} delay={i * 0.05} y={24}>
-                    {section.link ? (
-                      <Link href={section.link} style={{ textDecoration: "none", display: "block", height: "100%" }}>
-                        {inner}
-                      </Link>
-                    ) : (
-                      inner
-                    )}
-                  </Reveal>
+                return section.link ? (
+                  <Link key={section.id} className="card" href={section.link}>
+                    {inner}
+                  </Link>
+                ) : (
+                  <article key={section.id} className="card">
+                    {inner}
+                  </article>
                 );
               })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Features */}
-      <section id="features" style={{ background: "#f8f9fb", padding: "4.5rem 0", position: "relative", overflow: "hidden" }}>
-        {!reduce && (
-          <>
-            <motion.div
-              aria-hidden
-              style={{
-                position: "absolute",
-                width: 420,
-                height: 420,
-                borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(195,21,42,0.08) 0%, transparent 70%)",
-                top: -80,
-                right: -60,
-                pointerEvents: "none",
-              }}
-              animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.85, 0.5] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              aria-hidden
-              style={{
-                position: "absolute",
-                width: 280,
-                height: 280,
-                borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(195,21,42,0.06) 0%, transparent 70%)",
-                bottom: -40,
-                left: -40,
-                pointerEvents: "none",
-              }}
-              animate={{ scale: [1, 1.2, 1], x: [0, 24, 0] }}
-              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-            />
+            </section>
           </>
         )}
 
-        <div className="container-max" style={{ position: "relative" }}>
-          <Reveal style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <p
-              style={{
-                color: "#c3152a",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                marginBottom: "0.85rem",
-              }}
-            >
-              لماذا Naiosh Law
-            </p>
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: 900,
-                color: "#0a0a12",
-                letterSpacing: "-0.02em",
-                marginBottom: "1rem",
-              }}
-            >
-              كل ما تحتاجه مكتب المحاماة
-            </h2>
-            <p style={{ color: "#64748b", fontSize: "1.05rem", maxWidth: "520px", margin: "0 auto", lineHeight: 1.8 }}>
-              منصة واحدة تغني عن عشرات الأدوات المتفرقة وتوفر تدفق عمل سلس من البداية للنهاية
-            </p>
-          </Reveal>
-
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" }}
-            className="features-grid"
-          >
-            {features.map((f, i) => (
-              <Reveal key={f.title} delay={i * 0.08}>
-                <motion.div
-                  className="card-white landing-feature-card"
-                  style={{ padding: "2rem", height: "100%" }}
-                  whileHover={reduce ? undefined : { y: -10, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 320, damping: 22 }}
-                >
-                  <motion.div
-                    style={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: "14px",
-                      background: "rgba(195,21,42,0.07)",
-                      border: "1px solid rgba(195,21,42,0.12)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                      marginBottom: "1.25rem",
-                    }}
-                    whileHover={reduce ? undefined : { rotate: [0, -10, 10, 0], scale: 1.12 }}
-                    transition={{ duration: 0.45 }}
-                  >
-                    {f.icon}
-                  </motion.div>
-                  <h3
-                    style={{
-                      fontSize: "1.05rem",
-                      fontWeight: 800,
-                      color: "#0a0a12",
-                      marginBottom: "0.6rem",
-                    }}
-                  >
-                    {f.title}
-                  </h3>
-                  <p style={{ fontSize: "0.875rem", color: "#64748b", lineHeight: 1.75 }}>{f.desc}</p>
-                </motion.div>
-              </Reveal>
-            ))}
+        <section className="section-head" id="features">
+          <div>
+            <h2>لماذا تختار NAIOSH Law؟</h2>
+            <p>نظام قانوني متكامل بنفس هوية إمبراطورية نايوش البصرية والحركية.</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Modules */}
-      <section id="modules" style={{ background: "#ffffff", padding: "6rem 0" }}>
-        <div className="container-max">
-          <Reveal style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <p
-              style={{
-                color: "#c3152a",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                marginBottom: "0.85rem",
-              }}
-            >
-              الوحدات التشغيلية
-            </p>
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: 900,
-                color: "#0a0a12",
-                letterSpacing: "-0.02em",
-                marginBottom: "1rem",
-              }}
-            >
-              17 وحدة مترابطة وكاملة
-            </h2>
-            <p style={{ color: "#64748b", fontSize: "1.05rem", maxWidth: "500px", margin: "0 auto", lineHeight: 1.8 }}>
-              كل وحدة مستقلة بشاشاتها ووظائفها وعلاقاتها وصلاحياتها الخاصة
-            </p>
-          </Reveal>
+        <section className="cards">
+          {features.map((f) => (
+            <article key={f.title} className="card">
+              <div className="icon-box">
+                <i className={`fas ${f.icon}`} />
+              </div>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </article>
+          ))}
+        </section>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}
-            className="modules-grid"
-          >
-            {modules.map((item, i) => (
-              <Reveal key={item.slug} delay={(i % 6) * 0.05} y={28}>
-                <motion.div
-                  whileHover={reduce ? undefined : { y: -6, scale: 1.02 }}
-                  whileTap={reduce ? undefined : { scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 340, damping: 24 }}
-                  style={{ height: "100%" }}
-                >
-                  <ModuleCard item={item} />
-                </motion.div>
-              </Reveal>
-            ))}
+        <section className="section-head" id="modules-grid-head">
+          <div>
+            <h2>17 وحدة تشغيلية مترابطة</h2>
+            <p>كل وحدة مستقلة بشاشاتها ووظائفها وعلاقاتها وصلاحياتها الخاصة.</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA */}
-      <section
-        id="demo-request"
-        style={{
-          background: "#0a0a12",
-          padding: "6rem 0",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <motion.div
-          style={{
-            position: "absolute",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(195,21,42,0.2) 0%, transparent 65%)",
-            top: "50%",
-            left: "50%",
-            marginTop: -300,
-            marginLeft: -300,
-            pointerEvents: "none",
-          }}
-          animate={reduce ? undefined : { scale: [1, 1.2, 1], opacity: [0.45, 0.85, 0.45] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {!reduce && (
-          <motion.div
-            aria-hidden
-            style={{
-              position: "absolute",
-              insetInline: 0,
-              top: 0,
-              height: 1,
-              background: "linear-gradient(90deg, transparent, rgba(195,21,42,0.7), transparent)",
-            }}
-            animate={{ opacity: [0.25, 1, 0.25] }}
-            transition={{ duration: 2.6, repeat: Infinity }}
-          />
-        )}
+        <section className="cards" id="demo-request">
+          {modules.slice(0, 9).map((item) => (
+            <Link key={item.slug} className="card" href={`/app/modules/${item.slug}`}>
+              <div className="icon-box">
+                <i className="fas fa-briefcase" />
+              </div>
+              <h3>{item.title}</h3>
+              <p>{item.subtitle}</p>
+            </Link>
+          ))}
+        </section>
 
-        <div className="container-max" style={{ position: "relative" }}>
-          <Reveal>
-            <h2
-              style={{
-                fontSize: "2.75rem",
-                fontWeight: 900,
-                color: "#ffffff",
-                letterSpacing: "-0.02em",
-                marginBottom: "1rem",
-              }}
-            >
-              جاهز لتحويل مكتبك القانوني؟
-            </h2>
-            <p style={{ color: "#475569", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.8 }}>
-              ادخل بحساب تجريبي مباشرة وشوف النظام شغّال بالكامل
-            </p>
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-              <motion.div whileHover={reduce ? undefined : { scale: 1.06, y: -3 }} whileTap={reduce ? undefined : { scale: 0.96 }}>
-                <Link href="/login" className="btn-primary btn-pulse-glow" style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}>
-                  ابدأ تجربتك المجانية →
-                </Link>
-              </motion.div>
-              <motion.div whileHover={reduce ? undefined : { scale: 1.04 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
-                <Link href="/app/dashboard" className="btn-ghost-dark" style={{ fontSize: "1.05rem", padding: "1.05rem 2.5rem" }}>
-                  الدخول كزائر
-                </Link>
-              </motion.div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "1.25rem",
-                justifyContent: "center",
-                marginTop: "2.5rem",
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                { label: "مدير النظام", email: "admin@naioshlaw.com" },
-                { label: "عميل تجريبي", email: "client@naioshlaw.com" },
-              ].map((u, i) => (
-                <Reveal key={u.email} delay={0.15 + i * 0.1} y={20}>
-                  <motion.div
-                    whileHover={reduce ? undefined : { y: -4, borderColor: "rgba(195,21,42,0.35)" }}
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: "12px",
-                      padding: "0.85rem 1.25rem",
-                      textAlign: "start",
-                    }}
-                  >
-                    <p style={{ color: "#ffffff", fontSize: "0.82rem", fontWeight: 700 }}>{u.label}</p>
-                    <p style={{ color: "#475569", fontSize: "0.75rem", marginTop: "0.15rem" }}>{u.email}</p>
-                  </motion.div>
-                </Reveal>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer
-        id="footer-support"
-        style={{
-          background: "#0a0a12",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          padding: "2rem 0",
-        }}
-      >
-        <Reveal y={16}>
-          <div
-            className="container-max"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "1rem",
-            }}
-          >
-            <BrandLogo href="/" size={40} variant="light" subtitle="جميع الحقوق محفوظة © 2026" />
-            <div
-              style={{
-                color: "#c3152a",
-                fontWeight: 800,
-                fontSize: "0.95rem",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              ناعوش للمحاماة والاستشارات القانونية
+        <section className="newsletter-section" aria-label="ابدأ الآن">
+          <div className="newsletter-inner">
+            <h2>جاهز لإدارة مكتبك القانوني؟</h2>
+            <p>ادخل النظام الآن وابدأ بإدارة القضايا والموكلين بنفس تجربة إمبراطورية نايوش.</p>
+            <div className="newsletter-form" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link className="btn btn-primary" href="/login">
+                ابدأ الآن مجانًا
+              </Link>
+              <Link className="btn btn-secondary" href="/app/dashboard">
+                دخول لوحة التحكم
+              </Link>
             </div>
           </div>
-        </Reveal>
+        </section>
+      </main>
+
+      <nav className="floating-actions" aria-label="أزرار جانبية عائمة">
+        <Link href="/app/dashboard" title="إضافة" aria-label="إضافة">
+          <i className="fas fa-plus" />
+        </Link>
+        <Link href="/app/specialty/clients" title="المفضلة" aria-label="المفضلة">
+          <i className="fas fa-heart" />
+        </Link>
+        <Link href="/#footer-support" title="رسائل" aria-label="رسائل">
+          <i className="fas fa-envelope" />
+        </Link>
+        <button
+          type="button"
+          id="to-top"
+          title="الصعود للأعلى"
+          aria-label="الصعود للأعلى"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          <i className="fas fa-arrow-up" />
+        </button>
+      </nav>
+
+      <footer className="site-footer" id="footer-support" aria-label="تذييل الصفحة">
+        <div className="container site-footer-inner">
+          <section className="site-footer-brand" aria-label="هوية نايوش">
+            <BrandLogo href="/" size={56} showText={false} variant="dark" />
+            <p>أنظمة ذكية تدير الأعمال وتسرّع النمو</p>
+          </section>
+
+          <section className="site-footer-col" aria-label="روابط سريعة">
+            <h3>روابط سريعة</h3>
+            <Link href="/">الرئيسية</Link>
+            <Link href="/login">استأجر نظام الآن</Link>
+            <Link href="/#modules">التصنيفات</Link>
+            <Link href="/#features">المميزات</Link>
+            <Link href="/app/dashboard">لوحة التحكم</Link>
+          </section>
+
+          <section className="site-footer-col" aria-label="خدمة العملاء">
+            <h3>خدمة العملاء</h3>
+            <Link href="/#footer-support">اتصل بنا</Link>
+            <Link href="/login">سجل معنا</Link>
+            <Link href="/login">سياسة الخصوصية</Link>
+            <Link href="/login">الشروط والأحكام</Link>
+          </section>
+
+          <section className="site-footer-col" id="contact" aria-label="تواصل معنا">
+            <h3>تواصل معنا</h3>
+            <p>
+              <i className="fas fa-location-dot" aria-hidden="true" /> الرياض، المملكة العربية السعودية
+            </p>
+            <p>
+              <i className="fas fa-envelope" aria-hidden="true" /> info@naiosh.com
+            </p>
+            <p>
+              <i className="fas fa-phone" aria-hidden="true" /> 920003456
+            </p>
+          </section>
+        </div>
+        <div className="site-footer-bottom">
+          <div className="container site-footer-bottom-inner">
+            <span>© {new Date().getFullYear()} NAIOSH Law — جميع الحقوق محفوظة</span>
+          </div>
+        </div>
       </footer>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .features-grid { grid-template-columns: 1fr !important; }
-          .modules-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (min-width: 769px) and (max-width: 1100px) {
-          .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .modules-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        .landing-feature-card {
-          transition: box-shadow 0.25s ease, border-color 0.25s ease;
-        }
-        .landing-feature-card:hover {
-          box-shadow: 0 18px 40px rgba(195, 21, 42, 0.12);
-          border-color: rgba(195, 21, 42, 0.18);
-        }
-        .btn-pulse-glow {
-          animation: landing-btn-pulse 2.6s ease-in-out infinite;
-        }
-        @keyframes landing-btn-pulse {
-          0%, 100% { box-shadow: 0 8px 24px rgba(195, 21, 42, 0.28); }
-          50% { box-shadow: 0 12px 36px rgba(195, 21, 42, 0.5); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .btn-pulse-glow { animation: none !important; }
-        }
-      `}</style>
     </>
   );
 }
