@@ -204,7 +204,7 @@ export function ArchivePanel() {
   return (
     <AppShell>
       {Toast}
-      <div style={{ maxWidth: 1300 }}>
+      <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="📦"
           title="الأرشيف المركزي"

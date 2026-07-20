@@ -51,6 +51,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    if (document.querySelector('link[data-erp-hq]')) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "/erp-app/hq.css";
+    link.setAttribute("data-erp-hq", "1");
+    document.head.appendChild(link);
+  }, []);
+
   const role = (user?.role ?? "client") as UserRole;
   const roleLabel = ROLE_LABELS[role] ?? "مستخدم";
   const roleColor = ROLE_COLORS[role] ?? "bg-gray-500";
@@ -380,11 +389,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="shrink-0 p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white hover:bg-white/15 transition-colors"
+            className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
+            style={{
+              background: theme.primaryColor || "#c3152a",
+              boxShadow: "0 8px 20px -6px rgba(195,21,42,0.55)",
+            }}
           >
-            <span className="w-6 text-center">🚪</span>
+            <span className="w-6 text-center" aria-hidden>
+              ⏻
+            </span>
             {sidebarOpen && <span className="text-sm">تسجيل الخروج</span>}
           </button>
+          {sidebarOpen && (
+            <p className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/55">
+              {roleLabel}
+            </p>
+          )}
         </div>
       </aside>
 
@@ -456,25 +476,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="shrink-0 p-3 border-t border-white/10">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white hover:bg-white/15 transition-colors"
+                className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
+                style={{
+                  background: theme.primaryColor || "#c3152a",
+                  boxShadow: "0 8px 20px -6px rgba(195,21,42,0.55)",
+                }}
               >
-                <span className="w-6 text-center">🚪</span>
+                <span className="w-6 text-center" aria-hidden>
+                  ⏻
+                </span>
                 <span className="text-sm">تسجيل الخروج</span>
               </button>
+              <p className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/55">
+                {roleLabel}
+              </p>
             </div>
           </div>
         </div>
       )}
 
       <main className="flex-1 overflow-auto min-w-0 app-main">
-        <div className="p-5 lg:p-8 max-w-[1400px] mx-auto">
+        <div className="erp-app-content p-4 lg:p-5 xl:p-6">
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               gap: "0.75rem",
-              marginBottom: "0.85rem",
+              marginBottom: "0.75rem",
             }}
           >
             <div id="naiosh-back-slot" style={{ marginBottom: 0 }} />

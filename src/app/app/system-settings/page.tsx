@@ -697,7 +697,7 @@ export default function SystemSettingsPage() {
       >
         <div
           style={{
-            maxWidth: "64rem",
+            maxWidth: "100%",
             margin: "0 auto",
             padding: "0.75rem 1rem",
             display: "flex",
@@ -771,7 +771,7 @@ export default function SystemSettingsPage() {
         </div>
       </header>
 
-      <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "2rem 1rem 6rem" }}>
+      <main style={{ maxWidth: "100%", margin: "0 auto", padding: "2rem 1rem 6rem" }}>
         {loading ? (
           <div className="section-card" style={{ textAlign: "center", color: "#64748b" }}>
             <i className="fas fa-circle-notch fa-spin" style={{ marginLeft: 8 }} />

@@ -336,7 +336,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         ))}
       </div>
 
-      <div style={{ maxWidth: embedded ? "100%" : 1300 }}>
+      <div className="erp-page" style={{ width: "100%", maxWidth: "100%" }}>
         <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>

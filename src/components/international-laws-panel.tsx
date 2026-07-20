@@ -150,7 +150,7 @@ export function InternationalLawsHub() {
   }));
 
   return (
-    <div style={{ maxWidth: 1200 }}>
+    <div className="erp-page" style={{ width: "100%" }}>
       {Toast}
 
       {/* Hero */}
@@ -549,7 +549,7 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
     : null;
 
   return (
-    <div style={{ maxWidth: 1200 }}>
+    <div className="erp-page" style={{ width: "100%" }}>
       {Toast}
 
       <div

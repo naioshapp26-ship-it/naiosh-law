@@ -183,7 +183,7 @@ export default function ProfessionalNetworkPage() {
     <AppShell>
       {Toast}
       {ActionToast}
-      <div style={{ maxWidth: 1140 }}>
+      <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="🤝"
           title="الشبكة المهنية"

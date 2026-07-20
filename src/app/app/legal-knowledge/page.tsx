@@ -148,7 +148,7 @@ export default function LegalKnowledgePage() {
   return (
     <AppShell>
       {Toast}
-      <div style={{ maxWidth: 1140 }}>
+      <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="📚"
           title="التصنيف القانوني"
