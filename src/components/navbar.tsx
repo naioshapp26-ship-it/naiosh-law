@@ -1,22 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
-import { LANDING_HEADER_OFFSET } from "@/components/landing-promo-bar";
 
 type Props = {
   variant?: "dark" | "landing";
 };
 
+const LANDING_LINKS = [
+  { href: "/", label: "الرئيسية", active: true },
+  { href: "/#modules", label: "منتجاتنا" },
+  { href: "/#features", label: "خدماتنا" },
+  { href: "/app/modules/administration", label: "الفروع" },
+  { href: "/app/dashboard", label: "المنصات" },
+  { href: "/#demo-request", label: "الإعلانات" },
+  { href: "/login", label: "العضوية" },
+  { href: "/#features", label: "المدونة" },
+  { href: "/#modules", label: "الأسعار" },
+  { href: "/#footer-support", label: "اتصل بنا" },
+  { href: "/#footer-support", label: "مركز المعلومات", icon: "fa-info-circle", className: "nav-info-center" },
+  { href: "/login", label: "سجل معانا", icon: "fa-user-plus", className: "nav-register-with-us" },
+];
+
+/**
+ * Landing navbar uses ERP `/newhome` top-nav chrome exactly.
+ * Non-landing variant keeps the previous app chrome.
+ */
 export function Navbar({ variant = "dark" }: Props) {
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
-  const [mobileSolutionsOpen, setMobileSolutionsOpen] = useState(false);
-  const solutionsMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isLanding) return;
@@ -25,440 +40,110 @@ export function Navbar({ variant = "dark" }: Props) {
     return () => window.removeEventListener("scroll", handler);
   }, [isLanding]);
 
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (solutionsMenuRef.current && !solutionsMenuRef.current.contains(event.target as Node)) {
-        setSolutionsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
-
-  const navStyle: React.CSSProperties = isLanding
-    ? {
-        position: "fixed",
-        top: 36,
-        insetInline: 0,
-        zIndex: 100,
-        background: "#ffffff",
-        borderBottom: "1px solid #e2e8f0",
-        boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
-        padding: "0.45rem 0",
-      }
-    : {
-        position: "fixed",
-        top: 0,
-        insetInline: 0,
-        zIndex: 100,
-        transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
-        background: scrolled ? "rgba(10,10,18,0.92)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(16px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "1px solid transparent",
-        padding: scrolled ? "0.85rem 0" : "1.25rem 0",
-      };
-
-  const linkColor = isLanding ? "#475569" : "#94a3b8";
-  const linkHoverBg = isLanding ? "rgba(195,21,42,0.06)" : "rgba(255,255,255,0.06)";
-  const linkHoverColor = isLanding ? "#c3152a" : "#ffffff";
-
-  const links = isLanding
-    ? [
-        { href: "/", label: "الرئيسية" },
-        { href: "/#modules", label: "منتجاتنا" },
-        { href: "/#features", label: "خدماتنا" },
-        { href: "/app/modules/administration", label: "الفروع" },
-        { href: "/app/dashboard", label: "المنصات" },
-        { href: "/#demo-request", label: "الإعلانات" },
-        { href: "/login", label: "العضوية" },
-        { href: "/#features", label: "المدونة" },
-        { href: "/#modules", label: "الأسعار" },
-        { href: "/#footer-support", label: "اتصل بنا" },
-        { href: "/#footer-support", label: "مركز المعلومات" },
-        { href: "/login", label: "سجل معانا" },
-      ]
-    : [
-        { href: "/#modules", label: "المنتجات" },
-        { href: "/#footer-support", label: "الدعم الفني" },
-        { href: "/#demo-request", label: "طلب تجريبي" },
-        { href: "/#features", label: "المميزات" },
-        { href: "/#modules", label: "الوحدات" },
-        { href: "/app/dashboard", label: "عرض تجريبي" },
-      ];
-
-  const solutionItems = [
-    { href: "/app/modules/case-management", label: "حل إدارة القضايا" },
-    { href: "/app/modules/clients-management", label: "حل إدارة الموكلين" },
-    { href: "/app/modules/court-sessions", label: "حل الجلسات والمتابعات" },
-    { href: "/app/modules/legal-accounting", label: "حل المحاسبة القانونية" },
-  ];
-
-  const utilityButtons = isLanding ? (
-    <div className="landing-header-actions">
-      <DarkModeToggle />
-      <Link href="/login" className="landing-action-btn landing-action-soft">
-        إنشاء حساب
-      </Link>
-      <Link href="/login" className="landing-action-btn landing-action-ghost">
-        تسجيل الدخول
-      </Link>
-      <Link href="/app/dashboard" className="landing-action-btn landing-action-ghost">
-        صفحتي
-      </Link>
-      <Link href="/login" className="landing-action-btn landing-action-primary">
-        استأجر النظام الآن
-      </Link>
-      <Link href="/app/dashboard" className="landing-action-btn landing-action-outline">
-        أنشئ صفحتك
-      </Link>
-    </div>
-  ) : (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-      <DarkModeToggle />
-      <Link
-        href="/login"
-        className="btn-primary"
-        style={{ padding: "0.55rem 1.4rem", fontSize: "0.875rem" }}
-      >
-        دخول النظام
-      </Link>
-    </div>
+  const darkNavStyle = useMemo<React.CSSProperties>(
+    () => ({
+      position: "fixed",
+      top: 0,
+      insetInline: 0,
+      zIndex: 100,
+      transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+      background: scrolled ? "rgba(10,10,18,0.92)" : "transparent",
+      backdropFilter: scrolled ? "blur(16px)" : "none",
+      WebkitBackdropFilter: scrolled ? "blur(16px)" : "none",
+      borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "1px solid transparent",
+      padding: scrolled ? "0.85rem 0" : "1.25rem 0",
+    }),
+    [scrolled]
   );
 
-  return (
-    <>
-      <header style={navStyle}>
-        <div
-          className={`container-max${isLanding ? " landing-header-row" : ""}`}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: isLanding ? "1.1rem" : "1rem",
-            minHeight: isLanding ? 56 : undefined,
-          }}
-        >
-          <div className={isLanding ? "landing-brand-slot" : undefined}>
-            <BrandLogo
-              href="/"
-              size={isLanding ? 36 : 48}
-              showText={isLanding}
-              variant={isLanding ? "dark" : "light"}
-              subtitle={isLanding ? "القانوني السيادي 360" : undefined}
-            />
-          </div>
-
-          <div className={isLanding ? "desktop-nav landing-desktop-cluster" : "desktop-nav"} style={isLanding ? undefined : { display: "flex", alignItems: "center", gap: "0.15rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <nav className={isLanding ? "landing-nav-links" : undefined} aria-label="التنقل الرئيسي" style={isLanding ? undefined : { display: "contents" }}>
-              {!isLanding && (
-                <div ref={solutionsMenuRef} style={{ position: "relative" }}>
-                  <button
-                    type="button"
-                    onClick={() => setSolutionsOpen((prev) => !prev)}
-                    style={{
-                      color: linkColor,
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
-                      padding: "0.45rem 0.75rem",
-                      borderRadius: "8px",
-                      border: "none",
-                      background: solutionsOpen ? linkHoverBg : "transparent",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-cairo)",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "0.35rem",
-                    }}
-                  >
-                    <span>الحلول</span>
-                    <span style={{ fontSize: "0.65rem" }}>{solutionsOpen ? "▲" : "▼"}</span>
-                  </button>
-                  {solutionsOpen && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "calc(100% + 0.45rem)",
-                        insetInlineEnd: 0,
-                        minWidth: "240px",
-                        background: isLanding ? "#fff" : "rgba(10,10,18,0.96)",
-                        border: isLanding ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.09)",
-                        borderRadius: "12px",
-                        padding: "0.45rem",
-                        boxShadow: "0 18px 45px rgba(0,0,0,0.12)",
-                      }}
-                    >
-                      {solutionItems.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setSolutionsOpen(false)}
-                          style={{
-                            display: "block",
-                            padding: "0.55rem 0.65rem",
-                            borderRadius: "8px",
-                            color: isLanding ? "#475569" : "#cbd5e1",
-                            fontSize: "0.82rem",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {links.map((l) => (
+  if (isLanding) {
+    return (
+      <header className={`top-nav${menuOpen ? " is-mobile-nav-open is-mobile-nav-ready" : " is-mobile-nav-ready"}`}>
+        <div className="container inner">
+          <div className="nav-main">
+            <Link className="brand" href="/">
+              <BrandLogo size={45} showText={false} variant="dark" />
+              <span className="logo-text">NAIOSH Law</span>
+            </Link>
+            <nav className="nav-links" aria-label="روابط الصفحات">
+              <span className="nav-active-indicator" id="nav-active-indicator" aria-hidden="true" />
+              {LANDING_LINKS.map((link) => (
                 <Link
-                  key={`${l.href}-${l.label}`}
-                  href={l.href}
-                  className={isLanding && l.label === "الرئيسية" ? "landing-nav-link is-active" : "landing-nav-link"}
-                  style={{
-                    color: isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor,
-                    fontSize: isLanding ? "0.72rem" : "0.875rem",
-                    fontWeight: isLanding && l.label === "الرئيسية" ? 800 : 600,
-                    padding: isLanding ? "0.28rem 0.38rem" : "0.45rem 0.75rem",
-                    borderRadius: "8px",
-                    transition: "color 0.2s, background 0.2s",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = linkHoverColor;
-                    (e.currentTarget as HTMLElement).style.background = linkHoverBg;
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.color =
-                      isLanding && l.label === "الرئيسية" ? "#c3152a" : linkColor;
-                    (e.currentTarget as HTMLElement).style.background = "transparent";
-                  }}
+                  key={`${link.href}-${link.label}`}
+                  href={link.href}
+                  className={[link.className, link.active ? "active" : ""].filter(Boolean).join(" ") || undefined}
+                  aria-label={link.label}
+                  onClick={() => setMenuOpen(false)}
                 >
-                  {l.label}
+                  {link.icon ? <i className={`fas ${link.icon}`} aria-hidden="true" /> : null}
+                  <span>{link.label}</span>
                 </Link>
               ))}
             </nav>
-            {utilityButtons}
           </div>
+
+          <Link href="/login" className="mobile-header-login" aria-label="تسجيل الدخول">
+            دخول
+          </Link>
 
           <button
-            onClick={() => {
-              setMenuOpen((prev) => {
-                const next = !prev;
-                if (!next) setMobileSolutionsOpen(false);
-                return next;
-              });
-            }}
-            style={{
-              display: "none",
-              background: isLanding ? "#f8fafc" : "rgba(255,255,255,0.07)",
-              border: isLanding ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.12)",
-              borderRadius: "10px",
-              padding: "0.5rem",
-              cursor: "pointer",
-              color: isLanding ? "#0a0a12" : "#ffffff",
-            }}
-            className="mobile-menu-btn"
-            aria-label="قائمة"
+            type="button"
+            className="mobile-nav-toggle"
+            aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              {menuOpen ? (
-                <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              ) : (
-                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              )}
-            </svg>
+            <i className={`fas ${menuOpen ? "fa-xmark" : "fa-bars"}`} aria-hidden="true" />
           </button>
-        </div>
 
-        {menuOpen && (
-          <div
-            style={{
-              background: isLanding ? "#fff" : "rgba(10,10,18,0.97)",
-              borderTop: isLanding ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.07)",
-              padding: "1.25rem",
-            }}
-          >
-            {links.map((l) => (
-              <Link
-                key={`${l.href}-${l.label}`}
-                href={l.href}
-                onClick={() => setMenuOpen(false)}
-                style={{
-                  display: "block",
-                  padding: "0.75rem 0.5rem",
-                  color: isLanding ? "#475569" : "#94a3b8",
-                  fontSize: "0.95rem",
-                  fontWeight: 600,
-                  borderBottom: isLanding ? "1px solid #f1f5f9" : "1px solid rgba(255,255,255,0.05)",
-                }}
-              >
-                {l.label}
+          <div className="auth-actions-shell" aria-label="إجراءات الحساب">
+            <div className="auth-actions">
+              <DarkModeToggle />
+              <Link href="/app/dashboard" className="auth-btn magnetic-btn">
+                أنشئ صفحتك
               </Link>
-            ))}
-            {isLanding ? (
-              <div className="landing-header-actions-mobile" style={{ marginTop: "1rem", display: "grid", gap: "0.5rem" }}>
-                <Link href="/login" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-soft">
-                  إنشاء حساب
-                </Link>
-                <Link href="/login" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-ghost">
-                  تسجيل الدخول
-                </Link>
-                <Link href="/app/dashboard" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-ghost">
-                  صفحتي
-                </Link>
-                <Link href="/login" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-primary">
-                  استأجر النظام الآن
-                </Link>
-                <Link href="/app/dashboard" onClick={() => setMenuOpen(false)} className="landing-action-btn landing-action-outline">
-                  أنشئ صفحتك
-                </Link>
-              </div>
-            ) : (
-              <Link href="/login" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display: "block", textAlign: "center", marginTop: "1rem" }}>
-                دخول النظام
+              <Link href="/login" className="auth-btn magnetic-btn">
+                استأجر نظام الآن
               </Link>
-            )}
+              <Link href="/app/dashboard" className="auth-btn magnetic-btn">
+                صفحتي
+              </Link>
+              <Link href="/login" className="auth-btn magnetic-btn">
+                تسجيل الدخول
+              </Link>
+              <Link href="/login" className="auth-btn magnetic-btn">
+                إنشاء حساب
+              </Link>
+            </div>
           </div>
-        )}
+        </div>
       </header>
+    );
+  }
 
-      {isLanding && <div style={{ height: LANDING_HEADER_OFFSET }} aria-hidden />}
-
-      <style>{`
-        .landing-brand-slot {
-          flex: 0 0 auto;
-          max-width: 188px;
-          overflow: hidden;
-          position: relative;
-          z-index: 2;
-          background: #fff;
-          padding-inline-end: 0.15rem;
-        }
-        .landing-brand-slot a {
-          display: block;
-          max-width: 100%;
-        }
-        .landing-header-row {
-          width: min(1440px, calc(100% - 2rem)) !important;
-        }
-        .landing-desktop-cluster {
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          gap: 0.75rem;
-          flex: 1 1 auto;
-          min-width: 0;
-          flex-wrap: nowrap;
-          position: relative;
-          z-index: 1;
-        }
-        .landing-nav-links {
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          gap: 0.1rem;
-          flex: 1 1 auto;
-          min-width: 0;
-          flex-wrap: nowrap;
-          overflow-x: auto;
-          scrollbar-width: none;
-          padding-inline-start: 0.25rem;
-        }
-        .landing-nav-links::-webkit-scrollbar {
-          display: none;
-        }
-        .landing-header-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.35rem;
-          flex-wrap: nowrap;
-          flex-shrink: 0;
-          padding-inline-start: 0.55rem;
-          border-inline-start: 1px solid #e2e8f0;
-        }
-        .landing-action-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          white-space: nowrap;
-          padding: 0.38rem 0.78rem;
-          border-radius: 8px;
-          font-size: 0.7rem;
-          font-weight: 700;
-          font-family: var(--font-cairo), sans-serif;
-          line-height: 1.15;
-          text-decoration: none;
-          transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-        }
-        .landing-action-soft {
-          border: 1px solid #fecaca;
-          background: #fff1f2;
-          color: #9f1239;
-        }
-        .landing-action-soft:hover {
-          background: #ffe4e6;
-          border-color: #fda4af;
-        }
-        .landing-action-ghost {
-          border: 1px solid #e2e8f0;
-          background: #ffffff;
-          color: #475569;
-        }
-        .landing-action-ghost:hover {
-          border-color: #cbd5e1;
-          color: #0f172a;
-          background: #f8fafc;
-        }
-        .landing-action-primary {
-          border: 1px solid #c3152a;
-          background: #c3152a;
-          color: #ffffff;
-          font-weight: 800;
-          box-shadow: 0 4px 12px rgba(195, 21, 42, 0.2);
-        }
-        .landing-action-primary:hover {
-          background: #a71224;
-          border-color: #a71224;
-        }
-        .landing-action-outline {
-          border: 1px solid #c3152a;
-          background: #ffffff;
-          color: #c3152a;
-          font-weight: 800;
-        }
-        .landing-action-outline:hover {
-          background: #fff1f2;
-        }
-        .landing-header-actions-mobile .landing-action-btn {
-          width: 100%;
-          padding: 0.7rem 1rem;
-          font-size: 0.88rem;
-        }
-        @media (max-width: 1400px) {
-          .landing-action-btn {
-            padding: 0.34rem 0.58rem;
-            font-size: 0.66rem;
-          }
-          .landing-header-actions {
-            gap: 0.28rem;
-          }
-        }
-        @media (max-width: 1200px) {
-          .landing-header-actions .landing-action-soft,
-          .landing-header-actions .landing-action-ghost:not(:last-of-type) {
-            display: none;
-          }
-        }
-        @media (max-width: 1100px) {
-          .landing-header-actions .landing-action-ghost {
-            display: none;
-          }
-        }
-        @media (max-width: 768px) {
-          .desktop-nav { display: none !important; }
-          .mobile-menu-btn { display: flex !important; }
-        }
-      `}</style>
-    </>
+  return (
+    <header style={darkNavStyle}>
+      <div
+        className="container-max"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+        }}
+      >
+        <BrandLogo href="/" size={48} showText={false} variant="light" />
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <DarkModeToggle />
+          <Link
+            href="/login"
+            className="btn-primary"
+            style={{ padding: "0.55rem 1.4rem", fontSize: "0.875rem" }}
+          >
+            دخول النظام
+          </Link>
+        </div>
+      </div>
+    </header>
   );
 }
