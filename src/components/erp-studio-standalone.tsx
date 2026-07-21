@@ -53,7 +53,16 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
         <DarkModeToggle />
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-5">
+      <div
+        className="erp-studio-container p-4 md:p-6 space-y-5"
+        style={{
+          width: "100%",
+          maxWidth: "80rem",
+          marginLeft: "auto",
+          marginRight: "auto",
+          boxSizing: "border-box",
+        }}
+      >
         <header
           className="rounded-2xl p-6 relative overflow-hidden text-white"
           style={{ background: heroBg, color: "#fff" }}
