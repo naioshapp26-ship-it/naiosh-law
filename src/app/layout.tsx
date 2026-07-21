@@ -52,6 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/newhome/landing-shared.css?v=services-cards-side-20260721"
           data-erp-home="1"
         />
+        <link
+          rel="stylesheet"
+          href="/newhome/branches-page.css?v=erp-branches-copy-20260721"
+          data-erp-home="1"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark-mode');document.documentElement.style.colorScheme='dark'}}catch(_){}`,
