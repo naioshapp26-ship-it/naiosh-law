@@ -49,7 +49,7 @@ export function ErpSidebarNav({ onNavigate }: Props) {
   } as const;
 
   return (
-    <div className="flex flex-col gap-0.5 px-1 py-2">
+    <div className="flex flex-col gap-0.5 px-1 py-2 shrink-0">
       <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0 mb-1">
         وحدات المنظومة
       </p>
@@ -77,7 +77,7 @@ export function ErpSidebarNav({ onNavigate }: Props) {
         }
 
         return (
-          <div key={mod.id} className="mx-2">
+          <div key={mod.id} className="mx-2 shrink-0">
             <button
               type="button"
               onClick={() => toggle(mod.id)}

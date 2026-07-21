@@ -142,7 +142,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const SidebarNavBody = ({ onNavigate, showEmpire }: { onNavigate?: () => void; showEmpire: boolean }) => (
     <>
-      <div className="flex flex-col gap-0.5 px-1 py-2">
+      <div className="flex flex-col gap-0.5 px-1 py-2 shrink-0">
         <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0 mb-1">
           القائمة الرئيسية
         </p>
@@ -354,11 +354,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <nav className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+        <nav className="flex-1 flex flex-col min-h-0 overflow-y-auto overscroll-contain">
           {sidebarOpen ? (
             <SidebarNavBody showEmpire />
           ) : (
-            <div className="flex flex-col flex-1 justify-evenly items-center py-4">
+            <div className="flex flex-col gap-2 items-center py-4 shrink-0">
               {PRIMARY_NAV.map((item) => {
                 const active = isActive(item.href);
                 return (
@@ -366,7 +366,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     title={item.label}
-                    className="p-2.5 rounded-xl text-lg transition-all"
+                    className="p-2.5 rounded-xl text-lg transition-all shrink-0"
                     style={active ? { background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" } : { opacity: 0.9 }}
                   >
                     {item.icon}
