@@ -12,7 +12,7 @@ import {
   LAW_SERVICES_STATS,
 } from "@/data/law-services";
 
-const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=services-hub-20260721";
+const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=services-cards-side-20260721";
 
 export default function ServicesPage() {
   useEffect(() => {
@@ -26,15 +26,10 @@ export default function ServicesPage() {
       link.setAttribute("data-erp-home", "1");
       document.head.appendChild(link);
     }
-
-    return () => {
-      // Keep stylesheets; HomepageRouteChrome will flip homepage mode by path.
-    };
   }, []);
 
   return (
     <>
-      {/* stylesheet also loaded from root layout + HomepageRouteChrome */}
       <LandingPromoBar />
       <Navbar variant="landing" />
 
@@ -54,22 +49,7 @@ export default function ServicesPage() {
             ))}
           </div>
 
-          <div className="landing-hub-grid" aria-label="فئات الخدمات">
-            {LAW_SERVICE_CATEGORIES.map((cat) => (
-              <a key={cat.id} className="landing-hub-card" href={`#${cat.id}`}>
-                <span className="landing-hub-card-icon">
-                  <i className={`fas ${cat.icon}`} aria-hidden="true" />
-                </span>
-                <h3>{cat.title}</h3>
-                <p>{cat.desc}</p>
-                <span className="landing-hub-card-cta">
-                  عرض {cat.items.length} خدمات ←
-                </span>
-              </a>
-            ))}
-          </div>
-
-          <div className="landing-hub-actions">
+          <div className="landing-hub-actions" style={{ marginTop: 8, marginBottom: 8 }}>
             <Link className="btn primary" href="/rent-system">
               استأجر نظام الآن
             </Link>
@@ -78,12 +58,13 @@ export default function ServicesPage() {
             </Link>
           </div>
 
-          <div className="landing-hub-details" aria-label="تفاصيل كل الخدمات">
+          {/* بطاقات الفئات جنب بعض — كل بطاقة فيها خدماتها مرقّمة */}
+          <div className="landing-hub-details" aria-label="بطاقات الخدمات">
             {LAW_SERVICE_CATEGORIES.map((cat) => (
               <section key={cat.id} id={cat.id} className="landing-hub-detail">
                 <div className="landing-hub-detail-head">
-                  <span className="landing-hub-card-icon">
-                    <i className={`fas ${cat.icon}`} aria-hidden="true" />
+                  <span className="landing-hub-card-icon" aria-hidden="true">
+                    <i className={`fas ${cat.icon}`} />
                   </span>
                   <div>
                     <h2>{cat.title}</h2>
