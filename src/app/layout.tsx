@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/styles.css?v=erp-copy-20260721-flashfix2" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/styles.css?v=sidebar-white-text-20260721" data-erp-home="1" />
         <link
           rel="stylesheet"
           href="/newhome/homepage-premium.css?v=erp-copy-20260721-flashfix2"

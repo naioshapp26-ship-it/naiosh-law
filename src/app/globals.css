@@ -63,24 +63,42 @@ html:not(.homepage-root) body {
   color: var(--dark) !important;
 }
 
-html:not(.homepage-root) h1,
-html:not(.homepage-root) h2,
-html:not(.homepage-root) h3,
-html:not(.homepage-root) h4,
-html:not(.homepage-root) h5,
-html:not(.homepage-root) h6,
-html:not(.homepage-root) p {
-  color: inherit;
-}
-
+/* Homepage typography is scoped under body.homepage in newhome/styles.css.
+   Keep a safety net for any leftover unscoped rules without beating Tailwind utilities. */
 html:not(.homepage-root) .erp-page h1,
 html:not(.homepage-root) .erp-page h2,
 html:not(.homepage-root) .erp-page h3 {
   color: inherit !important;
 }
 
-html:not(.homepage-root) a {
+/* Dark app sidebar: force light text/dividers so labels never render as black-on-maroon */
+#app-sidebar,
+.app-sidebar-panel {
+  color: #ffffff;
+}
+
+#app-sidebar p,
+#app-sidebar span,
+#app-sidebar a,
+#app-sidebar button,
+#app-sidebar i,
+#app-sidebar label,
+.app-sidebar-panel p,
+.app-sidebar-panel span,
+.app-sidebar-panel a,
+.app-sidebar-panel button,
+.app-sidebar-panel i,
+.app-sidebar-panel label {
   color: inherit;
+}
+
+#app-sidebar .border-white\/10,
+#app-sidebar .border-t,
+#app-sidebar .border-b,
+.app-sidebar-panel .border-white\/10,
+.app-sidebar-panel .border-t,
+.app-sidebar-panel .border-b {
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .container-max {
