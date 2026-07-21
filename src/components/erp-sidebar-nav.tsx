@@ -50,7 +50,10 @@ export function ErpSidebarNav({ onNavigate }: Props) {
 
   return (
     <div className="flex flex-col gap-0.5 px-1 py-2 shrink-0">
-      <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0 mb-1">
+      <p
+        className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/85 shrink-0 mb-1"
+        style={{ color: "rgba(255,255,255,0.9)" }}
+      >
         وحدات المنظومة
       </p>
 
@@ -94,7 +97,7 @@ export function ErpSidebarNav({ onNavigate }: Props) {
             </button>
 
             {open && (
-              <div className="mt-1 mr-4 mb-1 space-y-0.5 border-r border-white/20 pr-2">
+              <div className="mt-1 mr-4 mb-1 space-y-0.5 border-r border-white/45 pr-2">
                 <Link
                   href={href}
                   onClick={onNavigate}

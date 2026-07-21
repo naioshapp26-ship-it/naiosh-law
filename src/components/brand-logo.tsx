@@ -41,12 +41,42 @@ export function BrandLogo({
   const isDataUrl = hasLogo && resolvedSrc.startsWith("data:");
   const isRemoteApi = hasLogo && (resolvedSrc.startsWith("/api/") || resolvedSrc.startsWith("http"));
 
+  const onDarkChrome = variant === "light";
+  const pad = Math.max(4, Math.round(dimension * 0.08));
+  const inner = Math.max(20, dimension - pad * 2);
+
   const imgStyle: React.CSSProperties = {
-    width: dimension,
-    height: dimension,
+    width: inner,
+    height: inner,
     objectFit: "contain",
-    filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.35))",
+    objectPosition: "center",
+    display: "block",
+    filter: onDarkChrome
+      ? "drop-shadow(0 1px 2px rgba(0,0,0,0.18))"
+      : "drop-shadow(0 4px 12px rgba(0,0,0,0.22))",
   };
+
+  const frameStyle: React.CSSProperties = onDarkChrome
+    ? {
+        width: dimension,
+        height: dimension,
+        borderRadius: Math.max(10, Math.round(dimension * 0.22)),
+        background: "linear-gradient(160deg, #ffffff 0%, #f8fafc 55%, #f1f5f9 100%)",
+        border: "1px solid rgba(255,255,255,0.95)",
+        boxShadow: "0 6px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95)",
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+        overflow: "hidden",
+        padding: pad,
+      }
+    : {
+        width: dimension,
+        height: dimension,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+      };
 
   const onImgError = () => {
     if (resolvedSrc !== DEFAULT_PUBLIC_LOGO) setFailedSrc(logoSrc || resolvedSrc);
@@ -59,11 +89,11 @@ export function BrandLogo({
         width: dimension,
         height: dimension,
         borderRadius: "14px",
-        background: variant === "light" ? "rgba(255,255,255,0.14)" : "rgba(195,21,42,0.1)",
-        border: variant === "light" ? "1px solid rgba(255,255,255,0.2)" : "1px solid rgba(195,21,42,0.2)",
+        background: onDarkChrome ? "#ffffff" : "rgba(195,21,42,0.1)",
+        border: onDarkChrome ? "1px solid rgba(255,255,255,0.95)" : "1px solid rgba(195,21,42,0.2)",
         display: "grid",
         placeItems: "center",
-        color: variant === "light" ? "#fff" : "#c3152a",
+        color: onDarkChrome ? "#c3152a" : "#c3152a",
         fontWeight: 900,
         fontSize: Math.max(12, dimension * 0.34),
         fontFamily: "var(--font-cairo)",
@@ -74,15 +104,12 @@ export function BrandLogo({
     </div>
   );
 
-  const img = !hasLogo ? (
-    placeholder
-  ) : isDataUrl || isRemoteApi ? (
+  const logoImage = !hasLogo ? null : isDataUrl || isRemoteApi ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       key={resolvedSrc}
       src={resolvedSrc}
       alt={BRAND.logoAlt}
-      className={`shrink-0 ${animated ? "logo-float" : ""}`}
       style={imgStyle}
       onError={onImgError}
     />
@@ -91,14 +118,21 @@ export function BrandLogo({
       key={resolvedSrc}
       src={resolvedSrc}
       alt={BRAND.logoAlt}
-      width={dimension}
-      height={dimension}
+      width={inner}
+      height={inner}
       priority
       unoptimized
-      className={`shrink-0 ${animated ? "logo-float" : ""}`}
       style={imgStyle}
       onError={onImgError}
     />
+  );
+
+  const img = !hasLogo ? (
+    placeholder
+  ) : (
+    <div className={`shrink-0 ${animated ? "logo-float" : ""}`} style={frameStyle}>
+      {logoImage}
+    </div>
   );
 
   const content = (
@@ -106,9 +140,19 @@ export function BrandLogo({
       {img}
       {showText && (
         <div className="min-w-0 leading-tight" style={{ maxWidth: "100%" }}>
-          <p className={`font-black text-sm truncate tracking-tight ${textColor}`}>{displayName}</p>
+          <p
+            className={`font-black text-sm truncate tracking-tight ${textColor}`}
+            style={onDarkChrome ? { color: "#ffffff" } : undefined}
+          >
+            {displayName}
+          </p>
           {displaySubtitle && (
-            <p className={`text-[10px] truncate mt-0.5 ${subColor}`}>{displaySubtitle}</p>
+            <p
+              className={`text-[10px] truncate mt-0.5 ${subColor}`}
+              style={onDarkChrome ? { color: "rgba(255,255,255,0.88)" } : undefined}
+            >
+              {displaySubtitle}
+            </p>
           )}
         </div>
       )}

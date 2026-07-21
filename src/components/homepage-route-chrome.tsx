@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const STYLESHEETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "/newhome/styles.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/styles.css?v=sidebar-white-text-20260721",
   "/newhome/homepage-premium.css?v=erp-copy-20260721-flashfix2",
   "/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2",
   "/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2",

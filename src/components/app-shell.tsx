@@ -143,7 +143,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const SidebarNavBody = ({ onNavigate, showEmpire }: { onNavigate?: () => void; showEmpire: boolean }) => (
     <>
       <div className="flex flex-col gap-0.5 px-1 py-2 shrink-0">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0 mb-1">
+        <p
+          className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/85 shrink-0 mb-1"
+          style={{ color: "rgba(255,255,255,0.9)" }}
+        >
           القائمة الرئيسية
         </p>
         {PRIMARY_NAV.map((item) => {
@@ -166,9 +169,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {showEmpire && (
         <>
-          <div className="h-px bg-white/15 mx-4 shrink-0" />
+          <div className="h-px bg-white/40 mx-4 shrink-0" />
           <EmpireSidebarNav collapsed={false} onNavigate={onNavigate} />
-          <div className="h-px bg-white/15 mx-4 shrink-0" />
+          <div className="h-px bg-white/40 mx-4 shrink-0" />
           <ErpSidebarNav onNavigate={onNavigate} />
         </>
       )}
@@ -320,7 +323,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar — fixed so page scroll never moves it */}
       <aside
         id="app-sidebar"
-        className={`desktop-sidebar transition-all duration-300 flex-col shadow-2xl ${
+        className={`desktop-sidebar app-sidebar-panel transition-all duration-300 flex-col shadow-2xl ${
           sidebarOpen ? "" : "is-collapsed"
         }`}
         style={{
@@ -336,11 +339,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           zIndex: 40,
         }}
       >
-        <div className="shrink-0 py-3 px-3 border-b border-white/10">
+        <div className="shrink-0 py-3 px-3 border-b border-white/40">
           <div className="flex items-center justify-between gap-2">
             {sidebarOpen ? (
               <BrandLogo
-                size={58}
+                size={64}
                 href="/app/dashboard"
                 showText
                 variant="light"
@@ -349,7 +352,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               />
             ) : (
               <Link href="/app/dashboard" className="mx-auto block" title={theme.brandName}>
-                <BrandLogo size={44} showText={false} />
+                <BrandLogo size={48} showText={false} variant="light" />
               </Link>
             )}
             <button
@@ -363,13 +366,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {sidebarOpen && (
-          <div className="shrink-0 px-4 py-3 border-b border-white/10">
+          <div className="shrink-0 px-4 py-3 border-b border-white/40">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/20 flex items-center justify-center text-sm font-bold text-white">
+              <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/35 flex items-center justify-center text-sm font-bold text-white">
                 {user?.name?.charAt(0) ?? "?"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate text-white">{user?.name ?? "مستخدم"}</p>
+                <p className="text-sm font-semibold truncate text-white" style={{ color: "#ffffff" }}>
+                  {user?.name ?? "مستخدم"}
+                </p>
                 <span className={`inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-full ${roleColor} text-white`}>
                   {roleLabel}
                 </span>
@@ -403,9 +408,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* مثبت دائماً أسفل القائمة حتى يظهر لمدير النظام بوضوح */}
         {isAdmin && (
-          <div className="shrink-0 px-1 py-2 border-t border-white/10">
+          <div className="shrink-0 px-1 py-2 border-t border-white/40">
             {sidebarOpen && (
-              <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
+              <p
+                className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/80"
+                style={{ color: "rgba(255,255,255,0.85)" }}
+              >
                 تحكم المدير
               </p>
             )}
@@ -413,13 +421,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <div className="shrink-0 p-3 border-t border-white/10">
+        <div className="shrink-0 p-3 border-t border-white/40">
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
             style={{
               background: theme.primaryColor || "#c3152a",
               boxShadow: "0 8px 20px -6px rgba(195,21,42,0.55)",
+              color: "#ffffff",
             }}
           >
             <span className="w-6 text-center" aria-hidden>
@@ -428,7 +437,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {sidebarOpen && <span className="text-sm">تسجيل الخروج</span>}
           </button>
           {sidebarOpen && (
-            <p className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/55">
+            <p
+              className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/80"
+              style={{ color: "rgba(255,255,255,0.8)" }}
+            >
               {roleLabel}
             </p>
           )}
@@ -454,6 +466,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
           />
           <div
+            className="app-sidebar-panel"
             style={{
               position: "relative",
               zIndex: 1,
@@ -465,11 +478,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               animation: "slide-drawer 0.25s ease",
               display: "flex",
               flexDirection: "column",
+              color: "#ffffff",
               ...sidebarStyle,
             }}
           >
-            <div className="shrink-0 py-3 px-3 border-b border-white/10 flex items-center justify-between gap-2">
-              <BrandLogo size={48} href="/app/dashboard" showText variant="light" subtitle={theme.tagline} className="flex-1 min-w-0" />
+            <div className="shrink-0 py-3 px-3 border-b border-white/40 flex items-center justify-between gap-2">
+              <BrandLogo size={56} href="/app/dashboard" showText variant="light" subtitle={theme.tagline} className="flex-1 min-w-0" />
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
@@ -477,7 +491,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 style={{
                   width: 32,
                   height: 32,
-                  border: "1px solid rgba(255,255,255,0.2)",
+                  border: "1px solid rgba(255,255,255,0.45)",
                   borderRadius: 8,
                   background: "rgba(255,255,255,0.12)",
                   color: "#fff",
@@ -487,13 +501,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 ✕
               </button>
             </div>
-            <div className="shrink-0 px-4 py-3 border-b border-white/10">
+            <div className="shrink-0 px-4 py-3 border-b border-white/40">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/20 flex items-center justify-center text-sm font-bold text-white">
+                <div className="w-9 h-9 rounded-full bg-white/15 ring-2 ring-white/35 flex items-center justify-center text-sm font-bold text-white">
                   {user?.name?.charAt(0) ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate text-white">{user?.name ?? "مستخدم"}</p>
+                  <p className="text-sm font-semibold truncate text-white" style={{ color: "#ffffff" }}>
+                    {user?.name ?? "مستخدم"}
+                  </p>
                   <span className={`inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-full ${roleColor} text-white`}>
                     {roleLabel}
                   </span>
@@ -504,20 +520,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarNavBody onNavigate={() => setDrawerOpen(false)} showEmpire />
             </nav>
             {isAdmin && (
-              <div className="shrink-0 px-1 py-2 border-t border-white/10">
-                <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
+              <div className="shrink-0 px-1 py-2 border-t border-white/40">
+                <p
+                  className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/80"
+                  style={{ color: "rgba(255,255,255,0.85)" }}
+                >
                   تحكم المدير
                 </p>
                 <SystemSettingsLink onNavigate={() => setDrawerOpen(false)} />
               </div>
             )}
-            <div className="shrink-0 p-3 border-t border-white/10">
+            <div className="shrink-0 p-3 border-t border-white/40">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
                 style={{
                   background: theme.primaryColor || "#c3152a",
                   boxShadow: "0 8px 20px -6px rgba(195,21,42,0.55)",
+                  color: "#ffffff",
                 }}
               >
                 <span className="w-6 text-center" aria-hidden>
@@ -525,7 +545,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <span className="text-sm">تسجيل الخروج</span>
               </button>
-              <p className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/55">
+              <p
+                className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/80"
+                style={{ color: "rgba(255,255,255,0.8)" }}
+              >
                 {roleLabel}
               </p>
             </div>

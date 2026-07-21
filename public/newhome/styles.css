@@ -66,20 +66,21 @@ body {
     radial-gradient(circle at 92% 78%, rgba(var(--brand-red-rgb), 0.04), transparent 36%);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Scope to landing only — unscoped p/a/h* colors were overriding app sidebar text-white */
+body.homepage h1,
+body.homepage h2,
+body.homepage h3,
+body.homepage h4,
+body.homepage h5,
+body.homepage h6 {
   color: var(--homepage-heading-color);
 }
 
-p {
+body.homepage p {
   color: var(--homepage-paragraph-color);
 }
 
-a {
+body.homepage a {
   color: var(--homepage-link-color);
 }
 
