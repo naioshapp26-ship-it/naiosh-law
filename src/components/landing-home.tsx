@@ -248,6 +248,7 @@ export default function LandingHome() {
             <Link href="/services">خدماتنا</Link>
             <Link href="/branches">الفروع</Link>
             <Link href="/platforms">المنصات</Link>
+            <Link href="/ads">الإعلانات</Link>
             <Link href="/app/dashboard">لوحة التحكم</Link>
           </section>
 

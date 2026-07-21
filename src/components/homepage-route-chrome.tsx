@@ -12,6 +12,7 @@ const STYLESHEETS = [
   "/newhome/mobile-header.css?v=erp-copy-20260721-flashfix2",
   "/newhome/landing-shared.css?v=platforms-hub-20260721",
   "/newhome/branches-page.css?v=erp-branches-copy-20260721",
+  "/newhome/ads-page.css?v=erp-ads-copy-20260721",
 ] as const;
 
 function stylesheetId(href: string) {
@@ -76,7 +77,9 @@ export function HomepageRouteChrome() {
         pathname === "/branches" ||
         pathname.startsWith("/branches/") ||
         pathname === "/platforms" ||
-        pathname.startsWith("/platforms/")
+        pathname.startsWith("/platforms/") ||
+        pathname === "/ads" ||
+        pathname.startsWith("/ads/")
     );
   }, [pathname]);
 
