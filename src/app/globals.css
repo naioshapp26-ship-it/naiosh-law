@@ -21,32 +21,35 @@
   --font: var(--font-cairo), "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* Keep reset inside @layer base so Tailwind utilities (mx-auto, p-*, etc.) win. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-html {
-  scroll-behavior: smooth;
-  /* أرقام لاتينية (إنجليزية) في كل الواجهة حتى مع lang=ar */
-  font-variant-numeric: lining-nums tabular-nums;
-  -webkit-locale: "en";
-}
+  html {
+    scroll-behavior: smooth;
+    /* أرقام لاتينية (إنجليزية) في كل الواجهة حتى مع lang=ar */
+    font-variant-numeric: lining-nums tabular-nums;
+    -webkit-locale: "en";
+  }
 
-body {
-  font-family: var(--font);
-  background: var(--light);
-  color: var(--dark);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
-  font-variant-numeric: lining-nums tabular-nums;
-}
+  body {
+    font-family: var(--font);
+    background: var(--light);
+    color: var(--dark);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 /*

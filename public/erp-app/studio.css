@@ -30,6 +30,13 @@
   }
   body.erp-studio-standalone .erp-studio-page {
     min-height: 100vh;
+    width: 100%;
+  }
+  body.erp-studio-standalone .erp-studio-container {
+    width: 100% !important;
+    max-width: 80rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   body.erp-studio-standalone .global-back-button {
     display: none !important;
