@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   computeEntityStats,
@@ -338,110 +338,6 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
   );
 }
 
-function StudioBody({ config }: { config: ErpPageConfig }) {
-  const [active, setActive] = useState(0);
-  const tabs = config.tabs ?? [];
-  const isMarketing = config.icon === "fa-bullhorn";
-  const heroBg = isMarketing
-    ? "linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #7f1d1d 100%)"
-    : "linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%)";
-
-  return (
-    <div className="space-y-5">
-      <header
-        className="rounded-2xl p-6 relative overflow-hidden text-white"
-        style={{ background: heroBg, color: "#fff" }}
-      >
-        <div className="absolute -left-10 -top-10 w-56 h-56 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -right-10 bottom-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-full text-xs font-bold border border-white/15">
-                <i className={`fas ${config.icon}`} aria-hidden /> {config.title}
-              </span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold mb-1.5 m-0" style={{ color: "#fff" }}>
-              {config.title}
-            </h1>
-            <p className="text-sm leading-relaxed max-w-xl m-0" style={{ color: "rgba(254,226,226,0.85)" }}>
-              {config.subtitle}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-            <button type="button" className="btn btn-primary text-sm">
-              <i className="fas fa-plus" /> {isMarketing ? "حملة جديدة" : "فعالية جديدة"}
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl font-bold transition-all border border-white/15 text-sm"
-            >
-              <i className="fas fa-video text-xs" /> رفع محتوى
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        {tabs.map((tab, i) => {
-          const icons = [
-            "fa-chart-pie",
-            "fa-calendar-plus",
-            "fa-layer-group",
-            "fa-video",
-            "fa-photo-film",
-            "fa-scissors",
-            "fa-film",
-            "fa-share-nodes",
-            "fa-circle-dot",
-          ];
-          return (
-          <button
-            key={tab}
-            type="button"
-            className={`nav-tab nav-tile ${i === active ? "active" : ""}`}
-            onClick={() => setActive(i)}
-          >
-            <i className={`fas ${icons[i] || "fa-circle"}`} />
-            {tab}
-          </button>
-          );
-        })}
-      </nav>
-
-      <section className="section active panel p-6">
-        <SectionHeader icon="fa-chart-pie" title="ملخص الاستوديو" actionLabel={isMarketing ? "إضافة حملة" : "إضافة فعالية"} />
-        <div className="info-banner">
-          <i className="fas fa-circle-info" />
-          <span>
-            هذه اللوحة تمنحك نظرة سريعة على {isMarketing ? "الحملات" : "الفعاليات"} والمقاطع المسجلة لتسهيل تجهيز الريلز والنشر.
-          </span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
-          {(config.kpis ?? []).map((kpi, i) => (
-            <div
-              key={kpi.label}
-              className={`stat-card border-t-4 ${
-                i === 0 ? "border-red-500" : i === 1 ? "border-amber-500" : i === 2 ? "border-emerald-500" : "border-indigo-500"
-              }`}
-            >
-              <p className="text-xs text-slate-500 font-bold mb-2 m-0">{kpi.label}</p>
-              <p className="text-3xl font-black text-slate-800 m-0">{kpi.value}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <DataTable
-        title={`سجل ${config.title}`}
-        columns={config.columns ?? []}
-        seed={config.seed ?? []}
-        actionLabel={isMarketing ? "حملة" : "فعالية"}
-      />
-    </div>
-  );
-}
-
 function PoliciesBody({ kpis = [], policies = [] }: { kpis?: ErpKpiDef[]; policies?: ErpPolicyDef[] }) {
   return (
     <>
@@ -557,20 +453,14 @@ export function ErpWorkspacePage({ pageId, config, module, parent }: Props) {
 
   return (
     <div className="erp-page erp-workspace max-w-7xl mx-auto space-y-5" data-erp-page={pageId} style={{ width: "100%" }}>
-      {config.kind === "studio" ? (
-        <StudioBody config={config} />
-      ) : (
-        <>
-          <OpsHero config={config} crumb={crumb} />
-          {config.kind === "hub" && module ? <HubBody module={module} /> : null}
-          {config.kind === "entity-ops" ? <EntityOpsBody config={config} /> : null}
-          {config.kind === "kpi-panels" ? <KpiPanelsBody kpis={config.kpis} panels={config.panels} /> : null}
-          {config.kind === "card-grid" ? <CardGridBody cards={config.cards} /> : null}
-          {config.kind === "payment-methods" ? <PaymentMethodsBody methods={config.methods} /> : null}
-          {config.kind === "payment-invoices" ? <PaymentInvoicesBody config={config} /> : null}
-          {config.kind === "policies" ? <PoliciesBody kpis={config.kpis} policies={config.policies} /> : null}
-        </>
-      )}
+      <OpsHero config={config} crumb={crumb} />
+      {config.kind === "hub" && module ? <HubBody module={module} /> : null}
+      {config.kind === "entity-ops" ? <EntityOpsBody config={config} /> : null}
+      {config.kind === "kpi-panels" ? <KpiPanelsBody kpis={config.kpis} panels={config.panels} /> : null}
+      {config.kind === "card-grid" ? <CardGridBody cards={config.cards} /> : null}
+      {config.kind === "payment-methods" ? <PaymentMethodsBody methods={config.methods} /> : null}
+      {config.kind === "payment-invoices" ? <PaymentInvoicesBody config={config} /> : null}
+      {config.kind === "policies" ? <PoliciesBody kpis={config.kpis} policies={config.policies} /> : null}
     </div>
   );
 }

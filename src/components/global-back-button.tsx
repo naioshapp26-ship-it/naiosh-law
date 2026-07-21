@@ -23,6 +23,8 @@ function resolveFallbackUrl(pathname: string) {
 function shouldShow(pathname: string) {
   const path = normalizePath(pathname);
   if (EXCLUDED_PATHS.has(path)) return false;
+  // Studio pages are ERP standalone chrome with their own back CTA.
+  if (path.includes("events-studio") || path.includes("marketing-campaigns-studio")) return false;
   if (typeof document !== "undefined" && document.body?.dataset?.hideGlobalBack === "true") {
     return false;
   }
