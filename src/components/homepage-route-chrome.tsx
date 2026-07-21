@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 
 const STYLESHEETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "/newhome/styles.css?v=sidebar-white-text-20260721",
+  "/newhome/styles.css?v=logo-space-fix-20260721",
   "/newhome/homepage-premium.css?v=erp-copy-20260721-flashfix2",
   "/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2",
   "/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2",
-  "/newhome/mobile-header.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/mobile-header.css?v=logo-space-fix-20260721",
   "/newhome/landing-shared.css?v=platforms-hub-20260721",
   "/newhome/branches-page.css?v=erp-branches-copy-20260721",
   "/newhome/ads-page.css?v=erp-ads-copy-20260721",

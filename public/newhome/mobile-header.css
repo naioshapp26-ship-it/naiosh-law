@@ -33,7 +33,7 @@ body.mobile-nav-lock .mobile-nav-backdrop {
   }
 
   body.homepage {
-    --homepage-top-nav-min-height: 56px;
+    --homepage-top-nav-min-height: 72px;
     --mobile-header-total: calc(var(--announcement-bar-height, 34px) + var(--homepage-top-nav-min-height));
     --mobile-auth-strip-height: 270px;
     --announcement-bar-height: 34px;
@@ -67,10 +67,11 @@ body.mobile-nav-lock .mobile-nav-backdrop {
     grid-template-areas: 'toggle brand login' !important;
     align-items: center !important;
     gap: 8px !important;
-    min-height: 56px !important;
-    padding: 6px 0 !important;
+    min-height: 72px !important;
+    padding: 8px 0 !important;
     flex-direction: unset !important;
     flex-wrap: nowrap !important;
+    overflow: visible !important;
   }
 
   body.homepage .nav-main {
@@ -105,11 +106,17 @@ body.mobile-nav-lock .mobile-nav-backdrop {
     background: rgba(229, 9, 20, 0.05);
     border: 1px solid rgba(229, 9, 20, 0.12);
     text-decoration: none;
+    overflow: visible !important;
   }
 
-  body.homepage .brand img {
-    height: 34px !important;
-    width: 34px !important;
+  body.homepage .brand img,
+  body.homepage #site-logo-header {
+    height: 52px !important;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    object-fit: contain !important;
     flex-shrink: 0;
   }
 
