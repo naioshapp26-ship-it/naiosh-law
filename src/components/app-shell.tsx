@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 import { EmpireSidebarNav } from "@/components/empire-sidebar";
+import { ErpSidebarNav } from "@/components/erp-sidebar-nav";
 import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
 import { useSiteTheme } from "@/components/theme-provider";
@@ -167,6 +168,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <>
           <div className="h-px bg-white/15 mx-4 shrink-0" />
           <EmpireSidebarNav collapsed={false} onNavigate={onNavigate} />
+          <div className="h-px bg-white/15 mx-4 shrink-0" />
+          <ErpSidebarNav onNavigate={onNavigate} />
         </>
       )}
     </>
