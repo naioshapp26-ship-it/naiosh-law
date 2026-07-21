@@ -70,6 +70,12 @@ html:not(.homepage-root) p {
   color: inherit;
 }
 
+html:not(.homepage-root) .erp-page h1,
+html:not(.homepage-root) .erp-page h2,
+html:not(.homepage-root) .erp-page h3 {
+  color: inherit !important;
+}
+
 html:not(.homepage-root) a {
   color: inherit;
 }

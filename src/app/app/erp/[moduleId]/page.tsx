@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { ErpModuleHub } from "@/components/erp-module-workspace";
+import { ErpWorkspacePage } from "@/components/erp-module-workspace";
+import { getErpPageConfig } from "@/data/erp-page-catalog";
 import { getErpModuleById } from "@/data/erp-sidebar-modules";
 import { useSession } from "@/lib/session";
 
@@ -12,10 +13,11 @@ export default function ErpModulePage() {
   const moduleId = String(params.moduleId ?? "");
   const { user, ready } = useSession(true);
   const mod = getErpModuleById(moduleId);
+  const config = getErpPageConfig(moduleId);
 
   if (!ready || !user) return null;
 
-  if (!mod) {
+  if (!mod || !config) {
     return (
       <AppShell>
         <div className="text-center py-20">
@@ -31,7 +33,7 @@ export default function ErpModulePage() {
 
   return (
     <AppShell>
-      <ErpModuleHub module={mod} />
+      <ErpWorkspacePage pageId={moduleId} config={config} module={mod} />
     </AppShell>
   );
 }
