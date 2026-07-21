@@ -21,10 +21,10 @@ const OFFICE_PAGES = [
 ];
 
 const CTA_BUTTONS = [
-  { label: "ابدأ الآن مجانًا", href: "/login", primary: true },
+  { label: "ابدأ الآن مجانًا", href: "/rent-system", primary: true },
   { label: "دخول النظام", href: "/login", primary: false },
   { label: "عرض الوحدات", href: "/#modules", primary: false },
-  { label: "طلب عرض تجريبي", href: "/#demo-request", primary: false },
+  { label: "أنشئ صفحتك", href: "/create-page", primary: false },
 ];
 
 const STATS = [

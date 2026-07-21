@@ -106,7 +106,7 @@ export const LANDING_SPECIALTIES: LandingSpecialty[] = [
     icon: "🏠",
     title: "صفحتي",
     subtitle: "لوحتك الشخصية ومؤشراتك واختصارات تخصصاتك",
-    domainHref: "/app/dashboard",
+    domainHref: "/my-page",
     highlights: ["ملخص يومي", "مؤشرات الأداء", "اختصارات الوحدات", "تنبيهات سريعة"],
   },
   {
