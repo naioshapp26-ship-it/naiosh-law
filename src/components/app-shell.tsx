@@ -183,7 +183,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row" style={{ background: "var(--site-bg, #f8fafc)" }} dir="rtl">
+    <div
+      className="flex min-h-screen flex-col md:flex-row"
+      style={{ background: "var(--site-bg, #f8fafc)", width: "100%", overflowX: "hidden" }}
+      dir="rtl"
+    >
       {/* Mobile top header — restored previous phone layout */}
       <header className="mobile-top-header" style={{ display: "none" }}>
         <div
@@ -309,8 +313,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop sidebar — unchanged look; hidden on phones */}
       <aside
-        className={`desktop-sidebar ${sidebarOpen ? "w-[290px]" : "w-[72px]"} sticky top-0 h-screen transition-all duration-300 flex-col shadow-2xl shrink-0 z-20`}
-        style={{ ...sidebarStyle, display: "flex" }}
+        id="app-sidebar"
+        className={`desktop-sidebar sticky top-0 h-screen transition-all duration-300 flex-col shadow-2xl z-20 ${
+          sidebarOpen ? "" : "is-collapsed"
+        }`}
+        style={{
+          ...sidebarStyle,
+          display: "flex",
+          flex: sidebarOpen ? "0 0 290px" : "0 0 72px",
+          width: sidebarOpen ? 290 : 72,
+          minWidth: sidebarOpen ? 290 : 72,
+          maxWidth: sidebarOpen ? 290 : 72,
+        }}
       >
         <div className="shrink-0 py-3 px-3 border-b border-white/10">
           <div className="flex items-center justify-between gap-2">
@@ -498,8 +512,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main className="flex-1 overflow-auto min-w-0 app-main">
-        <div className="erp-app-content p-4 lg:p-5 xl:p-6">
+      <main
+        className="flex-1 overflow-auto min-w-0 app-main"
+        style={{ flex: "1 1 auto", minWidth: 0, width: "auto" }}
+      >
+        <div className="erp-app-content p-4 lg:p-5 xl:p-6" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           <div
             style={{
               display: "flex",
@@ -596,6 +613,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         @media (min-width: 769px) {
           .mobile-top-header { display: none !important; }
           .mobile-bottom-nav { display: none !important; }
+          #app-sidebar.desktop-sidebar {
+            flex: 0 0 290px !important;
+            width: 290px !important;
+            min-width: 290px !important;
+            max-width: 290px !important;
+          }
+          #app-sidebar.desktop-sidebar.is-collapsed {
+            flex: 0 0 72px !important;
+            width: 72px !important;
+            min-width: 72px !important;
+            max-width: 72px !important;
+          }
+          .app-main {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+          }
         }
         @keyframes slide-drawer {
           from { transform: translateX(100%); opacity: 0; }
