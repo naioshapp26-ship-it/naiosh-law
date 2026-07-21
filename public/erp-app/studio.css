@@ -21,6 +21,19 @@
     border-radius: 0;
     min-height: calc(100vh - 2rem);
   }
+  body.erp-studio-standalone {
+    font-family: 'Cairo', var(--font-cairo), sans-serif;
+    background-color: #f1f5f9 !important;
+    background-image: radial-gradient(circle at 15% 10%, rgba(185,28,28,0.08), transparent 40%), radial-gradient(circle at 85% 90%, rgba(245,158,11,0.06), transparent 40%) !important;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  body.erp-studio-standalone .erp-studio-page {
+    min-height: 100vh;
+  }
+  body.erp-studio-standalone .global-back-button {
+    display: none !important;
+  }
     .panel {
       background: #ffffff;
       border: 1px solid var(--line);

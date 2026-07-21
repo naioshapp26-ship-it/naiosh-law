@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ErpWorkspacePage } from "@/components/erp-module-workspace";
+import { ErpStudioStandalone } from "@/components/erp-studio-standalone";
 import { getErpPageConfig } from "@/data/erp-page-catalog";
 import { getErpModuleById } from "@/data/erp-sidebar-modules";
 import { useSession } from "@/lib/session";
@@ -17,7 +18,7 @@ export default function ErpModulePage() {
 
   if (!ready || !user) return null;
 
-  if (!mod || !config) {
+  if (!config || (!mod && config.kind !== "studio")) {
     return (
       <AppShell>
         <div className="text-center py-20">
@@ -29,6 +30,11 @@ export default function ErpModulePage() {
         </div>
       </AppShell>
     );
+  }
+
+  // ERP studios are standalone full pages (no HQ sidebar) — match that chrome.
+  if (config.kind === "studio") {
+    return <ErpStudioStandalone config={config} />;
   }
 
   return (
