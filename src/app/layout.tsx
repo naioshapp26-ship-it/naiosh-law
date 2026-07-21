@@ -49,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link
           rel="stylesheet"
-          href="/newhome/landing-shared.css?v=services-cards-side-20260721"
+          href="/newhome/landing-shared.css?v=platforms-hub-20260721"
           data-erp-home="1"
         />
         <link
