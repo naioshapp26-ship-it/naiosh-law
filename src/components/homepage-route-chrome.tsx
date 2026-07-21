@@ -5,27 +5,32 @@ import { usePathname } from "next/navigation";
 
 const STYLESHEETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "/newhome/styles.css?v=erp-copy-20260721-flashfix",
-  "/newhome/homepage-premium.css?v=erp-copy-20260721-flashfix",
-  "/newhome/dark-mode.css?v=erp-copy-20260721-flashfix",
-  "/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix",
-  "/newhome/mobile-header.css?v=erp-copy-20260721-flashfix",
+  "/newhome/styles.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/homepage-premium.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/mobile-header.css?v=erp-copy-20260721-flashfix2",
 ] as const;
 
 function stylesheetId(href: string) {
   return `erp-home-${href.replace(/[^a-z0-9]+/gi, "-")}`;
 }
 
-/** Inject once and keep forever so client navigations never FOUC. */
+/**
+ * Backup injector: root layout already owns the <link>s, but Next head
+ * reconciliation can still drop them on some client navigations — re-add ASAP.
+ */
 export function ensureErpHomepageStylesheets() {
   if (typeof document === "undefined") return;
   STYLESHEETS.forEach((href) => {
+    if (document.querySelector(`link[data-erp-home][href="${href}"]`)) return;
     const id = stylesheetId(href);
     if (document.getElementById(id)) return;
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
     link.href = href;
+    link.setAttribute("data-erp-home", "1");
     document.head.appendChild(link);
   });
 }
@@ -45,14 +50,22 @@ export function setHomepageMode(on: boolean) {
 
 /**
  * Keeps ERP homepage chrome stable across client navigations.
- * Stylesheets stay injected on every route (selectors are scoped to body.homepage),
- * so /login → / never waits on CSS reload.
+ * Stylesheets stay in layout <head>; this toggles body.homepage by pathname
+ * and re-ensures links if Next drops them during soft nav.
  */
 export function HomepageRouteChrome() {
   const pathname = usePathname();
 
   useLayoutEffect(() => {
-    // Always re-ensure: Next head reconciliation can drop manually added <link>s on nav.
+    ensureErpHomepageStylesheets();
+    const observer = new MutationObserver(() => {
+      ensureErpHomepageStylesheets();
+    });
+    observer.observe(document.head, { childList: true });
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
     ensureErpHomepageStylesheets();
     setHomepageMode(pathname === "/");
   }, [pathname]);

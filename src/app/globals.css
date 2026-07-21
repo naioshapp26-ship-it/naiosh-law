@@ -49,6 +49,31 @@ a {
   text-decoration: none;
 }
 
+/*
+ * ERP /newhome CSS is kept in <head> permanently (avoids FOUC on soft back to /).
+ * Neutralize its unscoped body/typography rules off the landing page.
+ */
+html:not(.homepage-root) body {
+  font-family: var(--font) !important;
+  background: var(--light) !important;
+  background-image: none !important;
+  color: var(--dark) !important;
+}
+
+html:not(.homepage-root) h1,
+html:not(.homepage-root) h2,
+html:not(.homepage-root) h3,
+html:not(.homepage-root) h4,
+html:not(.homepage-root) h5,
+html:not(.homepage-root) h6,
+html:not(.homepage-root) p {
+  color: inherit;
+}
+
+html:not(.homepage-root) a {
+  color: inherit;
+}
+
 .container-max {
   width: min(1220px, calc(100% - 3rem));
   margin-inline: auto;
