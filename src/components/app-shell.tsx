@@ -184,8 +184,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="flex min-h-screen flex-col md:flex-row"
-      style={{ background: "var(--site-bg, #f8fafc)", width: "100%", overflowX: "hidden" }}
+      className="app-shell-root flex flex-col md:flex-row"
+      style={{
+        background: "var(--site-bg, #f8fafc)",
+        width: "100%",
+        height: "100dvh",
+        maxHeight: "100dvh",
+        overflow: "hidden",
+      }}
       dir="rtl"
     >
       {/* Mobile top header — restored previous phone layout */}
@@ -311,19 +317,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Desktop sidebar — unchanged look; hidden on phones */}
+      {/* Desktop sidebar — fixed so page scroll never moves it */}
       <aside
         id="app-sidebar"
-        className={`desktop-sidebar sticky top-0 h-screen transition-all duration-300 flex-col shadow-2xl z-20 ${
+        className={`desktop-sidebar transition-all duration-300 flex-col shadow-2xl ${
           sidebarOpen ? "" : "is-collapsed"
         }`}
         style={{
           ...sidebarStyle,
           display: "flex",
-          flex: sidebarOpen ? "0 0 290px" : "0 0 72px",
+          position: "fixed",
+          top: 0,
+          right: 0,
+          height: "100dvh",
           width: sidebarOpen ? 290 : 72,
           minWidth: sidebarOpen ? 290 : 72,
           maxWidth: sidebarOpen ? 290 : 72,
+          zIndex: 40,
         }}
       >
         <div className="shrink-0 py-3 px-3 border-b border-white/10">
@@ -425,6 +435,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
+      {/* Reserves horizontal space for the fixed desktop sidebar */}
+      <div
+        className="desktop-sidebar-spacer shrink-0"
+        aria-hidden
+        style={{
+          width: sidebarOpen ? 290 : 72,
+          minWidth: sidebarOpen ? 290 : 72,
+          flex: sidebarOpen ? "0 0 290px" : "0 0 72px",
+        }}
+      />
+
       {/* Mobile drawer overlay — previous phone menu behavior */}
       {drawerOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}>
@@ -513,8 +534,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main
-        className="flex-1 overflow-auto min-w-0 app-main"
-        style={{ flex: "1 1 auto", minWidth: 0, width: "auto" }}
+        className="flex-1 min-w-0 app-main"
+        style={{
+          flex: "1 1 auto",
+          minWidth: 0,
+          width: "auto",
+          height: "100dvh",
+          maxHeight: "100dvh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
         <div className="erp-app-content p-4 lg:p-5 xl:p-6" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           <div
@@ -605,29 +635,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <style>{`
         @media (max-width: 768px) {
           .desktop-sidebar { display: none !important; }
+          .desktop-sidebar-spacer { display: none !important; }
           .mobile-top-header { display: block !important; }
           .mobile-bottom-nav { display: flex !important; }
-          .app-main { padding-bottom: 5rem !important; }
+          .app-main { padding-bottom: 5rem !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+          .app-shell-root { height: auto !important; max-height: none !important; overflow: visible !important; min-height: 100dvh; }
           .desktop-theme-toggle { display: none !important; }
         }
         @media (min-width: 769px) {
           .mobile-top-header { display: none !important; }
           .mobile-bottom-nav { display: none !important; }
           #app-sidebar.desktop-sidebar {
-            flex: 0 0 290px !important;
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            height: 100dvh !important;
             width: 290px !important;
             min-width: 290px !important;
             max-width: 290px !important;
+            z-index: 40 !important;
           }
           #app-sidebar.desktop-sidebar.is-collapsed {
-            flex: 0 0 72px !important;
             width: 72px !important;
             min-width: 72px !important;
             max-width: 72px !important;
           }
+          .desktop-sidebar-spacer {
+            flex: 0 0 290px !important;
+            width: 290px !important;
+            min-width: 290px !important;
+          }
+          .app-shell-root:has(#app-sidebar.is-collapsed) .desktop-sidebar-spacer {
+            flex: 0 0 72px !important;
+            width: 72px !important;
+            min-width: 72px !important;
+          }
           .app-main {
             flex: 1 1 auto !important;
             min-width: 0 !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            overflow-y: auto !important;
           }
         }
         @keyframes slide-drawer {
