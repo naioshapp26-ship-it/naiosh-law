@@ -14,7 +14,7 @@ const LANDING_LINKS = [
   { href: "/#modules", label: "منتجاتنا" },
   { href: "/services", label: "خدماتنا" },
   { href: "/branches", label: "الفروع" },
-  { href: "/app/dashboard", label: "المنصات" },
+  { href: "/platforms", label: "المنصات" },
   { href: "/#demo-request", label: "الإعلانات" },
   { href: "/login", label: "العضوية" },
   { href: "/#features", label: "المدونة" },
@@ -39,6 +39,7 @@ export function Navbar({ variant = "dark" }: Props) {
   const isLinkActive = (href: string, label: string) => {
     if (label === "خدماتنا") return pathname === "/services" || pathname.startsWith("/services/");
     if (label === "الفروع") return pathname === "/branches" || pathname.startsWith("/branches/");
+    if (label === "المنصات") return pathname === "/platforms" || pathname.startsWith("/platforms/");
     if (label === "الرئيسية") return pathname === "/";
     return false;
   };
