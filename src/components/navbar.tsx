@@ -204,7 +204,7 @@ export function Navbar({ variant = "dark" }: Props) {
       >
         <Link href="/" className="brand" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/naiosh-logo.png" alt="شعار نايوش" style={{ height: 48, width: "auto" }} />
+          <img src="/naiosh-logo.png" alt="شعار نايوش" style={{ height: 64, width: "auto", objectFit: "contain" }} />
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <DarkModeToggle />

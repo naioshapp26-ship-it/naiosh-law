@@ -152,9 +152,12 @@ body.homepage a {
 }
 
 .brand img {
-  height: 45px;
+  height: 64px;
   width: auto;
+  max-width: none;
   object-fit: contain;
+  object-position: center;
+  overflow: visible;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
 }
 
@@ -167,7 +170,7 @@ body.homepage a {
 
 @media (min-width: 768px) {
   .brand img {
-    height: 55px;
+    height: 72px;
   }
 }
 
@@ -223,7 +226,7 @@ body.homepage a {
 
 #book-tour,
 #register-with-us {
-  scroll-margin-top: calc(var(--announcement-bar-height, 50px) + var(--homepage-top-nav-min-height, 60px) + 16px);
+  scroll-margin-top: calc(var(--announcement-bar-height, 50px) + var(--homepage-top-nav-min-height, 88px) + 16px);
 }
 
 .nav-dropdown {
@@ -1978,7 +1981,7 @@ body.homepage {
   --homepage-hero-visual-fallback: #000000;
   --homepage-btn-hover-brightness: 1.09;
   --homepage-top-nav-offset: 0px;
-  --homepage-top-nav-min-height: 60px;
+  --homepage-top-nav-min-height: 88px;
   padding-top: var(--announcement-bar-height);
   overflow-x: hidden;
 }
@@ -2015,9 +2018,10 @@ body.homepage .top-nav {
   top: var(--announcement-bar-height);
   margin-top: var(--homepage-top-nav-offset);
   margin-bottom: 0;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: visible;
 }
 
 body.homepage .top-nav .inner {
@@ -2025,7 +2029,8 @@ body.homepage .top-nav .inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 20px;
+  padding: 8px 20px;
+  overflow: visible;
 }
 
 body.homepage .auth-actions-shell {
@@ -2115,12 +2120,26 @@ body.homepage .logo-text {
   color: #171a20;
 }
 
-body.homepage .brand img {
-  height: 48px;
-  width: 48px;
+body.homepage .brand {
+  overflow: visible;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Full crest — no circular crop; room for crown above the shield */
+body.homepage .brand img,
+body.homepage #site-logo-header {
+  height: 72px;
+  width: auto;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
+  object-position: center;
   background: transparent;
-  border-radius: 50%;
+  border-radius: 0;
+  overflow: visible;
+  flex-shrink: 0;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
 }
 
@@ -4130,7 +4149,13 @@ body.homepage #main-sections-grid .card:hover .icon-box {
   }
 
   .brand img {
-    height: 42px;
+    height: 52px;
+    width: auto;
+  }
+
+  body.homepage .brand img,
+  body.homepage #site-logo-header {
+    height: 56px;
     width: auto;
   }
 
