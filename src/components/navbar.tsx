@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/color-mode";
 
 type Props = {
@@ -9,9 +10,9 @@ type Props = {
 };
 
 const LANDING_LINKS = [
-  { href: "/", label: "الرئيسية", active: true },
+  { href: "/", label: "الرئيسية" },
   { href: "/#modules", label: "منتجاتنا" },
-  { href: "/#features", label: "خدماتنا" },
+  { href: "/services", label: "خدماتنا" },
   { href: "/app/modules/administration", label: "الفروع" },
   { href: "/app/dashboard", label: "المنصات" },
   { href: "/#demo-request", label: "الإعلانات" },
@@ -28,11 +29,18 @@ const LANDING_LINKS = [
  * Auth pill order matches ERP: أنشئ صفحتك · استأجر نظام الآن · صفحتي · تسجيل الدخول · إنشاء حساب
  */
 export function Navbar({ variant = "dark" }: Props) {
+  const pathname = usePathname();
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [myPageHref, setMyPageHref] = useState("/my-page");
+
+  const isLinkActive = (href: string, label: string) => {
+    if (label === "خدماتنا") return pathname === "/services" || pathname.startsWith("/services/");
+    if (label === "الرئيسية") return pathname === "/";
+    return false;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -109,18 +117,22 @@ export function Navbar({ variant = "dark" }: Props) {
             </Link>
             <nav className="nav-links" aria-label="روابط الصفحات">
               <span className="nav-active-indicator" id="nav-active-indicator" aria-hidden="true" />
-              {LANDING_LINKS.map((link) => (
+              {LANDING_LINKS.map((link) => {
+                const active = isLinkActive(link.href, link.label);
+                return (
                 <Link
                   key={`${link.href}-${link.label}`}
                   href={link.href}
-                  className={[link.className, link.active ? "active" : ""].filter(Boolean).join(" ") || undefined}
+                  className={[link.className, active ? "active" : ""].filter(Boolean).join(" ") || undefined}
                   aria-label={link.label}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMenuOpen(false)}
                 >
                   {link.icon ? <i className={`fas ${link.icon}`} aria-hidden="true" /> : null}
                   <span>{link.label}</span>
                 </Link>
-              ))}
+                );
+              })}
             </nav>
           </div>
 
