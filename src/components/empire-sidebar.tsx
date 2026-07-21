@@ -20,8 +20,8 @@ export function EmpireSidebarNav({ collapsed = false, onNavigate }: Props) {
   const axes = imperialAxes.filter((a) => a.id <= 9);
 
   return (
-    <div className="flex flex-col flex-1 justify-evenly min-h-0 py-2">
-      <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0">
+    <div className="flex flex-col gap-0.5 px-1 py-2 shrink-0">
+      <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/60 shrink-0 mb-1">
         المحاور القانونية
       </p>
 
