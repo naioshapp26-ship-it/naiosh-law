@@ -57,66 +57,6 @@
   color: #5f6672;
 }
 
-.landing-hub-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.landing-hub-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-radius: 20px;
-  border: 1px solid #eceef4;
-  background: #fff;
-  box-shadow: 0 16px 30px rgba(11, 14, 20, 0.08);
-  padding: 22px 20px 18px;
-  text-decoration: none;
-  color: inherit;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-}
-
-.landing-hub-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 24px 42px rgba(10, 14, 22, 0.14);
-  border-color: rgba(197, 7, 18, 0.28);
-}
-
-.landing-hub-card-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #e50914, #8b000e);
-  color: #fff;
-  font-size: 18px;
-}
-
-.landing-hub-card h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 900;
-  color: #1d222b;
-}
-
-.landing-hub-card p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
-  color: #5f6672;
-  font-weight: 600;
-}
-
-.landing-hub-card-cta {
-  margin-top: auto;
-  font-size: 13px;
-  font-weight: 800;
-  color: #c50712;
-}
-
 .landing-hub-actions {
   display: flex;
   flex-wrap: wrap;
@@ -148,10 +88,13 @@
   border: 1px solid rgba(197, 7, 18, 0.35);
 }
 
+/* Category cards side-by-side */
 .landing-hub-details {
-  margin-top: 48px;
+  margin-top: 28px;
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  align-items: stretch;
 }
 
 .landing-hub-detail {
@@ -160,21 +103,45 @@
   border: 1px solid #eceef4;
   background: #fff;
   box-shadow: 0 16px 30px rgba(11, 14, 20, 0.08);
-  padding: 22px 22px 18px;
+  padding: 22px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.landing-hub-detail:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 42px rgba(10, 14, 22, 0.12);
+  border-color: rgba(197, 7, 18, 0.22);
 }
 
 .landing-hub-detail-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+.landing-hub-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e50914, #8b000e);
+  color: #fff;
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 .landing-hub-detail-head h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 900;
   color: #1d222b;
+  line-height: 1.35;
 }
 
 .landing-hub-detail-head p {
@@ -182,6 +149,7 @@
   color: #5f6672;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.6;
 }
 
 .landing-hub-detail-list {
@@ -191,6 +159,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  flex: 1;
 }
 
 .landing-hub-detail-list li {
@@ -199,40 +168,55 @@
   gap: 10px;
   border: 1px solid #eef0f5;
   border-radius: 14px;
-  background: #fafbfd;
-  padding: 12px 14px;
+  background: #f7f8fb;
+  padding: 12px 12px;
   color: #1f232b;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.55;
+  min-width: 0;
+}
+
+.landing-hub-detail-list li > span:last-child {
+  min-width: 0;
 }
 
 .landing-hub-detail-list .num {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(197, 7, 18, 0.1);
-  color: #c50712;
-  font-size: 12px;
+  background: #c50712;
+  color: #fff;
+  font-size: 11px;
   font-weight: 900;
 }
 
-@media (max-width: 900px) {
-  .landing-hub-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
+@media (max-width: 1100px) {
   .landing-hub-detail-list {
     grid-template-columns: 1fr;
   }
 }
 
+@media (max-width: 900px) {
+  .landing-hub-details {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hub-detail-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 560px) {
-  .landing-hub-grid {
+  .landing-hub-details {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hub-detail-list {
     grid-template-columns: 1fr;
   }
 }
