@@ -10,6 +10,7 @@ const STYLESHEETS = [
   "/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2",
   "/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2",
   "/newhome/mobile-header.css?v=erp-copy-20260721-flashfix2",
+  "/newhome/landing-shared.css?v=services-hub-20260721",
 ] as const;
 
 function stylesheetId(href: string) {
@@ -67,7 +68,7 @@ export function HomepageRouteChrome() {
 
   useLayoutEffect(() => {
     ensureErpHomepageStylesheets();
-    setHomepageMode(pathname === "/");
+    setHomepageMode(pathname === "/" || pathname === "/services" || pathname.startsWith("/services/"));
   }, [pathname]);
 
   return null;
