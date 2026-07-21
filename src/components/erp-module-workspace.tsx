@@ -83,23 +83,28 @@ function PageHero({
 }) {
   return (
     <div
-      className="rounded-2xl p-6 text-white shadow-lg"
-      style={{ background: gradientClass(config.gradient) }}
+      className="rounded-2xl p-6 text-white shadow-lg relative overflow-hidden"
+      style={{ background: gradientClass(config.gradient), color: "#fff" }}
     >
       {crumb && (
-        <p className="text-sm text-white/80 mb-2">
-          <Link href={crumb.href} className="underline underline-offset-2 hover:text-white">
+        <p className="text-sm mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>
+          <Link href={crumb.href} className="underline underline-offset-2" style={{ color: "#fff" }}>
             {crumb.label}
           </Link>
           <span className="mx-2 opacity-60">/</span>
           <span>{config.title}</span>
         </p>
       )}
-      <h2 className="text-2xl md:text-3xl font-black flex items-center gap-3">
+      <h2
+        className="text-2xl md:text-3xl font-black flex items-center gap-3"
+        style={{ color: "#fff", margin: 0 }}
+      >
         <i className={`fas ${config.icon}`} aria-hidden />
         {config.title}
       </h2>
-      <p className="mt-2 text-white/90 text-sm md:text-base">{config.subtitle}</p>
+      <p className="mt-2 text-sm md:text-base" style={{ color: "rgba(255,255,255,0.92)" }}>
+        {config.subtitle}
+      </p>
     </div>
   );
 }
@@ -283,8 +288,7 @@ function PaymentMethodsBody({ methods = [] }: { methods?: ErpMethodDef[] }) {
 function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
   return (
     <>
-      <div className="flex justify-between items-center flex-wrap gap-3">
-        <h1 className="text-2xl font-bold text-gray-800">🧾 {config.title}</h1>
+      <div className="flex justify-end items-center flex-wrap gap-3">
         <button type="button" className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold">
           فاتورة جديدة
         </button>
@@ -303,10 +307,11 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
                     : kpi.tone === "from-amber-500 to-orange-600"
                       ? "linear-gradient(135deg,#f59e0b,#ea580c)"
                       : "linear-gradient(135deg,#f43f5e,#dc2626)",
+              color: "#fff",
             }}
           >
-            <p className="text-sm opacity-90 mb-1">{kpi.label}</p>
-            <p className="text-3xl font-black">{kpi.value}</p>
+            <p className="text-sm opacity-90 mb-1" style={{ color: "rgba(255,255,255,0.92)" }}>{kpi.label}</p>
+            <p className="text-3xl font-black" style={{ color: "#fff" }}>{kpi.value}</p>
           </div>
         ))}
       </div>
