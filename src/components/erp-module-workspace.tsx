@@ -452,7 +452,11 @@ export function ErpWorkspacePage({ pageId, config, module, parent }: Props) {
   const crumb = parent ? { label: parent.label, href: erpModuleHref(parent.id) } : null;
 
   return (
-    <div className="erp-page erp-workspace max-w-7xl mx-auto space-y-5" data-erp-page={pageId} style={{ width: "100%" }}>
+    <div
+      className="erp-page erp-workspace space-y-5"
+      data-erp-page={pageId}
+      style={{ width: "100%", maxWidth: "80rem", marginLeft: "auto", marginRight: "auto" }}
+    >
       <OpsHero config={config} crumb={crumb} />
       {config.kind === "hub" && module ? <HubBody module={module} /> : null}
       {config.kind === "entity-ops" ? <EntityOpsBody config={config} /> : null}
