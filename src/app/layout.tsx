@@ -24,6 +24,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ar" dir="rtl" className={cairo.variable} style={{ fontVariantNumeric: "lining-nums tabular-nums" }}>
       <head>
+        {/* Owned by the root layout so client navigations never unload ERP landing CSS (FOUC on /login → /). */}
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          data-erp-home="1"
+        />
+        <link rel="stylesheet" href="/newhome/styles.css?v=erp-copy-20260721-flashfix2" data-erp-home="1" />
+        <link
+          rel="stylesheet"
+          href="/newhome/homepage-premium.css?v=erp-copy-20260721-flashfix2"
+          data-erp-home="1"
+        />
+        <link rel="stylesheet" href="/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2" data-erp-home="1" />
+        <link
+          rel="stylesheet"
+          href="/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2"
+          data-erp-home="1"
+        />
+        <link
+          rel="stylesheet"
+          href="/newhome/mobile-header.css?v=erp-copy-20260721-flashfix2"
+          data-erp-home="1"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark-mode');document.documentElement.style.colorScheme='dark'}}catch(_){}`,

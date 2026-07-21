@@ -78,7 +78,7 @@ export default function LandingHome() {
     <>
       <script
         dangerouslySetInnerHTML={{
-          __html: `try{document.body.classList.add('homepage')}catch(_){}`,
+          __html: `try{document.body.classList.add('homepage');document.documentElement.classList.add('homepage-root');document.body.style.removeProperty('background');document.body.style.removeProperty('color');}catch(_){}`,
         }}
       />
       <ErpHomepageStyles />
