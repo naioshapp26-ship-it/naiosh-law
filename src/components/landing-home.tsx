@@ -243,7 +243,7 @@ export default function LandingHome() {
           <section className="site-footer-col" aria-label="روابط سريعة">
             <h3>روابط سريعة</h3>
             <Link href="/">الرئيسية</Link>
-            <Link href="/login">استأجر نظام الآن</Link>
+            <Link href="/rent-system">استأجر نظام الآن</Link>
             <Link href="/#modules">التصنيفات</Link>
             <Link href="/#features">المميزات</Link>
             <Link href="/app/dashboard">لوحة التحكم</Link>
@@ -252,7 +252,7 @@ export default function LandingHome() {
           <section className="site-footer-col" aria-label="خدمة العملاء">
             <h3>خدمة العملاء</h3>
             <Link href="/#footer-support">اتصل بنا</Link>
-            <Link href="/login">سجل معنا</Link>
+            <Link href="/register">سجل معنا</Link>
             <Link href="/login">سياسة الخصوصية</Link>
             <Link href="/login">الشروط والأحكام</Link>
           </section>

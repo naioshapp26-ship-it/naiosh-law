@@ -20,25 +20,42 @@ const LANDING_LINKS = [
   { href: "/#modules", label: "الأسعار" },
   { href: "/#footer-support", label: "اتصل بنا" },
   { href: "/#footer-support", label: "مركز المعلومات", icon: "fa-info-circle", className: "nav-info-center" },
-  { href: "/login", label: "سجل مجانًا", icon: "fa-user-plus", className: "nav-register-with-us" },
+  { href: "/register", label: "سجل مجانًا", icon: "fa-user-plus", className: "nav-register-with-us" },
 ];
 
 /**
  * Landing navbar uses ERP `/newhome` top-nav chrome exactly.
- * Non-landing variant keeps the previous app chrome.
+ * Auth pill order matches ERP: أنشئ صفحتك · استأجر نظام الآن · صفحتي · تسجيل الدخول · إنشاء حساب
  */
 export function Navbar({ variant = "dark" }: Props) {
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sessionName, setSessionName] = useState<string | null>(null);
+  const [myPageHref, setMyPageHref] = useState("/my-page");
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/auth/me", { credentials: "include" })
       .then(async (res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled) setSessionName(data?.user?.name ? String(data.user.name) : null);
+      .then(async (data) => {
+        if (cancelled) return;
+        const name = data?.user?.name ? String(data.user.name) : null;
+        setSessionName(name);
+        if (!name) {
+          setMyPageHref("/my-page");
+          return;
+        }
+        try {
+          const pageRes = await fetch("/api/creator-pages/me", { credentials: "include" });
+          if (!pageRes.ok) return;
+          const pageData = await pageRes.json();
+          const username = pageData?.page?.username;
+          if (username) setMyPageHref(`/u/${encodeURIComponent(username)}`);
+          else setMyPageHref("/my-page");
+        } catch {
+          setMyPageHref("/my-page");
+        }
       })
       .catch(() => {
         if (!cancelled) setSessionName(null);
@@ -124,13 +141,19 @@ export function Navbar({ variant = "dark" }: Props) {
           <div className="auth-actions-shell" aria-label="إجراءات الحساب">
             <div className="auth-actions">
               <DarkModeToggle />
+              <Link href="/create-page" className="auth-btn magnetic-btn">
+                أنشئ صفحتك
+              </Link>
+              <Link href="/rent-system" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
+                استأجر نظام الآن
+              </Link>
+              <Link href={myPageHref} className="auth-btn magnetic-btn" id="my-page-nav-btn">
+                صفحتي
+              </Link>
               {sessionName ? (
                 <>
-                  <Link href="/app/dashboard" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
+                  <Link href="/app/dashboard" className="auth-btn magnetic-btn">
                     لوحة التحكم
-                  </Link>
-                  <Link href="/login" className="auth-btn magnetic-btn">
-                    تبديل الحساب
                   </Link>
                   <button type="button" className="auth-btn magnetic-btn" onClick={logout} style={{ cursor: "pointer", fontFamily: "inherit" }}>
                     تسجيل الخروج
@@ -141,14 +164,8 @@ export function Navbar({ variant = "dark" }: Props) {
                   <Link href="/login" className="auth-btn magnetic-btn">
                     تسجيل الدخول
                   </Link>
-                  <Link href="/login" className="auth-btn magnetic-btn">
+                  <Link href="/register" className="auth-btn magnetic-btn">
                     إنشاء حساب
-                  </Link>
-                  <Link href="/login" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
-                    استأجر النظام الآن
-                  </Link>
-                  <Link href="/login" className="auth-btn magnetic-btn">
-                    أنشئ صفحتك
                   </Link>
                 </>
               )}
@@ -176,11 +193,7 @@ export function Navbar({ variant = "dark" }: Props) {
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <DarkModeToggle />
-          <Link
-            href="/login"
-            className="btn-primary"
-            style={{ padding: "0.55rem 1.4rem", fontSize: "0.875rem" }}
-          >
+          <Link href="/login" className="btn-primary" style={{ padding: "0.55rem 1.4rem", fontSize: "0.875rem" }}>
             دخول النظام
           </Link>
         </div>
