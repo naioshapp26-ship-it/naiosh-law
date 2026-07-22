@@ -30,10 +30,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/styles.css?v=header-hero-flush-20260722b" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/styles.css?v=header-hero-flush-20260722c" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/homepage-premium.css?v=header-hero-flush-20260722b"
+          href="/newhome/homepage-premium.css?v=header-hero-flush-20260722c"
           data-erp-home="1"
         />
         <link rel="stylesheet" href="/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2" data-erp-home="1" />
@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link
           rel="stylesheet"
-          href="/newhome/mobile-header.css?v=header-hero-flush-20260722b"
+          href="/newhome/mobile-header.css?v=header-hero-flush-20260722c"
           data-erp-home="1"
         />
         <link

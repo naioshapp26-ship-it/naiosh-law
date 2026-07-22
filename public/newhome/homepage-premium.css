@@ -156,8 +156,15 @@ body.homepage .hero-inner {
   display: grid !important;
 }
 
+/* Sticky in-flow announcement + compact nav — no body padding gap */
+body.homepage .announcement-bar {
+  position: sticky !important;
+  margin: 0 !important;
+}
+
 /* Remove any strip between white header and hero — ERP flush join */
-body.homepage .top-nav + .hero {
+body.homepage .top-nav + .hero,
+body.homepage .hero {
   margin-top: 0 !important;
   padding-top: 0 !important;
   border-top: 0 !important;
@@ -166,6 +173,8 @@ body.homepage .top-nav + .hero {
 body.homepage .top-nav {
   border-bottom: 0 !important;
   box-shadow: none !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 body.homepage .hero-stats,

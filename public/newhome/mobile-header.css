@@ -41,8 +41,10 @@ body.mobile-nav-lock .mobile-nav-backdrop {
   }
 
   body.homepage .announcement-bar {
-    min-height: 34px;
-    padding: 4px 10px;
+    min-height: var(--announcement-bar-height);
+    height: var(--announcement-bar-height);
+    padding: 0 10px;
+    box-sizing: border-box;
   }
 
   body.homepage .announcement-track {
