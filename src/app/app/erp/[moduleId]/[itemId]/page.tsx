@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ErpWorkspacePage } from "@/components/erp-module-workspace";
+import SystemSettingsPage from "@/components/system-settings-page";
 import { getErpPageConfig } from "@/data/erp-page-catalog";
 import { getErpModuleById } from "@/data/erp-sidebar-modules";
 import { useSession } from "@/lib/session";
+
+const HOMEPAGE_SETTINGS_IDS = new Set(["settings", "identity-settings"]);
 
 export default function ErpModuleItemPage() {
   const params = useParams();
@@ -18,6 +21,11 @@ export default function ErpModuleItemPage() {
   const config = getErpPageConfig(itemId);
 
   if (!ready || !user) return null;
+
+  // Nested ERP entry e.g. إدارة النظام → إعدادات الهوية
+  if (HOMEPAGE_SETTINGS_IDS.has(itemId)) {
+    return <SystemSettingsPage />;
+  }
 
   if (!parent || !item || !config) {
     return (
