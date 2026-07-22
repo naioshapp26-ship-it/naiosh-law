@@ -17,6 +17,8 @@ export async function PATCH(request: Request, { params }: Params) {
       author: body.author !== undefined ? String(body.author) : undefined,
       summary: body.summary !== undefined ? String(body.summary) : undefined,
       content: body.content !== undefined ? String(body.content) : undefined,
+      mediaUrl: body.mediaUrl !== undefined ? (body.mediaUrl ? String(body.mediaUrl) : null) : undefined,
+      mediaKind: body.mediaKind !== undefined ? (body.mediaKind ? String(body.mediaKind) : null) : undefined,
       tags: body.tags !== undefined ? String(body.tags) : undefined,
       status: body.status !== undefined ? String(body.status) : undefined,
     },

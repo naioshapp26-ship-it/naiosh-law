@@ -16,6 +16,9 @@ type Props = {
   saveLabel?: string;
   enableFiles?: boolean;
   enableParties?: boolean;
+  filesLabel?: string;
+  filesHint?: string;
+  filesMode?: "all" | "media";
 };
 
 export function Modal({
@@ -28,6 +31,9 @@ export function Modal({
   saveLabel = "حفظ",
   enableFiles = true,
   enableParties = true,
+  filesLabel,
+  filesHint,
+  filesMode = "all",
 }: Props) {
   const [form, setForm] = useState<Record<string, unknown>>({});
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
@@ -162,6 +168,7 @@ export function Modal({
                     label={f.label}
                     value={parseAttachments(form[f.key])}
                     onChange={(files) => set(f.key, files)}
+                    mode={filesMode}
                   />
                 ) : (
                   <>
@@ -222,10 +229,21 @@ export function Modal({
             {enableFiles && !hasExplicitFilesField && (
               <div style={{ gridColumn: "1 / -1" }}>
                 <FileUploadField
-                  label="المرفقات من الكمبيوتر (ملف شاهد · صورة · فيديو)"
-                  hint="مهم لقضايا التأمين والحوادث: ارفع الشواهد والصور ومقاطع الفيديو مباشرة من سطح المكتب"
+                  label={
+                    filesLabel ??
+                    (filesMode === "media"
+                      ? "صورة أو فيديو المقالة (رفع مباشر أو رابط)"
+                      : "المرفقات من الكمبيوتر (ملف شاهد · صورة · فيديو)")
+                  }
+                  hint={
+                    filesHint ??
+                    (filesMode === "media"
+                      ? "معظم المقالات تتضمن صورة أو فيديو — ارفع من الجهاز أو الصق رابطًا مباشرًا"
+                      : "مهم لقضايا التأمين والحوادث: ارفع الشواهد والصور ومقاطع الفيديو مباشرة من سطح المكتب")
+                  }
                   value={attachments}
                   onChange={setAttachments}
+                  mode={filesMode}
                 />
               </div>
             )}

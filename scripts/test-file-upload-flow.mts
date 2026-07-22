@@ -9,7 +9,11 @@ import {
   ACCEPTED_IMAGE_TYPES,
   ACCEPTED_VIDEO_TYPES,
   MAX_FILE_BYTES,
+  attachmentFromMediaUrl,
   formatFileSize,
+  guessMediaKindFromUrl,
+  isRemoteMediaAttachment,
+  mediaKindFromAttachment,
   parseAttachments,
   readFileAsAttachment,
 } from "../src/lib/file-upload";
@@ -65,4 +69,23 @@ assert.ok(parsed?.fileData.startsWith("data:image/jpeg;base64,"));
 const tooBig = { name: "big.mp4", type: "video/mp4", size: MAX_FILE_BYTES + 1 } as File;
 assert.equal(await readFileAsAttachment(tooBig), null);
 
-console.log("PASS: file upload flow helpers OK");
+assert.equal(guessMediaKindFromUrl("https://cdn.example.com/cover.jpg"), "image");
+assert.equal(guessMediaKindFromUrl("https://cdn.example.com/clip.mp4"), "video");
+assert.equal(guessMediaKindFromUrl("https://www.youtube.com/watch?v=abc"), "video");
+
+const fromUrl = attachmentFromMediaUrl("https://cdn.example.com/photos/hero.png");
+assert.ok(fromUrl);
+assert.equal(fromUrl?.mimeType, "image/url");
+assert.equal(fromUrl?.fileData, "https://cdn.example.com/photos/hero.png");
+assert.equal(fromUrl?.size, 0);
+assert.ok(isRemoteMediaAttachment(fromUrl!));
+assert.equal(mediaKindFromAttachment(fromUrl!), "image");
+
+assert.equal(attachmentFromMediaUrl("not-a-url"), null);
+assert.equal(attachmentFromMediaUrl("ftp://x.com/a.jpg"), null);
+
+const yt = attachmentFromMediaUrl("https://youtu.be/xyz", "video");
+assert.equal(yt?.mimeType, "video/url");
+assert.equal(mediaKindFromAttachment(yt!), "video");
+
+console.log("PASS: file upload flow helpers OK (direct + URL media)");

@@ -5,6 +5,8 @@ export type FileAttachment = {
   size: number;
 };
 
+export type MediaUrlKind = "image" | "video";
+
 /** مستندات شائعة كشواهد ومستندات رسمية */
 export const ACCEPTED_DOCUMENT_TYPES =
   ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.rtf,.zip,.rar,.7z";
@@ -62,4 +64,49 @@ export function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** True when attachment points to an http(s) media link instead of embedded file data. */
+export function isRemoteMediaAttachment(a: FileAttachment) {
+  return /^https?:\/\//i.test(a.fileData) && !a.fileData.startsWith("data:");
+}
+
+export function guessMediaKindFromUrl(url: string): MediaUrlKind {
+  const clean = url.trim().toLowerCase().split(/[?#]/)[0] ?? "";
+  if (
+    /\.(mp4|webm|mov|m4v|avi|mkv|wmv)$/i.test(clean) ||
+    /youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com/.test(clean)
+  ) {
+    return "video";
+  }
+  return "image";
+}
+
+/**
+ * Build an attachment from a public image/video URL (no binary upload).
+ * `fileData` stores the remote URL; size is 0.
+ */
+export function attachmentFromMediaUrl(
+  url: string,
+  kind?: MediaUrlKind
+): FileAttachment | null {
+  const trimmed = url.trim();
+  if (!/^https?:\/\/\S+/i.test(trimmed)) return null;
+  const resolved = kind ?? guessMediaKindFromUrl(trimmed);
+  const pathName = trimmed.split(/[?#]/)[0] ?? trimmed;
+  const rawName = pathName.split("/").filter(Boolean).pop() || (resolved === "video" ? "video" : "image");
+  const name = rawName.includes(".") ? rawName : resolved === "video" ? `${rawName}.mp4` : `${rawName}.jpg`;
+  return {
+    name: decodeURIComponent(name),
+    mimeType: resolved === "video" ? "video/url" : "image/url",
+    fileData: trimmed,
+    size: 0,
+  };
+}
+
+export function mediaKindFromAttachment(a: FileAttachment): MediaUrlKind | null {
+  if (a.mimeType.startsWith("video/") || a.mimeType === "video/url") return "video";
+  if (a.mimeType.startsWith("image/") || a.mimeType === "image/url") return "image";
+  if (isRemoteMediaAttachment(a)) return guessMediaKindFromUrl(a.fileData);
+  return null;
 }

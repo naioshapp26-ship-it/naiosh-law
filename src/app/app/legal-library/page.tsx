@@ -18,6 +18,7 @@ import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
+import { isRemoteMediaAttachment, mediaKindFromAttachment } from "@/lib/file-upload";
 
 type Tab = "documents" | "articles" | "circulars";
 
@@ -45,6 +46,8 @@ type Article = {
   readMinutes: number;
   status: string;
   publishedAt: string;
+  mediaUrl?: string;
+  mediaKind?: string;
 };
 
 type Circular = {
@@ -178,11 +181,18 @@ export default function LegalLibraryPage() {
             status: clean.status || "منشور",
           }
         : tab === "articles"
-          ? {
-              ...clean,
-              readMinutes: clean.readMinutes ? Number(clean.readMinutes) : null,
-              status: clean.status || "منشور",
-            }
+          ? (() => {
+              const remote = attachments.find(isRemoteMediaAttachment);
+              const mediaUrl = remote?.fileData ?? null;
+              const mediaKind = remote ? mediaKindFromAttachment(remote) : null;
+              return {
+                ...clean,
+                readMinutes: clean.readMinutes ? Number(clean.readMinutes) : null,
+                status: clean.status || "منشور",
+                mediaUrl,
+                mediaKind,
+              };
+            })()
           : {
               ...clean,
               status: clean.status || "ساري",
@@ -416,6 +426,53 @@ export default function LegalLibraryPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
                 {articles.map((a) => (
                   <div key={a.id} className="card-white" style={{ padding: "1.25rem" }}>
+                    {a.mediaUrl && (
+                      <div
+                        style={{
+                          marginBottom: "0.75rem",
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          border: "1px solid #e2e8f0",
+                          background: "#0f172a",
+                          aspectRatio: "16 / 9",
+                        }}
+                      >
+                        {a.mediaKind === "video" || /youtube|youtu\.be|vimeo|\.mp4|\.webm|\.mov/i.test(a.mediaUrl) ? (
+                          <div
+                            style={{
+                              height: "100%",
+                              minHeight: 140,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#fff",
+                              fontWeight: 800,
+                              fontSize: "0.85rem",
+                              gap: 8,
+                              background:
+                                "linear-gradient(135deg, rgba(195,21,42,0.85), rgba(15,23,42,0.95))",
+                            }}
+                          >
+                            <span aria-hidden>🎬</span>
+                            <a
+                              href={a.mediaUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "#fff", textDecoration: "underline" }}
+                            >
+                              مشاهدة الفيديو
+                            </a>
+                          </div>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={a.mediaUrl}
+                            alt=""
+                            style={{ width: "100%", height: "100%", minHeight: 140, objectFit: "cover", display: "block" }}
+                          />
+                        )}
+                      </div>
+                    )}
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                       <span style={{ fontSize: "0.72rem", color: "#64748b" }}>✍️ {a.author}</span>
                       <span style={{ fontSize: "0.72rem", color: "#f59e0b", fontWeight: 600 }}>
@@ -512,6 +569,17 @@ export default function LegalLibraryPage() {
         saveLabel="إضافة"
         enableParties={false}
         enableFiles
+        filesMode={tab === "articles" ? "media" : "all"}
+        filesLabel={
+          tab === "articles"
+            ? "صورة أو فيديو المقالة (رفع مباشر أو رابط)"
+            : undefined
+        }
+        filesHint={
+          tab === "articles"
+            ? "٩٠٪ من المقالات معها صورة أو فيديو — ارفع من الجهاز أو الصق رابطًا (يوتيوب، CDN، صورة مباشرة)"
+            : undefined
+        }
       />
     </AppShell>
   );

@@ -442,6 +442,10 @@ model LegalArticle {
   specialization   LegalSpecialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
   summary          String?
   content          String?
+  /** Primary article image/video URL (direct link). Uploaded files go to record supplements. */
+  mediaUrl         String?
+  /** image | video */
+  mediaKind        String?
   tags             String?
   readMinutes      Int?
   status           String              @default("منشور")

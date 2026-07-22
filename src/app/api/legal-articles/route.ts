@@ -40,6 +40,8 @@ export async function GET(request: Request) {
       readMinutes: a.readMinutes ?? 5,
       status: a.status,
       publishedAt: a.publishedAt ?? "—",
+      mediaUrl: a.mediaUrl ?? "",
+      mediaKind: a.mediaKind ?? "",
     }))
   );
 }
@@ -57,6 +59,8 @@ export async function POST(request: Request) {
       specializationId: body.specializationId ? String(body.specializationId) : null,
       summary: body.summary ? String(body.summary) : null,
       content: body.content ? String(body.content) : null,
+      mediaUrl: body.mediaUrl ? String(body.mediaUrl) : null,
+      mediaKind: body.mediaKind ? String(body.mediaKind) : null,
       tags: body.tags ? String(body.tags) : null,
       readMinutes: body.readMinutes != null ? Number(body.readMinutes) : null,
       status: String(body.status ?? "منشور"),
