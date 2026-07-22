@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { ModuleCard } from "@/components/module-card";
+import { Modal } from "@/components/ui/modal";
 import { modules } from "@/data/modules";
 import { formatDate } from "@/lib/format";
 import {
@@ -14,9 +15,17 @@ import {
   imperialAxes,
   totalEmpireItems,
   countAxisItems,
+  type ImperialAxis,
 } from "@/data/empire-structure";
 import { resolveItemHref } from "@/lib/empire-routes";
-import { useSession } from "@/lib/session";
+import { useSession, canWriteRole } from "@/lib/session";
+import {
+  ADD_AXIS_FORM_FIELDS,
+  appendCustomLegalAxis,
+  createCustomLegalAxis,
+  loadCustomLegalAxes,
+  type CustomLegalAxis,
+} from "@/lib/custom-legal-axes";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -79,6 +88,22 @@ const upcomingSessions = [
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
   const [dashType, setDashType] = useState("system360");
+  const [customAxes, setCustomAxes] = useState<CustomLegalAxis[]>([]);
+  const [addAxisOpen, setAddAxisOpen] = useState(false);
+
+  useEffect(() => {
+    setCustomAxes(loadCustomLegalAxes());
+  }, []);
+
+  const builtInAxes = imperialAxes.filter((a) => a.id <= 8);
+  const dashboardCustom = customAxes.filter((a) => a.source === "dashboard" || a.source === "both");
+  const allAxes: Array<ImperialAxis | CustomLegalAxis> = [...builtInAxes, ...dashboardCustom];
+
+  const handleAddAxis = (data: Record<string, unknown>) => {
+    const axis = createCustomLegalAxis(data, "both");
+    setCustomAxes(appendCustomLegalAxis(axis));
+    setAddAxisOpen(false);
+  };
 
   if (!ready || !user) {
     return (
@@ -91,7 +116,10 @@ export default function DashboardPage() {
     );
   }
 
-  const kpis = kpisByDashboard[dashType] ?? kpisByDashboard.system360;
+  const canWrite = canWriteRole(user.role);
+  const kpis = (kpisByDashboard[dashType] ?? kpisByDashboard.system360).map((k) =>
+    k.label === "المحاور القانونية" ? { ...k, value: String(allAxes.length) } : k
+  );
   const activeDash = dashboardTypes.find((d) => d.id === dashType)!;
 
   return (
@@ -251,12 +279,26 @@ export default function DashboardPage() {
         </AnimatePresence>
 
         <motion.div variants={fadeUp} custom={2} style={{ marginBottom: "1.75rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1rem", fontWeight: 800, color: "#0a0a12" }}>المحاور القانونية الثمانية</h2>
-            <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{totalEmpireItems()} عنصر في الهيكل السيادي</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "0.75rem", flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: "1rem", fontWeight: 800, color: "#0a0a12", margin: 0 }}>المحاور القانونية</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                {allAxes.length} محور · {totalEmpireItems()} عنصر في الهيكل السيادي
+              </span>
+              {canWrite && (
+                <button
+                  type="button"
+                  onClick={() => setAddAxisOpen(true)}
+                  className="btn-primary"
+                  style={{ padding: "0.55rem 1rem", fontSize: "0.82rem" }}
+                >
+                  ＋ إضافة محور
+                </button>
+              )}
+            </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.85rem" }} className="axis-grid">
-            {imperialAxes.filter((a) => a.id <= 8).map((axis, i) => (
+            {allAxes.map((axis, i) => (
               <motion.div
                 key={axis.slug}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -284,7 +326,9 @@ export default function DashboardPage() {
                   </h3>
                   <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.5rem" }}>{axis.subtitle}</p>
                   <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 700 }}>
-                    {countAxisItems(axis)} عنصر ←
+                    {"items" in axis || "dropdowns" in axis
+                      ? `${countAxisItems(axis as ImperialAxis)} عنصر ←`
+                      : "محور مخصص ←"}
                   </span>
                 </Link>
               </motion.div>
@@ -369,6 +413,17 @@ export default function DashboardPage() {
           .kpi-grid, .axis-grid, .mod-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
+
+      <Modal
+        open={addAxisOpen}
+        title="إضافة محور قانوني"
+        fields={ADD_AXIS_FORM_FIELDS}
+        onSave={handleAddAxis}
+        onClose={() => setAddAxisOpen(false)}
+        saveLabel="إضافة المحور"
+        enableParties={false}
+        filesLabel="شواهد وملفات المحور (مستند · صورة · فيديو)"
+      />
     </AppShell>
   );
 }

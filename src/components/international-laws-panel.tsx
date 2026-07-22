@@ -34,6 +34,13 @@ import { RecordSupplementModal } from "@/components/record-supplement-modal";
 import { fetchRecordSupplements, saveRecordSupplement } from "@/lib/record-supplement-client";
 import { extractAttachments, stripAttachments } from "@/lib/form-attachments";
 import type { FileAttachment } from "@/lib/file-upload";
+import {
+  ADD_AXIS_FORM_FIELDS,
+  appendCustomLegalAxis,
+  createCustomLegalAxis,
+  loadCustomLegalAxes,
+  type CustomLegalAxis,
+} from "@/lib/custom-legal-axes";
 
 export type LawEntry = {
   id: string;
@@ -109,6 +116,8 @@ export function InternationalLawsHub() {
   const [entries, setEntries] = useState<LawEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [customAxes, setCustomAxes] = useState<CustomLegalAxis[]>([]);
+  const [addAxisOpen, setAddAxisOpen] = useState(false);
   const { show, Toast } = useToast();
 
   const load = useCallback(async () => {
@@ -125,6 +134,10 @@ export function InternationalLawsHub() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    setCustomAxes(loadCustomLegalAxes());
+  }, []);
 
   const seed = async () => {
     setSeeding(true);
@@ -144,10 +157,35 @@ export function InternationalLawsHub() {
   if (!ready || !user) return null;
 
   const canWrite = canWriteRole(user.role);
-  const axisCounts = internationalLawAxes.map((a) => ({
-    ...a,
-    count: entries.filter((e) => e.axisSlug === a.slug).length,
-  }));
+  const intlCustom = customAxes.filter((a) => a.source === "international" || a.source === "both");
+  const axisCounts = [
+    ...internationalLawAxes.map((a) => ({
+      ...a,
+      count: entries.filter((e) => e.axisSlug === a.slug).length,
+      topicsCount: a.topics.length,
+      isCustom: false as const,
+    })),
+    ...intlCustom.map((a) => ({
+      id: a.id,
+      slug: a.slug,
+      title: a.title,
+      subtitle: a.subtitle,
+      icon: a.icon,
+      color: a.color,
+      description: a.description,
+      topics: [] as LawAxis["topics"],
+      count: entries.filter((e) => e.axisSlug === a.slug).length,
+      topicsCount: 0,
+      isCustom: true as const,
+    })),
+  ];
+
+  const handleAddAxis = (data: Record<string, unknown>) => {
+    const axis = createCustomLegalAxis(data, "both");
+    setCustomAxes(appendCustomLegalAxis(axis));
+    setAddAxisOpen(false);
+    show("success", `تمت إضافة المحور «${axis.title}»`);
+  };
 
   return (
     <div className="erp-page" style={{ width: "100%" }}>
@@ -170,20 +208,25 @@ export function InternationalLawsHub() {
 
       <PageHeader
         icon="📚"
-        title="المحاور القانونية الثمانية"
-        subtitle={`${TOTAL_TOPICS} موضوع قانوني عبر 8 محاور — ${PRIMARY_TOPIC_CATALOG.length} موضوع في القائمة الأولية`}
+        title="المحاور القانونية"
+        subtitle={`${TOTAL_TOPICS} موضوع قانوني عبر ${axisCounts.length} محور — ${PRIMARY_TOPIC_CATALOG.length} موضوع في القائمة الأولية`}
         actions={
-          canWrite && (
-            <BtnPrimary onClick={seed} disabled={seeding}>
-              {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
-            </BtnPrimary>
-          )
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            {canWrite && (
+              <BtnPrimary onClick={() => setAddAxisOpen(true)}>＋ إضافة محور</BtnPrimary>
+            )}
+            {canWrite && (
+              <BtnSecondary onClick={seed} disabled={seeding}>
+                {seeding ? "⏳ جاري التحميل..." : "📦 بيانات تجريبية"}
+              </BtnSecondary>
+            )}
+          </div>
         }
       />
 
       <PageStats
         stats={[
-          { label: "المحاور", value: 8, icon: "🌐", color: "#0ea5e9" },
+          { label: "المحاور", value: axisCounts.length, icon: "🌐", color: "#0ea5e9" },
           { label: "الموضوعات", value: TOTAL_TOPICS, icon: "📋" },
           { label: "السجلات", value: entries.length, icon: "📁", color: "#c3152a" },
           { label: "القائمة الأولية", value: PRIMARY_TOPIC_CATALOG.length, icon: "📖" },
@@ -205,7 +248,7 @@ export function InternationalLawsHub() {
             {axisCounts.map((axis) => (
               <Link
                 key={axis.slug}
-                href={`/app/international-laws/${axis.slug}`}
+                href={axis.isCustom ? "/app/international-laws" : `/app/international-laws/${axis.slug}`}
                 className="card-white"
                 style={{
                   display: "block",
@@ -223,11 +266,12 @@ export function InternationalLawsHub() {
                   </div>
                 </div>
                 <p style={{ fontSize: "0.78rem", color: "#64748b", lineHeight: 1.6, marginBottom: "0.75rem" }}>
-                  {axis.description.slice(0, 100)}...
+                  {(axis.description || "").slice(0, 100)}
+                  {(axis.description || "").length > 100 ? "..." : ""}
                 </p>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.75rem", color: axis.color, fontWeight: 700 }}>
-                    {axis.topics.length} موضوع
+                    {axis.isCustom ? "محور مخصص" : `${axis.topicsCount} موضوع`}
                   </span>
                   <span style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700 }}>
                     {axis.count} سجل • ادخل ←
@@ -289,6 +333,17 @@ export function InternationalLawsHub() {
           </p>
         </>
       )}
+
+      <Modal
+        open={addAxisOpen}
+        title="إضافة محور قانوني"
+        fields={ADD_AXIS_FORM_FIELDS}
+        onSave={handleAddAxis}
+        onClose={() => setAddAxisOpen(false)}
+        saveLabel="إضافة المحور"
+        enableParties={false}
+        filesLabel="شواهد وملفات المحور (مستند · صورة · فيديو)"
+      />
     </div>
   );
 }
