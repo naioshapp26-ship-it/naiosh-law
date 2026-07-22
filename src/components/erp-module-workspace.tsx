@@ -187,9 +187,9 @@ function useLabeledAddModal(title: string, fields: FormField[]) {
 }
 
 function EntityOpsBody({ config }: { config: ErpPageConfig }) {
-  const seed = config.seed ?? [];
   const stats = config.stats ?? [];
-  const columns = config.columns ?? [];
+  const seed = useMemo(() => config.seed ?? [], [config.seed]);
+  const columns = useMemo(() => config.columns ?? [], [config.columns]);
   const values = computeEntityStats(seed, stats);
   const fields = useMemo(
     () => (columns.length ? fieldsFromColumnLabels(columns) : defaultLabeledCreateFields(config.title)),
@@ -331,23 +331,23 @@ function PaymentMethodsBody({ methods = [] }: { methods?: ErpMethodDef[] }) {
 }
 
 function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
-  const columns = config.columns ?? [];
+  const columns = useMemo(() => config.columns ?? [], [config.columns]);
+  const baseSeed = useMemo(() => config.seed ?? [], [config.seed]);
   const fields = useMemo(
     () => (columns.length ? fieldsFromColumnLabels(columns) : defaultLabeledCreateFields(config.title)),
     [columns, config.title]
   );
   const { openAdd, modal, rows } = useLabeledAddModal(config.title, fields);
   const seed = useMemo(() => {
-    const base = config.seed ?? [];
-    if (!rows.length) return base;
+    if (!rows.length) return baseSeed;
     const extras = rows.map((r) =>
       columns.map((col, i) => {
         const key = fields[i]?.key;
         return String((key ? r[key] : "") ?? r[col] ?? "—");
       })
     );
-    return [...extras, ...base];
-  }, [config.seed, rows, columns, fields]);
+    return [...extras, ...baseSeed];
+  }, [baseSeed, rows, columns, fields]);
 
   return (
     <>
