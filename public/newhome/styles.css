@@ -226,7 +226,7 @@ body.homepage a {
 
 #book-tour,
 #register-with-us {
-  scroll-margin-top: calc(var(--announcement-bar-height, 50px) + var(--homepage-top-nav-min-height, 88px) + 16px);
+  scroll-margin-top: calc(var(--announcement-bar-height, 50px) + var(--homepage-top-nav-min-height, 132px) + 40px);
 }
 
 .nav-dropdown {
@@ -1981,7 +1981,8 @@ body.homepage {
   --homepage-hero-visual-fallback: #000000;
   --homepage-btn-hover-brightness: 1.09;
   --homepage-top-nav-offset: 0px;
-  --homepage-top-nav-min-height: 88px;
+  --homepage-header-logo-height: 96px;
+  --homepage-top-nav-min-height: 132px;
   padding-top: var(--announcement-bar-height);
   overflow-x: hidden;
 }
@@ -2008,7 +2009,7 @@ body.homepage .top-nav .container,
 body.homepage .hero-inner.container {
   max-width: none;
   width: 100%;
-  padding-inline: clamp(18px, 2.4vw, 44px);
+  padding-inline: clamp(28px, 3.2vw, 64px);
 }
 
 body.homepage .top-nav {
@@ -2018,19 +2019,22 @@ body.homepage .top-nav {
   top: var(--announcement-bar-height);
   margin-top: var(--homepage-top-nav-offset);
   margin-bottom: 0;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 0;
+  padding-bottom: 0;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
   overflow: visible;
 }
 
 body.homepage .top-nav .inner {
   min-height: var(--homepage-top-nav-min-height);
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 20px;
+  padding-block: 18px;
+  padding-inline: 4px;
   overflow: visible;
+  box-sizing: content-box;
 }
 
 body.homepage .auth-actions-shell {
@@ -2124,23 +2128,32 @@ body.homepage .brand {
   overflow: visible;
   flex-shrink: 0;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  padding: 0;
+  margin-inline-end: 8px;
+  min-height: 0;
+  height: auto;
+  box-sizing: content-box;
 }
 
-/* Full crest — no circular crop; room for crown above the shield */
+/* Full ornate crest — scales + crown must stay visible */
 body.homepage .brand img,
 body.homepage #site-logo-header {
-  height: 72px;
+  height: var(--homepage-header-logo-height, 96px);
   width: auto;
-  max-width: none;
+  max-width: min(240px, 30vw);
   max-height: none;
   object-fit: contain;
   object-position: center;
   background: transparent;
-  border-radius: 0;
+  border-radius: 0 !important;
   overflow: visible;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+  display: block;
+  padding: 0;
+  margin: 0;
+  box-sizing: content-box;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.18));
 }
 
 body.homepage .hero-content h1,
@@ -4149,14 +4162,15 @@ body.homepage #main-sections-grid .card:hover .icon-box {
   }
 
   .brand img {
-    height: 52px;
+    height: 56px;
     width: auto;
   }
 
   body.homepage .brand img,
   body.homepage #site-logo-header {
-    height: 56px;
+    height: var(--homepage-header-logo-height, 64px);
     width: auto;
+    max-width: min(160px, 46vw);
   }
 
   .logo-text {

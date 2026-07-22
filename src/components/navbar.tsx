@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/color-mode";
+import { useSiteTheme } from "@/components/theme-provider";
+import { DEFAULT_PUBLIC_LOGO } from "@/lib/site-settings";
 
 type Props = {
   variant?: "dark" | "landing";
@@ -30,11 +32,19 @@ const LANDING_LINKS = [
  */
 export function Navbar({ variant = "dark" }: Props) {
   const pathname = usePathname();
+  const { logoSrc } = useSiteTheme();
+  const headerLogoSrc = logoSrc?.trim() || DEFAULT_PUBLIC_LOGO;
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [myPageHref, setMyPageHref] = useState("/my-page");
+  const [logoFailed, setLogoFailed] = useState(false);
+  const resolvedLogoSrc = logoFailed ? DEFAULT_PUBLIC_LOGO : headerLogoSrc;
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [headerLogoSrc]);
 
   const isLinkActive = (href: string, label: string) => {
     if (label === "خدماتنا") return pathname === "/services" || pathname.startsWith("/services/");
@@ -115,7 +125,15 @@ export function Navbar({ variant = "dark" }: Props) {
           <div className="nav-main">
             <Link className="brand" href="/">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img id="site-logo-header" src="/naiosh-logo.png" alt="شعار نايوش" />
+              <img
+                id="site-logo-header"
+                key={resolvedLogoSrc}
+                src={resolvedLogoSrc}
+                alt="شعار نايوش"
+                onError={() => {
+                  if (!logoFailed) setLogoFailed(true);
+                }}
+              />
               <span className="logo-text">NAIOSH Law</span>
             </Link>
             <nav className="nav-links" aria-label="روابط الصفحات">
@@ -204,7 +222,14 @@ export function Navbar({ variant = "dark" }: Props) {
       >
         <Link href="/" className="brand" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/naiosh-logo.png" alt="شعار نايوش" style={{ height: 64, width: "auto", objectFit: "contain" }} />
+          <img
+            src={resolvedLogoSrc}
+            alt="شعار نايوش"
+            style={{ height: 72, width: "auto", objectFit: "contain", display: "block" }}
+            onError={() => {
+              if (!logoFailed) setLogoFailed(true);
+            }}
+          />
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <DarkModeToggle />

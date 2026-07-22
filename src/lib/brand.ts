@@ -4,6 +4,6 @@ export const BRAND = {
   nameAr: "نايوش",
   tagline: "النظام القانوني السيادي 360",
   taglineEn: "النظام القانوني المتكامل",
-  logoPath: "/naiosh-logo.png?v=crest-crown-20260719",
+  logoPath: "/naiosh-logo.png?v=full-crest-scales-20260721",
   logoAlt: "شعار NAIOSH Law — نايوش للقانون",
 } as const;
