@@ -156,10 +156,16 @@ body.homepage .hero-inner {
   display: grid !important;
 }
 
-/* Remove dark strip between white header and hero */
+/* Remove any strip between white header and hero — ERP flush join */
 body.homepage .top-nav + .hero {
   margin-top: 0 !important;
-  padding-top: 0;
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+
+body.homepage .top-nav {
+  border-bottom: 0 !important;
+  box-shadow: none !important;
 }
 
 body.homepage .hero-stats,

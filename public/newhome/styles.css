@@ -226,7 +226,7 @@ body.homepage a {
 
 #book-tour,
 #register-with-us {
-  scroll-margin-top: calc(var(--announcement-bar-height, 50px) + var(--homepage-top-nav-min-height, 132px) + 40px);
+  scroll-margin-top: calc(var(--announcement-bar-height, 42px) + var(--homepage-top-nav-min-height, 56px) + 16px);
 }
 
 .nav-dropdown {
@@ -1981,8 +1981,10 @@ body.homepage {
   --homepage-hero-visual-fallback: #000000;
   --homepage-btn-hover-brightness: 1.09;
   --homepage-top-nav-offset: 0px;
-  --homepage-header-logo-height: 96px;
-  --homepage-top-nav-min-height: 132px;
+  /* Compact ERP chrome: tight header so hero sits flush under the nav */
+  --homepage-header-logo-height: 56px;
+  --homepage-top-nav-min-height: 56px;
+  --announcement-bar-height: 42px;
   padding-top: var(--announcement-bar-height);
   overflow-x: hidden;
 }
@@ -2014,27 +2016,28 @@ body.homepage .hero-inner.container {
 
 body.homepage .top-nav {
   background: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: none !important;
   backdrop-filter: none;
   top: var(--announcement-bar-height);
   margin-top: var(--homepage-top-nav-offset);
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: none !important;
   overflow: visible;
+  line-height: 1.2;
 }
 
 body.homepage .top-nav .inner {
   min-height: var(--homepage-top-nav-min-height);
-  height: auto;
+  height: var(--homepage-top-nav-min-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-block: 18px;
+  padding-block: 0;
   padding-inline: 4px;
   overflow: visible;
-  box-sizing: content-box;
+  box-sizing: border-box;
 }
 
 body.homepage .auth-actions-shell {
@@ -2136,13 +2139,13 @@ body.homepage .brand {
   box-sizing: content-box;
 }
 
-/* Full ornate crest — scales + crown must stay visible */
+/* Full crest stays visible in a compact ERP header */
 body.homepage .brand img,
 body.homepage #site-logo-header {
-  height: var(--homepage-header-logo-height, 96px);
+  height: var(--homepage-header-logo-height, 56px);
   width: auto;
-  max-width: min(240px, 30vw);
-  max-height: none;
+  max-width: min(160px, 20vw);
+  max-height: var(--homepage-header-logo-height, 56px);
   object-fit: contain;
   object-position: center;
   background: transparent;
@@ -2152,7 +2155,7 @@ body.homepage #site-logo-header {
   display: block;
   padding: 0;
   margin: 0;
-  box-sizing: content-box;
+  box-sizing: border-box;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.18));
 }
 
@@ -2300,8 +2303,9 @@ body.homepage .hero {
   display: block;
   width: 100%;
   max-width: none;
-  margin: 0;
-  margin-top: 0;
+  margin: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
   min-height: auto;
   align-items: stretch;
   background-color: #000000;
@@ -2323,9 +2327,12 @@ body.homepage .hero {
   padding-bottom: 0;
 }
 
-body.homepage .top-nav + .hero {
-  margin-top: 0;
-  padding-top: 0;
+/* Flush ERP join: no white strip between white header and red hero */
+body.homepage .top-nav + .hero,
+body.homepage .hero {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
 }
 
 body.homepage .hero.hero-bg-image,
@@ -2419,7 +2426,7 @@ body.homepage .hero-inner {
   align-self: stretch;
   align-content: center;
   min-height: clamp(620px, 82vh, 860px);
-  padding: 48px clamp(18px, 2.4vw, 44px) 28px;
+  padding: 28px clamp(18px, 2.4vw, 44px) 28px;
   padding-inline-start: clamp(28px, 3.2vw, 56px);
   padding-inline-end: clamp(32px, 3.6vw, 68px);
   direction: ltr;
