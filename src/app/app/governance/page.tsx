@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Tab = "approvals" | "policies" | "signatures" | "audit";
 
@@ -203,6 +204,8 @@ export default function GovernancePage() {
     tab === "approvals" ? approvalFields : tab === "policies" ? policyFields : signatureFields;
 
   const handleAdd = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const clean = stripAttachments(data);
     const endpoint =
       tab === "approvals"
         ? "/api/approval-requests"
@@ -213,17 +216,17 @@ export default function GovernancePage() {
     const payload =
       tab === "approvals"
         ? {
-            ...data,
-            type: APPROVAL_TYPE_MAP[String(data.type)] ?? "other",
-            priority: data.priority || "متوسط",
+            ...clean,
+            type: APPROVAL_TYPE_MAP[String(clean.type)] ?? "other",
+            priority: clean.priority || "متوسط",
           }
         : tab === "policies"
           ? {
-              ...data,
-              version: data.version || "1.0",
-              status: data.status || "ساري",
+              ...clean,
+              version: clean.version || "1.0",
+              status: clean.status || "ساري",
             }
-          : data;
+          : clean;
 
     try {
       const res = await fetch(endpoint, {
@@ -237,7 +240,22 @@ export default function GovernancePage() {
         show("error", (err as { error?: string }).error || "فشل الإضافة");
         return;
       }
-      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      const created = await res.json().catch(() => ({}));
+      const recordId = String((created as { id?: string }).id ?? "");
+      if (recordId && attachments.length) {
+        await persistFormAttachments({
+          sourceModule: `governance-${tab}`,
+          sourceId: recordId,
+          title: String((payload as { title?: string }).title ?? activeTab.addLabel ?? "سجل حوكمة"),
+          attachments,
+        });
+      }
+      show(
+        "success",
+        attachments.length
+          ? `✅ تمت ${activeTab.addLabel} مع ${attachments.length} مرفق`
+          : `✅ تمت ${activeTab.addLabel} بنجاح`
+      );
       setAddOpen(false);
       loadAll();
     } catch {
@@ -577,7 +595,7 @@ export default function GovernancePage() {
           onClose={() => setAddOpen(false)}
           saveLabel="إضافة"
           enableParties={false}
-          enableFiles={false}
+          enableFiles
         />
       )}
     </AppShell>

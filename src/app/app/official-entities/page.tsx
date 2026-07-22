@@ -136,19 +136,21 @@ export default function OfficialEntitiesPage() {
   };
 
   const handleSaveOfficial = async (data: Record<string, unknown>) => {
-    const entityName = String(data.entityName ?? "");
+    const attachments = extractAttachments(data);
+    const clean = stripAttachments(data);
+    const entityName = String(clean.entityName ?? "");
     const entityId = entities.find((e) => e.name === entityName)?.id;
     const res = await fetch("/api/court-officials", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: data.name,
-        role: data.role,
+        name: clean.name,
+        role: clean.role,
         entityId,
-        court: data.court || entityName,
-        chamber: data.chamber,
-        phone: data.phone,
+        court: clean.court || entityName,
+        chamber: clean.chamber,
+        phone: clean.phone,
         status: "نشط",
       }),
     });
@@ -156,7 +158,20 @@ export default function OfficialEntitiesPage() {
       show("error", "فشل إضافة المسؤول");
       return;
     }
-    show("success", "✅ تمت إضافة المسؤول");
+    const created = await res.json().catch(() => ({}));
+    const recordId = String((created as { id?: string }).id ?? "");
+    if (recordId && attachments.length) {
+      await persistFormAttachments({
+        sourceModule: "court-officials",
+        sourceId: recordId,
+        title: String(clean.name ?? "مسؤول قضائي"),
+        attachments,
+      });
+    }
+    show(
+      "success",
+      attachments.length ? `✅ تمت إضافة المسؤول مع ${attachments.length} مرفق` : "✅ تمت إضافة المسؤول"
+    );
     setOfficialModalOpen(false);
     await load();
   };
@@ -307,7 +322,7 @@ export default function OfficialEntitiesPage() {
         onSave={handleSaveOfficial}
         onClose={() => setOfficialModalOpen(false)}
         enableParties={false}
-        enableFiles={false}
+        enableFiles
       />
     </AppShell>
   );

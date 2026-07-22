@@ -150,7 +150,9 @@ export default function ProfessionalNetworkPage() {
   };
 
   const handleNetworkSave = async (data: Record<string, unknown>) => {
-    const receiver = professionals.find((p) => p.name === String(data.receiverName ?? ""));
+    const attachments = extractAttachments(data);
+    const clean = stripAttachments(data);
+    const receiver = professionals.find((p) => p.name === String(clean.receiverName ?? ""));
     if (!receiver) {
       show("error", "اختر مستلمًا من قائمة المحترفين");
       return;
@@ -161,9 +163,9 @@ export default function ProfessionalNetworkPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         professionalId: receiver.id,
-        type: NETWORK_TYPE_MAP[String(data.type)] ?? "collaboration",
-        caseRef: data.caseRef,
-        message: data.message,
+        type: NETWORK_TYPE_MAP[String(clean.type)] ?? "collaboration",
+        caseRef: clean.caseRef,
+        message: clean.message,
       }),
     });
     if (!res.ok) {
@@ -171,7 +173,20 @@ export default function ProfessionalNetworkPage() {
       show("error", (err as { error?: string }).error || "فشل إرسال طلب الشبكة");
       return;
     }
-    show("success", "✅ تم إرسال طلب الشبكة");
+    const created = await res.json().catch(() => ({}));
+    const recordId = String((created as { id?: string }).id ?? "");
+    if (recordId && attachments.length) {
+      await persistFormAttachments({
+        sourceModule: "professional-network-request",
+        sourceId: recordId,
+        title: String(clean.type ?? "طلب شبكة"),
+        attachments,
+      });
+    }
+    show(
+      "success",
+      attachments.length ? `✅ تم إرسال طلب الشبكة مع ${attachments.length} مرفق` : "✅ تم إرسال طلب الشبكة"
+    );
     setNetworkModalOpen(false);
     setTab("network");
     await load();
@@ -330,7 +345,7 @@ export default function ProfessionalNetworkPage() {
         onSave={handleNetworkSave}
         onClose={() => setNetworkModalOpen(false)}
         enableParties={false}
-        enableFiles={false}
+        enableFiles
       />
     </AppShell>
   );

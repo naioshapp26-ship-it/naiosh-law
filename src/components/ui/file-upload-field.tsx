@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   ACCEPTED_FILE_TYPES,
+  ACCEPTED_DOCUMENT_TYPES,
+  ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_VIDEO_TYPES,
   MAX_FILE_BYTES,
   formatFileSize,
   readFileAsAttachment,
@@ -16,57 +19,206 @@ type Props = {
   hint?: string;
 };
 
+type PickKind = "any" | "document" | "image" | "video";
+
+const PICKERS: { kind: PickKind; accept: string; icon: string; title: string; desc: string }[] = [
+  {
+    kind: "document",
+    accept: ACCEPTED_DOCUMENT_TYPES,
+    icon: "📄",
+    title: "ملف / شاهد",
+    desc: "PDF · Word · Excel",
+  },
+  {
+    kind: "image",
+    accept: ACCEPTED_IMAGE_TYPES,
+    icon: "🖼️",
+    title: "صورة",
+    desc: "JPG · PNG · WEBP",
+  },
+  {
+    kind: "video",
+    accept: ACCEPTED_VIDEO_TYPES,
+    icon: "🎬",
+    title: "فيديو",
+    desc: "MP4 · MOV · WEBM",
+  },
+];
+
 export function FileUploadField({
   value,
   onChange,
-  label = "المرفقات (مستندات، صور، فيديو، صوت)",
-  hint = `يدعم PDF، Excel، Word، صور، فيديو، صوت — حتى ${formatFileSize(MAX_FILE_BYTES)} لكل ملف`,
+  label = "المرفقات من الكمبيوتر (ملف شاهد · صورة · فيديو)",
+  hint = `اسحب الملفات هنا أو اختر من سطح المكتب — حتى ${formatFileSize(MAX_FILE_BYTES)} لكل ملف`,
 }: Props) {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [accept, setAccept] = useState(ACCEPTED_FILE_TYPES);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
+  const handleFiles = async (files: FileList | File[] | null) => {
+    if (!files || (files instanceof FileList ? files.length === 0 : files.length === 0)) return;
     setError("");
-    const next = [...value];
-    for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_BYTES) {
-        setError(`الملف ${file.name} أكبر من ${formatFileSize(MAX_FILE_BYTES)}`);
-        continue;
+    setBusy(true);
+    try {
+      const next = [...value];
+      const list = Array.from(files as ArrayLike<File>);
+      for (const file of list) {
+        if (file.size > MAX_FILE_BYTES) {
+          setError(`الملف ${file.name} أكبر من ${formatFileSize(MAX_FILE_BYTES)}`);
+          continue;
+        }
+        const parsed = await readFileAsAttachment(file);
+        if (parsed) next.push(parsed);
+        else setError(`تعذر قراءة الملف ${file.name}`);
       }
-      const parsed = await readFileAsAttachment(file);
-      if (parsed) next.push(parsed);
+      onChange(next);
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
-    onChange(next);
+  };
+
+  const openPicker = (kind: PickKind) => {
+    const nextAccept =
+      kind === "document"
+        ? ACCEPTED_DOCUMENT_TYPES
+        : kind === "image"
+          ? ACCEPTED_IMAGE_TYPES
+          : kind === "video"
+            ? ACCEPTED_VIDEO_TYPES
+            : ACCEPTED_FILE_TYPES;
+    setAccept(nextAccept);
+    // Allow state to apply before opening the native dialog
+    requestAnimationFrame(() => {
+      inputRef.current?.click();
+    });
   };
 
   return (
     <div>
-      <label className="input-label">{label}</label>
-      <input
-        type="file"
-        multiple
-        accept={ACCEPTED_FILE_TYPES}
-        className="input-field"
-        onChange={(e) => void handleFiles(e.target.files)}
-      />
-      <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.35rem" }}>{hint}</p>
-      {error && <p style={{ color: "#c3152a", fontSize: "0.78rem", marginTop: "0.35rem" }}>{error}</p>}
+      <label className="input-label" htmlFor={inputId}>
+        {label}
+      </label>
+
+      <div
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+          setDragging(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          void handleFiles(e.dataTransfer.files);
+        }}
+        style={{
+          border: `1.5px dashed ${dragging ? "#c3152a" : "#cbd5e1"}`,
+          background: dragging ? "rgba(195,21,42,0.06)" : "#f8fafc",
+          borderRadius: 14,
+          padding: "0.9rem",
+          transition: "border-color 0.15s ease, background 0.15s ease",
+        }}
+      >
+        <input
+          id={inputId}
+          ref={inputRef}
+          type="file"
+          multiple
+          accept={accept}
+          style={{ display: "none" }}
+          onChange={(e) => void handleFiles(e.target.files)}
+        />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: "0.55rem",
+            marginBottom: "0.65rem",
+          }}
+        >
+          {PICKERS.map((p) => (
+            <button
+              key={p.kind}
+              type="button"
+              onClick={() => openPicker(p.kind)}
+              disabled={busy}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4,
+                padding: "0.7rem 0.4rem",
+                borderRadius: 12,
+                border: "1px solid #e2e8f0",
+                background: "#fff",
+                cursor: busy ? "wait" : "pointer",
+                fontFamily: "inherit",
+                color: "#0f172a",
+              }}
+            >
+              <span style={{ fontSize: "1.15rem" }} aria-hidden>
+                {p.icon}
+              </span>
+              <span style={{ fontSize: "0.78rem", fontWeight: 800 }}>{p.title}</span>
+              <span style={{ fontSize: "0.65rem", color: "#94a3b8", fontWeight: 600 }}>{p.desc}</span>
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => openPicker("any")}
+          disabled={busy}
+          style={{
+            width: "100%",
+            padding: "0.65rem 0.85rem",
+            borderRadius: 10,
+            border: "1px solid #e2e8f0",
+            background: "#fff",
+            cursor: busy ? "wait" : "pointer",
+            fontFamily: "inherit",
+            fontWeight: 700,
+            fontSize: "0.82rem",
+            color: "#334155",
+          }}
+        >
+          {busy ? "جاري رفع الملفات..." : "📁 اختيار ملفات متعددة من سطح المكتب"}
+        </button>
+
+        <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.55rem", marginBottom: 0 }}>{hint}</p>
+      </div>
+
+      {error && <p style={{ color: "#c3152a", fontSize: "0.78rem", marginTop: "0.45rem" }}>{error}</p>}
+
       {value.length > 0 && (
         <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
           {value.map((a, i) => (
             <div
-              key={`${a.name}-${i}`}
+              key={`${a.name}-${i}-${a.size}`}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                gap: "0.75rem",
                 padding: "0.55rem 0.75rem",
                 background: "#f8f9fb",
                 borderRadius: "10px",
                 border: "1px solid #e2e8f0",
               }}
             >
-              <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
+              <span style={{ fontSize: "0.8rem", fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
                 {a.mimeType.startsWith("video/") ? "🎬" : a.mimeType.startsWith("image/") ? "🖼️" : "📎"}{" "}
                 {a.name}{" "}
                 <span style={{ color: "#94a3b8", fontWeight: 500 }}>({formatFileSize(a.size)})</span>
@@ -74,7 +226,15 @@ export function FileUploadField({
               <button
                 type="button"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-                style={{ background: "none", border: "none", color: "#c3152a", cursor: "pointer", fontSize: "0.75rem" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#c3152a",
+                  cursor: "pointer",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  flexShrink: 0,
+                }}
               >
                 إزالة
               </button>

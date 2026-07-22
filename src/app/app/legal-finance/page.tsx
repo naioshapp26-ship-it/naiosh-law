@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Tab =
   | "invoices"
@@ -479,8 +480,10 @@ export default function LegalFinancePage() {
   };
 
   const handleSave = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const clean = stripAttachments(data);
     const endpoint = endpointForTab();
-    const payload = buildPayload(data);
+    const payload = buildPayload(clean);
     const isEdit = Boolean(editTarget?.id);
     const url = isEdit ? `${endpoint}/${editTarget!.id}` : endpoint;
 
@@ -496,7 +499,24 @@ export default function LegalFinancePage() {
         show("error", (err as { error?: string }).error || (isEdit ? "فشل التعديل" : "فشل الإضافة"));
         return;
       }
-      show("success", isEdit ? "✅ تم حفظ التعديلات" : `✅ تمت ${activeTab.addLabel} بنجاح`);
+      const saved = await res.json().catch(() => ({}));
+      const recordId = String((saved as { id?: string }).id ?? editTarget?.id ?? "");
+      if (recordId && attachments.length) {
+        await persistFormAttachments({
+          sourceModule: `legal-finance-${tab}`,
+          sourceId: recordId,
+          title: String((payload as { title?: string; client?: string }).title ?? (payload as { client?: string }).client ?? activeTab.addLabel ?? "سجل مالي"),
+          attachments,
+        });
+      }
+      show(
+        "success",
+        isEdit
+          ? "✅ تم حفظ التعديلات"
+          : attachments.length
+            ? `✅ تمت ${activeTab.addLabel} مع ${attachments.length} مرفق`
+            : `✅ تمت ${activeTab.addLabel} بنجاح`
+      );
       setAddOpen(false);
       setEditTarget(null);
       loadAll();
@@ -943,7 +963,7 @@ ${stamp}` : stamp;
           onClose={() => { setAddOpen(false); setEditTarget(null); }}
           saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
           enableParties={false}
-          enableFiles={false}
+          enableFiles
         />
       )}
 
@@ -955,7 +975,7 @@ ${stamp}` : stamp;
         onClose={() => setAssignTarget(null)}
         saveLabel="تأكيد التعيين"
         enableParties={false}
-        enableFiles={false}
+        enableFiles
       />
 
       <ConfirmDialog
