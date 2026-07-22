@@ -5,9 +5,13 @@ import { useParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ErpWorkspacePage } from "@/components/erp-module-workspace";
 import { ErpStudioStandalone } from "@/components/erp-studio-standalone";
+import SystemSettingsPage from "@/components/system-settings-page";
 import { getErpPageConfig } from "@/data/erp-page-catalog";
 import { getErpModuleById } from "@/data/erp-sidebar-modules";
 import { useSession } from "@/lib/session";
+
+/** ERP sidebar entries that should open the real homepage identity settings UI. */
+const HOMEPAGE_SETTINGS_IDS = new Set(["settings", "identity-settings"]);
 
 export default function ErpModulePage() {
   const params = useParams();
@@ -17,6 +21,11 @@ export default function ErpModulePage() {
   const config = getErpPageConfig(moduleId);
 
   if (!ready || !user) return null;
+
+  // Match ERP «إعدادات الصفحة الرئيسية» → full identity settings page (not KPI stub).
+  if (HOMEPAGE_SETTINGS_IDS.has(moduleId)) {
+    return <SystemSettingsPage />;
+  }
 
   if (!config || (!mod && config.kind !== "studio")) {
     return (
