@@ -102,10 +102,10 @@ const branchFields: FormField[] = [
 
 const ruleFields: FormField[] = [
   { key: "title", label: "عنوان القاعدة", type: "text", required: true },
-  { key: "trigger", label: "المحرك", type: "text", placeholder: "عند إنشاء قضية" },
+  { key: "trigger", label: "الحدث المحرك للإشعار", type: "text", placeholder: "عند إنشاء قضية" },
   {
     key: "channel",
-    label: "القناة",
+    label: "قناة الإرسال",
     type: "select",
     options: ["بريد", "رسالة", "واتساب", "داخل النظام"],
   },
@@ -118,13 +118,13 @@ const integrationFields: FormField[] = [
   { key: "name", label: "اسم التكامل", type: "text", required: true },
   {
     key: "type",
-    label: "النوع",
+    label: "نوع التكامل",
     type: "select",
-    options: ["بريد", "رسالة", "واتساب", "مدفوعات", "Webhook", "أخرى"],
+    options: ["بريد", "رسالة", "واتساب", "مدفوعات", "ويب هوك", "أخرى"],
   },
   { key: "provider", label: "المزود", type: "text", placeholder: "Resend / Twilio" },
-  { key: "endpoint", label: "Endpoint", type: "text" },
-  { key: "apiKey", label: "مفتاح API", type: "text" },
+  { key: "endpoint", label: "نقطة النهاية (URL)", type: "text" },
+  { key: "apiKey", label: "مفتاح واجهة البرمجة", type: "text" },
   { key: "status", label: "الحالة", type: "select", options: ["متصل", "مقطوع"] },
 ];
 
@@ -614,7 +614,9 @@ export default function CommunicationsPage() {
               <div className="card-white" style={{ padding: "1.5rem", maxWidth: 520 }}>
                 <h3 style={{ fontWeight: 800, marginBottom: "1rem" }}>إرسال إشعار تجريبي</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <label className="input-label" htmlFor="notify-channel">قناة الإرسال</label>
                   <select
+                    id="notify-channel"
                     value={sendForm.channel}
                     onChange={(e) => setSendForm({ ...sendForm, channel: e.target.value })}
                     style={inputStyle}
@@ -624,22 +626,30 @@ export default function CommunicationsPage() {
                     <option value="whatsapp">واتساب (Twilio)</option>
                     <option value="in_app">إشعار النظام</option>
                   </select>
+                  <label className="input-label" htmlFor="notify-recipient">المستلم</label>
                   <input
-                    placeholder="المستلم (بريد أو رقم هاتف)"
+                    id="notify-recipient"
+                    placeholder="بريد أو رقم هاتف"
                     value={sendForm.recipient}
                     onChange={(e) => setSendForm({ ...sendForm, recipient: e.target.value })}
                     style={inputStyle}
                   />
                   {sendForm.channel === "email" && (
-                    <input
-                      placeholder="الموضوع"
-                      value={sendForm.subject}
-                      onChange={(e) => setSendForm({ ...sendForm, subject: e.target.value })}
-                      style={inputStyle}
-                    />
+                    <>
+                      <label className="input-label" htmlFor="notify-subject">موضوع الرسالة</label>
+                      <input
+                        id="notify-subject"
+                        placeholder="موضوع الرسالة"
+                        value={sendForm.subject}
+                        onChange={(e) => setSendForm({ ...sendForm, subject: e.target.value })}
+                        style={inputStyle}
+                      />
+                    </>
                   )}
+                  <label className="input-label" htmlFor="notify-body">نص الرسالة</label>
                   <textarea
-                    placeholder="نص الرسالة"
+                    id="notify-body"
+                    placeholder="اكتب نص الرسالة"
                     rows={4}
                     value={sendForm.body}
                     onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })}

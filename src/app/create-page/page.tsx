@@ -224,10 +224,19 @@ export default function CreatePage() {
 
             <h3>روابط التواصل</h3>
             <div className="cp-cols">
-              {(["whatsapp", "facebook", "instagram", "youtube", "snapchat", "tiktok"] as const).map((key) => (
+              {(
+                [
+                  ["whatsapp", "واتساب"],
+                  ["facebook", "فيسبوك"],
+                  ["instagram", "إنستغرام"],
+                  ["youtube", "يوتيوب"],
+                  ["snapchat", "سناب شات"],
+                  ["tiktok", "تيك توك"],
+                ] as const
+              ).map(([key, label]) => (
                 <div className="cp-field" key={key}>
-                  <label>{key[0].toUpperCase() + key.slice(1)}</label>
-                  <input value={form[key]} onChange={set(key)} placeholder={`رابط ${key}`} />
+                  <label>{label}</label>
+                  <input value={form[key]} onChange={set(key)} placeholder={`رابط ${label}`} />
                 </div>
               ))}
             </div>
@@ -235,24 +244,30 @@ export default function CreatePage() {
             <h3>روابط مخصصة</h3>
             {customLinks.map((row, i) => (
               <div className="cp-custom" key={i}>
-                <input
-                  placeholder="عنوان الرابط"
-                  value={row.label}
-                  onChange={(e) => {
-                    const next = [...customLinks];
-                    next[i] = { ...next[i], label: e.target.value };
-                    setCustomLinks(next);
-                  }}
-                />
-                <input
-                  placeholder="https://"
-                  value={row.url}
-                  onChange={(e) => {
-                    const next = [...customLinks];
-                    next[i] = { ...next[i], url: e.target.value };
-                    setCustomLinks(next);
-                  }}
-                />
+                <div className="cp-field">
+                  <label>عنوان الرابط</label>
+                  <input
+                    placeholder="مثال: موقعي الشخصي"
+                    value={row.label}
+                    onChange={(e) => {
+                      const next = [...customLinks];
+                      next[i] = { ...next[i], label: e.target.value };
+                      setCustomLinks(next);
+                    }}
+                  />
+                </div>
+                <div className="cp-field">
+                  <label>رابط URL</label>
+                  <input
+                    placeholder="https://"
+                    value={row.url}
+                    onChange={(e) => {
+                      const next = [...customLinks];
+                      next[i] = { ...next[i], url: e.target.value };
+                      setCustomLinks(next);
+                    }}
+                  />
+                </div>
               </div>
             ))}
             <button
