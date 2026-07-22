@@ -123,7 +123,7 @@ export function getLogoSrc(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
 
 export const LOGO_SERVE_PATH = "/api/site-settings/logo";
 /** الشعار المدمج في public — يُستخدم كاحتياطي عند غياب/فشل الشعار المرفوع */
-export const DEFAULT_PUBLIC_LOGO = "/naiosh-logo.png?v=crest-crown-20260719";
+export const DEFAULT_PUBLIC_LOGO = "/naiosh-logo.png?v=full-crest-scales-20260721";
 
 export function logoCacheKey(updatedAt?: string | Date | null) {
   if (!updatedAt) return null;
