@@ -257,50 +257,63 @@ export function FileUploadField({
             <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#334155", margin: "0 0 0.55rem" }}>
               ② إضافة عبر رابط (صورة أو فيديو)
             </p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              <select
-                value={urlKind}
-                onChange={(e) => setUrlKind(e.target.value as MediaUrlKind | "auto")}
-                className="input-field"
-                style={{ width: "auto", minWidth: 110, flex: "0 0 auto" }}
-                aria-label="نوع الوسائط"
-              >
-                <option value="auto">تلقائي</option>
-                <option value="image">صورة</option>
-                <option value="video">فيديو</option>
-              </select>
-              <input
-                type="url"
-                value={mediaUrl}
-                onChange={(e) => setMediaUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addFromUrl();
-                  }
-                }}
-                className="input-field"
-                placeholder="https://example.com/photo.jpg أو رابط يوتيوب/فيديو"
-                style={{ flex: "1 1 180px", minWidth: 0 }}
-              />
-              <button
-                type="button"
-                onClick={addFromUrl}
-                style={{
-                  padding: "0.65rem 1rem",
-                  borderRadius: 10,
-                  border: "1px solid #fecaca",
-                  background: "#fff1f2",
-                  color: "#9f1239",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  fontWeight: 800,
-                  fontSize: "0.82rem",
-                  flex: "0 0 auto",
-                }}
-              >
-                إضافة الرابط
-              </button>
+            <div style={{ display: "grid", gap: "0.45rem" }}>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div style={{ flex: "0 0 auto", minWidth: 110 }}>
+                  <label className="input-label" htmlFor={`${inputId}-url-kind`}>
+                    نوع الوسائط
+                  </label>
+                  <select
+                    id={`${inputId}-url-kind`}
+                    value={urlKind}
+                    onChange={(e) => setUrlKind(e.target.value as MediaUrlKind | "auto")}
+                    className="input-field"
+                    style={{ width: "100%" }}
+                  >
+                    <option value="auto">تلقائي</option>
+                    <option value="image">صورة</option>
+                    <option value="video">فيديو</option>
+                  </select>
+                </div>
+                <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                  <label className="input-label" htmlFor={`${inputId}-media-url`}>
+                    رابط الصورة أو الفيديو
+                  </label>
+                  <input
+                    id={`${inputId}-media-url`}
+                    type="url"
+                    value={mediaUrl}
+                    onChange={(e) => setMediaUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addFromUrl();
+                      }
+                    }}
+                    className="input-field"
+                    placeholder="https://example.com/photo.jpg أو رابط يوتيوب/فيديو"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addFromUrl}
+                  style={{
+                    padding: "0.65rem 1rem",
+                    borderRadius: 10,
+                    border: "1px solid #fecaca",
+                    background: "#fff1f2",
+                    color: "#9f1239",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    fontWeight: 800,
+                    fontSize: "0.82rem",
+                    flex: "0 0 auto",
+                    marginBottom: 2,
+                  }}
+                >
+                  إضافة الرابط
+                </button>
+              </div>
             </div>
           </div>
         )}

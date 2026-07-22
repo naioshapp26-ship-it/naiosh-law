@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { ErpPageConfig } from "@/data/erp-page-catalog";
 import { DarkModeToggle } from "@/components/color-mode";
+import { Modal } from "@/components/ui/modal";
+import { defaultLabeledCreateFields } from "@/lib/form-field-labels";
 
 const STUDIO_ICONS = [
   "fa-chart-pie",
@@ -37,6 +39,7 @@ function useStudioCss() {
 export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
   useStudioCss();
   const [active, setActive] = useState(0);
+  const [addOpen, setAddOpen] = useState(false);
   const isMarketing = config.icon === "fa-bullhorn";
   const tabs = config.tabs ?? [];
   const heroBg = isMarketing
@@ -46,6 +49,8 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
   const subColor = isMarketing ? "rgba(254,226,226,0.85)" : "rgba(199,210,254,0.85)";
   const createLabel = isMarketing ? "حملة جديدة" : "فعالية جديدة";
   const addLabel = isMarketing ? "إضافة حملة" : "إضافة فعالية";
+  const entityTitle = isMarketing ? "حملة" : "فعالية";
+  const fields = useMemo(() => defaultLabeledCreateFields(entityTitle), [entityTitle]);
 
   return (
     <div className="erp-studio-page min-h-screen" dir="rtl">
@@ -87,7 +92,7 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-              <button type="button" className="btn btn-primary text-sm">
+              <button type="button" className="btn btn-primary text-sm" onClick={() => setAddOpen(true)}>
                 <i className="fas fa-plus" /> {createLabel}
               </button>
               <button
@@ -128,7 +133,7 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
               </div>
               <h2 style={{ margin: 0, color: "#0f172a" }}>ملخص الاستوديو</h2>
             </div>
-            <button type="button" className="btn btn-primary section-add-btn">
+            <button type="button" className="btn btn-primary section-add-btn" onClick={() => setAddOpen(true)}>
               <i className="fas fa-plus" /> {addLabel}
             </button>
           </div>
@@ -160,50 +165,18 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
               </div>
             ))}
           </div>
-
-          <div className="mt-7">
-            <h3 className="font-bold text-base text-slate-700 mb-3 flex items-center gap-2 m-0">
-              <i className="fas fa-clock-rotate-left text-slate-400 text-sm" aria-hidden />
-              آخر {isMarketing ? "الحملات" : "الفعاليات"} المضافة
-            </h3>
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-full text-sm bg-white rounded-xl overflow-hidden">
-                <thead>
-                  <tr className="bg-slate-50 text-right">
-                    {(config.columns ?? []).map((col) => (
-                      <th key={col} className="table-cell">
-                        {col}
-                      </th>
-                    ))}
-                    <th className="table-cell">إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(config.seed ?? []).map((row, idx) => (
-                    <tr key={idx}>
-                      {row.map((cell, i) => (
-                        <td key={i} className="table-cell text-right">
-                          {cell}
-                        </td>
-                      ))}
-                      <td className="table-cell text-right">
-                        <div className="flex gap-2 justify-end">
-                          <button type="button" className="btn btn-soft btn-xs">
-                            عرض
-                          </button>
-                          <button type="button" className="btn btn-soft btn-xs">
-                            تعديل
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </section>
       </div>
+
+      <Modal
+        open={addOpen}
+        title={`إضافة ${entityTitle}`}
+        fields={fields}
+        onSave={() => setAddOpen(false)}
+        onClose={() => setAddOpen(false)}
+        saveLabel="إضافة"
+        filesLabel="شواهد وملفات القضية (مستند · صورة · فيديو)"
+      />
     </div>
   );
 }

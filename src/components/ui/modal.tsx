@@ -5,6 +5,7 @@ import type { FormField } from "@/data/module-configs";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { parseAttachments, type FileAttachment } from "@/lib/file-upload";
 import { PARTY_FORM_FIELDS, PARTY_FIELD_KEYS } from "@/lib/party-fields";
+import { assertFieldLabel, sanitizeFormFields } from "@/lib/form-field-labels";
 
 type Props = {
   open: boolean;
@@ -43,13 +44,14 @@ export function Modal({
   const hasExplicitPartyFields = PARTY_FIELD_KEYS.some((key) => fields.some((f) => f.key === key));
 
   const effectiveFields = useMemo(() => {
-    if (!enableParties || hasExplicitPartyFields) return fields;
+    const labeled = sanitizeFormFields(fields);
+    if (!enableParties || hasExplicitPartyFields) return labeled;
     const insertAt = Math.max(
       0,
-      fields.findIndex((f) => f.type === "textarea" || f.key === "description" || f.key === "notes")
+      labeled.findIndex((f) => f.type === "textarea" || f.key === "description" || f.key === "notes")
     );
-    const at = insertAt === -1 ? fields.length : insertAt;
-    return [...fields.slice(0, at), ...PARTY_FORM_FIELDS, ...fields.slice(at)];
+    const at = insertAt === -1 ? labeled.length : insertAt;
+    return sanitizeFormFields([...labeled.slice(0, at), ...PARTY_FORM_FIELDS, ...labeled.slice(at)]);
   }, [fields, enableParties, hasExplicitPartyFields]);
 
   useEffect(() => {
@@ -158,26 +160,30 @@ export function Modal({
             }}
             className="modal-form-grid"
           >
-            {effectiveFields.map((f) => (
+            {effectiveFields.map((f) => {
+              const fieldLabel = assertFieldLabel(f);
+              const inputId = `modal-field-${f.key}`;
+              return (
               <div
                 key={f.key}
                 style={f.type === "textarea" || f.type === "files" ? { gridColumn: "1 / -1" } : {}}
               >
                 {f.type === "files" ? (
                   <FileUploadField
-                    label={f.label}
+                    label={fieldLabel}
                     value={parseAttachments(form[f.key])}
                     onChange={(files) => set(f.key, files)}
                     mode={filesMode}
                   />
                 ) : (
                   <>
-                    <label className="input-label">
-                      {f.label}
+                    <label className="input-label" htmlFor={inputId}>
+                      {fieldLabel}
                       {f.required && <span style={{ color: "#c3152a" }}> *</span>}
                     </label>
                     {f.type === "select" ? (
                       <select
+                        id={inputId}
                         value={String(form[f.key] ?? "")}
                         onChange={(e) => set(f.key, e.target.value)}
                         required={f.required}
@@ -193,6 +199,7 @@ export function Modal({
                       </select>
                     ) : f.type === "textarea" ? (
                       <textarea
+                        id={inputId}
                         value={String(form[f.key] ?? "")}
                         onChange={(e) => set(f.key, e.target.value)}
                         required={f.required}
@@ -203,6 +210,7 @@ export function Modal({
                       />
                     ) : (
                       <input
+                        id={inputId}
                         type={
                           f.type === "number"
                             ? "number"
@@ -224,7 +232,8 @@ export function Modal({
                   </>
                 )}
               </div>
-            ))}
+              );
+            })}
 
             {enableFiles && !hasExplicitFilesField && (
               <div style={{ gridColumn: "1 / -1" }}>

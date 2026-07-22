@@ -208,7 +208,7 @@ const paymentFields: FormField[] = [
   { key: "reference", label: "المرجع", type: "text" },
   { key: "paidAt", label: "تاريخ الدفع", type: "date" },
   { key: "notes", label: "ملاحظات", type: "textarea" },
-  { key: "recordId", label: "معرّف الفاتورة", type: "text", placeholder: "id فاتورة (اختياري)" },
+  { key: "recordId", label: "رقم / معرّف الفاتورة", type: "text", placeholder: "اختياري" },
 ];
 
 
@@ -754,37 +754,47 @@ ${stamp}` : stamp;
               <div className="card-white" style={{ padding: "1.5rem", maxWidth: 520 }}>
                 <h3 style={{ fontWeight: 800, marginBottom: "1rem", color: "#0a0a12" }}>حاسبة الأتعاب للعميل</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <label className="input-label" htmlFor="fee-calc-case-type">نوع القضية</label>
                   <input
-                    placeholder="نوع القضية (مثال: تجاري)"
+                    id="fee-calc-case-type"
+                    placeholder="مثال: تجاري"
                     value={calcForm.caseType}
                     onChange={(e) => setCalcForm({ ...calcForm, caseType: e.target.value })}
                     style={inputStyle}
                   />
+                  <label className="input-label" htmlFor="fee-calc-spec">التخصص</label>
                   <select
+                    id="fee-calc-spec"
                     value={calcForm.specializationId}
                     onChange={(e) => setCalcForm({ ...calcForm, specializationId: e.target.value })}
                     style={inputStyle}
                   >
-                    <option value="">— التخصص —</option>
+                    <option value="">اختر...</option>
                     {specs.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
+                  <label className="input-label" htmlFor="fee-calc-stage">المرحلة القضائية</label>
                   <input
-                    placeholder="المرحلة (ابتدائي / استئناف)"
+                    id="fee-calc-stage"
+                    placeholder="ابتدائي / استئناف"
                     value={calcForm.stage}
                     onChange={(e) => setCalcForm({ ...calcForm, stage: e.target.value })}
                     style={inputStyle}
                   />
+                  <label className="input-label" htmlFor="fee-calc-hours">عدد الساعات</label>
                   <input
-                    placeholder="عدد الساعات (اختياري)"
+                    id="fee-calc-hours"
+                    placeholder="اختياري"
                     type="number"
                     value={calcForm.hours}
                     onChange={(e) => setCalcForm({ ...calcForm, hours: e.target.value })}
                     style={inputStyle}
                   />
+                  <label className="input-label" htmlFor="fee-calc-base">المبلغ الأساسي للنسبة</label>
                   <input
-                    placeholder="المبلغ الأساسي للنسبة (اختياري)"
+                    id="fee-calc-base"
+                    placeholder="اختياري"
                     type="number"
                     value={calcForm.baseAmount}
                     onChange={(e) => setCalcForm({ ...calcForm, baseAmount: e.target.value })}

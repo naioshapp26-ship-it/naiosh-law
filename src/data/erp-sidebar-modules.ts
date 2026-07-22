@@ -146,7 +146,7 @@ export const ERP_SIDEBAR_MODULES: ErpNavModule[] = [
       {
         "id": "intellectual-property",
         "icon": "fa-copyright",
-        "label": "الملكية الفكرية"
+        "label": "ملكية نايوش"
       },
       {
         "id": "visitor-chat",

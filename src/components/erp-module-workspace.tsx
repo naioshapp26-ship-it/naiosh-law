@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   computeEntityStats,
@@ -12,6 +12,9 @@ import {
   type ErpPolicyDef,
 } from "@/data/erp-page-catalog";
 import { erpModuleHref, type ErpNavModule } from "@/data/erp-sidebar-modules";
+import { Modal } from "@/components/ui/modal";
+import type { FormField } from "@/data/module-configs";
+import { defaultLabeledCreateFields, fieldsFromColumnLabels } from "@/lib/form-field-labels";
 
 function useErpStudioCss() {
   useEffect(() => {
@@ -85,42 +88,18 @@ function gradientCss(gradient: string) {
   return map[gradient] || "linear-gradient(135deg,#7f1d1d,#b91c1c)";
 }
 
-function SectionHeader({
-  icon,
-  title,
-  actionLabel,
-}: {
-  icon: string;
-  title: string;
-  actionLabel?: string;
-}) {
-  return (
-    <div className="section-header">
-      <div className="section-header-main">
-        <div className="section-icon">
-          <i className={`fas ${icon}`} aria-hidden />
-        </div>
-        <h2 style={{ color: "#0f172a", margin: 0 }}>{title}</h2>
-      </div>
-      {actionLabel ? (
-        <button type="button" className="btn btn-primary section-add-btn">
-          <i className="fas fa-plus" /> {actionLabel}
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
 function DataTable({
   title,
   columns,
   seed,
   actionLabel = "إضافة",
+  onAdd,
 }: {
   title: string;
   columns: string[];
   seed: string[][];
   actionLabel?: string;
+  onAdd?: () => void;
 }) {
   return (
     <div className="panel overflow-hidden">
@@ -130,7 +109,7 @@ function DataTable({
           <button type="button" className="btn btn-soft">
             <i className="fas fa-rotate" /> تحديث
           </button>
-          <button type="button" className="btn btn-primary">
+          <button type="button" className="btn btn-primary" onClick={onAdd}>
             <i className="fas fa-plus" /> {actionLabel}
           </button>
           <button type="button" className="btn btn-soft">
@@ -185,11 +164,48 @@ function DataTable({
   );
 }
 
+function useLabeledAddModal(title: string, fields: FormField[]) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+
+  const modal = (
+    <Modal
+      open={open}
+      title={`إضافة ${title}`}
+      fields={fields}
+      onSave={(data) => {
+        setRows((prev) => [data, ...prev]);
+        setOpen(false);
+      }}
+      onClose={() => setOpen(false)}
+      saveLabel="إضافة"
+      filesLabel="شواهد وملفات القضية (مستند · صورة · فيديو)"
+    />
+  );
+
+  return { openAdd: () => setOpen(true), modal, rows };
+}
+
 function EntityOpsBody({ config }: { config: ErpPageConfig }) {
-  const seed = config.seed ?? [];
   const stats = config.stats ?? [];
-  const columns = config.columns ?? [];
+  const seed = useMemo(() => config.seed ?? [], [config.seed]);
+  const columns = useMemo(() => config.columns ?? [], [config.columns]);
   const values = computeEntityStats(seed, stats);
+  const fields = useMemo(
+    () => (columns.length ? fieldsFromColumnLabels(columns) : defaultLabeledCreateFields(config.title)),
+    [columns, config.title]
+  );
+  const { openAdd, modal, rows } = useLabeledAddModal(config.title, fields);
+  const localSeed = useMemo(() => {
+    if (!rows.length) return seed;
+    const extras = rows.map((r) =>
+      columns.map((col, i) => {
+        const key = fields[i]?.key;
+        return String((key ? r[key] : "") ?? r[col] ?? "—");
+      })
+    );
+    return [...extras, ...seed];
+  }, [rows, seed, columns, fields]);
 
   return (
     <>
@@ -200,16 +216,28 @@ function EntityOpsBody({ config }: { config: ErpPageConfig }) {
               <span className="text-slate-500 text-sm font-bold">{item.label}</span>
               <i className={`fas ${item.icon} ${item.tone}`} aria-hidden />
             </div>
-            <p className="text-3xl font-black text-slate-800 m-0">{values[item.key] ?? 0}</p>
+            <p className="text-3xl font-black text-slate-800 m-0">{(values[item.key] ?? 0) + rows.length}</p>
           </div>
         ))}
       </div>
-      <DataTable title={`سجل ${config.title}`} columns={columns} seed={seed} />
+      <DataTable title={`سجل ${config.title}`} columns={columns} seed={localSeed} onAdd={openAdd} />
+      {modal}
     </>
   );
 }
 
-function KpiPanelsBody({ kpis = [], panels = [] }: { kpis?: ErpKpiDef[]; panels?: ErpPanelDef[] }) {
+function KpiPanelsBody({
+  title,
+  kpis = [],
+  panels = [],
+}: {
+  title: string;
+  kpis?: ErpKpiDef[];
+  panels?: ErpPanelDef[];
+}) {
+  const fields = useMemo(() => defaultLabeledCreateFields(title), [title]);
+  const { openAdd, modal } = useLabeledAddModal(title, fields);
+
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -241,13 +269,17 @@ function KpiPanelsBody({ kpis = [], panels = [] }: { kpis?: ErpKpiDef[]; panels?
       <div className="panel p-5">
         <h3 className="font-bold text-slate-800 mb-4 mt-0">إجراءات سريعة</h3>
         <div className="flex flex-wrap gap-3">
-          {["تحديث البيانات", "إضافة عنصر", "تصدير تقرير", "إعدادات الوحدة"].map((label) => (
+          <button type="button" className="btn btn-primary" onClick={openAdd}>
+            إضافة عنصر
+          </button>
+          {["تحديث البيانات", "تصدير تقرير", "إعدادات الوحدة"].map((label) => (
             <button key={label} type="button" className="btn btn-primary">
               {label}
             </button>
           ))}
         </div>
       </div>
+      {modal}
     </>
   );
 }
@@ -299,10 +331,28 @@ function PaymentMethodsBody({ methods = [] }: { methods?: ErpMethodDef[] }) {
 }
 
 function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
+  const columns = useMemo(() => config.columns ?? [], [config.columns]);
+  const baseSeed = useMemo(() => config.seed ?? [], [config.seed]);
+  const fields = useMemo(
+    () => (columns.length ? fieldsFromColumnLabels(columns) : defaultLabeledCreateFields(config.title)),
+    [columns, config.title]
+  );
+  const { openAdd, modal, rows } = useLabeledAddModal(config.title, fields);
+  const seed = useMemo(() => {
+    if (!rows.length) return baseSeed;
+    const extras = rows.map((r) =>
+      columns.map((col, i) => {
+        const key = fields[i]?.key;
+        return String((key ? r[key] : "") ?? r[col] ?? "—");
+      })
+    );
+    return [...extras, ...baseSeed];
+  }, [baseSeed, rows, columns, fields]);
+
   return (
     <>
       <div className="flex justify-end">
-        <button type="button" className="btn btn-primary">
+        <button type="button" className="btn btn-primary" onClick={openAdd}>
           <i className="fas fa-plus" /> فاتورة جديدة
         </button>
       </div>
@@ -330,10 +380,12 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
       </div>
       <DataTable
         title={`سجل ${config.title}`}
-        columns={config.columns ?? []}
-        seed={config.seed ?? []}
+        columns={columns}
+        seed={seed}
         actionLabel="فاتورة"
+        onAdd={openAdd}
       />
+      {modal}
     </>
   );
 }
@@ -460,7 +512,9 @@ export function ErpWorkspacePage({ pageId, config, module, parent }: Props) {
       <OpsHero config={config} crumb={crumb} />
       {config.kind === "hub" && module ? <HubBody module={module} /> : null}
       {config.kind === "entity-ops" ? <EntityOpsBody config={config} /> : null}
-      {config.kind === "kpi-panels" ? <KpiPanelsBody kpis={config.kpis} panels={config.panels} /> : null}
+      {config.kind === "kpi-panels" ? (
+        <KpiPanelsBody title={config.title} kpis={config.kpis} panels={config.panels} />
+      ) : null}
       {config.kind === "card-grid" ? <CardGridBody cards={config.cards} /> : null}
       {config.kind === "payment-methods" ? <PaymentMethodsBody methods={config.methods} /> : null}
       {config.kind === "payment-invoices" ? <PaymentInvoicesBody config={config} /> : null}

@@ -637,7 +637,7 @@ export const moduleConfigs: ModuleConfig[] = [
     columns: [
       { key:"name",        label:"اسم التكامل" },
       { key:"type",        label:"النوع" },
-      { key:"endpoint",    label:"Endpoint" },
+      { key:"endpoint",    label:"نقطة النهاية" },
       { key:"callsToday",  label:"استدعاءات اليوم", type:"number" },
       { key:"successRate", label:"نسبة النجاح" },
       { key:"lastChecked", label:"آخر فحص" },
@@ -656,8 +656,8 @@ export const moduleConfigs: ModuleConfig[] = [
     formFields: [
       { key:"name",     label:"اسم التكامل",  type:"text",   required:true },
       { key:"type",     label:"نوع التكامل",  type:"select", options:["رسائل نصية","بريد إلكتروني","مدفوعات","توقيع إلكتروني","بيانات خارجية","ضريبي","تحليلات","أخرى"] },
-      { key:"endpoint", label:"API Endpoint", type:"text",   placeholder:"/api/..." },
-      { key:"apiKey",   label:"API Key",      type:"text",   placeholder:"مشفّر..." },
+      { key:"endpoint", label:"نقطة النهاية (URL)", type:"text",   placeholder:"/api/..." },
+      { key:"apiKey",   label:"مفتاح واجهة البرمجة", type:"text",   placeholder:"مشفّر..." },
       { key:"status",   label:"الحالة",       type:"select", options:["متصل","منقطع","تحذير"] },
     ],
   },
