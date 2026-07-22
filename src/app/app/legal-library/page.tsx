@@ -15,6 +15,9 @@ import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
+import { upsertRecordParties } from "@/lib/record-parties-client";
 
 type Tab = "documents" | "articles" | "circulars";
 
@@ -157,6 +160,9 @@ export default function LegalLibraryPage() {
   const formFields = tab === "documents" ? documentFields : tab === "articles" ? articleFields : circularFields;
 
   const handleAdd = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const parties = extractPartyFields(data);
+    const clean = stripPartyFields(stripAttachments(data));
     const endpoint =
       tab === "documents"
         ? "/api/legal-documents"
@@ -167,19 +173,19 @@ export default function LegalLibraryPage() {
     const payload =
       tab === "documents"
         ? {
-            ...data,
-            type: DOC_TYPE_MAP[String(data.type)] ?? "other",
-            status: data.status || "منشور",
+            ...clean,
+            type: DOC_TYPE_MAP[String(clean.type)] ?? "other",
+            status: clean.status || "منشور",
           }
         : tab === "articles"
           ? {
-              ...data,
-              readMinutes: data.readMinutes ? Number(data.readMinutes) : null,
-              status: data.status || "منشور",
+              ...clean,
+              readMinutes: clean.readMinutes ? Number(clean.readMinutes) : null,
+              status: clean.status || "منشور",
             }
           : {
-              ...data,
-              status: data.status || "ساري",
+              ...clean,
+              status: clean.status || "ساري",
             };
 
     try {
@@ -194,7 +200,30 @@ export default function LegalLibraryPage() {
         show("error", (err as { error?: string }).error || "فشل الإضافة");
         return;
       }
-      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      const created = await res.json().catch(() => ({}));
+      const recordId = String((created as { id?: string }).id ?? "");
+      if (recordId && attachments.length) {
+        await persistFormAttachments({
+          sourceModule: `legal-library-${tab}`,
+          sourceId: recordId,
+          title: String((payload as Record<string, unknown>).title ?? activeTab.addLabel),
+          attachments,
+          notes: "مرفقات من نموذج إضافة المكتبة القانونية",
+        });
+      }
+      if (recordId) {
+        await upsertRecordParties({
+          sourceModule: `legal-library-${tab}`,
+          sourceId: recordId,
+          parties,
+        });
+      }
+      show(
+        "success",
+        attachments.length
+          ? `✅ تمت ${activeTab.addLabel} مع ${attachments.length} مرفق`
+          : `✅ تمت ${activeTab.addLabel} بنجاح`
+      );
       setAddOpen(false);
       load();
     } catch {
@@ -482,7 +511,7 @@ export default function LegalLibraryPage() {
         onClose={() => setAddOpen(false)}
         saveLabel="إضافة"
         enableParties={false}
-        enableFiles={false}
+        enableFiles
       />
     </AppShell>
   );

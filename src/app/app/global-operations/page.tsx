@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Tab = "supply" | "shipments" | "international" | "branches" | "alerts";
 
@@ -242,22 +243,24 @@ export default function GlobalOperationsPage() {
             : alertFields;
 
   const handleAdd = async (data: Record<string, unknown>) => {
-    let payload: Record<string, unknown> = { ...data };
+    const attachments = extractAttachments(data);
+    const clean = stripAttachments(data);
+    let payload: Record<string, unknown> = { ...clean };
 
     if (tab === "supply") {
       payload = {
-        ...data,
-        rating: data.rating != null && data.rating !== "" ? Number(data.rating) : 0,
+        ...clean,
+        rating: clean.rating != null && clean.rating !== "" ? Number(clean.rating) : 0,
       };
     } else if (tab === "branches") {
       payload = {
-        ...data,
-        isHQ: data.isHQ === "نعم" || data.isHQ === true,
+        ...clean,
+        isHQ: clean.isHQ === "نعم" || clean.isHQ === true,
       };
     } else if (tab === "alerts") {
       payload = {
-        ...data,
-        branchId: data.branchId ? String(data.branchId) : undefined,
+        ...clean,
+        branchId: clean.branchId ? String(clean.branchId) : undefined,
       };
       if (!payload.branchId) delete payload.branchId;
     }
@@ -274,7 +277,22 @@ export default function GlobalOperationsPage() {
         show("error", (err as { error?: string }).error || "فشل الإضافة");
         return;
       }
-      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      const created = await res.json().catch(() => ({}));
+      const recordId = String((created as { id?: string }).id ?? "");
+      if (recordId && attachments.length) {
+        await persistFormAttachments({
+          sourceModule: `global-operations-${tab}`,
+          sourceId: recordId,
+          title: String(payload.name ?? payload.title ?? activeTab.addLabel),
+          attachments,
+        });
+      }
+      show(
+        "success",
+        attachments.length
+          ? `✅ تمت ${activeTab.addLabel} مع ${attachments.length} مرفق`
+          : `✅ تمت ${activeTab.addLabel} بنجاح`
+      );
       setAddOpen(false);
       loadAll();
     } catch {
@@ -655,7 +673,7 @@ export default function GlobalOperationsPage() {
         onClose={() => setAddOpen(false)}
         saveLabel="إضافة"
         enableParties={false}
-        enableFiles={false}
+        enableFiles
       />
     </AppShell>
   );

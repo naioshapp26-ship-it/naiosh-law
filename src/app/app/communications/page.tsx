@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
+import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 
 type Tab = "branches" | "rules" | "logs" | "integrations" | "send";
 
@@ -244,6 +245,8 @@ export default function CommunicationsPage() {
     tab === "branches" ? branchFields : tab === "rules" ? ruleFields : integrationFields;
 
   const handleAdd = async (data: Record<string, unknown>) => {
+    const attachments = extractAttachments(data);
+    const clean = stripAttachments(data);
     const endpoint =
       tab === "branches"
         ? "/api/office-branches"
@@ -254,22 +257,22 @@ export default function CommunicationsPage() {
     const payload =
       tab === "branches"
         ? {
-            ...data,
-            status: data.status || "نشط",
-            isMain: data.isMain === "نعم",
+            ...clean,
+            status: clean.status || "نشط",
+            isMain: clean.isMain === "نعم",
           }
         : tab === "rules"
           ? {
-              ...data,
-              channel: CHANNEL_MAP[String(data.channel)] ?? "email",
-              audience: data.audience || "الجميع",
-              status: data.status || "نشط",
+              ...clean,
+              channel: CHANNEL_MAP[String(clean.channel)] ?? "email",
+              audience: clean.audience || "الجميع",
+              status: clean.status || "نشط",
             }
           : {
-              ...data,
-              type: INTEGRATION_TYPE_MAP[String(data.type)] ?? "other",
-              provider: data.provider || "custom",
-              status: data.status || "متصل",
+              ...clean,
+              type: INTEGRATION_TYPE_MAP[String(clean.type)] ?? "other",
+              provider: clean.provider || "custom",
+              status: clean.status || "متصل",
             };
 
     try {
@@ -284,7 +287,26 @@ export default function CommunicationsPage() {
         show("error", (err as { error?: string }).error || "فشل الإضافة");
         return;
       }
-      show("success", `✅ تمت ${activeTab.addLabel} بنجاح`);
+      const created = await res.json().catch(() => ({}));
+      const recordId = String((created as { id?: string }).id ?? "");
+      if (recordId && attachments.length) {
+        await persistFormAttachments({
+          sourceModule: `communications-${tab}`,
+          sourceId: recordId,
+          title: String(
+            (payload as Record<string, unknown>).name ??
+              (payload as Record<string, unknown>).title ??
+              activeTab.addLabel
+          ),
+          attachments,
+        });
+      }
+      show(
+        "success",
+        attachments.length
+          ? `✅ تمت ${activeTab.addLabel} مع ${attachments.length} مرفق`
+          : `✅ تمت ${activeTab.addLabel} بنجاح`
+      );
       setAddOpen(false);
       loadAll();
     } catch {
@@ -656,7 +678,7 @@ export default function CommunicationsPage() {
           onClose={() => setAddOpen(false)}
           saveLabel="إضافة"
           enableParties={false}
-          enableFiles={false}
+          enableFiles
         />
       )}
     </AppShell>

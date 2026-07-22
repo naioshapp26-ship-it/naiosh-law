@@ -221,7 +221,12 @@ export function Modal({
 
             {enableFiles && !hasExplicitFilesField && (
               <div style={{ gridColumn: "1 / -1" }}>
-                <FileUploadField value={attachments} onChange={setAttachments} />
+                <FileUploadField
+                  label="المرفقات من الكمبيوتر (ملف شاهد · صورة · فيديو)"
+                  hint="مهم لقضايا التأمين والحوادث: ارفع الشواهد والصور ومقاطع الفيديو مباشرة من سطح المكتب"
+                  value={attachments}
+                  onChange={setAttachments}
+                />
               </div>
             )}
           </div>
