@@ -275,11 +275,6 @@ export const ERP_SIDEBAR_MODULES: ErpNavModule[] = [
     ]
   },
   {
-    "id": "settings",
-    "icon": "fa-paint-brush",
-    "label": "إعدادات الصفحة الرئيسية"
-  },
-  {
     "id": "audit-logs",
     "icon": "fa-history",
     "label": "سجل النظام"
