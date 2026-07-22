@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/color-mode";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DEFAULT_PUBLIC_LOGO } from "@/lib/site-settings";
-import { NAIOSH_OWNERSHIP_MENU } from "@/data/naiosh-ownership-menu";
+import { NAIOSH_OWNERSHIP_ADD_HREF, NAIOSH_OWNERSHIP_MENU } from "@/data/naiosh-ownership-menu";
 
 type Props = {
   variant?: "dark" | "landing";
@@ -260,41 +260,52 @@ export function Navbar({ variant = "dark" }: Props) {
             </nav>
           </div>
 
-          {typeof document !== "undefined" &&
-          ownershipOpen &&
-          ownershipPos &&
-          createPortal(
-            <div
-              id="naiosh-ownership-menu"
-              ref={ownershipMenuRef}
-              className="nav-dropdown-menu nav-ownership-menu is-open"
-              role="menu"
-              aria-label="قائمة ملكية نايوش"
-              style={{
-                position: "fixed",
-                top: ownershipPos.top,
-                left: ownershipPos.left,
-                width: ownershipPos.width,
-                maxHeight: ownershipPos.maxHeight,
-                zIndex: 5000,
-              }}
-            >
-              {NAIOSH_OWNERSHIP_MENU.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  role="menuitem"
-                  onClick={() => {
-                    setOwnershipOpen(false);
-                    setMenuOpen(false);
+              {typeof document !== "undefined" &&
+              ownershipOpen &&
+              ownershipPos &&
+              createPortal(
+                <div
+                  id="naiosh-ownership-menu"
+                  ref={ownershipMenuRef}
+                  className="nav-dropdown-menu nav-ownership-menu is-open"
+                  role="menu"
+                  aria-label="قائمة ملكية نايوش"
+                  style={{
+                    position: "fixed",
+                    top: ownershipPos.top,
+                    left: ownershipPos.left,
+                    width: ownershipPos.width,
+                    maxHeight: ownershipPos.maxHeight,
+                    zIndex: 5000,
                   }}
                 >
-                  {item.label}
-                </Link>
-              ))}
-            </div>,
-            document.body
-          )}
+                  <Link
+                    href={NAIOSH_OWNERSHIP_ADD_HREF}
+                    role="menuitem"
+                    className="nav-ownership-add"
+                    onClick={() => {
+                      setOwnershipOpen(false);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    إضافة ملكية جديدة
+                  </Link>
+                  {NAIOSH_OWNERSHIP_MENU.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      role="menuitem"
+                      onClick={() => {
+                        setOwnershipOpen(false);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>,
+                document.body
+              )}
 
           <Link href="/login" className="mobile-header-login" aria-label="تسجيل الدخول">
             دخول

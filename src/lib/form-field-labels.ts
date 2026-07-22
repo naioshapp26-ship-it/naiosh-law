@@ -1,4 +1,5 @@
 import type { FormField } from "@/data/module-configs";
+import { NAIOSH_OWNERSHIP_TYPE_OPTIONS } from "@/data/naiosh-ownership-menu";
 
 /** Detect Latin-only / technical labels that should be Arabic in the UI. */
 const LATIN_ONLY = /^[\sA-Za-z0-9_\-./:()]+$/;
@@ -64,7 +65,7 @@ export function fieldsFromColumnLabels(columns: string[]): FormField[] {
         label,
         type: "select",
         required: true,
-        options: ["علامة تجارية", "براءة اختراع", "حقوق مؤلف", "تصميم صناعي", "أخرى"],
+        options: [...NAIOSH_OWNERSHIP_TYPE_OPTIONS],
       };
     }
     if (/جهة التوثيق/.test(label)) {

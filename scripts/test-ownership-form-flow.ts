@@ -1,3 +1,4 @@
+import { NAIOSH_OWNERSHIP_TYPE_OPTIONS, ownershipAddHref } from "../src/data/naiosh-ownership-menu";
 import { PARTY_FORM_FIELDS } from "../src/lib/party-fields";
 import {
   assertFieldLabel,
@@ -55,9 +56,39 @@ for (const f of fields) {
   }
 }
 
+const typeField = fields.find((f) => f.label === "نوع الملكية");
+if (!typeField?.options?.length) {
+  console.error("FAIL flow: نوع الملكية missing options");
+  process.exit(1);
+}
+
+const missingTypes = NAIOSH_OWNERSHIP_TYPE_OPTIONS.filter((t) => !typeField.options?.includes(t));
+if (missingTypes.length) {
+  console.error("FAIL flow: ownership menu types missing from select", missingTypes);
+  process.exit(1);
+}
+
+const sampleHref = ownershipAddHref("توثيق العقود");
+if (!sampleHref.includes("add=1") || !sampleHref.includes("type=")) {
+  console.error("FAIL flow: ownershipAddHref must include add=1 and type", sampleHref);
+  process.exit(1);
+}
+if (!decodeURIComponent(sampleHref.replace(/\+/g, "%20")).includes("توثيق العقود")) {
+  console.error("FAIL flow: ownershipAddHref type value missing", sampleHref);
+  process.exit(1);
+}
+
+const typeKey = typeField.key;
+const prefill = { [typeKey]: "توثيق العقود" };
+if (prefill[typeKey] !== "توثيق العقود") {
+  console.error("FAIL flow: cannot prefill نوع الملكية");
+  process.exit(1);
+}
+
 console.log("PASS flow: إضافة ملكية نايوش");
 console.log(
   fields
     .map((f) => `${f.label}${f.required ? " *" : ""} [${f.type}]`)
     .join("\n")
 );
+console.log(`types=${typeField.options.length} addHref=${sampleHref}`);

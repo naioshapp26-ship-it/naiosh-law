@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   computeEntityStats,
   type ErpCardDef,
@@ -12,6 +13,7 @@ import {
   type ErpPolicyDef,
 } from "@/data/erp-page-catalog";
 import { erpModuleHref, type ErpNavModule } from "@/data/erp-sidebar-modules";
+import { NAIOSH_OWNERSHIP_TYPE_OPTIONS } from "@/data/naiosh-ownership-menu";
 import { Modal } from "@/components/ui/modal";
 import type { FormField } from "@/data/module-configs";
 import { defaultLabeledCreateFields, fieldsFromColumnLabels } from "@/lib/form-field-labels";
@@ -166,27 +168,48 @@ function DataTable({
 
 function useLabeledAddModal(title: string, fields: FormField[]) {
   const [open, setOpen] = useState(false);
+  const [initial, setInitial] = useState<Record<string, unknown> | undefined>();
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+
+  const openAdd = useCallback((seed?: Record<string, unknown>) => {
+    setInitial(seed && Object.keys(seed).length ? seed : undefined);
+    setOpen(true);
+  }, []);
+
+  const closeAdd = useCallback(() => {
+    setOpen(false);
+    setInitial(undefined);
+  }, []);
 
   const modal = (
     <Modal
       open={open}
       title={`إضافة ${title}`}
       fields={fields}
+      initial={initial}
       onSave={(data) => {
         setRows((prev) => [data, ...prev]);
-        setOpen(false);
+        closeAdd();
       }}
-      onClose={() => setOpen(false)}
+      onClose={closeAdd}
       saveLabel="إضافة"
       filesLabel="شواهد وملفات القضية (مستند · صورة · فيديو)"
     />
   );
 
-  return { openAdd: () => setOpen(true), modal, rows };
+  return { openAdd, modal, rows };
 }
 
-function EntityOpsBody({ config }: { config: ErpPageConfig }) {
+function ownershipTypeFieldKey(fields: FormField[]): string | undefined {
+  return fields.find((f) => /نوع الملكية/.test(f.label))?.key;
+}
+
+function EntityOpsBody({ config, pageId }: { config: ErpPageConfig; pageId: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const autoOpenedRef = useRef(false);
+  const isOwnership = pageId === "intellectual-property";
   const stats = config.stats ?? [];
   const seed = useMemo(() => config.seed ?? [], [config.seed]);
   const columns = useMemo(() => config.columns ?? [], [config.columns]);
@@ -196,6 +219,7 @@ function EntityOpsBody({ config }: { config: ErpPageConfig }) {
     [columns, config.title]
   );
   const { openAdd, modal, rows } = useLabeledAddModal(config.title, fields);
+  const typeKey = useMemo(() => ownershipTypeFieldKey(fields), [fields]);
   const localSeed = useMemo(() => {
     if (!rows.length) return seed;
     const extras = rows.map((r) =>
@@ -207,8 +231,55 @@ function EntityOpsBody({ config }: { config: ErpPageConfig }) {
     return [...extras, ...seed];
   }, [rows, seed, columns, fields]);
 
+  useEffect(() => {
+    if (!isOwnership || autoOpenedRef.current) return;
+    const shouldAdd = searchParams.get("add") === "1";
+    const type = searchParams.get("type")?.trim() || "";
+    if (!shouldAdd && !type) return;
+    autoOpenedRef.current = true;
+    const seedData = type && typeKey ? { [typeKey]: type } : undefined;
+    openAdd(seedData);
+    router.replace(pathname, { scroll: false });
+  }, [isOwnership, searchParams, typeKey, openAdd, router, pathname]);
+
   return (
     <>
+      {isOwnership ? (
+        <div className="panel p-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="font-bold text-slate-800 m-0 mb-1">إضافة ملكية جديدة</h3>
+            <p className="text-sm text-slate-500 m-0">
+              اختر نوع الملكية من القائمة أو اضغط الإضافة لفتح نموذج التسجيل الكامل
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => openAdd()}
+          >
+            <i className="fas fa-plus" /> إضافة ملكية جديدة
+          </button>
+        </div>
+      ) : null}
+
+      {isOwnership ? (
+        <div className="panel p-4">
+          <p className="text-sm font-bold text-slate-700 m-0 mb-3">أنواع الملكية السريعة</p>
+          <div className="flex flex-wrap gap-2">
+            {NAIOSH_OWNERSHIP_TYPE_OPTIONS.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className="btn btn-soft"
+                onClick={() => openAdd(typeKey ? { [typeKey]: type } : undefined)}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((item) => (
           <div key={item.key} className="stat-card">
@@ -220,7 +291,13 @@ function EntityOpsBody({ config }: { config: ErpPageConfig }) {
           </div>
         ))}
       </div>
-      <DataTable title={`سجل ${config.title}`} columns={columns} seed={localSeed} onAdd={openAdd} />
+      <DataTable
+        title={`سجل ${config.title}`}
+        columns={columns}
+        seed={localSeed}
+        actionLabel={isOwnership ? "إضافة ملكية جديدة" : "إضافة"}
+        onAdd={() => openAdd()}
+      />
       {modal}
     </>
   );
@@ -269,7 +346,7 @@ function KpiPanelsBody({
       <div className="panel p-5">
         <h3 className="font-bold text-slate-800 mb-4 mt-0">إجراءات سريعة</h3>
         <div className="flex flex-wrap gap-3">
-          <button type="button" className="btn btn-primary" onClick={openAdd}>
+          <button type="button" className="btn btn-primary" onClick={() => openAdd()}>
             إضافة عنصر
           </button>
           {["تحديث البيانات", "تصدير تقرير", "إعدادات الوحدة"].map((label) => (
@@ -352,7 +429,7 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
   return (
     <>
       <div className="flex justify-end">
-        <button type="button" className="btn btn-primary" onClick={openAdd}>
+        <button type="button" className="btn btn-primary" onClick={() => openAdd()}>
           <i className="fas fa-plus" /> فاتورة جديدة
         </button>
       </div>
@@ -511,7 +588,11 @@ export function ErpWorkspacePage({ pageId, config, module, parent }: Props) {
     >
       <OpsHero config={config} crumb={crumb} />
       {config.kind === "hub" && module ? <HubBody module={module} /> : null}
-      {config.kind === "entity-ops" ? <EntityOpsBody config={config} /> : null}
+      {config.kind === "entity-ops" ? (
+        <Suspense fallback={null}>
+          <EntityOpsBody config={config} pageId={pageId} />
+        </Suspense>
+      ) : null}
       {config.kind === "kpi-panels" ? (
         <KpiPanelsBody title={config.title} kpis={config.kpis} panels={config.panels} />
       ) : null}

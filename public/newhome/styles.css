@@ -415,6 +415,19 @@ body.homepage a {
   color: #fca5a5 !important;
 }
 
+.nav-ownership-menu a.nav-ownership-add {
+  background: #c3152a !important;
+  color: #ffffff !important;
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+
+.nav-ownership-menu a.nav-ownership-add:hover {
+  background: #a01022 !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+
 .nav-links a:hover,
 .nav-links a.active {
   color: #fff;
