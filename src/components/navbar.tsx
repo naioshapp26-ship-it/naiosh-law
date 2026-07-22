@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/color-mode";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DEFAULT_PUBLIC_LOGO } from "@/lib/site-settings";
+import { NAIOSH_OWNERSHIP_MENU } from "@/data/naiosh-ownership-menu";
 
 type Props = {
   variant?: "dark" | "landing";
@@ -37,6 +38,7 @@ export function Navbar({ variant = "dark" }: Props) {
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [ownershipOpen, setOwnershipOpen] = useState(false);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [myPageHref, setMyPageHref] = useState("/my-page");
   const [logoFailed, setLogoFailed] = useState(false);
@@ -154,6 +156,32 @@ export function Navbar({ variant = "dark" }: Props) {
                 </Link>
                 );
               })}
+
+              <details
+                className="nav-dropdown nav-ownership"
+                open={ownershipOpen}
+                onToggle={(e) => setOwnershipOpen((e.target as HTMLDetailsElement).open)}
+              >
+                <summary aria-label="ملكية نايوش">
+                  <i className="fas fa-copyright" aria-hidden="true" />
+                  <span>ملكية نايوش</span>
+                </summary>
+                <div className="nav-dropdown-menu nav-ownership-menu" role="menu" aria-label="قائمة ملكية نايوش">
+                  {NAIOSH_OWNERSHIP_MENU.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      role="menuitem"
+                      onClick={() => {
+                        setOwnershipOpen(false);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </details>
             </nav>
           </div>
 

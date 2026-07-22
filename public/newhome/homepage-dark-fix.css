@@ -84,6 +84,29 @@ body.homepage.dark-mode .nav-dropdown-menu a:hover {
   color: #ffffff !important;
 }
 
+body.homepage.dark-mode .nav-ownership > summary,
+body.homepage.dark-mode .nav-ownership > summary:hover,
+body.homepage.dark-mode .nav-ownership[open] > summary {
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(195, 21, 42, 0.45), 0 10px 22px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.homepage.dark-mode .nav-ownership-menu {
+  background: #0a0a0a !important;
+  border-color: #222 !important;
+}
+
+body.homepage.dark-mode .nav-ownership-menu a {
+  background: #111111 !important;
+  color: #ffffff !important;
+}
+
+body.homepage.dark-mode .nav-ownership-menu a:hover {
+  background: #1a0a0d !important;
+  color: #ffffff !important;
+}
+
 body.homepage.dark-mode .auth-actions-shell {
   background: var(--hp-dm-surface-2) !important;
   border-color: var(--hp-dm-border) !important;
