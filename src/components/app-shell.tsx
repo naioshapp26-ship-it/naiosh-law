@@ -344,14 +344,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? (
               <BrandLogo
                 size={64}
-                href="/app/dashboard"
+                href="/"
                 showText
                 variant="light"
                 subtitle={theme.tagline}
                 className="flex-1 min-w-0"
               />
             ) : (
-              <Link href="/app/dashboard" className="mx-auto block" title={theme.brandName}>
+              <Link href="/" className="mx-auto block" title={`${theme.brandName} — الصفحة الرئيسية`}>
                 <BrandLogo size={48} showText={false} variant="light" />
               </Link>
             )}
@@ -483,7 +483,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             }}
           >
             <div className="shrink-0 py-3 px-3 border-b border-white/40 flex items-center justify-between gap-2">
-              <BrandLogo size={56} href="/app/dashboard" showText variant="light" subtitle={theme.tagline} className="flex-1 min-w-0" />
+              <BrandLogo size={56} href="/" showText variant="light" subtitle={theme.tagline} className="flex-1 min-w-0" />
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
