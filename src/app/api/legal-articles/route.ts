@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { neutralizeCountryWording } from "@/lib/neutralize-country-wording";
 
 export async function GET(request: Request) {
   const { error } = await requireAuth();
@@ -28,22 +29,33 @@ export async function GET(request: Request) {
     include: { branch: true, specialization: true },
   });
 
-  return NextResponse.json(
-    items.map((a) => ({
+  const mapped = [];
+  for (const a of items) {
+    const title = neutralizeCountryWording(a.title);
+    const summary = a.summary ? neutralizeCountryWording(a.summary) : "";
+    if (title !== a.title || (a.summary && summary !== a.summary)) {
+      await prisma.legalArticle.update({
+        where: { id: a.id },
+        data: { title, summary: summary || null },
+      });
+    }
+    mapped.push({
       id: a.id,
-      title: a.title,
+      title,
       author: a.author ?? "—",
       branch: a.branch?.name ?? "—",
       specialization: a.specialization?.name ?? "—",
-      summary: a.summary ?? "",
+      summary,
       tags: a.tags ?? "",
       readMinutes: a.readMinutes ?? 5,
       status: a.status,
       publishedAt: a.publishedAt ?? "—",
       mediaUrl: a.mediaUrl ?? "",
       mediaKind: a.mediaKind ?? "",
-    }))
-  );
+    });
+  }
+
+  return NextResponse.json(mapped);
 }
 
 export async function POST(request: Request) {
@@ -53,11 +65,11 @@ export async function POST(request: Request) {
 
   const created = await prisma.legalArticle.create({
     data: {
-      title: String(body.title ?? ""),
+      title: neutralizeCountryWording(String(body.title ?? "")),
       author: body.author ? String(body.author) : null,
       branchId: body.branchId ? String(body.branchId) : null,
       specializationId: body.specializationId ? String(body.specializationId) : null,
-      summary: body.summary ? String(body.summary) : null,
+      summary: body.summary ? neutralizeCountryWording(String(body.summary)) : null,
       content: body.content ? String(body.content) : null,
       mediaUrl: body.mediaUrl ? String(body.mediaUrl) : null,
       mediaKind: body.mediaKind ? String(body.mediaKind) : null,

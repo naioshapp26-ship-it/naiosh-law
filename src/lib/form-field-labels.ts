@@ -74,7 +74,7 @@ export function fieldsFromColumnLabels(columns: string[]): FormField[] {
         label,
         type: "select",
         options: [
-          "الهيئة السعودية للملكية الفكرية",
+          "هيئة الملكية الفكرية",
           "مكتب التوثيق",
           "وزارة الثقافة",
           "الشهر العقاري",

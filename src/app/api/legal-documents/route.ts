@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
 import type { LibraryDocumentType } from "@/generated/prisma/client";
+import { neutralizeCountryWording } from "@/lib/neutralize-country-wording";
 
 const typeLabels: Record<LibraryDocumentType, string> = {
   law: "قانون",
@@ -39,21 +40,32 @@ export async function GET(request: Request) {
     include: { branch: true, specialization: true },
   });
 
-  return NextResponse.json(
-    items.map((d) => ({
+  const mapped = [];
+  for (const d of items) {
+    const title = neutralizeCountryWording(d.title);
+    const summary = d.summary ? neutralizeCountryWording(d.summary) : "";
+    if (title !== d.title || (d.summary && summary !== d.summary)) {
+      await prisma.legalDocument.update({
+        where: { id: d.id },
+        data: { title, summary: summary || null },
+      });
+    }
+    mapped.push({
       id: d.id,
-      title: d.title,
+      title,
       type: typeLabels[d.type] ?? d.type,
       category: d.category ?? "—",
       branch: d.branch?.name ?? "—",
       specialization: d.specialization?.name ?? "—",
-      summary: d.summary ?? "",
+      summary,
       tags: d.tags ?? "",
       status: d.status,
       publishedAt: d.publishedAt ?? "—",
       fileUrl: d.fileUrl,
-    }))
-  );
+    });
+  }
+
+  return NextResponse.json(mapped);
 }
 
 export async function POST(request: Request) {
@@ -63,12 +75,12 @@ export async function POST(request: Request) {
 
   const created = await prisma.legalDocument.create({
     data: {
-      title: String(body.title ?? ""),
+      title: neutralizeCountryWording(String(body.title ?? "")),
       type: (body.type as LibraryDocumentType) ?? "other",
       category: body.category ? String(body.category) : null,
       branchId: body.branchId ? String(body.branchId) : null,
       specializationId: body.specializationId ? String(body.specializationId) : null,
-      summary: body.summary ? String(body.summary) : null,
+      summary: body.summary ? neutralizeCountryWording(String(body.summary)) : null,
       content: body.content ? String(body.content) : null,
       fileUrl: body.fileUrl ? String(body.fileUrl) : null,
       tags: body.tags ? String(body.tags) : null,

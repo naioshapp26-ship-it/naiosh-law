@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@/generated/prisma/client";
+import { neutralizeCountryWording } from "@/lib/neutralize-country-wording";
 
 export type EnrichResult = Record<string, number>;
 
@@ -403,9 +404,9 @@ export async function enrichDemoData(prisma: PrismaClient): Promise<EnrichResult
   }
   if (n) result.circularInstructions = n;
 
-  // ── Legal docs / articles (by title) ──
+  // ── Legal docs / articles (by title) — بدون تخصيص لدولة ──
   const docs = [
-    { title: "دليل التحكيم التجاري المصري", type: "other" as const, category: "تحكيم", summary: "مرجع إجرائي للتحكيم المحلي والدولي.", tags: "تحكيم,تجاري", status: "منشور", publishedAt: "2026-04-01" },
+    { title: "دليل التحكيم التجاري", type: "other" as const, category: "تحكيم", summary: "مرجع إجرائي للتحكيم المحلي والدولي.", tags: "تحكيم,تجاري", status: "منشور", publishedAt: "2026-04-01" },
     { title: "نموذج مذكرة دفاع — نزاع إيجار", type: "memo_template" as const, category: "مذكرات", summary: "قالب مذكرة دفاع لدعوى إيجار تجاري.", tags: "إيجار,مذكرة", status: "منشور", publishedAt: "2026-05-20" },
   ];
   n = 0;
@@ -418,7 +419,7 @@ export async function enrichDemoData(prisma: PrismaClient): Promise<EnrichResult
   if (n) result.legalDocuments = n;
 
   const articles = [
-    { title: "قواعد الاختصاص في المنازعات البحرية", author: "أحمد المحامي", summary: "تحليل اختصاص المحاكم البحرية المصرية.", tags: "بحري,اختصاص", readMinutes: 9, status: "منشور", publishedAt: "2026-06-12" },
+    { title: "قواعد الاختصاص في المنازعات البحرية", author: "أحمد المحامي", summary: "تحليل اختصاص المحاكم البحرية في المنازعات التجارية.", tags: "بحري,اختصاص", readMinutes: 9, status: "منشور", publishedAt: "2026-06-12" },
     { title: "حماية البيانات في القطاع المصرفي", author: "د. منى الاستشارية", summary: "امتثال البنوك لقوانين حماية البيانات.", tags: "بنوك,خصوصية", readMinutes: 7, status: "منشور", publishedAt: "2026-07-01" },
   ];
   n = 0;
@@ -429,6 +430,32 @@ export async function enrichDemoData(prisma: PrismaClient): Promise<EnrichResult
     n++;
   }
   if (n) result.legalArticles = n;
+
+  // Rename legacy country-specific library titles already in DB
+  const renamedDocs = await prisma.legalDocument.updateMany({
+    where: { title: "دليل التحكيم التجاري المصري" },
+    data: { title: "دليل التحكيم التجاري" },
+  });
+  if (renamedDocs.count) result.neutralizedDocuments = renamedDocs.count;
+
+  n = 0;
+  const libraryDocs = await prisma.legalDocument.findMany({ select: { id: true, title: true, summary: true } });
+  for (const d of libraryDocs) {
+    const title = neutralizeCountryWording(d.title);
+    const summary = d.summary ? neutralizeCountryWording(d.summary) : d.summary;
+    if (title === d.title && summary === d.summary) continue;
+    await prisma.legalDocument.update({ where: { id: d.id }, data: { title, summary } });
+    n++;
+  }
+  const libraryArticles = await prisma.legalArticle.findMany({ select: { id: true, title: true, summary: true } });
+  for (const a of libraryArticles) {
+    const title = neutralizeCountryWording(a.title);
+    const summary = a.summary ? neutralizeCountryWording(a.summary) : a.summary;
+    if (title === a.title && summary === a.summary) continue;
+    await prisma.legalArticle.update({ where: { id: a.id }, data: { title, summary } });
+    n++;
+  }
+  if (n) result.neutralizedLibraryCopy = n;
 
   // ── Approvals (by refNo) ──
   const admin = await prisma.user.findFirst({ where: { role: "admin" } });
