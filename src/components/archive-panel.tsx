@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ArchiveModal } from "@/components/archive-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { PageHeader, PageStats, BtnPrimary, PageLoader, useToast } from "@/components/domain-page";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { ArchiveRecordDto } from "@/lib/archive-types";
@@ -26,16 +27,6 @@ const td: React.CSSProperties = {
   fontSize: "0.82rem",
   color: "#0a0a12",
   borderBottom: "1px solid #f1f5f9",
-};
-const actionBtn: React.CSSProperties = {
-  padding: "0.35rem 0.65rem",
-  borderRadius: "8px",
-  border: "1px solid #e2e8f0",
-  background: "#fff",
-  cursor: "pointer",
-  fontFamily: "var(--font-cairo)",
-  fontSize: "0.72rem",
-  fontWeight: 700,
 };
 
 export function ArchivePanel() {
@@ -282,27 +273,18 @@ export function ArchivePanel() {
                     <td style={td}>{row.attachments.length ? `📎 ${row.attachments.length}` : "—"}</td>
                     <td style={td}>{formatDate(row.createdAt, { year: "numeric", month: "numeric", day: "numeric" })}</td>
                     <td style={td}>
-                      <div style={{ display: "flex", gap: "0.35rem", flexWrap: "nowrap" }}>
-                        <button type="button" style={actionBtn} onClick={() => setViewTarget(row)}>👁 عرض</button>
-                        {canWrite && (
-                          <>
-                            <button
-                              type="button"
-                              style={{ ...actionBtn, color: "#0ea5e9", borderColor: "#bae6fd" }}
-                              onClick={() => { setEditTarget(row); setModalOpen(true); }}
-                            >
-                              ✏️ تعديل
-                            </button>
-                            <button
-                              type="button"
-                              style={{ ...actionBtn, color: "#c3152a", borderColor: "#fecaca" }}
-                              onClick={() => setDeleteTarget(row)}
-                            >
-                              🗑 حذف
-                            </button>
-                          </>
-                        )}
-                      </div>
+                      <RowActions
+                        actions={standardRowActions({
+                          onView: () => setViewTarget(row),
+                          onEdit: canWrite
+                            ? () => {
+                                setEditTarget(row);
+                                setModalOpen(true);
+                              }
+                            : undefined,
+                          onDelete: canWrite ? () => setDeleteTarget(row) : undefined,
+                        })}
+                      />
                     </td>
                   </tr>
                 ))}

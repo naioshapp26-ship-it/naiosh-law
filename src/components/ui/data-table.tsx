@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StatusBadge } from "./status-badge";
+import { RowActions, standardRowActions } from "./row-actions";
 import type { Column } from "@/data/module-configs";
 import { formatCurrency, formatNumber } from "@/lib/format";
 
@@ -203,113 +204,15 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                     ))}
                     {hasActions && (
                       <td style={{ padding: "0.85rem 1rem" }}>
-                        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                          {onView && (
-                            <button
-                              onClick={() => onView(row)}
-                              style={{
-                                background: "#f1f5f9",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#475569",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#e2e8f0")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#f1f5f9")}
-                            >
-                              👁 عرض
-                            </button>
-                          )}
-                          {onEdit && (
-                            <button
-                              onClick={() => onEdit(row)}
-                              style={{
-                                background: "rgba(195,21,42,0.07)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#c3152a",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.14)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(195,21,42,0.07)")}
-                            >
-                              ✏️ تعديل
-                            </button>
-                          )}
-                          {onSupplement && (
-                            <button
-                              onClick={() => onSupplement(row)}
-                              style={{
-                                background: "rgba(34,197,94,0.1)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#16a34a",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,0.18)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,0.1)")}
-                            >
-                              ➕ إضافة
-                            </button>
-                          )}
-                          {onArchive && (
-                            <button
-                              onClick={() => onArchive(row)}
-                              style={{
-                                background: "rgba(100,116,139,0.1)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#475569",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(100,116,139,0.18)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(100,116,139,0.1)")}
-                            >
-                              📦 أرشفة
-                            </button>
-                          )}
-                          {onDelete && (
-                            <button
-                              onClick={() => onDelete(row)}
-                              style={{
-                                background: "rgba(239,68,68,0.08)",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.35rem 0.7rem",
-                                cursor: "pointer",
-                                fontSize: "0.73rem",
-                                fontWeight: 600,
-                                color: "#dc2626",
-                                fontFamily: "var(--font-cairo)",
-                                transition: "all 0.15s",
-                              }}
-                              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)")}
-                              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)")}
-                            >
-                              🗑 حذف
-                            </button>
-                          )}
-                        </div>
+                        <RowActions
+                          actions={standardRowActions({
+                            onView: onView ? () => onView(row) : undefined,
+                            onEdit: onEdit ? () => onEdit(row) : undefined,
+                            onAdd: onSupplement ? () => onSupplement(row) : undefined,
+                            onArchive: onArchive ? () => onArchive(row) : undefined,
+                            onDelete: onDelete ? () => onDelete(row) : undefined,
+                          })}
+                        />
                       </td>
                     )}
                   </tr>

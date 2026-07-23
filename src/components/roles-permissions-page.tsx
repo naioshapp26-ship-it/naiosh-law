@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession } from "@/lib/session";
 import {
   ACCOUNT_TYPE_LABELS,
@@ -723,12 +724,14 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
                       </span>
                     </td>
                     <td className="center">
-                      <button type="button" className="icon-btn" title="تعديل" onClick={() => openEditRole(r.code)}>
-                        <i className="fas fa-edit" />
-                      </button>
-                      <button type="button" className="icon-btn danger" title="حذف" onClick={() => deleteRole(r.code)}>
-                        <i className="fas fa-trash-alt" />
-                      </button>
+                      <RowActions
+                        iconSet="fa"
+                        style={{ justifyContent: "center" }}
+                        actions={standardRowActions({
+                          onEdit: () => openEditRole(r.code),
+                          onDelete: () => deleteRole(r.code),
+                        })}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -860,15 +863,15 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
                         </span>
                       </td>
                       <td className="center actions">
-                        <button type="button" className="mini blue" onClick={() => selectUser(u.id)}>
-                          عرض
-                        </button>
-                        <button type="button" className="mini amber" onClick={() => openEditUser(u.id)}>
-                          تعديل
-                        </button>
-                        <button type="button" className="mini red" onClick={() => deleteUser(u.id)}>
-                          حذف
-                        </button>
+                        <RowActions
+                          iconSet="fa"
+                          style={{ justifyContent: "center" }}
+                          actions={standardRowActions({
+                            onView: () => selectUser(u.id),
+                            onEdit: () => openEditUser(u.id),
+                            onDelete: () => deleteUser(u.id),
+                          })}
+                        />
                       </td>
                     </tr>
                   ))}

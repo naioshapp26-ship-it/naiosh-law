@@ -13,6 +13,7 @@ import {
 } from "@/components/domain-page";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
@@ -223,16 +224,6 @@ const assignFields: FormField[] = [
   { key: "assignNote", label: "ملاحظة التعيين", type: "textarea" },
 ];
 
-const actionBtnBase: CSSProperties = {
-  border: "none",
-  borderRadius: "8px",
-  padding: "0.35rem 0.65rem",
-  cursor: "pointer",
-  fontSize: "0.72rem",
-  fontWeight: 600,
-  fontFamily: "var(--font-cairo)",
-};
-
 function FinanceRowActions({
   canWrite,
   onView,
@@ -247,26 +238,14 @@ function FinanceRowActions({
   onDelete: () => void;
 }) {
   return (
-    <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-      <button type="button" onClick={onView} style={{ ...actionBtnBase, background: "#f1f5f9", color: "#475569" }}>
-        👁 عرض
-      </button>
-      {canWrite && (
-        <button type="button" onClick={onEdit} style={{ ...actionBtnBase, background: "rgba(195,21,42,0.07)", color: "#c3152a" }}>
-          ✏️ تعديل
-        </button>
-      )}
-      {canWrite && (
-        <button type="button" onClick={onAssign} style={{ ...actionBtnBase, background: "rgba(14,165,233,0.1)", color: "#0284c7" }}>
-          🏷️ تعيين
-        </button>
-      )}
-      {canWrite && (
-        <button type="button" onClick={onDelete} style={{ ...actionBtnBase, background: "rgba(239,68,68,0.08)", color: "#dc2626" }}>
-          🗑 حذف
-        </button>
-      )}
-    </div>
+    <RowActions
+      actions={standardRowActions({
+        onView,
+        onEdit: canWrite ? onEdit : undefined,
+        onAssign: canWrite ? onAssign : undefined,
+        onDelete: canWrite ? onDelete : undefined,
+      })}
+    />
   );
 }
 

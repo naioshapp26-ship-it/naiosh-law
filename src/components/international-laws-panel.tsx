@@ -15,6 +15,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { formatDateTime } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
 import {
@@ -97,17 +98,6 @@ const td: React.CSSProperties = {
   fontSize: "0.82rem",
   color: "#0a0a12",
   borderBottom: "1px solid #f1f5f9",
-};
-
-const actionBtn: React.CSSProperties = {
-  padding: "0.35rem 0.65rem",
-  borderRadius: "8px",
-  border: "1px solid #e2e8f0",
-  background: "#fff",
-  cursor: "pointer",
-  fontFamily: "var(--font-cairo)",
-  fontSize: "0.72rem",
-  fontWeight: 700,
 };
 
 /* ── Hub page ── */
@@ -848,17 +838,15 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                   </td>
                   <td style={td}>{e.client}</td>
                   <td style={td}>
-                    <div style={{ display: "flex", gap: "0.35rem", flexWrap: "nowrap" }}>
-                      <button type="button" style={actionBtn} onClick={() => void openView(e)}>👁 عرض</button>
-                      {canWrite && (
-                        <>
-                          <button type="button" style={{ ...actionBtn, color: "#16a34a", borderColor: "#bbf7d0" }} onClick={() => setSupplementTarget(e)}>➕ إضافة</button>
-                          <button type="button" style={{ ...actionBtn, color: "#475569", borderColor: "#cbd5e1" }} onClick={() => setArchiveTarget(e)}>📦 أرشفة</button>
-                          <button type="button" style={{ ...actionBtn, color: "#0ea5e9", borderColor: "#bae6fd" }} onClick={() => openEdit(e)}>✏️ تعديل</button>
-                          <button type="button" style={{ ...actionBtn, color: "#c3152a", borderColor: "#fecaca" }} onClick={() => setDeleteTarget(e)}>🗑 حذف</button>
-                        </>
-                      )}
-                    </div>
+                    <RowActions
+                      actions={standardRowActions({
+                        onView: () => void openView(e),
+                        onEdit: canWrite ? () => openEdit(e) : undefined,
+                        onAdd: canWrite ? () => setSupplementTarget(e) : undefined,
+                        onArchive: canWrite ? () => setArchiveTarget(e) : undefined,
+                        onDelete: canWrite ? () => setDeleteTarget(e) : undefined,
+                      })}
+                    />
                   </td>
                 </tr>
               )))}

@@ -15,6 +15,7 @@ import {
 import { erpModuleHref, type ErpNavModule } from "@/data/erp-sidebar-modules";
 import { NAIOSH_OWNERSHIP_TYPE_OPTIONS } from "@/data/naiosh-ownership-menu";
 import { Modal } from "@/components/ui/modal";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import type { FormField } from "@/data/module-configs";
 import { defaultLabeledCreateFields, fieldsFromColumnLabels } from "@/lib/form-field-labels";
 
@@ -96,12 +97,22 @@ function DataTable({
   seed,
   actionLabel = "إضافة",
   onAdd,
+  onViewRow,
+  onEditRow,
+  onSupplementRow,
+  onArchiveRow,
+  onDeleteRow,
 }: {
   title: string;
   columns: string[];
   seed: string[][];
   actionLabel?: string;
   onAdd?: () => void;
+  onViewRow?: (row: string[], index: number) => void;
+  onEditRow?: (row: string[], index: number) => void;
+  onSupplementRow?: (row: string[], index: number) => void;
+  onArchiveRow?: (row: string[], index: number) => void;
+  onDeleteRow?: (row: string[], index: number) => void;
 }) {
   return (
     <div className="panel overflow-hidden">
@@ -128,7 +139,7 @@ function DataTable({
                   {col}
                 </th>
               ))}
-              <th className="table-cell text-right">إجراءات</th>
+              <th className="table-cell text-right">الإجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -147,14 +158,17 @@ function DataTable({
                     </td>
                   ))}
                   <td className="table-cell text-right">
-                    <div className="flex gap-2 justify-end">
-                      <button type="button" className="btn btn-soft btn-xs">
-                        عرض
-                      </button>
-                      <button type="button" className="btn btn-soft btn-xs">
-                        تعديل
-                      </button>
-                    </div>
+                    <RowActions
+                      iconSet="fa"
+                      style={{ justifyContent: "flex-end" }}
+                      actions={standardRowActions({
+                        onView: () => onViewRow?.(row, idx),
+                        onEdit: () => onEditRow?.(row, idx),
+                        onAdd: () => onSupplementRow?.(row, idx),
+                        onArchive: () => onArchiveRow?.(row, idx),
+                        onDelete: () => onDeleteRow?.(row, idx),
+                      })}
+                    />
                   </td>
                 </tr>
               ))
@@ -197,7 +211,7 @@ function useLabeledAddModal(title: string, fields: FormField[]) {
     />
   );
 
-  return { openAdd, modal, rows };
+  return { openAdd, modal, rows, setRows };
 }
 
 function ownershipTypeFieldKey(fields: FormField[]): string | undefined {
@@ -213,23 +227,28 @@ function EntityOpsBody({ config, pageId }: { config: ErpPageConfig; pageId: stri
   const stats = config.stats ?? [];
   const seed = useMemo(() => config.seed ?? [], [config.seed]);
   const columns = useMemo(() => config.columns ?? [], [config.columns]);
-  const values = computeEntityStats(seed, stats);
   const fields = useMemo(
     () => (columns.length ? fieldsFromColumnLabels(columns) : defaultLabeledCreateFields(config.title)),
     [columns, config.title]
   );
   const { openAdd, modal, rows } = useLabeledAddModal(config.title, fields);
+  const [viewRow, setViewRow] = useState<Record<string, string> | null>(null);
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => new Set());
   const typeKey = useMemo(() => ownershipTypeFieldKey(fields), [fields]);
+
+  const rowKey = useCallback((row: string[]) => row.join("\u0001"), []);
+
   const localSeed = useMemo(() => {
-    if (!rows.length) return seed;
     const extras = rows.map((r) =>
       columns.map((col, i) => {
         const key = fields[i]?.key;
         return String((key ? r[key] : "") ?? r[col] ?? "—");
       })
     );
-    return [...extras, ...seed];
-  }, [rows, seed, columns, fields]);
+    return [...extras, ...seed].filter((row) => !hiddenKeys.has(rowKey(row)));
+  }, [rows, seed, columns, fields, hiddenKeys, rowKey]);
+
+  const values = computeEntityStats(localSeed, stats);
 
   useEffect(() => {
     if (!isOwnership || autoOpenedRef.current) return;
@@ -241,6 +260,26 @@ function EntityOpsBody({ config, pageId }: { config: ErpPageConfig; pageId: stri
     openAdd(seedData);
     router.replace(pathname, { scroll: false });
   }, [isOwnership, searchParams, typeKey, openAdd, router, pathname]);
+
+  const rowToRecord = useCallback(
+    (row: string[]) => {
+      const data: Record<string, string> = {};
+      columns.forEach((col, i) => {
+        const key = fields[i]?.key ?? col;
+        data[key] = row[i] ?? "";
+        data[col] = row[i] ?? "";
+      });
+      return data;
+    },
+    [columns, fields]
+  );
+
+  const hideRow = useCallback(
+    (row: string[]) => {
+      setHiddenKeys((prev) => new Set(prev).add(rowKey(row)));
+    },
+    [rowKey]
+  );
 
   return (
     <>
@@ -287,7 +326,7 @@ function EntityOpsBody({ config, pageId }: { config: ErpPageConfig; pageId: stri
               <span className="text-slate-500 text-sm font-bold">{item.label}</span>
               <i className={`fas ${item.icon} ${item.tone}`} aria-hidden />
             </div>
-            <p className="text-3xl font-black text-slate-800 m-0">{(values[item.key] ?? 0) + rows.length}</p>
+            <p className="text-3xl font-black text-slate-800 m-0">{values[item.key] ?? 0}</p>
           </div>
         ))}
       </div>
@@ -297,8 +336,51 @@ function EntityOpsBody({ config, pageId }: { config: ErpPageConfig; pageId: stri
         seed={localSeed}
         actionLabel={isOwnership ? "إضافة ملكية جديدة" : "إضافة"}
         onAdd={() => openAdd()}
+        onViewRow={(row) => setViewRow(rowToRecord(row))}
+        onEditRow={(row) => openAdd(rowToRecord(row))}
+        onSupplementRow={(row) => openAdd(rowToRecord(row))}
+        onArchiveRow={hideRow}
+        onDeleteRow={hideRow}
       />
       {modal}
+      {viewRow ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`عرض ${config.title}`}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.45)",
+            zIndex: 80,
+            display: "grid",
+            placeItems: "center",
+            padding: "1rem",
+          }}
+          onClick={() => setViewRow(null)}
+        >
+          <div
+            className="panel"
+            style={{ width: "min(560px, 100%)", padding: "1.25rem 1.5rem", maxHeight: "85vh", overflow: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h3 className="font-bold text-slate-800 m-0">عرض السجل</h3>
+              <button type="button" className="btn btn-soft btn-xs" onClick={() => setViewRow(null)}>
+                إغلاق
+              </button>
+            </div>
+            <dl className="m-0 grid gap-3">
+              {columns.map((col) => (
+                <div key={col} className="flex flex-wrap justify-between gap-2 border-b border-slate-100 pb-2">
+                  <dt className="text-sm font-bold text-slate-500 m-0">{col}</dt>
+                  <dd className="text-sm font-bold text-slate-800 m-0">{viewRow[col] || "—"}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -461,6 +543,25 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
         seed={seed}
         actionLabel="فاتورة"
         onAdd={openAdd}
+        onViewRow={(row) => {
+          const data: Record<string, unknown> = {};
+          columns.forEach((col, i) => {
+            const key = fields[i]?.key ?? col;
+            data[key] = row[i] ?? "";
+          });
+          openAdd(data);
+        }}
+        onEditRow={(row) => {
+          const data: Record<string, unknown> = {};
+          columns.forEach((col, i) => {
+            const key = fields[i]?.key ?? col;
+            data[key] = row[i] ?? "";
+          });
+          openAdd(data);
+        }}
+        onSupplementRow={() => openAdd()}
+        onArchiveRow={() => undefined}
+        onDeleteRow={() => undefined}
       />
       {modal}
     </>

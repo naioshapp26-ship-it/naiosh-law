@@ -121,6 +121,35 @@
     .btn-xs { padding: 4px 9px; font-size: 0.72rem; border-radius: 6px; gap: 4px; }
     .btn-icon { padding: 5px 8px; }
 
+    /* Unified row action pills (عرض / تعديل / إضافة / أرشفة / حذف) */
+    .row-actions { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+    .row-action {
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.7rem;
+      cursor: pointer;
+      font-size: 0.73rem;
+      font-weight: 600;
+      font-family: 'Cairo', sans-serif;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+    }
+    .row-action-view { background: rgba(37,99,235,0.1); color: #2563eb; }
+    .row-action-view:hover { background: rgba(37,99,235,0.18); }
+    .row-action-edit { background: rgba(195,21,42,0.07); color: #c3152a; }
+    .row-action-edit:hover { background: rgba(195,21,42,0.14); }
+    .row-action-add { background: rgba(34,197,94,0.1); color: #16a34a; }
+    .row-action-add:hover { background: rgba(34,197,94,0.18); }
+    .row-action-archive { background: rgba(100,116,139,0.1); color: #475569; }
+    .row-action-archive:hover { background: rgba(100,116,139,0.18); }
+    .row-action-delete { background: rgba(239,68,68,0.08); color: #dc2626; }
+    .row-action-delete:hover { background: rgba(239,68,68,0.15); }
+    .row-action-assign { background: rgba(14,165,233,0.1); color: #0284c7; }
+    .row-action-assign:hover { background: rgba(14,165,233,0.18); }
+
     /* ─── Badges ─── */
     .badge { border-radius: 9999px; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px; }
 
