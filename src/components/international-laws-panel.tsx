@@ -39,7 +39,14 @@ import {
   ADD_AXIS_FORM_FIELDS,
   appendCustomLegalAxis,
   createCustomLegalAxis,
+  hideAxis,
+  loadAxisOverrides,
   loadCustomLegalAxes,
+  loadHiddenAxisSlugs,
+  removeCustomLegalAxis,
+  updateCustomLegalAxis,
+  upsertAxisOverride,
+  type AxisPresentationOverride,
   type CustomLegalAxis,
 } from "@/lib/custom-legal-axes";
 
@@ -107,7 +114,24 @@ export function InternationalLawsHub() {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [customAxes, setCustomAxes] = useState<CustomLegalAxis[]>([]);
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([]);
+  const [overrides, setOverrides] = useState<Record<string, AxisPresentationOverride>>({});
   const [addAxisOpen, setAddAxisOpen] = useState(false);
+  const [editAxis, setEditAxis] = useState<{
+    slug: string;
+    isCustom: boolean;
+    title: string;
+    subtitle: string;
+    icon: string;
+    color: string;
+    description: string;
+  } | null>(null);
+  const [deleteAxis, setDeleteAxis] = useState<{
+    slug: string;
+    isCustom: boolean;
+    title: string;
+  } | null>(null);
+  const [deletingAxis, setDeletingAxis] = useState(false);
   const { show, Toast } = useToast();
 
   const load = useCallback(async () => {
@@ -127,6 +151,8 @@ export function InternationalLawsHub() {
 
   useEffect(() => {
     setCustomAxes(loadCustomLegalAxes());
+    setHiddenSlugs(loadHiddenAxisSlugs());
+    setOverrides(loadAxisOverrides());
   }, []);
 
   const seed = async () => {
@@ -148,26 +174,50 @@ export function InternationalLawsHub() {
 
   const canWrite = canWriteRole(user.role);
   const intlCustom = customAxes.filter((a) => a.source === "international" || a.source === "both");
+  const withOverride = <T extends { slug: string; title: string; subtitle: string; icon: string; color: string; description: string }>(
+    axis: T
+  ): T => {
+    const o = overrides[axis.slug];
+    if (!o) return axis;
+    return {
+      ...axis,
+      title: o.title?.trim() || axis.title,
+      subtitle: o.subtitle?.trim() || axis.subtitle,
+      icon: o.icon?.trim() || axis.icon,
+      color: o.color?.trim() || axis.color,
+      description: o.description?.trim() || axis.description,
+    };
+  };
   const axisCounts = [
-    ...internationalLawAxes.map((a) => ({
-      ...a,
-      count: entries.filter((e) => e.axisSlug === a.slug).length,
-      topicsCount: a.topics.length,
-      isCustom: false as const,
-    })),
-    ...intlCustom.map((a) => ({
-      id: a.id,
-      slug: a.slug,
-      title: a.title,
-      subtitle: a.subtitle,
-      icon: a.icon,
-      color: a.color,
-      description: a.description,
-      topics: [] as LawAxis["topics"],
-      count: entries.filter((e) => e.axisSlug === a.slug).length,
-      topicsCount: 0,
-      isCustom: true as const,
-    })),
+    ...internationalLawAxes
+      .filter((a) => !hiddenSlugs.includes(a.slug))
+      .map((a) => {
+        const axis = withOverride(a);
+        return {
+          ...axis,
+          count: entries.filter((e) => e.axisSlug === a.slug).length,
+          topicsCount: a.topics.length,
+          isCustom: false as const,
+        };
+      }),
+    ...intlCustom
+      .filter((a) => !hiddenSlugs.includes(a.slug))
+      .map((a) => {
+        const axis = withOverride(a);
+        return {
+          id: axis.id,
+          slug: axis.slug,
+          title: axis.title,
+          subtitle: axis.subtitle,
+          icon: axis.icon,
+          color: axis.color,
+          description: axis.description,
+          topics: [] as LawAxis["topics"],
+          count: entries.filter((e) => e.axisSlug === a.slug).length,
+          topicsCount: 0,
+          isCustom: true as const,
+        };
+      }),
   ];
 
   const handleAddAxis = (data: Record<string, unknown>) => {
@@ -175,6 +225,34 @@ export function InternationalLawsHub() {
     setCustomAxes(appendCustomLegalAxis(axis));
     setAddAxisOpen(false);
     show("success", `تمت إضافة المحور «${axis.title}»`);
+  };
+
+  const handleEditAxis = (data: Record<string, unknown>) => {
+    if (!editAxis) return;
+    if (editAxis.isCustom) {
+      setCustomAxes(updateCustomLegalAxis(editAxis.slug, data));
+    } else {
+      upsertAxisOverride(editAxis.slug, data);
+      setOverrides(loadAxisOverrides());
+    }
+    show("success", `تم تعديل المحور «${String(data.title ?? editAxis.title)}»`);
+    setEditAxis(null);
+  };
+
+  const confirmDeleteAxis = () => {
+    if (!deleteAxis) return;
+    setDeletingAxis(true);
+    try {
+      if (deleteAxis.isCustom) {
+        setCustomAxes(removeCustomLegalAxis(deleteAxis.slug));
+      } else {
+        setHiddenSlugs(hideAxis(deleteAxis.slug));
+      }
+      show("success", `تم حذف المحور «${deleteAxis.title}»`);
+      setDeleteAxis(null);
+    } finally {
+      setDeletingAxis(false);
+    }
   };
 
   return (
@@ -236,38 +314,66 @@ export function InternationalLawsHub() {
             }}
           >
             {axisCounts.map((axis) => (
-              <Link
+              <div
                 key={axis.slug}
-                href={axis.isCustom ? "/app/international-laws" : `/app/international-laws/${axis.slug}`}
                 className="card-white"
                 style={{
-                  display: "block",
                   padding: "1.35rem",
-                  textDecoration: "none",
                   borderRight: `4px solid ${axis.color}`,
                   transition: "transform 0.2s, box-shadow 0.2s",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.5rem" }}>
-                  <span style={{ fontSize: "1.5rem" }}>{axis.icon}</span>
-                  <div>
-                    <p style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 600 }}>{axis.subtitle}</p>
-                    <p style={{ fontWeight: 800, color: "#0a0a12", fontSize: "0.92rem", lineHeight: 1.4 }}>{axis.title}</p>
+                <Link
+                  href={axis.isCustom ? "/app/international-laws" : `/app/international-laws/${axis.slug}`}
+                  style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.5rem" }}>
+                    <span style={{ fontSize: "1.5rem" }}>{axis.icon}</span>
+                    <div>
+                      <p style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 600 }}>{axis.subtitle}</p>
+                      <p style={{ fontWeight: 800, color: "#0a0a12", fontSize: "0.92rem", lineHeight: 1.4 }}>{axis.title}</p>
+                    </div>
                   </div>
-                </div>
-                <p style={{ fontSize: "0.78rem", color: "#64748b", lineHeight: 1.6, marginBottom: "0.75rem" }}>
-                  {(axis.description || "").slice(0, 100)}
-                  {(axis.description || "").length > 100 ? "..." : ""}
-                </p>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.75rem", color: axis.color, fontWeight: 700 }}>
-                    {axis.isCustom ? "محور مخصص" : `${axis.topicsCount} موضوع`}
-                  </span>
-                  <span style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700 }}>
-                    {axis.count} سجل • ادخل ←
-                  </span>
-                </div>
-              </Link>
+                  <p style={{ fontSize: "0.78rem", color: "#64748b", lineHeight: 1.6, marginBottom: "0.75rem" }}>
+                    {(axis.description || "").slice(0, 100)}
+                    {(axis.description || "").length > 100 ? "..." : ""}
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.75rem", color: axis.color, fontWeight: 700 }}>
+                      {axis.isCustom ? "محور مخصص" : `${axis.topicsCount} موضوع`}
+                    </span>
+                    <span style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700 }}>
+                      {axis.count} سجل • ادخل ←
+                    </span>
+                  </div>
+                </Link>
+
+                {canWrite ? (
+                  <RowActions
+                    actions={standardRowActions({
+                      onEdit: () =>
+                        setEditAxis({
+                          slug: axis.slug,
+                          isCustom: axis.isCustom,
+                          title: axis.title,
+                          subtitle: axis.subtitle,
+                          icon: axis.icon,
+                          color: axis.color,
+                          description: axis.description,
+                        }),
+                      onDelete: () =>
+                        setDeleteAxis({
+                          slug: axis.slug,
+                          isCustom: axis.isCustom,
+                          title: axis.title,
+                        }),
+                    })}
+                  />
+                ) : null}
+              </div>
             ))}
           </div>
 
@@ -333,6 +439,43 @@ export function InternationalLawsHub() {
         saveLabel="إضافة المحور"
         enableParties={false}
         filesLabel="شواهد وملفات المحور (مستند · صورة · فيديو)"
+      />
+
+      <Modal
+        key={editAxis?.slug ?? "edit-axis-closed"}
+        open={!!editAxis}
+        title="تعديل محور قانوني"
+        fields={ADD_AXIS_FORM_FIELDS}
+        initial={
+          editAxis
+            ? {
+                title: editAxis.title,
+                subtitle: editAxis.subtitle,
+                icon: editAxis.icon,
+                color: editAxis.color,
+                description: editAxis.description,
+              }
+            : undefined
+        }
+        onSave={handleEditAxis}
+        onClose={() => setEditAxis(null)}
+        saveLabel="حفظ التعديل"
+        enableParties={false}
+        filesLabel="شواهد وملفات المحور (مستند · صورة · فيديو)"
+      />
+
+      <ConfirmDialog
+        open={!!deleteAxis}
+        title="تأكيد حذف المحور"
+        message={
+          deleteAxis
+            ? `هل تريد حذف المحور «${deleteAxis.title}»؟ لن يظهر بعد ذلك في قائمة المحاور.`
+            : ""
+        }
+        confirmLabel="حذف المحور"
+        loading={deletingAxis}
+        onConfirm={confirmDeleteAxis}
+        onCancel={() => setDeleteAxis(null)}
       />
     </div>
   );

@@ -7,6 +7,8 @@ import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { ModuleCard } from "@/components/module-card";
 import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { modules } from "@/data/modules";
 import { formatDate } from "@/lib/format";
 import {
@@ -23,7 +25,14 @@ import {
   ADD_AXIS_FORM_FIELDS,
   appendCustomLegalAxis,
   createCustomLegalAxis,
+  hideAxis,
+  loadAxisOverrides,
   loadCustomLegalAxes,
+  loadHiddenAxisSlugs,
+  removeCustomLegalAxis,
+  updateCustomLegalAxis,
+  upsertAxisOverride,
+  type AxisPresentationOverride,
   type CustomLegalAxis,
 } from "@/lib/custom-legal-axes";
 
@@ -89,20 +98,87 @@ export default function DashboardPage() {
   const { user, ready } = useSession(true);
   const [dashType, setDashType] = useState("system360");
   const [customAxes, setCustomAxes] = useState<CustomLegalAxis[]>([]);
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([]);
+  const [overrides, setOverrides] = useState<Record<string, AxisPresentationOverride>>({});
   const [addAxisOpen, setAddAxisOpen] = useState(false);
+  const [editAxis, setEditAxis] = useState<{
+    slug: string;
+    isCustom: boolean;
+    title: string;
+    subtitle: string;
+    icon: string;
+    color: string;
+    description: string;
+  } | null>(null);
+  const [deleteAxis, setDeleteAxis] = useState<{
+    slug: string;
+    isCustom: boolean;
+    title: string;
+  } | null>(null);
+  const [deletingAxis, setDeletingAxis] = useState(false);
 
   useEffect(() => {
     setCustomAxes(loadCustomLegalAxes());
+    setHiddenSlugs(loadHiddenAxisSlugs());
+    setOverrides(loadAxisOverrides());
   }, []);
 
-  const builtInAxes = imperialAxes.filter((a) => a.id <= 8);
-  const dashboardCustom = customAxes.filter((a) => a.source === "dashboard" || a.source === "both");
-  const allAxes: Array<ImperialAxis | CustomLegalAxis> = [...builtInAxes, ...dashboardCustom];
+  const withOverride = <T extends { slug: string; title: string; subtitle: string; icon: string; color: string; description?: string }>(
+    axis: T
+  ): T => {
+    const o = overrides[axis.slug];
+    if (!o) return axis;
+    return {
+      ...axis,
+      title: o.title?.trim() || axis.title,
+      subtitle: o.subtitle?.trim() || axis.subtitle,
+      icon: o.icon?.trim() || axis.icon,
+      color: o.color?.trim() || axis.color,
+      description: o.description?.trim() || axis.description || "",
+    };
+  };
+
+  const builtInAxes = imperialAxes
+    .filter((a) => a.id <= 8 && !hiddenSlugs.includes(a.slug))
+    .map((a) => withOverride(a));
+  const dashboardCustom = customAxes
+    .filter((a) => (a.source === "dashboard" || a.source === "both") && !hiddenSlugs.includes(a.slug))
+    .map((a) => withOverride(a));
+  const allAxes: Array<(ImperialAxis | CustomLegalAxis) & { isCustom?: boolean }> = [
+    ...builtInAxes.map((a) => ({ ...a, isCustom: false as const })),
+    ...dashboardCustom.map((a) => ({ ...a, isCustom: true as const })),
+  ];
 
   const handleAddAxis = (data: Record<string, unknown>) => {
     const axis = createCustomLegalAxis(data, "both");
     setCustomAxes(appendCustomLegalAxis(axis));
     setAddAxisOpen(false);
+  };
+
+  const handleEditAxis = (data: Record<string, unknown>) => {
+    if (!editAxis) return;
+    if (editAxis.isCustom) {
+      setCustomAxes(updateCustomLegalAxis(editAxis.slug, data));
+    } else {
+      upsertAxisOverride(editAxis.slug, data);
+      setOverrides(loadAxisOverrides());
+    }
+    setEditAxis(null);
+  };
+
+  const confirmDeleteAxis = () => {
+    if (!deleteAxis) return;
+    setDeletingAxis(true);
+    try {
+      if (deleteAxis.isCustom) {
+        setCustomAxes(removeCustomLegalAxis(deleteAxis.slug));
+      } else {
+        setHiddenSlugs(hideAxis(deleteAxis.slug));
+      }
+      setDeleteAxis(null);
+    } finally {
+      setDeletingAxis(false);
+    }
   };
 
   if (!ready || !user) {
@@ -306,31 +382,58 @@ export default function DashboardPage() {
                 transition={{ delay: 0.1 + i * 0.05 }}
                 whileHover={{ y: -6, scale: 1.02 }}
               >
-                <Link
-                  href={axis.href}
+                <div
                   className="card-white"
                   style={{
-                    display: "block",
                     padding: "1.25rem",
-                    textDecoration: "none",
                     borderTop: `3px solid ${axis.color}`,
                     height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.65rem",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: "1.3rem" }}>{axis.icon}</span>
-                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: axis.color }}>المحور {axis.id}</span>
-                  </div>
-                  <h3 style={{ fontWeight: 800, color: "#0a0a12", fontSize: "0.88rem", marginBottom: "0.35rem", lineHeight: 1.4 }}>
-                    {axis.title}
-                  </h3>
-                  <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.5rem" }}>{axis.subtitle}</p>
-                  <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 700 }}>
-                    {"items" in axis || "dropdowns" in axis
-                      ? `${countAxisItems(axis as ImperialAxis)} عنصر ←`
-                      : "محور مخصص ←"}
-                  </span>
-                </Link>
+                  <Link href={axis.href} style={{ textDecoration: "none", color: "inherit", display: "block", flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                      <span style={{ fontSize: "1.3rem" }}>{axis.icon}</span>
+                      <span style={{ fontSize: "0.7rem", fontWeight: 700, color: axis.color }}>المحور {axis.id}</span>
+                    </div>
+                    <h3 style={{ fontWeight: 800, color: "#0a0a12", fontSize: "0.88rem", marginBottom: "0.35rem", lineHeight: 1.4 }}>
+                      {axis.title}
+                    </h3>
+                    <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.5rem" }}>{axis.subtitle}</p>
+                    <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 700 }}>
+                      {"items" in axis || "dropdowns" in axis
+                        ? `${countAxisItems(axis as ImperialAxis)} عنصر ←`
+                        : "محور مخصص ←"}
+                    </span>
+                  </Link>
+                  {canWrite ? (
+                    <RowActions
+                      actions={standardRowActions({
+                        onEdit: () =>
+                          setEditAxis({
+                            slug: axis.slug,
+                            isCustom: !!axis.isCustom,
+                            title: axis.title,
+                            subtitle: axis.subtitle,
+                            icon: axis.icon,
+                            color: axis.color,
+                            description:
+                              "description" in axis && typeof axis.description === "string"
+                                ? axis.description
+                                : axis.subtitle,
+                          }),
+                        onDelete: () =>
+                          setDeleteAxis({
+                            slug: axis.slug,
+                            isCustom: !!axis.isCustom,
+                            title: axis.title,
+                          }),
+                      })}
+                    />
+                  ) : null}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -423,6 +526,43 @@ export default function DashboardPage() {
         saveLabel="إضافة المحور"
         enableParties={false}
         filesLabel="شواهد وملفات المحور (مستند · صورة · فيديو)"
+      />
+
+      <Modal
+        key={editAxis?.slug ?? "edit-axis-closed"}
+        open={!!editAxis}
+        title="تعديل محور قانوني"
+        fields={ADD_AXIS_FORM_FIELDS}
+        initial={
+          editAxis
+            ? {
+                title: editAxis.title,
+                subtitle: editAxis.subtitle,
+                icon: editAxis.icon,
+                color: editAxis.color,
+                description: editAxis.description,
+              }
+            : undefined
+        }
+        onSave={handleEditAxis}
+        onClose={() => setEditAxis(null)}
+        saveLabel="حفظ التعديل"
+        enableParties={false}
+        filesLabel="شواهد وملفات المحور (مستند · صورة · فيديو)"
+      />
+
+      <ConfirmDialog
+        open={!!deleteAxis}
+        title="تأكيد حذف المحور"
+        message={
+          deleteAxis
+            ? `هل تريد حذف المحور «${deleteAxis.title}»؟ لن يظهر بعد ذلك في قائمة المحاور.`
+            : ""
+        }
+        confirmLabel="حذف المحور"
+        loading={deletingAxis}
+        onConfirm={confirmDeleteAxis}
+        onCancel={() => setDeleteAxis(null)}
       />
     </AppShell>
   );

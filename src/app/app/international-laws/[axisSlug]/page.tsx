@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { InternationalLawsAxisPage } from "@/components/international-laws-panel";
 import { PageLoader } from "@/components/domain-page";
-import { axisBySlug } from "@/data/international-laws-structure";
+import { axisBySlug, type LawAxis } from "@/data/international-laws-structure";
+import { applyAxisOverride, isAxisHidden } from "@/lib/custom-legal-axes";
 import { useSession } from "@/lib/session";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -12,9 +13,20 @@ import Link from "next/link";
 function AxisContent() {
   const params = useParams();
   const slug = String(params.axisSlug ?? "");
-  const axis = axisBySlug[slug];
+  const [readyLocal, setReadyLocal] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const base: LawAxis | undefined = axisBySlug[slug];
+  const [axis, setAxis] = useState<LawAxis | undefined>(base);
 
-  if (!axis) {
+  useEffect(() => {
+    setHidden(isAxisHidden(slug));
+    setAxis(base ? applyAxisOverride(base) : undefined);
+    setReadyLocal(true);
+  }, [slug, base]);
+
+  if (!readyLocal) return <PageLoader />;
+
+  if (!axis || hidden) {
     return (
       <div style={{ textAlign: "center", padding: "4rem" }}>
         <p style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</p>
