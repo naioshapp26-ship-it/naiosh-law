@@ -5,12 +5,23 @@ import { useEffect, useMemo, useState } from "react";
 import type { ImperialAxis, NavDropdown, NavItem } from "@/data/empire-structure";
 import { resolveItemHref } from "@/lib/empire-routes";
 import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession, canWriteRole } from "@/lib/session";
 import {
   ADD_AXIS_ITEM_FORM_FIELDS,
   appendCustomAxisItem,
   createCustomAxisItem,
+  hideAxisItem,
+  isAxisItemHidden,
+  itemStorageKey,
+  loadAxisItemOverrides,
   loadCustomAxisItems,
+  loadHiddenAxisItemKeys,
+  removeCustomAxisItem,
+  updateCustomAxisItem,
+  upsertAxisItemOverride,
+  type AxisItemOverride,
   type CustomAxisItem,
 } from "@/lib/custom-axis-items";
 
@@ -19,37 +30,80 @@ type Props = {
   userName: string;
 };
 
-function ItemCard({ item }: { item: NavItem }) {
+type EditableItem = NavItem & { isCustom?: boolean };
+
+type EditTarget = {
+  id: string;
+  isCustom: boolean;
+  label: string;
+  href?: string;
+  moduleSlug?: string;
+  description?: string;
+};
+
+function ItemCard({
+  item,
+  canWrite,
+  onEdit,
+  onDelete,
+}: {
+  item: EditableItem;
+  canWrite: boolean;
+  onEdit: (item: EditableItem) => void;
+  onDelete: (item: EditableItem) => void;
+}) {
   const href = resolveItemHref(item);
   return (
-    <Link
-      href={href}
+    <div
       className="card-white"
       style={{
-        display: "block",
         padding: "1rem 1.15rem",
-        textDecoration: "none",
         borderRight: "3px solid rgba(195,21,42,0.35)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.65rem",
       }}
     >
-      <p style={{ fontWeight: 700, color: "#0a0a12", fontSize: "0.88rem", marginBottom: "0.25rem" }}>
-        {item.label}
-      </p>
-      {item.description && (
-        <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.35rem", lineHeight: 1.5 }}>
-          {item.description}
+      <Link href={href} style={{ textDecoration: "none", color: "inherit", display: "block", flex: 1 }}>
+        <p style={{ fontWeight: 700, color: "#0a0a12", fontSize: "0.88rem", marginBottom: "0.25rem" }}>
+          {item.label}
         </p>
-      )}
-      {item.moduleSlug ? (
-        <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 600 }}>وحدة تشغيلية ←</span>
-      ) : (
-        <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 600 }}>فتح ←</span>
-      )}
-    </Link>
+        {item.description && (
+          <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.35rem", lineHeight: 1.5 }}>
+            {item.description}
+          </p>
+        )}
+        {item.moduleSlug ? (
+          <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 600 }}>وحدة تشغيلية ←</span>
+        ) : (
+          <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 600 }}>فتح ←</span>
+        )}
+      </Link>
+      {canWrite ? (
+        <RowActions
+          actions={standardRowActions({
+            onEdit: () => onEdit(item),
+            onDelete: () => onDelete(item),
+          })}
+        />
+      ) : null}
+    </div>
   );
 }
 
-function DropdownSection({ dropdown, defaultOpen }: { dropdown: NavDropdown; defaultOpen?: boolean }) {
+function DropdownSection({
+  dropdown,
+  defaultOpen,
+  canWrite,
+  onEdit,
+  onDelete,
+}: {
+  dropdown: NavDropdown;
+  defaultOpen?: boolean;
+  canWrite: boolean;
+  onEdit: (item: EditableItem) => void;
+  onDelete: (item: EditableItem) => void;
+}) {
   const [open, setOpen] = useState(defaultOpen ?? false);
   return (
     <div className="card-white" style={{ overflow: "hidden", marginBottom: "0.85rem" }}>
@@ -89,7 +143,13 @@ function DropdownSection({ dropdown, defaultOpen }: { dropdown: NavDropdown; def
           }}
         >
           {dropdown.items.map((item) => (
-            <ItemCard key={item.id} item={item} />
+            <ItemCard
+              key={item.id}
+              item={{ ...item, isCustom: false }}
+              canWrite={canWrite}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       )}
@@ -97,28 +157,140 @@ function DropdownSection({ dropdown, defaultOpen }: { dropdown: NavDropdown; def
   );
 }
 
+function AddAxisItemButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="btn-primary"
+      style={{ padding: "0.55rem 1rem", fontSize: "0.82rem" }}
+    >
+      ＋ إضافة
+    </button>
+  );
+}
+
 export function AxisHubPage({ axis, userName }: Props) {
   const { user } = useSession();
   const canWrite = user ? canWriteRole(user.role) : false;
   const [customItems, setCustomItems] = useState<CustomAxisItem[]>([]);
+  const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
+  const [overrides, setOverrides] = useState<Record<string, AxisItemOverride>>({});
   const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EditTarget | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setCustomItems(loadCustomAxisItems(axis.slug));
+    setHiddenKeys(loadHiddenAxisItemKeys());
+    setOverrides(loadAxisItemOverrides());
   }, [axis.slug]);
 
-  const builtInCount = axis.items?.length ?? axis.dropdowns?.reduce((n, d) => n + d.items.length, 0) ?? 0;
-  const itemCount = builtInCount + customItems.length;
+  const withOverride = (item: NavItem): NavItem => {
+    const o = overrides[itemStorageKey(axis.slug, item.id)];
+    if (!o) return item;
+    return {
+      ...item,
+      label: o.label?.trim() || item.label,
+      href: o.href?.trim() || item.href,
+      moduleSlug: o.moduleSlug?.trim() || item.moduleSlug,
+      description: o.description?.trim() || item.description,
+    };
+  };
 
-  const flatItems = useMemo(() => {
-    const base = axis.items ?? [];
-    return [...base, ...customItems];
-  }, [axis.items, customItems]);
+  const isHidden = (itemId: string) =>
+    hiddenKeys.includes(itemStorageKey(axis.slug, itemId)) || isAxisItemHidden(axis.slug, itemId);
+
+  const visibleBuiltInItems = useMemo(() => {
+    return (axis.items ?? [])
+      .filter((item) => !isHidden(item.id))
+      .map((item) => ({ ...withOverride(item), isCustom: false as const }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers close over axis/overrides/hiddenKeys
+  }, [axis.items, axis.slug, overrides, hiddenKeys]);
+
+  const visibleCustomItems = useMemo(() => {
+    return customItems
+      .filter((item) => !isHidden(item.id))
+      .map((item) => ({ ...withOverride(item), isCustom: true as const }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customItems, axis.slug, overrides, hiddenKeys]);
+
+  const visibleDropdowns = useMemo(() => {
+    if (!axis.dropdowns) return [];
+    return axis.dropdowns
+      .map((dropdown) => ({
+        ...dropdown,
+        items: dropdown.items
+          .filter((item) => !isHidden(item.id))
+          .map((item) => withOverride(item)),
+      }))
+      .filter((dropdown) => dropdown.items.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [axis.dropdowns, axis.slug, overrides, hiddenKeys]);
+
+  const builtInCount =
+    visibleBuiltInItems.length ||
+    visibleDropdowns.reduce((n, d) => n + d.items.length, 0);
+  const itemCount = builtInCount + visibleCustomItems.length;
+
+  const flatItems = useMemo(
+    () => [...visibleBuiltInItems, ...visibleCustomItems],
+    [visibleBuiltInItems, visibleCustomItems]
+  );
 
   const handleAdd = (data: Record<string, unknown>) => {
     const item = createCustomAxisItem(axis.slug, data);
     setCustomItems(appendCustomAxisItem(item));
     setAddOpen(false);
+  };
+
+  const openEdit = (item: EditableItem) => {
+    setEditTarget({
+      id: item.id,
+      isCustom: !!item.isCustom,
+      label: item.label,
+      href: item.href,
+      moduleSlug: item.moduleSlug,
+      description: item.description,
+    });
+  };
+
+  const openDelete = (item: EditableItem) => {
+    setDeleteTarget({
+      id: item.id,
+      isCustom: !!item.isCustom,
+      label: item.label,
+      href: item.href,
+      moduleSlug: item.moduleSlug,
+      description: item.description,
+    });
+  };
+
+  const handleEdit = (data: Record<string, unknown>) => {
+    if (!editTarget) return;
+    if (editTarget.isCustom) {
+      setCustomItems(updateCustomAxisItem(axis.slug, editTarget.id, data));
+    } else {
+      upsertAxisItemOverride(axis.slug, editTarget.id, data);
+      setOverrides(loadAxisItemOverrides());
+    }
+    setEditTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      if (deleteTarget.isCustom) {
+        setCustomItems(removeCustomAxisItem(axis.slug, deleteTarget.id));
+      } else {
+        setHiddenKeys(hideAxisItem(axis.slug, deleteTarget.id));
+      }
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -181,27 +353,7 @@ export function AxisHubPage({ axis, userName }: Props) {
               مرحبًا {userName} — هذا المحور يحتوي على {itemCount} عنصرًا ضمن الهيكل السيادي الموحّد.
             </p>
           </div>
-          {canWrite && (
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              style={{
-                background: "#fff",
-                color: axis.color,
-                border: "none",
-                borderRadius: 12,
-                padding: "0.7rem 1.15rem",
-                fontWeight: 800,
-                fontSize: "0.88rem",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
-                flexShrink: 0,
-              }}
-            >
-              ＋ إضافة
-            </button>
-          )}
+          {canWrite && <AddAxisItemButton onClick={() => setAddOpen(true)} />}
         </div>
       </div>
 
@@ -218,7 +370,7 @@ export function AxisHubPage({ axis, userName }: Props) {
           { label: "إجمالي العناصر", value: itemCount, icon: "📋" },
           { label: "المحور", value: `#${axis.id}`, icon: axis.icon },
           ...(axis.dropdowns
-            ? [{ label: "القوائم المنسدلة", value: axis.dropdowns.length, icon: "📂" }]
+            ? [{ label: "القوائم المنسدلة", value: visibleDropdowns.length, icon: "📂" }]
             : []),
         ].map((s) => (
           <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
@@ -244,16 +396,7 @@ export function AxisHubPage({ axis, userName }: Props) {
             <h2 style={{ fontSize: "1.05rem", fontWeight: 800, margin: 0, color: "#0a0a12" }}>
               القوائم المنسدلة — التصنيف القانوني
             </h2>
-            {canWrite && (
-              <button
-                type="button"
-                onClick={() => setAddOpen(true)}
-                className="btn-primary"
-                style={{ padding: "0.55rem 1rem", fontSize: "0.82rem" }}
-              >
-                ＋ إضافة
-              </button>
-            )}
+            {canWrite && <AddAxisItemButton onClick={() => setAddOpen(true)} />}
           </div>
           {axis.slug === "legal-classification" && (
             <Link
@@ -276,10 +419,17 @@ export function AxisHubPage({ axis, userName }: Props) {
               📚 فتح منظومة التصنيف القانوني الكاملة (8 محاور) ←
             </Link>
           )}
-          {axis.dropdowns.map((d, i) => (
-            <DropdownSection key={d.id} dropdown={d} defaultOpen={i === 0} />
+          {visibleDropdowns.map((d, i) => (
+            <DropdownSection
+              key={d.id}
+              dropdown={d}
+              defaultOpen={i === 0}
+              canWrite={canWrite}
+              onEdit={openEdit}
+              onDelete={openDelete}
+            />
           ))}
-          {customItems.length > 0 && (
+          {visibleCustomItems.length > 0 && (
             <div style={{ marginTop: "1.25rem" }}>
               <h3 style={{ fontSize: "0.95rem", fontWeight: 800, marginBottom: "0.75rem", color: "#0a0a12" }}>
                 عناصر مضافة
@@ -291,8 +441,14 @@ export function AxisHubPage({ axis, userName }: Props) {
                   gap: "0.85rem",
                 }}
               >
-                {customItems.map((item) => (
-                  <ItemCard key={item.id} item={item} />
+                {visibleCustomItems.map((item) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    canWrite={canWrite}
+                    onEdit={openEdit}
+                    onDelete={openDelete}
+                  />
                 ))}
               </div>
             </div>
@@ -311,16 +467,7 @@ export function AxisHubPage({ axis, userName }: Props) {
             }}
           >
             <h2 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, color: "#0a0a12" }}>عناصر المحور</h2>
-            {canWrite && (
-              <button
-                type="button"
-                onClick={() => setAddOpen(true)}
-                className="btn-primary"
-                style={{ padding: "0.55rem 1rem", fontSize: "0.82rem" }}
-              >
-                ＋ إضافة
-              </button>
-            )}
+            {canWrite && <AddAxisItemButton onClick={() => setAddOpen(true)} />}
           </div>
           <div
             style={{
@@ -330,7 +477,13 @@ export function AxisHubPage({ axis, userName }: Props) {
             }}
           >
             {flatItems.map((item) => (
-              <ItemCard key={item.id} item={item} />
+              <ItemCard
+                key={item.id}
+                item={item}
+                canWrite={canWrite}
+                onEdit={openEdit}
+                onDelete={openDelete}
+              />
             ))}
           </div>
         </div>
@@ -361,6 +514,42 @@ export function AxisHubPage({ axis, userName }: Props) {
         saveLabel="إضافة"
         enableParties={false}
         filesLabel="شواهد وملفات العنصر (مستند · صورة · فيديو)"
+      />
+
+      <Modal
+        key={editTarget?.id ?? "edit-item-closed"}
+        open={!!editTarget}
+        title={`تعديل عنصر — ${axis.title}`}
+        fields={ADD_AXIS_ITEM_FORM_FIELDS}
+        initial={
+          editTarget
+            ? {
+                label: editTarget.label,
+                href: editTarget.href ?? "",
+                moduleSlug: editTarget.moduleSlug ?? "",
+                description: editTarget.description ?? "",
+              }
+            : undefined
+        }
+        onSave={handleEdit}
+        onClose={() => setEditTarget(null)}
+        saveLabel="حفظ التعديل"
+        enableParties={false}
+        filesLabel="شواهد وملفات العنصر (مستند · صورة · فيديو)"
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="تأكيد حذف العنصر"
+        message={
+          deleteTarget
+            ? `هل تريد حذف العنصر «${deleteTarget.label}»؟ لن يظهر بعد ذلك ضمن عناصر هذا المحور.`
+            : ""
+        }
+        confirmLabel="حذف العنصر"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );
