@@ -7,13 +7,17 @@ import { LandingPromoBar } from "@/components/landing-promo-bar";
 import { BrandLogo } from "@/components/brand-logo";
 import { ensureErpHomepageStylesheets, setHomepageMode } from "@/components/homepage-route-chrome";
 import {
+  LAW_INCUBATOR_INTRO,
+  LAW_INCUBATOR_STACK,
+  LAW_INCUBATOR_TITLE,
   LAW_PLATFORM_CARDS,
+  LAW_PLATFORM_CATEGORIES,
   LAW_PLATFORMS_INTRO,
   LAW_PLATFORMS_STATS,
   LAW_PLATFORMS_TITLE,
 } from "@/data/law-platforms";
 
-const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=platforms-hub-20260721";
+const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=platforms-catalog-20260724";
 
 export default function PlatformsPage() {
   useEffect(() => {
@@ -49,7 +53,7 @@ export default function PlatformsPage() {
             ))}
           </div>
 
-          <div className="landing-hub-grid" aria-label="أقسام المنصة">
+          <div className="landing-hub-grid" aria-label="أقسام المنصات">
             {LAW_PLATFORM_CARDS.map((card) => (
               <Link key={card.id} className="landing-hub-card" href={card.href}>
                 <span className="landing-hub-card-icon" aria-hidden="true">
@@ -61,6 +65,64 @@ export default function PlatformsPage() {
               </Link>
             ))}
           </div>
+
+          <div className="landing-hub-details" aria-label="كتالوج المنصات والمكاتب والمراكز والأكاديميات">
+            {LAW_PLATFORM_CATEGORIES.map((cat) => (
+              <section
+                key={cat.id}
+                id={cat.id}
+                className={`landing-hub-detail${cat.wide ? " landing-hub-detail-wide" : ""}`}
+              >
+                <div className="landing-hub-detail-head">
+                  <span className="landing-hub-card-icon" aria-hidden="true">
+                    <i className={`fas ${cat.icon}`} />
+                  </span>
+                  <div>
+                    <h2>
+                      {cat.title}
+                      <span style={{ marginInlineStart: 8, color: "#c50712", fontWeight: 800 }}>
+                        ({cat.items.length})
+                      </span>
+                    </h2>
+                    <p>{cat.desc}</p>
+                  </div>
+                </div>
+                <ol className="landing-hub-detail-list">
+                  {cat.items.map((item, index) => (
+                    <li key={`${cat.id}-${index}`}>
+                      <span className="num">{index + 1}</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ))}
+          </div>
+
+          <section
+            id="naiosh-360-incubators"
+            className="landing-hub-detail landing-hub-detail-wide"
+            style={{ marginTop: 18 }}
+            aria-label={LAW_INCUBATOR_TITLE}
+          >
+            <div className="landing-hub-detail-head">
+              <span className="landing-hub-card-icon" aria-hidden="true">
+                <i className="fas fa-crown" />
+              </span>
+              <div>
+                <h2>{LAW_INCUBATOR_TITLE}</h2>
+                <p>{LAW_INCUBATOR_INTRO}</p>
+              </div>
+            </div>
+            <ol className="landing-hub-detail-list">
+              {LAW_INCUBATOR_STACK.map((item, index) => (
+                <li key={`incubator-${index}`}>
+                  <span className="num">{index + 1}</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
 
           <div className="landing-hub-actions">
             <Link className="btn primary" href="/app/dashboard">
