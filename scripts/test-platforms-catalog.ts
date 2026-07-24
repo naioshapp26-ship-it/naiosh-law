@@ -43,7 +43,9 @@ assert(LAW_INCUBATOR_STACK.includes("نظام ذكاء اصطناعي موحد (
 const page = readFileSync(join(process.cwd(), "src/components/platforms-page.tsx"), "utf8");
 assert(page.includes("LAW_PLATFORM_CATEGORIES"), "platforms page must render categories");
 assert(page.includes("LAW_INCUBATOR_STACK"), "platforms page must render incubator stack");
-assert(page.includes("landing-hub-detail-wide"), "wide category layout class missing");
+assert(page.includes("platforms-overview-grid"), "overview 2x2 card grid missing");
+assert(page.includes("platforms-items-grid"), "ordered items grid missing");
+assert(page.includes("platforms-item-card"), "item card class missing");
 assert(page.includes("naiosh-360-incubators"), "incubator section id missing");
 
 const totalItems = LAW_PLATFORM_CATEGORIES.reduce((n, c) => n + c.items.length, 0);

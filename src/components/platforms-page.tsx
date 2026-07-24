@@ -17,7 +17,7 @@ import {
   LAW_PLATFORMS_TITLE,
 } from "@/data/law-platforms";
 
-const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=platforms-catalog-20260724";
+const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=platforms-cards-ordered-20260724";
 
 export default function PlatformsPage() {
   useEffect(() => {
@@ -38,13 +38,17 @@ export default function PlatformsPage() {
       <Navbar variant="landing" />
 
       <main className="container" id="landing-hub-root" style={{ paddingTop: 24 }}>
-        <section className="landing-hub" aria-label="المنصات">
-          <header className="landing-hub-head">
-            <h1>{LAW_PLATFORMS_TITLE}</h1>
-            <p>{LAW_PLATFORMS_INTRO}</p>
+        <section className="landing-hub platforms-catalog" aria-label="المنصات">
+          <header className="landing-hub-head" style={{ textAlign: "center" }}>
+            <h1 style={{ textAlign: "center" }}>{LAW_PLATFORMS_TITLE}</h1>
+            <p style={{ marginInline: "auto", textAlign: "center" }}>{LAW_PLATFORMS_INTRO}</p>
           </header>
 
-          <div className="landing-hub-stats" aria-label="إحصائيات المنصات">
+          <div
+            className="landing-hub-stats"
+            aria-label="إحصائيات المنصات"
+            style={{ justifyContent: "center" }}
+          >
             {LAW_PLATFORMS_STATS.map((stat) => (
               <article key={stat.label} className="landing-hub-stat">
                 <strong>{stat.value}</strong>
@@ -53,78 +57,76 @@ export default function PlatformsPage() {
             ))}
           </div>
 
-          <div className="landing-hub-grid" aria-label="أقسام المنصات">
+          {/* كروت الأقسام — شبكة 2×2 مرتبة */}
+          <div className="platforms-overview-grid" aria-label="أقسام المنصات">
             {LAW_PLATFORM_CARDS.map((card) => (
-              <Link key={card.id} className="landing-hub-card" href={card.href}>
-                <span className="landing-hub-card-icon" aria-hidden="true">
+              <Link key={card.id} className="platforms-overview-card" href={card.href}>
+                <span className="platforms-overview-icon" aria-hidden="true">
                   <i className={`fas ${card.icon}`} />
                 </span>
                 <h3>{card.title}</h3>
                 <p>{card.desc}</p>
-                <span className="landing-hub-card-cta">{card.cta}</span>
+                <span className="platforms-overview-cta">{card.cta} ←</span>
               </Link>
             ))}
           </div>
 
-          <div className="landing-hub-details" aria-label="كتالوج المنصات والمكاتب والمراكز والأكاديميات">
+          {/* أقسام الكتالوج — كروت مرقّمة مرتبة */}
+          <div className="platforms-sections" aria-label="كتالوج المنصات والمكاتب والمراكز والأكاديميات">
             {LAW_PLATFORM_CATEGORIES.map((cat) => (
-              <section
-                key={cat.id}
-                id={cat.id}
-                className={`landing-hub-detail${cat.wide ? " landing-hub-detail-wide" : ""}`}
-              >
-                <div className="landing-hub-detail-head">
+              <section key={cat.id} id={cat.id} className="platforms-section-card">
+                <div className="platforms-section-head">
                   <span className="landing-hub-card-icon" aria-hidden="true">
                     <i className={`fas ${cat.icon}`} />
                   </span>
                   <div>
                     <h2>
                       {cat.title}
-                      <span style={{ marginInlineStart: 8, color: "#c50712", fontWeight: 800 }}>
-                        ({cat.items.length})
-                      </span>
+                      <span className="count">({cat.items.length})</span>
                     </h2>
                     <p>{cat.desc}</p>
                   </div>
                 </div>
-                <ol className="landing-hub-detail-list">
+                <ol className="platforms-items-grid">
                   {cat.items.map((item, index) => (
-                    <li key={`${cat.id}-${index}`}>
-                      <span className="num">{index + 1}</span>
-                      <span>{item}</span>
+                    <li key={`${cat.id}-${index}`} className="platforms-item-card">
+                      <span className="platforms-item-num">{index + 1}</span>
+                      <span className="platforms-item-label">{item}</span>
                     </li>
                   ))}
                 </ol>
               </section>
             ))}
+
+            <section
+              id="naiosh-360-incubators"
+              className="platforms-section-card"
+              aria-label={LAW_INCUBATOR_TITLE}
+            >
+              <div className="platforms-section-head">
+                <span className="landing-hub-card-icon" aria-hidden="true">
+                  <i className="fas fa-crown" />
+                </span>
+                <div>
+                  <h2>
+                    {LAW_INCUBATOR_TITLE}
+                    <span className="count">({LAW_INCUBATOR_STACK.length})</span>
+                  </h2>
+                  <p>{LAW_INCUBATOR_INTRO}</p>
+                </div>
+              </div>
+              <ol className="platforms-items-grid">
+                {LAW_INCUBATOR_STACK.map((item, index) => (
+                  <li key={`incubator-${index}`} className="platforms-item-card">
+                    <span className="platforms-item-num">{index + 1}</span>
+                    <span className="platforms-item-label">{item}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
           </div>
 
-          <section
-            id="naiosh-360-incubators"
-            className="landing-hub-detail landing-hub-detail-wide"
-            style={{ marginTop: 18 }}
-            aria-label={LAW_INCUBATOR_TITLE}
-          >
-            <div className="landing-hub-detail-head">
-              <span className="landing-hub-card-icon" aria-hidden="true">
-                <i className="fas fa-crown" />
-              </span>
-              <div>
-                <h2>{LAW_INCUBATOR_TITLE}</h2>
-                <p>{LAW_INCUBATOR_INTRO}</p>
-              </div>
-            </div>
-            <ol className="landing-hub-detail-list">
-              {LAW_INCUBATOR_STACK.map((item, index) => (
-                <li key={`incubator-${index}`}>
-                  <span className="num">{index + 1}</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          <div className="landing-hub-actions">
+          <div className="landing-hub-actions" style={{ justifyContent: "center" }}>
             <Link className="btn primary" href="/app/dashboard">
               لوحة المنصات
             </Link>
