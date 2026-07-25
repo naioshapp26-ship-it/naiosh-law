@@ -53,12 +53,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    if (document.querySelector('link[data-erp-hq]')) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "/erp-app/hq.css";
-    link.setAttribute("data-erp-hq", "1");
-    document.head.appendChild(link);
+    const ensure = () => {
+      if (!document.querySelector('link[data-erp-hq]')) {
+        const hq = document.createElement("link");
+        hq.rel = "stylesheet";
+        hq.href = "/erp-app/hq.css";
+        hq.setAttribute("data-erp-hq", "1");
+        document.head.appendChild(hq);
+      }
+      // Keep studio.css present — Next head reconciliation can drop it on soft nav.
+      if (!document.querySelector('link[data-erp-studio]')) {
+        const studio = document.createElement("link");
+        studio.rel = "stylesheet";
+        studio.href = "/erp-app/studio.css?v=first-paint-20260725";
+        studio.setAttribute("data-erp-studio", "1");
+        document.head.appendChild(studio);
+      }
+    };
+    ensure();
+    const observer = new MutationObserver(ensure);
+    observer.observe(document.head, { childList: true });
+    return () => observer.disconnect();
   }, []);
 
   const role = (user?.role ?? "client") as UserRole;

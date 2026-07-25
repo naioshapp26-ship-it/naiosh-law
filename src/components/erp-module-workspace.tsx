@@ -21,10 +21,11 @@ import { defaultLabeledCreateFields, fieldsFromColumnLabels } from "@/lib/form-f
 
 function useErpStudioCss() {
   useEffect(() => {
+    // Prefer stylesheet already declared in root layout (first paint).
     if (document.querySelector('link[data-erp-studio]')) return;
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/erp-app/studio.css";
+    link.href = "/erp-app/studio.css?v=first-paint-20260725";
     link.setAttribute("data-erp-studio", "1");
     document.head.appendChild(link);
   }, []);
