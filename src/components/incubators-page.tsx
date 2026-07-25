@@ -7,19 +7,16 @@ import { LandingPromoBar } from "@/components/landing-promo-bar";
 import { BrandLogo } from "@/components/brand-logo";
 import { ensureErpHomepageStylesheets, setHomepageMode } from "@/components/homepage-route-chrome";
 import {
-  LAW_INCUBATOR_INTRO,
-  LAW_INCUBATOR_STACK,
-  LAW_INCUBATOR_TITLE,
-  LAW_PLATFORM_CARDS,
-  LAW_PLATFORM_CATEGORIES,
-  LAW_PLATFORMS_INTRO,
-  LAW_PLATFORMS_STATS,
-  LAW_PLATFORMS_TITLE,
-} from "@/data/law-platforms";
+  LAW_INCUBATOR_CARDS,
+  LAW_INCUBATOR_CATEGORIES,
+  LAW_INCUBATORS_INTRO,
+  LAW_INCUBATORS_STATS,
+  LAW_INCUBATORS_TITLE,
+} from "@/data/law-incubators";
 
 const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=platforms-cards-ordered-20260724";
 
-export default function PlatformsPage() {
+export default function IncubatorsPage() {
   useEffect(() => {
     ensureErpHomepageStylesheets();
     setHomepageMode(true);
@@ -38,18 +35,18 @@ export default function PlatformsPage() {
       <Navbar variant="landing" />
 
       <main className="container" id="landing-hub-root" style={{ paddingTop: 24 }}>
-        <section className="landing-hub platforms-catalog" aria-label="المنصات">
+        <section className="landing-hub platforms-catalog" aria-label="الحاضنات">
           <header className="landing-hub-head" style={{ textAlign: "center" }}>
-            <h1 style={{ textAlign: "center" }}>{LAW_PLATFORMS_TITLE}</h1>
-            <p style={{ marginInline: "auto", textAlign: "center" }}>{LAW_PLATFORMS_INTRO}</p>
+            <h1 style={{ textAlign: "center" }}>{LAW_INCUBATORS_TITLE}</h1>
+            <p style={{ marginInline: "auto", textAlign: "center" }}>{LAW_INCUBATORS_INTRO}</p>
           </header>
 
           <div
             className="landing-hub-stats"
-            aria-label="إحصائيات المنصات"
+            aria-label="إحصائيات الحاضنات"
             style={{ justifyContent: "center" }}
           >
-            {LAW_PLATFORMS_STATS.map((stat) => (
+            {LAW_INCUBATORS_STATS.map((stat) => (
               <article key={stat.label} className="landing-hub-stat">
                 <strong>{stat.value}</strong>
                 <span>{stat.label}</span>
@@ -57,9 +54,8 @@ export default function PlatformsPage() {
             ))}
           </div>
 
-          {/* كروت الأقسام — شبكة 2×2 مرتبة */}
-          <div className="platforms-overview-grid" aria-label="أقسام المنصات">
-            {LAW_PLATFORM_CARDS.map((card) => (
+          <div className="platforms-overview-grid" aria-label="أقسام الحاضنات">
+            {LAW_INCUBATOR_CARDS.map((card) => (
               <Link key={card.id} className="platforms-overview-card" href={card.href}>
                 <span className="platforms-overview-icon" aria-hidden="true">
                   <i className={`fas ${card.icon}`} />
@@ -71,9 +67,8 @@ export default function PlatformsPage() {
             ))}
           </div>
 
-          {/* أقسام الكتالوج — كروت مرقّمة مرتبة */}
-          <div className="platforms-sections" aria-label="كتالوج المنصات والمكاتب والمراكز والأكاديميات">
-            {LAW_PLATFORM_CATEGORIES.map((cat) => (
+          <div className="platforms-sections" aria-label="كتالوج حاضنات إمبراطورية نايوش">
+            {LAW_INCUBATOR_CATEGORIES.map((cat) => (
               <section key={cat.id} id={cat.id} className="platforms-section-card">
                 <div className="platforms-section-head">
                   <span className="landing-hub-card-icon" aria-hidden="true">
@@ -97,38 +92,11 @@ export default function PlatformsPage() {
                 </ol>
               </section>
             ))}
-
-            <section
-              id="naiosh-360-incubators"
-              className="platforms-section-card"
-              aria-label={LAW_INCUBATOR_TITLE}
-            >
-              <div className="platforms-section-head">
-                <span className="landing-hub-card-icon" aria-hidden="true">
-                  <i className="fas fa-crown" />
-                </span>
-                <div>
-                  <h2>
-                    {LAW_INCUBATOR_TITLE}
-                    <span className="count">({LAW_INCUBATOR_STACK.length})</span>
-                  </h2>
-                  <p>{LAW_INCUBATOR_INTRO}</p>
-                </div>
-              </div>
-              <ol className="platforms-items-grid">
-                {LAW_INCUBATOR_STACK.map((item, index) => (
-                  <li key={`incubator-${index}`} className="platforms-item-card">
-                    <span className="platforms-item-num">{index + 1}</span>
-                    <span className="platforms-item-label">{item}</span>
-                  </li>
-                ))}
-              </ol>
-            </section>
           </div>
 
           <div className="landing-hub-actions" style={{ justifyContent: "center" }}>
             <Link className="btn primary" href="/app/dashboard">
-              لوحة المنصات
+              لوحة الحاضنات
             </Link>
             <Link className="btn ghost" href="/login">
               تسجيل الدخول
@@ -141,7 +109,7 @@ export default function PlatformsPage() {
         <Link href="/app/dashboard" title="إضافة" aria-label="إضافة">
           <i className="fas fa-plus" />
         </Link>
-        <Link href="/platforms" title="المنصات" aria-label="المنصات">
+        <Link href="/incubators" title="الحاضنات" aria-label="الحاضنات">
           <i className="fas fa-heart" />
         </Link>
         <Link href="/#footer-support" title="رسائل" aria-label="رسائل">
@@ -168,7 +136,6 @@ export default function PlatformsPage() {
             <h3>روابط سريعة</h3>
             <Link href="/">الرئيسية</Link>
             <Link href="/services">خدماتنا</Link>
-            <Link href="/branches">الفروع</Link>
             <Link href="/platforms">المنصات</Link>
             <Link href="/incubators">الحاضنات</Link>
           </section>

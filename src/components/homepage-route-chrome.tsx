@@ -78,6 +78,8 @@ export function HomepageRouteChrome() {
         pathname.startsWith("/branches/") ||
         pathname === "/platforms" ||
         pathname.startsWith("/platforms/") ||
+        pathname === "/incubators" ||
+        pathname.startsWith("/incubators/") ||
         pathname === "/ads" ||
         pathname.startsWith("/ads/")
     );
