@@ -9,6 +9,7 @@
     "lint": "eslint",
     "audit:form-labels": "tsx scripts/audit-form-labels.ts",
     "test:ownership-form": "tsx scripts/test-ownership-form-flow.ts",
+    "test:my-tasks-columns": "tsx scripts/test-my-tasks-columns.ts",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",

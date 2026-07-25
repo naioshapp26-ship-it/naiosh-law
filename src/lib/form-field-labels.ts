@@ -59,6 +59,12 @@ export function fieldsFromColumnLabels(columns: string[]): FormField[] {
     if (/حالة/.test(label)) {
       return { key, label, type: "select", required: true, options: [...STATUS_OPTIONS] };
     }
+    if (/^المكلف$/.test(label)) {
+      return { key, label, type: "text", required: true, placeholder: "اسم المكلف بالمهمة" };
+    }
+    if (/^الموضوع$/.test(label)) {
+      return { key, label, type: "text", required: true, placeholder: "موضوع المهمة" };
+    }
     if (/نوع الملكية/.test(label)) {
       return {
         key,
