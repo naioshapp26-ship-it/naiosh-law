@@ -16,8 +16,8 @@ assert(config.title === "القانونية والمحاماة", `unexpected tit
 const columns = config.columns ?? [];
 const expected = [
   "الملف",
-  "طرف أول الجوال",
-  "طرف ثاني الجوال",
+  "جوال طرف أول",
+  "جوال طرف ثاني",
   "الدولة",
   "النوع",
   "المحامي",
@@ -34,8 +34,8 @@ expected.forEach((label, i) => {
 
 // Columns must sit beside الملف (right after it in RTL table header order)
 assert(columns[0] === "الملف", "الملف must remain first column");
-assert(columns[1] === "طرف أول الجوال", "طرف أول الجوال must be next to الملف");
-assert(columns[2] === "طرف ثاني الجوال", "طرف ثاني الجوال must follow first-party mobile");
+assert(columns[1] === "جوال طرف أول", "جوال طرف أول must be next to الملف");
+assert(columns[2] === "جوال طرف ثاني", "جوال طرف ثاني must follow first-party mobile");
 assert(columns[3] === "الدولة", "الدولة must follow second-party mobile");
 
 const seed = config.seed ?? [];
