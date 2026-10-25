@@ -17,8 +17,8 @@ const STATS = [
 ] as const;
 
 /**
- * Pixel-oriented legal hero — full-bleed desk image + cinematic navy fog,
- * matching the approved navy/gold reference layout.
+ * Legal hero — full-bleed desk image + cinematic navy fog.
+ * Content column parks on the visual RIGHT via RTL flex (not absolute offsets).
  */
 export function EmpireLandingHero() {
   return (

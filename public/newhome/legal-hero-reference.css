@@ -1,4 +1,4 @@
-/* Pixel-reference legal hero + navy header — v=hero-approved-comp-20261026d */
+/* Pixel-reference legal hero + navy header — v=hero-rtl-right-20261026 */
 
 /* ─── Header (defeat light shell / pink leftovers) ─── */
 body.homepage .top-nav {
@@ -134,15 +134,15 @@ body.homepage .hero.hero-legal-ref .hero-legal-bg img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
-  /* Anchor desk props toward the visible right half (approved crop) */
-  object-position: 80% 36% !important;
+  /* Image stage on visual LEFT — keep gavel/folio readable; text sits on the right */
+  object-position: 38% 40% !important;
   transform: none !important;
   display: block !important;
 }
 
 /*
- * Cinematic fog: denser on visual LEFT (text), clearer on RIGHT (desk props).
- * Tuned toward approved reference brightness L/M/R ≈ 25 / 37 / 105.
+ * Fog denser on visual RIGHT (text column), clearer on LEFT (legal desk props).
+ * Root cause of prior left parking was direction:ltr + justify-content:flex-start.
  */
 body.homepage .hero.hero-legal-ref .hero-legal-fog {
   position: absolute !important;
@@ -150,34 +150,34 @@ body.homepage .hero.hero-legal-ref .hero-legal-fog {
   pointer-events: none !important;
   background:
     linear-gradient(
-      90deg,
-      rgba(6, 12, 22, 0.98) 0%,
-      rgba(8, 14, 26, 0.95) 16%,
-      rgba(11, 20, 36, 0.88) 34%,
-      rgba(11, 20, 36, 0.62) 50%,
-      rgba(11, 20, 36, 0.24) 66%,
-      rgba(11, 20, 36, 0.06) 82%,
+      270deg,
+      rgba(6, 12, 22, 0.97) 0%,
+      rgba(8, 14, 26, 0.94) 16%,
+      rgba(11, 20, 36, 0.86) 34%,
+      rgba(11, 20, 36, 0.55) 52%,
+      rgba(11, 20, 36, 0.2) 72%,
+      rgba(11, 20, 36, 0.05) 88%,
       rgba(11, 20, 36, 0) 100%
     ),
     linear-gradient(
       180deg,
       rgba(11, 20, 36, 0.48) 0%,
       rgba(11, 20, 36, 0.08) 28%,
-      rgba(11, 20, 36, 0.14) 64%,
-      rgba(6, 12, 22, 0.82) 100%
+      rgba(11, 20, 36, 0.16) 64%,
+      rgba(6, 12, 22, 0.8) 100%
     ) !important;
 }
 
 /*
- * Shell: full-bleed stage with generous padding.
- * Content parks on the visual LEFT (approved mock), Arabic stays RTL/right-aligned inside.
+ * RTL shell: flex-start parks the content column on the visual RIGHT.
+ * Safe inline-start (right) margin ≈ 6–8vw. No absolute / translate hacks.
  */
 body.homepage .hero.hero-legal-ref .hero-inner.hero-legal-inner {
   position: relative !important;
   z-index: 2 !important;
   display: flex !important;
   flex-direction: row !important;
-  direction: ltr !important; /* flex-start = visual LEFT for the content column */
+  direction: rtl !important;
   grid-template-columns: none !important;
   grid-template-areas: none !important;
   grid-template-rows: none !important;
@@ -193,11 +193,12 @@ body.homepage .hero.hero-legal-ref .hero-inner.hero-legal-inner {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
-  padding-block: clamp(28px, 5vh, 64px) !important;
-  padding-inline: clamp(28px, 3.5vw, 64px) !important;
+  padding-block: clamp(36px, 6vh, 80px) !important;
+  padding-inline-start: clamp(48px, 7vw, 128px) !important; /* visual RIGHT */
+  padding-inline-end: clamp(36px, 5vw, 96px) !important; /* visual LEFT */
 }
 
-/* Content column: roomy Arabic block, right-aligned text, left side of viewport */
+/* Content column: 520–620px, right-aligned Arabic, parked on visual RIGHT */
 body.homepage .hero.hero-legal-ref .hero-content.hero-legal-content {
   grid-area: auto !important;
   justify-self: auto !important;
@@ -206,11 +207,13 @@ body.homepage .hero.hero-legal-ref .hero-content.hero-legal-content {
   text-align: right !important;
   display: flex !important;
   flex-direction: column !important;
-  align-items: flex-start !important;
-  width: min(560px, 100%) !important;
-  max-width: 560px !important;
+  align-items: stretch !important;
+  width: clamp(520px, 40vw, 620px) !important;
+  max-width: 620px !important;
   margin: 0 !important;
-  gap: 14px !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+  gap: 0 !important;
   padding: 0 !important;
 }
 
@@ -224,12 +227,12 @@ body.homepage .hero.hero-legal-ref .hero-content.hero-legal-content::after {
 body.homepage .hero.hero-legal-ref .hero-legal-eyebrow {
   display: inline-flex !important;
   align-items: center !important;
-  align-self: flex-start !important;
+  align-self: flex-start !important; /* RTL start = visual right */
   gap: 12px !important;
-  margin: 0 !important;
+  margin: 0 0 20px !important;
   max-width: none !important;
   color: #B79A61 !important;
-  font-size: 0.95rem !important;
+  font-size: 0.98rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.02em !important;
   line-height: 1.4 !important;
@@ -245,14 +248,15 @@ body.homepage .hero.hero-legal-ref .hero-legal-eyebrow-line {
 }
 
 body.homepage .hero.hero-legal-ref .hero-legal-title {
-  margin: 0 !important;
+  margin: 0 0 24px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
-  line-height: 1.18 !important;
+  gap: 6px !important;
+  line-height: 1.25 !important;
   font-weight: 900 !important;
   text-align: right !important;
   color: #ffffff !important;
+  width: 100% !important;
 }
 
 body.homepage .hero.hero-legal-ref .hero-legal-title::after {
@@ -262,26 +266,28 @@ body.homepage .hero.hero-legal-ref .hero-legal-title::after {
 
 body.homepage .hero.hero-legal-ref .hero-legal-title-main {
   color: #ffffff !important;
-  font-size: clamp(1.9rem, 3.8vw, 3.05rem) !important;
+  font-size: clamp(36px, 3.5vw, 56px) !important;
   font-weight: 900 !important;
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.55) !important;
   letter-spacing: -0.01em !important;
+  line-height: 1.25 !important;
 }
 
 body.homepage .hero.hero-legal-ref .hero-legal-title-accent {
   color: #B79A61 !important;
-  font-size: clamp(1.75rem, 3.5vw, 2.85rem) !important;
+  font-size: clamp(32px, 3.2vw, 50px) !important;
   font-weight: 900 !important;
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+  line-height: 1.25 !important;
 }
 
 body.homepage .hero.hero-legal-ref .hero-legal-lead {
-  margin: 0 !important;
-  max-width: 34rem !important;
+  margin: 0 0 30px !important;
+  max-width: none !important;
   width: 100% !important;
   color: rgba(255, 255, 255, 0.9) !important;
-  font-size: clamp(0.95rem, 1.3vw, 1.08rem) !important;
-  line-height: 1.85 !important;
+  font-size: clamp(16px, 1.15vw, 18px) !important;
+  line-height: 1.9 !important;
   font-weight: 500 !important;
   text-align: right !important;
 }
@@ -289,18 +295,20 @@ body.homepage .hero.hero-legal-ref .hero-legal-lead {
 body.homepage .hero.hero-legal-ref .hero-legal-ctas {
   display: flex !important;
   flex-wrap: wrap !important;
-  gap: 12px !important;
-  margin: 6px 0 0 !important;
-  justify-content: flex-start !important;
+  flex-direction: row !important;
+  direction: rtl !important;
+  gap: 14px !important;
+  margin: 0 0 28px !important;
+  justify-content: flex-start !important; /* RTL start = visual right; gold CTA first */
   align-items: center !important;
   width: 100% !important;
   max-width: none !important;
 }
 
 body.homepage .hero.hero-legal-ref .hero-legal-ctas .hero-cta-pill {
-  min-height: 48px !important;
+  min-height: 50px !important;
   min-width: 0 !important;
-  padding: 0.8rem 1.4rem !important;
+  padding: 0.85rem 1.45rem !important;
   border-radius: 12px !important;
   font-size: 0.95rem !important;
   font-weight: 800 !important;
@@ -308,6 +316,7 @@ body.homepage .hero.hero-legal-ref .hero-legal-ctas .hero-cta-pill {
   align-items: center !important;
   gap: 0.55rem !important;
   text-decoration: none !important;
+  white-space: nowrap !important;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease !important;
 }
 
@@ -344,10 +353,10 @@ body.homepage .hero.hero-legal-ref .hero-cta-navy:hover {
 body.homepage .hero.hero-legal-ref .hero-legal-stats {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 12px !important;
-  width: min(100%, 520px) !important;
-  max-width: 520px !important;
-  margin: 8px 0 0 !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
   text-align: right !important;
 }
 
@@ -355,16 +364,19 @@ body.homepage .hero.hero-legal-ref .hero-legal-stat {
   background: rgba(16, 29, 50, 0.72) !important;
   border: 1px solid rgba(183, 154, 97, 0.35) !important;
   border-radius: 14px !important;
-  padding: 14px 12px !important;
+  padding: 16px 14px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
-  gap: 4px !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22) !important;
   text-align: right !important;
-  min-height: 0 !important;
+  min-height: 104px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
 }
 
 body.homepage .hero.hero-legal-ref .hero-legal-stat i {
@@ -419,6 +431,7 @@ body.homepage:not(.dark-mode) .floating-actions button {
 @media (max-width: 1100px) {
   body.homepage .hero.hero-legal-ref .hero-content.hero-legal-content {
     width: min(560px, 100%) !important;
+    max-width: 560px !important;
   }
 }
 
@@ -428,21 +441,22 @@ body.homepage:not(.dark-mode) .floating-actions button {
   }
 
   body.homepage .hero.hero-legal-ref .hero-inner.hero-legal-inner {
+    direction: rtl !important;
     min-height: auto !important;
     max-width: 100% !important;
     padding-block: 44px 52px !important;
-    padding-inline: 22px !important;
+    padding-inline: 20px !important;
     justify-content: flex-start !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-content.hero-legal-content {
     width: 100% !important;
-    max-width: 36rem !important;
+    max-width: 100% !important;
     margin-inline: 0 !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-bg img {
-    object-position: 72% center !important;
+    object-position: 45% center !important;
     transform: none !important;
   }
 
@@ -455,15 +469,28 @@ body.homepage:not(.dark-mode) .floating-actions button {
         rgba(11, 20, 36, 0.82) 100%
       ),
       linear-gradient(
-        90deg,
+        270deg,
         rgba(8, 14, 26, 0.9) 0%,
-        rgba(11, 20, 36, 0.62) 52%,
+        rgba(11, 20, 36, 0.62) 55%,
         rgba(11, 20, 36, 0.28) 100%
       ) !important;
   }
 
+  body.homepage .hero.hero-legal-ref .hero-legal-title-main {
+    font-size: clamp(28px, 7vw, 40px) !important;
+  }
+
+  body.homepage .hero.hero-legal-ref .hero-legal-title-accent {
+    font-size: clamp(26px, 6.5vw, 36px) !important;
+  }
+
   body.homepage .hero.hero-legal-ref .hero-legal-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  body.homepage .hero.hero-legal-ref .hero-legal-stat {
+    min-height: 0 !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-ctas {
@@ -473,31 +500,36 @@ body.homepage:not(.dark-mode) .floating-actions button {
   body.homepage .hero.hero-legal-ref .hero-legal-ctas .hero-cta-pill {
     flex: 1 1 auto !important;
     justify-content: center !important;
+    white-space: normal !important;
   }
 }
 
 @media (max-width: 520px) {
   body.homepage .hero.hero-legal-ref .hero-inner.hero-legal-inner {
     padding-block: 36px 44px !important;
-    padding-inline: 18px !important;
+    padding-inline: 20px !important;
+  }
+
+  body.homepage .hero.hero-legal-ref .hero-legal-eyebrow {
+    margin-bottom: 16px !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-title {
-    margin-bottom: 1rem !important;
+    margin-bottom: 18px !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-lead {
-    margin-bottom: 1.35rem !important;
+    margin-bottom: 22px !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-ctas {
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 22px !important;
     gap: 10px !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-stats {
     grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    gap: 12px !important;
   }
 
   body.homepage .hero.hero-legal-ref .hero-legal-stat {

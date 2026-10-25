@@ -13,7 +13,7 @@ const STYLESHEETS = [
   "/newhome/landing-shared.css?v=identity-purge-20261026",
   "/newhome/branches-page.css?v=identity-purge-20261026",
   "/newhome/ads-page.css?v=identity-purge-20261026",
-  "/newhome/legal-hero-reference.css?v=hero-approved-comp-20261026d",
+  "/newhome/legal-hero-reference.css?v=hero-rtl-right-20261026",
   "/newhome/legal-identity-overrides.css?v=identity-purge-20261026",
 ] as const;
 
