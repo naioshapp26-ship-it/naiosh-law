@@ -39,7 +39,7 @@ export function EmpireLandingHero() {
 
           <h1 className="hero-legal-title">
             <span className="hero-legal-title-main">إدارة القضايا والموكلين</span>
-            <span className="hero-legal-title-accent">بذكاء لا مثيل له</span>
+            <span className="hero-legal-title-accent">بذكاء قانوني</span>
           </h1>
 
           <p className="hero-legal-lead">
