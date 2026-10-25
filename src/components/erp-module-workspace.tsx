@@ -25,7 +25,7 @@ function useErpStudioCss() {
     if (document.querySelector('link[data-erp-studio]')) return;
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/erp-app/studio.css?v=first-paint-20260725";
+    link.href = "/erp-app/studio.css?v=dark-contrast-20261026";
     link.setAttribute("data-erp-studio", "1");
     document.head.appendChild(link);
   }, []);

@@ -69,8 +69,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           data-erp-home="1"
         />
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}
-        <link rel="stylesheet" href="/erp-app/studio.css?v=identity-purge-20261026" data-erp-studio="1" />
-        <link rel="stylesheet" href="/erp-app/hq.css?v=identity-purge-20261026" data-erp-hq="1" />
+        <link rel="stylesheet" href="/erp-app/studio.css?v=dark-contrast-20261026" data-erp-studio="1" />
+        <link rel="stylesheet" href="/erp-app/hq.css?v=dark-contrast-20261026" data-erp-hq="1" />
+        <link rel="stylesheet" href="/erp-app/erp-theme.css?v=dark-contrast-20261026" data-erp-theme="1" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark-mode');document.documentElement.style.colorScheme='dark'}}catch(_){}`,

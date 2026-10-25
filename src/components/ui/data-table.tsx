@@ -60,19 +60,19 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
     }
     if (col.type === "currency") {
       return (
-        <span style={{ fontWeight: 700, color: "#0a0a12", fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+        <span className="dt-cell-primary" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
           {formatCurrency(val)}
         </span>
       );
     }
     if (col.type === "number") {
       return (
-        <span style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+        <span className="dt-cell-primary" style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
           {formatNumber(val)}
         </span>
       );
     }
-    return <span style={{ color: "#334155" }}>{String(val ?? "—")}</span>;
+    return <span className="dt-cell-secondary">{String(val ?? "—")}</span>;
   };
 
   return (
@@ -81,12 +81,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1 }}>
           <span
+            className="dt-search-icon"
             style={{
               position: "absolute",
               top: "50%",
               insetInlineStart: "1rem",
               transform: "translateY(-50%)",
-              color: "#94a3b8",
+              color: "var(--text-muted, #94a3b8)",
               fontSize: "0.9rem",
               pointerEvents: "none",
             }}
@@ -101,43 +102,26 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
             style={{ paddingInlineStart: "2.6rem" }}
           />
         </div>
-        <div
-          style={{
-            background: "#f1f5f9",
-            borderRadius: "10px",
-            padding: "0.6rem 1rem",
-            fontSize: "0.78rem",
-            color: "#64748b",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-          }}
-        >
+        <div className="dt-count">
           {filtered.length} سجل
         </div>
       </div>
 
       {/* Table */}
-      <div
-        style={{
-          borderRadius: "16px",
-          border: "1px solid #e2e8f0",
-          overflow: "hidden",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        }}
-      >
+      <div className="dt-wrap">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
+          <table className="dt-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
             <thead>
-              <tr style={{ background: "#f8f9fb", borderBottom: "1px solid #e2e8f0" }}>
+              <tr>
                 {columns.map((col) => (
                   <th
                     key={col.key}
+                    className="dt-th"
                     onClick={() => col.sortable !== false && handleSort(col.key)}
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",
                       fontWeight: 700,
-                      color: "#475569",
                       fontSize: "0.75rem",
                       whiteSpace: "nowrap",
                       cursor: col.sortable !== false ? "pointer" : "default",
@@ -146,7 +130,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                   >
                     {col.label}
                     {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#101D32" }}>
+                      <span style={{ marginInlineStart: "0.25rem", color: "var(--brand-gold, #B79A61)" }}>
                         {sortAsc ? " ↑" : " ↓"}
                       </span>
                     )}
@@ -154,11 +138,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                 ))}
                 {hasActions && (
                   <th
+                    className="dt-th"
                     style={{
                       padding: "0.9rem 1rem",
                       textAlign: "start",
                       fontWeight: 700,
-                      color: "#475569",
                       fontSize: "0.75rem",
                     }}
                   >
@@ -172,7 +156,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                 <tr>
                   <td
                     colSpan={columns.length + (hasActions ? 1 : 0)}
-                    style={{ padding: "3.5rem", textAlign: "center", color: "#94a3b8" }}
+                    className="dt-cell-secondary"
+                    style={{ padding: "3.5rem", textAlign: "center" }}
                   >
                     <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
                     <div style={{ fontWeight: 600 }}>لا توجد نتائج</div>
@@ -180,30 +165,18 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                 </tr>
               ) : (
                 paged.map((row, i) => (
-                  <tr
-                    key={i}
-                    style={{
-                      borderBottom: "1px solid #f1f5f9",
-                      transition: "background 0.15s",
-                      background: "transparent",
-                    }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "#fafbfc")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "transparent")
-                    }
-                  >
+                  <tr key={i} className="dt-row">
                     {columns.map((col) => (
                       <td
                         key={col.key}
+                        className="dt-td"
                         style={{ padding: "0.85rem 1rem", verticalAlign: "middle" }}
                       >
                         {renderCell(col, row)}
                       </td>
                     ))}
                     {hasActions && (
-                      <td style={{ padding: "0.85rem 1rem" }}>
+                      <td className="dt-td" style={{ padding: "0.85rem 1rem" }}>
                         <RowActions
                           actions={standardRowActions({
                             onView: onView ? () => onView(row) : undefined,
@@ -226,13 +199,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
       {/* Pagination */}
       {totalPages > 1 && (
         <div
+          className="dt-pagination"
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             marginTop: "1rem",
             fontSize: "0.8rem",
-            color: "#64748b",
           }}
         >
           <span>
@@ -242,11 +215,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
             <button
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
+              className="dt-page-btn"
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                background: page === 1 ? "#f8f9fb" : "#fff",
+                border: "1px solid var(--border-color, #e2e8f0)",
                 cursor: page === 1 ? "not-allowed" : "pointer",
                 opacity: page === 1 ? 0.5 : 1,
               }}
@@ -260,13 +233,14 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                 <button
                   key={p}
                   onClick={() => setPage(p)}
+                  className={`dt-page-btn${p === page ? " is-active" : ""}`}
                   style={{
                     padding: "0.4rem 0.65rem",
                     borderRadius: "8px",
                     border: "1px solid",
-                    borderColor: p === page ? "#101D32" : "#e2e8f0",
-                    background: p === page ? "#101D32" : "#fff",
-                    color: p === page ? "#fff" : "#475569",
+                    borderColor: p === page ? "var(--brand-navy, #101D32)" : "var(--border-color, #e2e8f0)",
+                    background: p === page ? "var(--brand-navy, #101D32)" : "var(--bg-card, #fff)",
+                    color: p === page ? "#fff" : "var(--text-secondary, #475569)",
                     cursor: "pointer",
                     fontWeight: p === page ? 800 : 400,
                     minWidth: 32,
@@ -279,11 +253,11 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
             <button
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
+              className="dt-page-btn"
               style={{
                 padding: "0.4rem 0.8rem",
                 borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                background: page === totalPages ? "#f8f9fb" : "#fff",
+                border: "1px solid var(--border-color, #e2e8f0)",
                 cursor: page === totalPages ? "not-allowed" : "pointer",
                 opacity: page === totalPages ? 0.5 : 1,
               }}
@@ -293,6 +267,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
           </div>
         </div>
       )}
+
     </div>
   );
 }
