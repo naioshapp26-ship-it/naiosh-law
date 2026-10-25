@@ -255,7 +255,7 @@ export default function LoginPage() {
           align-items: center;
           justify-content: center;
           padding: 1rem;
-          background: #f8fafc;
+          background: #F5F1E8;
           position: relative;
           font-family: var(--font);
         }
@@ -276,14 +276,14 @@ export default function LoginPage() {
           right: -10%;
           width: 50%;
           height: 50%;
-          background: rgba(195, 21, 42, 0.08);
+          background: rgba(16, 29, 50, 0.08);
         }
         .erp-login-orb-b {
           top: 40%;
           left: -10%;
           width: 40%;
           height: 40%;
-          background: rgba(195, 21, 42, 0.12);
+          background: rgba(183, 154, 97, 0.12);
         }
         .erp-login-card {
           width: 100%;
@@ -315,11 +315,11 @@ export default function LoginPage() {
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
         .erp-login-back:hover {
-          border-color: rgba(195,21,42,0.35);
+          border-color: rgba(183, 154, 97, 0.55);
           color: var(--primary);
         }
         .erp-login-header {
-          background: var(--primary, #c3152a);
+          background: var(--primary, #101D32);
           padding: 2rem;
           text-align: center;
           position: relative;
@@ -444,7 +444,7 @@ export default function LoginPage() {
         .erp-login-input:focus {
           background: #fff;
           border-color: var(--primary);
-          box-shadow: 0 0 0 3px rgba(195,21,42,0.15);
+          box-shadow: 0 0 0 3px rgba(16, 29, 50, 0.15);
         }
         .erp-login-row {
           display: flex;
@@ -475,19 +475,19 @@ export default function LoginPage() {
           padding: 0.85rem 1rem;
           border: none;
           border-radius: 0.75rem;
-          background: var(--primary, #c3152a);
+          background: var(--primary, #101D32);
           color: #fff;
           font-family: var(--font);
           font-size: 0.95rem;
           font-weight: 800;
           cursor: pointer;
-          box-shadow: 0 8px 20px -8px rgba(195,21,42,0.55);
+          box-shadow: 0 8px 20px -8px rgba(16, 29, 50, 0.55);
           transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
         }
         .erp-login-submit:hover:not(:disabled) {
-          background: var(--primary-dark, #a00f20);
+          background: var(--primary-dark, #0B1424);
           transform: translateY(-1px);
-          box-shadow: 0 12px 28px -8px rgba(195,21,42,0.6);
+          box-shadow: 0 12px 28px -8px rgba(16, 29, 50, 0.6);
         }
         .erp-login-submit:disabled { opacity: 0.72; cursor: wait; }
         .erp-login-spinner {
@@ -538,7 +538,7 @@ export default function LoginPage() {
         }
         .erp-login-demo:hover {
           border-color: var(--primary);
-          background: rgba(195,21,42,0.04);
+          background: rgba(16, 29, 50, 0.04);
         }
         .erp-login-demo-icon {
           width: 2.5rem;
@@ -547,7 +547,7 @@ export default function LoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(195,21,42,0.1);
+          background: rgba(16, 29, 50, 0.1);
           color: var(--primary);
           flex-shrink: 0;
           font-size: 1rem;

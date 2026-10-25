@@ -187,8 +187,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e50914, #8b000e);
-  color: #fff;
+  background: linear-gradient(135deg, #101D32, #0B1424);
+  color: #B79A61;
   font-size: 18px;
   flex-shrink: 0;
 }
@@ -336,10 +336,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e50914, #8b000e);
-  color: #fff;
+  background: linear-gradient(135deg, #101D32, #0B1424);
+  color: #B79A61;
   font-size: 24px;
-  box-shadow: 0 10px 22px rgba(197, 7, 18, 0.28);
+  box-shadow: 0 10px 22px rgba(16, 29, 50, 0.28);
 }
 
 .platforms-overview-card h3 {

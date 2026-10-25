@@ -2118,7 +2118,7 @@ body.homepage:not(.dark-mode) {
   --homepage-bg-glow-opacity: 0.12;
   --homepage-bg-glow-stop: 42%;
   --homepage-text-primary: #ffffff;
-  --homepage-text-secondary: rgba(255, 220, 228, 0.78);
+  --homepage-text-secondary: rgba(245, 241, 232, 0.86);
   --homepage-top-nav-start: #ffffff;
   --homepage-top-nav-end: #ffffff;
   background: #ffffff !important;
@@ -2211,7 +2211,7 @@ body.homepage .announcement-bar {
   right: 0;
   z-index: 70;
   background-color: var(--announcement-bg);
-  background-image: linear-gradient(90deg, rgba(28, 2, 10, 0.96) 0%, rgba(118, 16, 26, 0.94) 50%, rgba(28, 2, 10, 0.96) 100%);
+  background-image: linear-gradient(90deg, rgba(11, 20, 36, 0.98) 0%, rgba(16, 29, 50, 0.96) 50%, rgba(11, 20, 36, 0.98) 100%);
   color: var(--announcement-text);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
@@ -2556,7 +2556,7 @@ body.homepage .hero-content p {
   margin: 0 0 28px;
   font-size: 17px;
   line-height: 1.80;
-  color: rgba(255, 220, 228, 0.78);
+  color: rgba(245, 241, 232, 0.88);
   text-align: right;
 }
 
