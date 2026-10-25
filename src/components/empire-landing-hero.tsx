@@ -80,7 +80,7 @@ export function EmpireLandingHero() {
   const activeLibrary = libraryMedia[slide] || libraryMedia[0] || null;
   const preferredKind = theme.heroActiveType;
   const preferred = libraryMedia.find((m) => m.type === preferredKind) || activeLibrary;
-  const displaySrc = preferred?.url || heroBannerSrc || "/newhome/booking-workspace.svg";
+  const displaySrc = preferred?.url || heroBannerSrc || "/newhome/media/legal-hero-desk.jpg";
   const isVideo = preferred
     ? preferred.type === "video"
     : isHeroVideoSrc(heroBannerSrc, theme.heroMediaKind);
@@ -284,9 +284,10 @@ export function EmpireLandingHero() {
               style={
                 item.active
                   ? {
-                      background: "#d70000",
+                      background: "var(--brand-gold, #B79A61)",
+                      color: "#0B1424",
                       borderColor: "rgba(255,255,255,0.28)",
-                      boxShadow: "0 10px 24px rgba(215,0,0,0.45)",
+                      boxShadow: "0 10px 24px rgba(183,154,97,0.45)",
                     }
                   : undefined
               }

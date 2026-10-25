@@ -1,5 +1,13 @@
 /** إعدادات الموقع الافتراضية — تُطبَّق عبر CSS variables */
 
+import {
+  BRAND_IDENTITY,
+  GOLD_RGB,
+  NAVY_RGB,
+  isLegacyBrandRed,
+  normalizeHex,
+} from "@/lib/brand-identity";
+
 export type SiteTheme = {
   primaryColor: string;
   primaryDark: string;
@@ -34,37 +42,77 @@ export type SiteTheme = {
 };
 
 export const DEFAULT_SITE_THEME: SiteTheme = {
-  primaryColor: "#c3152a",
-  primaryDark: "#a00f20",
-  accentColor: "#0ea5e9",
-  sidebarFrom: "#450a0a",
-  sidebarVia: "#7f1d1d",
-  sidebarTo: "#450a0a",
-  backgroundColor: "#f8fafc",
-  textColor: "#0a0a12",
+  primaryColor: BRAND_IDENTITY.navyPrimary,
+  primaryDark: BRAND_IDENTITY.navyDark,
+  accentColor: BRAND_IDENTITY.antiqueGold,
+  sidebarFrom: BRAND_IDENTITY.navyDark,
+  sidebarVia: BRAND_IDENTITY.navyPrimary,
+  sidebarTo: BRAND_IDENTITY.navySecondary,
+  backgroundColor: BRAND_IDENTITY.ivoryBackground,
+  textColor: BRAND_IDENTITY.primaryText,
   brandName: "NAIOSH Law",
   brandNameAr: "نايوش",
   tagline: "النظام القانوني السيادي 360",
   logoPath: "",
   logoData: null,
-  heroBannerPath: null,
+  heroBannerPath: "/newhome/media/legal-hero-desk.jpg",
   heroBannerData: null,
-  heroMediaKind: null,
+  heroMediaKind: "image",
   borderRadius: "12",
-  secondaryColor: "#fecaca",
-  buttonColor: "#a00f20",
-  headerBgColor: "#ffffff",
-  headingColor: "#0a0a12",
-  paragraphColor: "#64748b",
-  linkColor: "#1e3a8a",
-  heroImageMode: "center",
+  secondaryColor: "#E8E0D0",
+  buttonColor: BRAND_IDENTITY.navyPrimary,
+  headerBgColor: BRAND_IDENTITY.navyDark,
+  headingColor: BRAND_IDENTITY.primaryText,
+  paragraphColor: BRAND_IDENTITY.secondaryText,
+  linkColor: BRAND_IDENTITY.navySecondary,
+  heroImageMode: "cover",
   heroActiveType: "image",
-  heroOverlayStrength: 0,
+  heroOverlayStrength: 18,
   heroAutoplaySlider: true,
-  heroActiveImageCaption: "",
+  heroActiveImageCaption: "مكتب قانوني فاخر — هوية نايوش",
   heroActiveVideoCaption: "",
   heroActiveVideoDescription: "",
 };
+
+/** ترقية إعدادات DB القديمة (أحمر/نبيتي) إلى الهوية القانونية بدون migration */
+export function upgradeLegacyBrandTheme(theme: SiteTheme): SiteTheme {
+  const primaryIsLegacy = isLegacyBrandRed(theme.primaryColor);
+  const sidebarIsLegacy = isLegacyBrandRed(theme.sidebarFrom) || isLegacyBrandRed(theme.sidebarVia);
+  if (!primaryIsLegacy && !sidebarIsLegacy) return theme;
+
+  return {
+    ...theme,
+    primaryColor: primaryIsLegacy ? DEFAULT_SITE_THEME.primaryColor : theme.primaryColor,
+    primaryDark: isLegacyBrandRed(theme.primaryDark) ? DEFAULT_SITE_THEME.primaryDark : theme.primaryDark,
+    accentColor:
+      isLegacyBrandRed(theme.accentColor) || normalizeHex(theme.accentColor) === "#0ea5e9"
+        ? DEFAULT_SITE_THEME.accentColor
+        : theme.accentColor,
+    sidebarFrom: isLegacyBrandRed(theme.sidebarFrom) ? DEFAULT_SITE_THEME.sidebarFrom : theme.sidebarFrom,
+    sidebarVia: isLegacyBrandRed(theme.sidebarVia) ? DEFAULT_SITE_THEME.sidebarVia : theme.sidebarVia,
+    sidebarTo: isLegacyBrandRed(theme.sidebarTo) ? DEFAULT_SITE_THEME.sidebarTo : theme.sidebarTo,
+    backgroundColor:
+      normalizeHex(theme.backgroundColor) === "#f8fafc" || normalizeHex(theme.backgroundColor) === "#f4f7f6"
+        ? DEFAULT_SITE_THEME.backgroundColor
+        : theme.backgroundColor,
+    buttonColor: isLegacyBrandRed(theme.buttonColor) ? DEFAULT_SITE_THEME.buttonColor : theme.buttonColor,
+    secondaryColor: isLegacyBrandRed(theme.secondaryColor)
+      ? DEFAULT_SITE_THEME.secondaryColor
+      : theme.secondaryColor,
+    headerBgColor: isLegacyBrandRed(theme.headerBgColor)
+      ? DEFAULT_SITE_THEME.headerBgColor
+      : theme.headerBgColor,
+    textColor: normalizeHex(theme.textColor) === "#0a0a12" ? DEFAULT_SITE_THEME.textColor : theme.textColor,
+    headingColor:
+      normalizeHex(theme.headingColor) === "#0a0a12" ? DEFAULT_SITE_THEME.headingColor : theme.headingColor,
+    paragraphColor:
+      normalizeHex(theme.paragraphColor) === "#64748b"
+        ? DEFAULT_SITE_THEME.paragraphColor
+        : theme.paragraphColor,
+    heroBannerPath: theme.heroBannerPath || DEFAULT_SITE_THEME.heroBannerPath,
+    heroMediaKind: theme.heroMediaKind || DEFAULT_SITE_THEME.heroMediaKind,
+  };
+}
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const clean = hex.replace("#", "");
@@ -75,24 +123,42 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } | nul
 
 export function applySiteTheme(theme: SiteTheme) {
   if (typeof document === "undefined") return;
+  const resolved = upgradeLegacyBrandTheme(theme);
   const root = document.documentElement;
-  const rgb = hexToRgb(theme.primaryColor);
+  const rgb = hexToRgb(resolved.primaryColor);
+  const gold = hexToRgb(resolved.accentColor);
 
-  root.style.setProperty("--primary", theme.primaryColor);
-  root.style.setProperty("--primary-dark", theme.primaryDark);
-  root.style.setProperty("--accent", theme.accentColor);
-  root.style.setProperty("--sidebar-from", theme.sidebarFrom);
-  root.style.setProperty("--sidebar-via", theme.sidebarVia);
-  root.style.setProperty("--sidebar-to", theme.sidebarTo);
-  root.style.setProperty("--site-bg", theme.backgroundColor);
-  root.style.setProperty("--dark", theme.textColor);
-  root.style.setProperty("--radius-base", `${theme.borderRadius}px`);
-  root.style.setProperty("--secondary", theme.secondaryColor);
-  root.style.setProperty("--button-color", theme.buttonColor);
-  root.style.setProperty("--header-bg", theme.headerBgColor);
-  root.style.setProperty("--heading-color", theme.headingColor);
-  root.style.setProperty("--paragraph-color", theme.paragraphColor);
-  root.style.setProperty("--link-color", theme.linkColor);
+  root.style.setProperty("--primary", resolved.primaryColor);
+  root.style.setProperty("--primary-dark", resolved.primaryDark);
+  root.style.setProperty("--accent", resolved.accentColor);
+  root.style.setProperty("--sidebar-from", resolved.sidebarFrom);
+  root.style.setProperty("--sidebar-via", resolved.sidebarVia);
+  root.style.setProperty("--sidebar-to", resolved.sidebarTo);
+  root.style.setProperty("--site-bg", resolved.backgroundColor);
+  root.style.setProperty("--dark", resolved.textColor);
+  root.style.setProperty("--radius-base", `${resolved.borderRadius}px`);
+  root.style.setProperty("--secondary", resolved.secondaryColor);
+  root.style.setProperty("--button-color", resolved.buttonColor);
+  root.style.setProperty("--header-bg", resolved.headerBgColor);
+  root.style.setProperty("--heading-color", resolved.headingColor);
+  root.style.setProperty("--paragraph-color", resolved.paragraphColor);
+  root.style.setProperty("--link-color", resolved.linkColor);
+
+  // Bridge landing tokens (historically named --brand-red*)
+  root.style.setProperty("--brand-red", resolved.primaryColor);
+  root.style.setProperty("--brand-red-rgb", rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : NAVY_RGB);
+  root.style.setProperty("--brand-red-soft", BRAND_IDENTITY.navySecondary);
+  root.style.setProperty("--brand-red-dark", resolved.primaryDark);
+  root.style.setProperty("--brand-red-mid", BRAND_IDENTITY.navySecondary);
+  root.style.setProperty("--brand-red-deep", BRAND_IDENTITY.navyDark);
+  root.style.setProperty("--brand-gold", resolved.accentColor);
+  root.style.setProperty("--brand-gold-rgb", gold ? `${gold.r}, ${gold.g}, ${gold.b}` : GOLD_RGB);
+  root.style.setProperty("--homepage-button-color", resolved.buttonColor);
+  root.style.setProperty("--announcement-bg", resolved.primaryDark);
+  root.style.setProperty(
+    "--hero-custom-image",
+    `url('${resolved.heroBannerPath || "/newhome/media/legal-hero-desk.jpg"}')`
+  );
 
   if (rgb) {
     root.style.setProperty("--primary-glow", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`);
@@ -148,6 +214,7 @@ export function hasCustomLogo(theme: Pick<SiteTheme, "logoPath" | "logoData">) {
 }
 
 export const HERO_BANNER_SERVE_PATH = "/api/site-settings/hero-banner";
+export const DEFAULT_HERO_IMAGE = "/newhome/media/legal-hero-desk.jpg";
 
 export function heroBannerCacheKey(updatedAt?: string | Date | null) {
   if (!updatedAt) return null;
@@ -191,7 +258,7 @@ export function getHeroBannerSrc(
     return data;
   }
 
-  return null;
+  return DEFAULT_HERO_IMAGE;
 }
 
 export type SiteSettingsRecord = SiteTheme & {
@@ -233,7 +300,7 @@ export function recordToTheme(row: {
   heroActiveVideoDescription?: string | null;
 }): SiteTheme {
   const kind = row.heroMediaKind === "video" || row.heroMediaKind === "image" ? row.heroMediaKind : null;
-  return {
+  const base: SiteTheme = {
     primaryColor: row.primaryColor,
     primaryDark: row.primaryDark,
     accentColor: row.accentColor,
@@ -267,4 +334,5 @@ export function recordToTheme(row: {
     heroActiveVideoCaption: row.heroActiveVideoCaption || "",
     heroActiveVideoDescription: row.heroActiveVideoDescription || "",
   };
+  return upgradeLegacyBrandTheme(base);
 }

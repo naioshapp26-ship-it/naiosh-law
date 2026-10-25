@@ -1,35 +1,38 @@
 :root {
-  --brand-red: #d70000;
-  --brand-red-rgb: 215, 0, 0;
-  --brand-red-soft: #ff4f63;
-  --brand-red-dark: #5a0009;
-  --brand-red-mid: #9f0008;
-  --brand-red-deep: #200007;
+  /* brand-red* kept as token names for compatibility — values are navy legal identity */
+  --brand-red: #101D32;
+  --brand-red-rgb: 16, 29, 50;
+  --brand-red-soft: #1A304D;
+  --brand-red-dark: #0B1424;
+  --brand-red-mid: #1A304D;
+  --brand-red-deep: #0B1424;
+  --brand-gold: #B79A61;
+  --brand-gold-rgb: 183, 154, 97;
   --status-active-color: #47ffb0;
   --status-active-color-rgb: 71, 255, 176;
-  --brand-black-deep: #020202;
-  --gradient-brand-primary: linear-gradient(135deg, var(--brand-red-soft), var(--brand-red-dark));
-  --brand-black: #050507;
+  --brand-black-deep: #0B1424;
+  --gradient-brand-primary: linear-gradient(135deg, #0B1424, #101D32, #1A304D);
+  --brand-black: #0B1424;
   --brand-white: #fff;
-  --brand-gray: #f3f4f6;
-  --brand-border: #e6e7eb;
-  --brand-text-muted: #5e636d;
+  --brand-gray: #F5F1E8;
+  --brand-border: #D9DEE5;
+  --brand-text-muted: #526071;
   --floating-actions-top: 58%;
   --divider-glow-soft: 0.2;
   --divider-glow-strong: 0.36;
   --homepage-button-color: var(--brand-red);
   --homepage-header-bg: #ffffff;
-  --homepage-text-color: #171a20;
-  --homepage-heading-color: #171a20;
-  --homepage-paragraph-color: #5e636d;
-  --homepage-link-color: #1f232b;
-  --hero-custom-image: url('/newhome/booking-workspace.svg');
+  --homepage-text-color: #172338;
+  --homepage-heading-color: #172338;
+  --homepage-paragraph-color: #526071;
+  --homepage-link-color: #1A304D;
+  --hero-custom-image: url('/newhome/media/legal-hero-desk.jpg');
   --hero-custom-size: cover;
   --hero-custom-position: center;
   --hero-bg-image: none;
-  --hero-bg-solid: #0a0a0a;
-  --hero-overlay-strength: 0.62;
-  --announcement-bg: #1a0208;
+  --hero-bg-solid: #0B1424;
+  --hero-overlay-strength: 0.55;
+  --announcement-bg: #0B1424;
   --announcement-text: #ffffff;
   --announcement-speed: 28s;
   --announcement-bar-height: 50px;
@@ -516,9 +519,9 @@ body.homepage a {
   --hero-bg-shift: 0px;
   --hero-fg-shift: 0px;
   min-height: 560px;
-  background-color: #110207;
+  background-color: #0B1424;
   background-image:
-    linear-gradient(118deg, rgba(8, 4, 8, 0.7) 0%, rgba(38, 0, 7, 0.66) 45%, rgba(9, 2, 8, 0.74) 100%),
+    linear-gradient(135deg, rgba(11, 20, 36, 0.82) 0%, rgba(16, 29, 50, 0.72) 48%, rgba(26, 48, 77, 0.78) 100%),
     var(--hero-custom-image);
   background-size: cover, var(--hero-custom-size);
   background-position: center, var(--hero-custom-position);
@@ -2077,11 +2080,11 @@ main#modules > section:not(:first-child)::before {
 }
 
 body.homepage {
-  --homepage-hero-gradient-start: #ff1a1a;
-  --homepage-hero-gradient-mid: #ff0000;
-  --homepage-red: #ff0000;
-  --homepage-red-bright: #ff3333;
-  --homepage-red-hover: #ff3b3b;
+  --homepage-hero-gradient-start: #0B1424;
+  --homepage-hero-gradient-mid: #101D32;
+  --homepage-red: #101D32;
+  --homepage-red-bright: #1A304D;
+  --homepage-red-hover: #B79A61;
   --homepage-hero-glow-size: 420px;
   --homepage-hero-glow-top: 18%;
   --homepage-hero-glow-left: 16%;
@@ -2106,10 +2109,10 @@ body.homepage {
 }
 
 body.homepage:not(.dark-mode) {
-  --homepage-bg-main: #ffffff;
+  --homepage-bg-main: #F5F1E8;
   --homepage-bg-section: #ffffff;
   --homepage-bg-card: rgba(255, 255, 255, 0.06);
-  --homepage-border: rgba(229, 9, 20, 0.14);
+  --homepage-border: rgba(183, 154, 97, 0.28);
   --homepage-bg-glow-x: 72%;
   --homepage-bg-glow-y: 8%;
   --homepage-bg-glow-opacity: 0.12;
@@ -2463,19 +2466,8 @@ body.homepage .hero {
   padding-top: 0 !important;
   min-height: auto;
   align-items: stretch;
-  background-color: #000000;
-  background-image: linear-gradient(
-    92deg,
-    #ff3338 0%,
-    #e50914 12%,
-    #d10000 24%,
-    #a8000f 38%,
-    #6a000c 52%,
-    #320006 66%,
-    #120002 78%,
-    #000000 88%,
-    #000000 100%
-  );
+  background-color: #0B1424;
+  background-image: linear-gradient(135deg, #0B1424, #101D32, #1A304D);
   border: 0;
   box-shadow: none;
   overflow: hidden;
@@ -2496,19 +2488,13 @@ body.homepage .hero.hero-has-image,
 body.homepage .hero.hero-has-video,
 body.homepage .hero.hero-has-solid,
 body.homepage .hero.hero-has-bg-image {
-  background-color: #000000;
-  background-image: linear-gradient(
-    92deg,
-    #ff3338 0%,
-    #e50914 12%,
-    #d10000 24%,
-    #a8000f 38%,
-    #6a000c 52%,
-    #320006 66%,
-    #120002 78%,
-    #000000 88%,
-    #000000 100%
-  );
+  background-color: #0B1424;
+  background-image:
+    linear-gradient(135deg, rgba(11, 20, 36, 0.78) 0%, rgba(16, 29, 50, 0.62) 45%, rgba(26, 48, 77, 0.72) 100%),
+    var(--hero-custom-image);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat;
 }
 
 body.homepage .hero .hero-media-layer {

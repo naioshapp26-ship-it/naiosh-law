@@ -268,7 +268,7 @@ body.mobile-nav-lock .mobile-nav-backdrop {
   body.homepage .nav-links a:hover,
   body.homepage .nav-links a:focus-visible {
     background: #f8fafc !important;
-    color: #b91c1c !important;
+    color: #101D32 !important;
   }
 
   body.homepage .nav-links a.active {
@@ -389,7 +389,7 @@ body.mobile-nav-lock .mobile-nav-backdrop {
   body.homepage .auth-btn:not([href*="login-page"]):not([href*="register"]):hover,
   body.homepage .auth-btn:not([href*="login-page"]):not([href*="register"]):focus-visible {
     background: #f1f5f9 !important;
-    color: #b91c1c !important;
+    color: #101D32 !important;
     border-color: #cbd5e1 !important;
   }
 

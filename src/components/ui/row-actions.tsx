@@ -14,9 +14,9 @@ const VARIANT_STYLES: Record<
     color: "#2563eb",
   },
   edit: {
-    background: "rgba(195,21,42,0.07)",
-    backgroundHover: "rgba(195,21,42,0.14)",
-    color: "#c3152a",
+    background: "rgba(16,29,50,0.07)",
+    backgroundHover: "rgba(16,29,50,0.14)",
+    color: "#101D32",
   },
   add: {
     background: "rgba(34,197,94,0.1)",

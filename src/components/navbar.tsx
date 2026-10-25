@@ -332,7 +332,7 @@ export function Navbar({ variant = "dark" }: Props) {
               <Link href="/create-page" className="auth-btn magnetic-btn">
                 أنشئ صفحتك
               </Link>
-              <Link href="/rent-system" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "#d70000", color: "#fff", borderColor: "#d70000" }}>
+              <Link href="/rent-system" className="auth-btn magnetic-btn auth-btn-primary" style={{ background: "var(--primary, #101D32)", color: "#fff", borderColor: "var(--brand-gold, #B79A61)" }}>
                 استأجر نظام الآن
               </Link>
               <Link href={myPageHref} className="auth-btn magnetic-btn" id="my-page-nav-btn">

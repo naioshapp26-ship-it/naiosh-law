@@ -1421,7 +1421,7 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
 
 const RP_CSS = `
   .rp-page {
-    --brand: #c3152a;
+    --brand: #101D32;
     font-family: var(--font-cairo), 'Cairo', sans-serif;
     direction: rtl;
     color: #1e293b;

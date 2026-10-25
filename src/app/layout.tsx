@@ -30,36 +30,37 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/styles.css?v=header-hero-flush-20260722c" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/styles.css?v=legal-navy-gold-20261025" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/homepage-premium.css?v=header-hero-flush-20260722c"
+          href="/newhome/homepage-premium.css?v=legal-navy-gold-20261025"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/dark-mode.css?v=legal-navy-gold-20261025" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2"
-          data-erp-home="1"
-        />
-        <link
-          rel="stylesheet"
-          href="/newhome/mobile-header.css?v=header-hero-flush-20260722c"
+          href="/newhome/homepage-dark-fix.css?v=legal-navy-gold-20261025"
           data-erp-home="1"
         />
         <link
           rel="stylesheet"
-          href="/newhome/landing-shared.css?v=platforms-hub-20260721"
+          href="/newhome/mobile-header.css?v=legal-navy-gold-20261025"
           data-erp-home="1"
         />
         <link
           rel="stylesheet"
-          href="/newhome/branches-page.css?v=erp-branches-copy-20260721"
+          href="/newhome/landing-shared.css?v=legal-navy-gold-20261025"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/ads-page.css?v=erp-ads-copy-20260721" data-erp-home="1" />
+        <link
+          rel="stylesheet"
+          href="/newhome/branches-page.css?v=legal-navy-gold-20261025"
+          data-erp-home="1"
+        />
+        <link rel="stylesheet" href="/newhome/ads-page.css?v=legal-navy-gold-20261025" data-erp-home="1" />
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}
-        <link rel="stylesheet" href="/erp-app/studio.css?v=first-paint-20260725" data-erp-studio="1" />
+        <link rel="stylesheet" href="/erp-app/studio.css?v=legal-navy-gold-20261025" data-erp-studio="1" />
+        <link rel="stylesheet" href="/erp-app/hq.css?v=legal-navy-gold-20261025" data-erp-hq="1" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark-mode');document.documentElement.style.colorScheme='dark'}}catch(_){}`,

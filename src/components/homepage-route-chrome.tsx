@@ -5,14 +5,14 @@ import { usePathname } from "next/navigation";
 
 const STYLESHEETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "/newhome/styles.css?v=header-hero-flush-20260722c",
-  "/newhome/homepage-premium.css?v=header-hero-flush-20260722c",
-  "/newhome/dark-mode.css?v=erp-copy-20260721-flashfix2",
-  "/newhome/homepage-dark-fix.css?v=erp-copy-20260721-flashfix2",
-  "/newhome/mobile-header.css?v=header-hero-flush-20260722c",
-  "/newhome/landing-shared.css?v=platforms-hub-20260721",
-  "/newhome/branches-page.css?v=erp-branches-copy-20260721",
-  "/newhome/ads-page.css?v=erp-ads-copy-20260721",
+  "/newhome/styles.css?v=legal-navy-gold-20261025",
+  "/newhome/homepage-premium.css?v=legal-navy-gold-20261025",
+  "/newhome/dark-mode.css?v=legal-navy-gold-20261025",
+  "/newhome/homepage-dark-fix.css?v=legal-navy-gold-20261025",
+  "/newhome/mobile-header.css?v=legal-navy-gold-20261025",
+  "/newhome/landing-shared.css?v=legal-navy-gold-20261025",
+  "/newhome/branches-page.css?v=legal-navy-gold-20261025",
+  "/newhome/ads-page.css?v=legal-navy-gold-20261025",
 ] as const;
 
 function stylesheetId(href: string) {

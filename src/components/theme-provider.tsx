@@ -14,6 +14,7 @@ import {
   DEFAULT_SITE_THEME,
   getHeroBannerSrc,
   getLogoSrc,
+  upgradeLegacyBrandTheme,
   type SiteSettingsRecord,
   type SiteTheme,
 } from "@/lib/site-settings";
@@ -41,8 +42,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const apply = useCallback((t: SiteTheme) => {
-    setTheme(t);
-    applySiteTheme(t);
+    const resolved = upgradeLegacyBrandTheme(t);
+    setTheme(resolved);
+    applySiteTheme(resolved);
     // Do not set inline body background/color — it fights ERP homepage chrome
     // on client navigations (/login → /). Pages use CSS variables instead.
     if (typeof document !== "undefined" && document.body.classList.contains("homepage")) {
@@ -79,7 +81,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const updateLocal = useCallback((patch: Partial<SiteTheme>) => {
     setTheme((prev) => {
-      const next = { ...prev, ...patch };
+      const next = upgradeLegacyBrandTheme({ ...prev, ...patch });
       applySiteTheme(next);
       if (typeof document !== "undefined" && document.body.classList.contains("homepage")) {
         document.body.style.removeProperty("background");

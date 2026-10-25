@@ -301,7 +301,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 width: 32,
                 height: 32,
                 borderRadius: "50%",
-                background: "rgba(195,21,42,0.1)",
+                background: "rgba(16, 29, 50,0.1)",
                 color: theme.primaryColor,
                 display: "flex",
                 alignItems: "center",
@@ -317,11 +317,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={handleLogout}
               style={{
-                background: "rgba(195,21,42,0.07)",
-                border: "1px solid rgba(195,21,42,0.15)",
+                background: "rgba(16, 29, 50,0.07)",
+                border: "1px solid rgba(16, 29, 50,0.15)",
                 borderRadius: "9px",
                 padding: "0.4rem 0.75rem",
-                color: "#c3152a",
+                color: "#101D32",
                 fontSize: "0.75rem",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -441,8 +441,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
             style={{
-              background: theme.primaryColor || "#c3152a",
-              boxShadow: "0 8px 20px -6px rgba(195,21,42,0.55)",
+              background: theme.primaryColor || "#101D32",
+              boxShadow: "0 8px 20px -6px rgba(16, 29, 50,0.55)",
               color: "#ffffff",
             }}
           >
@@ -550,8 +550,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
                 style={{
-                  background: theme.primaryColor || "#c3152a",
-                  boxShadow: "0 8px 20px -6px rgba(195,21,42,0.55)",
+                  background: theme.primaryColor || "#101D32",
+                  boxShadow: "0 8px 20px -6px rgba(16, 29, 50,0.55)",
                   color: "#ffffff",
                 }}
               >
@@ -632,7 +632,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 borderRadius: "10px",
                 textDecoration: "none",
                 flex: 1,
-                background: active ? "rgba(195,21,42,0.08)" : "transparent",
+                background: active ? "rgba(16, 29, 50,0.08)" : "transparent",
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>{item.icon}</span>
@@ -640,7 +640,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 style={{
                   fontSize: "0.6rem",
                   fontWeight: active ? 700 : 500,
-                  color: active ? "#c3152a" : "#94a3b8",
+                  color: active ? "#101D32" : "#94a3b8",
                 }}
               >
                 {item.label}

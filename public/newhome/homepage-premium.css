@@ -1,7 +1,7 @@
 /* Premium SaaS homepage — motion, glass nav, glow, particles */
 
 :root {
-  --premium-crimson: #8b0000;
+  --premium-crimson: #101D32;
   --premium-crimson-glow: rgba(139, 0, 0, 0.25);
   --premium-glass-bg: rgba(255, 255, 255, 0.72);
   --premium-glass-border: rgba(139, 0, 0, 0.08);
@@ -55,7 +55,7 @@ body.homepage .nav-active-indicator {
   bottom: 2px;
   height: 3px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #8b0000, #e50914);
+  background: linear-gradient(90deg, #101D32, #B79A61);
   box-shadow: 0 0 12px rgba(139, 0, 0, 0.45);
   pointer-events: none;
   z-index: 0;
@@ -83,7 +83,7 @@ body.homepage .nav-links a:hover {
 }
 
 body.homepage .nav-links a.active {
-  color: #8b0000;
+  color: #101D32;
 }
 
 /* ── Header auth buttons — white premium style ─────────────────────── */

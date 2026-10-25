@@ -45,7 +45,7 @@
   display: block;
   font-size: 24px;
   font-weight: 900;
-  color: #c50712;
+  color: #101D32;
   line-height: 1;
 }
 
@@ -77,14 +77,14 @@
 }
 
 .landing-hub-actions .btn.primary {
-  background: #c50712;
+  background: #101D32;
   color: #fff;
-  border: 1px solid #c50712;
+  border: 1px solid #101D32;
 }
 
 .landing-hub-actions .btn.ghost {
   background: #fff;
-  color: #c50712;
+  color: #101D32;
   border: 1px solid rgba(197, 7, 18, 0.35);
 }
 
@@ -134,7 +134,7 @@
   margin-top: auto;
   font-size: 13px;
   font-weight: 800;
-  color: #c50712;
+  color: #101D32;
 }
 
 /* Category cards side-by-side */
@@ -246,7 +246,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #c50712;
+  background: #101D32;
   color: #fff;
   font-size: 11px;
   font-weight: 900;
@@ -362,7 +362,7 @@
   margin-top: auto;
   font-size: 14px;
   font-weight: 800;
-  color: #c50712;
+  color: #101D32;
 }
 
 .platforms-sections {
@@ -396,7 +396,7 @@
 }
 
 .platforms-section-head h2 .count {
-  color: #c50712;
+  color: #101D32;
   font-weight: 800;
   margin-inline-start: 6px;
 }
@@ -452,7 +452,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #c50712;
+  background: #101D32;
   color: #fff;
   font-size: 12px;
   font-weight: 900;

@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #c3152a;
-  --primary-dark: #a00f20;
-  --accent: #0ea5e9;
-  --primary-glow: rgba(195, 21, 42, 0.35);
-  --primary-soft: rgba(195, 21, 42, 0.08);
-  --sidebar-from: #450a0a;
-  --sidebar-via: #7f1d1d;
-  --sidebar-to: #450a0a;
-  --site-bg: #f4f7f6;
+  /* Legal brand identity — navy + antique gold + ivory */
+  --primary: #101D32;
+  --primary-dark: #0B1424;
+  --accent: #B79A61;
+  --primary-glow: rgba(16, 29, 50, 0.35);
+  --primary-soft: rgba(16, 29, 50, 0.08);
+  --sidebar-from: #0B1424;
+  --sidebar-via: #101D32;
+  --sidebar-to: #1A304D;
+  --site-bg: #F5F1E8;
   --radius-base: 14px;
-  --dark: #0a0a12;
-  --dark-2: #12121e;
+  --dark: #172338;
+  --dark-2: #0B1424;
   --dark-border: rgba(255, 255, 255, 0.08);
   --light: #ffffff;
-  --light-soft: #f8f9fb;
-  --border: #e2e8f0;
-  --muted: #64748b;
+  --light-soft: #F5F1E8;
+  --border: #D9DEE5;
+  --muted: #526071;
+  --brand-gold: #B79A61;
+  --danger: #DC2626;
+  --success: #16A34A;
+  --warning: #EA580C;
   --font: var(--font-cairo), "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
@@ -578,8 +583,8 @@ body.dark-mode .landing-action-outline {
 }
 
 body.dark-mode .landing-action-primary {
-  background: #c3152a !important;
-  border-color: #c3152a !important;
+  background: #101D32 !important;
+  border-color: #B79A61 !important;
   color: #fff !important;
 }
 

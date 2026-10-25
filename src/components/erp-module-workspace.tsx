@@ -33,11 +33,11 @@ function useErpStudioCss() {
 
 function gradientCss(gradient: string) {
   const map: Record<string, string> = {
-    "from-red-800 to-red-600": "linear-gradient(135deg,#7f1d1d,#dc2626)",
-    "from-red-900 to-red-700": "linear-gradient(135deg,#7f1d1d,#b91c1c)",
-    "from-red-700 to-rose-600": "linear-gradient(135deg,#b91c1c,#e11d48)",
+    "from-red-800 to-red-600": "linear-gradient(135deg,#0B1424,#101D32)",
+    "from-red-900 to-red-700": "linear-gradient(135deg,#0B1424,#101D32)",
+    "from-red-700 to-rose-600": "linear-gradient(135deg,#101D32,#e11d48)",
     "from-rose-800 to-rose-600": "linear-gradient(135deg,#9f1239,#e11d48)",
-    "from-rose-700 to-red-600": "linear-gradient(135deg,#be123c,#dc2626)",
+    "from-rose-700 to-red-600": "linear-gradient(135deg,#be123c,#101D32)",
     "from-indigo-800 to-indigo-600": "linear-gradient(135deg,#3730a3,#4f46e5)",
     "from-indigo-700 to-blue-600": "linear-gradient(135deg,#4338ca,#2563eb)",
     "from-indigo-700 to-violet-600": "linear-gradient(135deg,#4338ca,#7c3aed)",
@@ -81,15 +81,15 @@ function gradientCss(gradient: string) {
     "from-yellow-600 to-amber-500": "linear-gradient(135deg,#ca8a04,#f59e0b)",
     "from-pink-700 to-rose-600": "linear-gradient(135deg,#be185d,#e11d48)",
     "from-rose-700 to-pink-600": "linear-gradient(135deg,#be123c,#db2777)",
-    "from-red-900 to-rose-700": "linear-gradient(135deg,#7f1d1d,#be123c)",
-    "from-red-900 to-slate-800": "linear-gradient(135deg,#7f1d1d,#1e293b)",
+    "from-red-900 to-rose-700": "linear-gradient(135deg,#0B1424,#be123c)",
+    "from-red-900 to-slate-800": "linear-gradient(135deg,#0B1424,#1e293b)",
     "from-red-800 to-orange-600": "linear-gradient(135deg,#991b1b,#ea580c)",
     "from-red-800 to-rose-600": "linear-gradient(135deg,#991b1b,#e11d48)",
     "from-green-700 to-emerald-600": "linear-gradient(135deg,#15803d,#059669)",
     "from-stone-700 to-stone-500": "linear-gradient(135deg,#44403c,#78716c)",
     "from-indigo-700 to-slate-700": "linear-gradient(135deg,#4338ca,#334155)",
   };
-  return map[gradient] || "linear-gradient(135deg,#7f1d1d,#b91c1c)";
+  return map[gradient] || "linear-gradient(135deg,#0B1424,#101D32)";
 }
 
 function DataTable({
@@ -529,7 +529,7 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
                     ? "linear-gradient(135deg,#10b981,#0d9488)"
                     : kpi.tone === "from-amber-500 to-orange-600"
                       ? "linear-gradient(135deg,#f59e0b,#ea580c)"
-                      : "linear-gradient(135deg,#f43f5e,#dc2626)",
+                      : "linear-gradient(135deg,#f43f5e,#101D32)",
               color: "#fff",
             }}
           >
