@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!document.querySelector('link[data-erp-theme]')) {
         const theme = document.createElement("link");
         theme.rel = "stylesheet";
-        theme.href = "/erp-app/erp-theme.css?v=dark-contrast-20261026";
+        theme.href = "/erp-app/erp-theme.css?v=dark-contrast-20261026b";
         theme.setAttribute("data-erp-theme", "1");
         document.head.appendChild(theme);
       }

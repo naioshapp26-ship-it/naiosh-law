@@ -1,7 +1,3 @@
-# Railway/Nixpacks: give Next.js enough heap during image build
+# Railway/Nixpacks: prevent Next.js OOM during image build
 [variables]
 NODE_OPTIONS = "--max-old-space-size=4096"
-NPM_CONFIG_PRODUCTION = "false"
-
-[phases.build]
-cmds = ["npm run build"]
