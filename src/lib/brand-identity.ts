@@ -28,16 +28,28 @@ export const LEGACY_BRAND_REDS = new Set(
     "#d70000",
     "#b91c1c",
     "#a00f20",
+    "#a01020",
     "#8b0000",
+    "#8b000e",
     "#450a0a",
+    "#250404",
+    "#2d0a0a",
+    "#1a0505",
     "#7f1d1d",
+    "#7f0d1a",
     "#991b1b",
     "#fecaca",
     "#e50914",
     "#ff0000",
+    "#ff2d2d",
     "#c50712",
+    "#960009",
+    "#b5000e",
   ].map((h) => h.toLowerCase())
 );
+
+/** Non-red broken values that must never drive brand chrome */
+export const LEGACY_BROKEN_PRIMARIES = new Set(["#000000", "#000", "#111111", "#0a0a12"].map((h) => h.toLowerCase()));
 
 export function normalizeHex(hex: string): string {
   const t = String(hex || "").trim().toLowerCase();
@@ -50,4 +62,9 @@ export function normalizeHex(hex: string): string {
 
 export function isLegacyBrandRed(hex: string): boolean {
   return LEGACY_BRAND_REDS.has(normalizeHex(hex));
+}
+
+export function isBrokenPrimary(hex: string): boolean {
+  const n = normalizeHex(hex);
+  return LEGACY_BROKEN_PRIMARIES.has(n) || isLegacyBrandRed(n);
 }

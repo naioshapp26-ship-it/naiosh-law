@@ -236,8 +236,8 @@ body.homepage .hero-particles {
 body.homepage .hero-particle {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 220, 228, 0.55);
-  box-shadow: 0 0 8px rgba(229, 9, 20, 0.35);
+  background: rgba(245, 241, 232, 0.55);
+  box-shadow: 0 0 8px rgba(16, 29, 50, 0.35);
   will-change: transform, opacity;
   pointer-events: none;
 }

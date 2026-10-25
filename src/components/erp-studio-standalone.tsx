@@ -43,7 +43,7 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
   const isMarketing = config.icon === "fa-bullhorn";
   const tabs = config.tabs ?? [];
   const heroBg = isMarketing
-    ? "linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #7f1d1d 100%)"
+    ? "linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #101D32 100%)"
     : "linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%)";
   const badgeColor = isMarketing ? "text-red-100" : "text-indigo-200";
   const subColor = isMarketing ? "rgba(254,226,226,0.85)" : "rgba(199,210,254,0.85)";

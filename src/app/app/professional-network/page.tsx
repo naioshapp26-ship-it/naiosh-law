@@ -218,7 +218,7 @@ export default function ProfessionalNetworkPage() {
 
         <PageStats
           stats={[
-            { label: "المحترفون", value: professionals.length, icon: "👨‍⚖️", color: "#c3152a" },
+            { label: "المحترفون", value: professionals.length, icon: "👨‍⚖️", color: "#101D32" },
             { label: "طلبات الشبكة", value: network.length, icon: "🔗" },
             { label: "المحامون", value: professionals.filter((p) => p.type === "lawyer").length, icon: "⚖️" },
             {
@@ -253,14 +253,14 @@ export default function ProfessionalNetworkPage() {
         ) : tab === "professionals" ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
             {professionals.map((p) => (
-              <div key={p.id} className="card-white" style={{ padding: "1.35rem", borderTop: "3px solid #c3152a" }}>
+              <div key={p.id} className="card-white" style={{ padding: "1.35rem", borderTop: "3px solid #101D32" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                   <h3 style={{ fontWeight: 800, color: "#0a0a12" }}>{p.name}</h3>
                   <span
                     style={{
                       fontSize: "0.7rem",
-                      background: "rgba(195,21,42,0.1)",
-                      color: "#c3152a",
+                      background: "rgba(16, 29, 50,0.1)",
+                      color: "#101D32",
                       padding: "0.2rem 0.5rem",
                       borderRadius: "8px",
                       fontWeight: 700,

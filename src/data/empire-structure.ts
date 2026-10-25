@@ -50,7 +50,7 @@ export const dashboardTypes: DashboardType[] = [
     label: "لوحة تحكم النظام 360",
     description: "رؤية شاملة 360° لكل المحاور والوحدات",
     icon: "🌐",
-    color: "#c3152a",
+    color: "#101D32",
     kpis: ["المحاور الثمانية", "الوحدات التشغيلية", "التكاملات", "التنبيهات"],
   },
   {
@@ -58,7 +58,7 @@ export const dashboardTypes: DashboardType[] = [
     label: "لوحة تحكم إمبراطورية نايوش",
     description: "القيادة المركزية لمنظومة نايوش القانونية",
     icon: "👑",
-    color: "#7f0d1a",
+    color: "#B79A61",
     kpis: ["الفروع العالمية", "الشراكات", "العمليات", "الحوكمة"],
   },
   {
@@ -98,7 +98,7 @@ export const imperialAxes: ImperialAxis[] = [
     title: "لوحة التحكم السيادية",
     subtitle: "الموضوع الرئيسي الأول",
     icon: "👑",
-    color: "#c3152a",
+    color: "#101D32",
     href: "/app/axis/sovereign",
     items: [
       item("dashboard", "لوحة التحكم", undefined, "/app/dashboard"),

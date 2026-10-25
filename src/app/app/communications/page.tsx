@@ -157,7 +157,7 @@ const btnStyle: React.CSSProperties = {
   padding: "0.7rem 1rem",
   borderRadius: "10px",
   border: "none",
-  background: "#c3152a",
+  background: "#101D32",
   color: "#fff",
   fontWeight: 700,
   cursor: "pointer",
@@ -352,7 +352,7 @@ export default function CommunicationsPage() {
             { label: "الفروع", value: branches.length, color: "#0a0a12" },
             { label: "قواعد نشطة", value: rules.filter((r) => r.status === "نشط").length, color: "#22c55e" },
             { label: "تكاملات", value: integrations.length, color: "#0ea5e9" },
-            { label: "إشعارات اليوم", value: logs.length, color: "#c3152a" },
+            { label: "إشعارات اليوم", value: logs.length, color: "#101D32" },
           ].map((s) => (
             <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
               <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
@@ -381,9 +381,9 @@ export default function CommunicationsPage() {
               style={{
                 padding: "0.5rem 0.95rem",
                 borderRadius: "10px",
-                border: tab === t.key ? "1px solid #c3152a" : "1px solid #e2e8f0",
-                background: tab === t.key ? "rgba(195,21,42,0.08)" : "#fff",
-                color: tab === t.key ? "#c3152a" : "#475569",
+                border: tab === t.key ? "1px solid #101D32" : "1px solid #e2e8f0",
+                background: tab === t.key ? "rgba(16, 29, 50,0.08)" : "#fff",
+                color: tab === t.key ? "#101D32" : "#475569",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontFamily: "var(--font-cairo)",
@@ -418,7 +418,7 @@ export default function CommunicationsPage() {
                         style={{
                           fontSize: "0.72rem",
                           fontWeight: 700,
-                          color: b.isMain === "رئيسي" ? "#c3152a" : "#64748b",
+                          color: b.isMain === "رئيسي" ? "#101D32" : "#64748b",
                         }}
                       >
                         {b.isMain}
@@ -486,7 +486,7 @@ export default function CommunicationsPage() {
                               type="button"
                               onClick={() => setAddOpen(true)}
                               style={{
-                                color: "#c3152a",
+                                color: "#101D32",
                                 fontWeight: 700,
                                 background: "none",
                                 border: "none",
@@ -591,7 +591,7 @@ export default function CommunicationsPage() {
                               type="button"
                               onClick={() => setAddOpen(true)}
                               style={{
-                                color: "#c3152a",
+                                color: "#101D32",
                                 fontWeight: 700,
                                 background: "none",
                                 border: "none",
@@ -662,7 +662,7 @@ export default function CommunicationsPage() {
                     <p
                       style={{
                         fontSize: "0.85rem",
-                        color: sendResult.includes("فشل") ? "#c3152a" : "#22c55e",
+                        color: sendResult.includes("فشل") ? "#101D32" : "#22c55e",
                         fontWeight: 600,
                       }}
                     >

@@ -58,7 +58,7 @@ function ItemCard({
       className="card-white"
       style={{
         padding: "1rem 1.15rem",
-        borderRight: "3px solid rgba(195,21,42,0.35)",
+        borderRight: "3px solid rgba(16, 29, 50,0.35)",
         display: "flex",
         flexDirection: "column",
         gap: "0.65rem",
@@ -74,9 +74,9 @@ function ItemCard({
           </p>
         )}
         {item.moduleSlug ? (
-          <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 600 }}>وحدة تشغيلية ←</span>
+          <span style={{ fontSize: "0.7rem", color: "#101D32", fontWeight: 600 }}>وحدة تشغيلية ←</span>
         ) : (
-          <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 600 }}>فتح ←</span>
+          <span style={{ fontSize: "0.7rem", color: "#101D32", fontWeight: 600 }}>فتح ←</span>
         )}
       </Link>
       {canWrite ? (
@@ -116,7 +116,7 @@ function DropdownSection({
           justifyContent: "space-between",
           alignItems: "center",
           padding: "1.1rem 1.25rem",
-          background: open ? "linear-gradient(135deg, rgba(195,21,42,0.06) 0%, #fff 100%)" : "#fff",
+          background: open ? "linear-gradient(135deg, rgba(16, 29, 50,0.06) 0%, #fff 100%)" : "#fff",
           border: "none",
           cursor: "pointer",
           fontFamily: "var(--font-cairo)",
@@ -129,7 +129,7 @@ function DropdownSection({
             {dropdown.items.length} عنصر
           </p>
         </div>
-        <span style={{ color: "#c3152a", fontWeight: 700, fontSize: "0.85rem" }}>{open ? "▲" : "▼"}</span>
+        <span style={{ color: "#101D32", fontWeight: 700, fontSize: "0.85rem" }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div
@@ -408,12 +408,12 @@ export function AxisHubPage({ axis, userName }: Props) {
                 marginBottom: "1.25rem",
                 padding: "0.75rem 1.25rem",
                 borderRadius: "14px",
-                background: "linear-gradient(135deg, #c3152a 0%, #a01020 100%)",
+                background: "linear-gradient(135deg, #101D32 0%, #0B1424 100%)",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: "0.9rem",
                 textDecoration: "none",
-                boxShadow: "0 4px 14px rgba(195,21,42,0.3)",
+                boxShadow: "0 4px 14px rgba(16, 29, 50,0.3)",
               }}
             >
               📚 فتح منظومة التصنيف القانوني الكاملة (8 محاور) ←
@@ -496,7 +496,7 @@ export function AxisHubPage({ axis, userName }: Props) {
             display: "inline-flex",
             alignItems: "center",
             gap: "0.4rem",
-            color: "#c3152a",
+            color: "#101D32",
             fontWeight: 700,
             fontSize: "0.875rem",
           }}

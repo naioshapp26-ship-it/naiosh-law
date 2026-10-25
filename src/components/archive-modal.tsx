@@ -116,7 +116,7 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
         <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gap: "1rem" }}>
             <div>
-              <label className="input-label">العنوان <span style={{ color: "#c3152a" }}>*</span></label>
+              <label className="input-label">العنوان <span style={{ color: "#101D32" }}>*</span></label>
               <input className="input-field" required value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
             </div>
             <div>
@@ -126,19 +126,19 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
               <div>
-                <label className="input-label">طرف أول <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">طرف أول <span style={{ color: "#101D32" }}>*</span></label>
                 <input className="input-field" required value={parties.firstParty} onChange={(e) => setParties((p) => ({ ...p, firstParty: e.target.value }))} />
               </div>
               <div>
-                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#101D32" }}>*</span></label>
                 <input className="input-field" type="tel" required value={parties.firstPartyPhone} onChange={(e) => setParties((p) => ({ ...p, firstPartyPhone: e.target.value }))} />
               </div>
               <div>
-                <label className="input-label">طرف ثاني <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">طرف ثاني <span style={{ color: "#101D32" }}>*</span></label>
                 <input className="input-field" required value={parties.secondParty} onChange={(e) => setParties((p) => ({ ...p, secondParty: e.target.value }))} />
               </div>
               <div>
-                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#101D32" }}>*</span></label>
                 <input className="input-field" type="tel" required value={parties.secondPartyPhone} onChange={(e) => setParties((p) => ({ ...p, secondPartyPhone: e.target.value }))} />
               </div>
             </div>

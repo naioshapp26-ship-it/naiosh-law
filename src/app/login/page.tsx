@@ -386,9 +386,9 @@ export default function LoginPage() {
           margin-bottom: 1.25rem;
           padding: 0.85rem 1rem;
           border-radius: 0.75rem;
-          background: rgba(195,21,42,0.06);
-          border: 1px solid rgba(195,21,42,0.2);
-          color: #c3152a;
+          background: rgba(220, 38, 38, 0.08);
+          border: 1px solid rgba(220, 38, 38, 0.25);
+          color: #DC2626;
           font-size: 0.875rem;
           font-weight: 600;
         }

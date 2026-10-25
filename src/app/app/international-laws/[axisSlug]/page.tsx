@@ -31,7 +31,7 @@ function AxisContent() {
       <div style={{ textAlign: "center", padding: "4rem" }}>
         <p style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</p>
         <h2 style={{ fontWeight: 800, marginBottom: "0.5rem" }}>المحور غير موجود</h2>
-        <Link href="/app/international-laws" style={{ color: "#c3152a", fontWeight: 700 }}>
+        <Link href="/app/international-laws" style={{ color: "#101D32", fontWeight: 700 }}>
           العودة للتصنيف القانوني
         </Link>
       </div>

@@ -54,7 +54,7 @@ body.mobile-nav-lock .mobile-nav-backdrop {
   /* ── Header bar: one clean row only ── */
   body.homepage .top-nav {
     background: #ffffff !important;
-    border-bottom: 2px solid rgba(229, 9, 20, 0.14) !important;
+    border-bottom: 2px solid rgba(16, 29, 50, 0.14) !important;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
     padding: 0 !important;
     overflow: visible !important;
@@ -112,8 +112,8 @@ body.mobile-nav-lock .mobile-nav-backdrop {
     height: auto !important;
     padding: 4px 8px !important;
     border-radius: 14px;
-    background: rgba(229, 9, 20, 0.05);
-    border: 1px solid rgba(229, 9, 20, 0.12);
+    background: rgba(16, 29, 50, 0.05);
+    border: 1px solid rgba(16, 29, 50, 0.12);
     text-decoration: none;
     overflow: visible !important;
     box-sizing: border-box !important;

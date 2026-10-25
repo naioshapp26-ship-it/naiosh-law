@@ -103,16 +103,16 @@ export default function LandingHome() {
         >
           <div>
             <p style={{ fontSize: ".875rem", fontWeight: 600, color: "#4b5563", margin: 0 }}>الأرصدة المتاحة</p>
-            <p style={{ fontSize: "2rem", fontWeight: 800, color: "#b91c1c", margin: ".25rem 0 0" }}>شحن فوري وآمن</p>
+            <p style={{ fontSize: "2rem", fontWeight: 800, color: "#101D32", margin: ".25rem 0 0" }}>شحن فوري وآمن</p>
             <p style={{ fontSize: ".75rem", color: "#6b7280", margin: ".35rem 0 0" }}>
               الرصيد جيد — اشترِ باقات الرصيد واستخدمها في خدماتك
             </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem", alignItems: "center" }}>
-            <Link href="/login" style={{ fontSize: ".875rem", fontWeight: 700, color: "#b91c1c", textDecoration: "underline", textUnderlineOffset: 4 }}>
+            <Link href="/login" style={{ fontSize: ".875rem", fontWeight: 700, color: "#101D32", textDecoration: "underline", textUnderlineOffset: 4 }}>
               شحن الأرصدة
             </Link>
-            <Link href="/login" style={{ fontSize: ".875rem", fontWeight: 700, color: "#991b1b", marginInlineStart: "1rem" }}>
+            <Link href="/login" style={{ fontSize: ".875rem", fontWeight: 700, color: "#101D32", marginInlineStart: "1rem" }}>
               كل خيارات الدفع ←
             </Link>
           </div>

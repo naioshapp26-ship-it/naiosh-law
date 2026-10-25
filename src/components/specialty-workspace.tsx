@@ -44,10 +44,10 @@ function SpecialtyRail({ activeSlug }: { activeSlug: string }) {
               fontSize: "0.82rem",
               fontWeight: 800,
               textDecoration: "none",
-              background: active ? "#c3152a" : "#fff",
+              background: active ? "#101D32" : "#fff",
               color: active ? "#fff" : "#475569",
-              border: active ? "1px solid #c3152a" : "1px solid #e2e8f0",
-              boxShadow: active ? "0 8px 20px rgba(195,21,42,0.25)" : "none",
+              border: active ? "1px solid #101D32" : "1px solid #e2e8f0",
+              boxShadow: active ? "0 8px 20px rgba(16, 29, 50,0.25)" : "none",
             }}
           >
             <span aria-hidden>{s.icon}</span>
@@ -117,7 +117,7 @@ function DataTables({ specialty }: { specialty: LandingSpecialty }) {
           label: b.label,
           value: b.rows.length,
           icon: "📊",
-          color: "#c3152a",
+          color: "#101D32",
         }))}
       />
 
@@ -233,7 +233,7 @@ function ProfileHub() {
             key={s.slug}
             href={specialtyHref(s.slug)}
             className="card-white"
-            style={{ padding: "1.1rem", textDecoration: "none", borderRight: "3px solid rgba(195,21,42,0.35)" }}
+            style={{ padding: "1.1rem", textDecoration: "none", borderRight: "3px solid rgba(16, 29, 50,0.35)" }}
           >
             <div style={{ fontSize: "1.35rem", marginBottom: "0.35rem" }}>{s.icon}</div>
             <p style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.25rem" }}>{s.label}</p>
@@ -306,11 +306,11 @@ export function SpecialtyWorkspace({ slug }: Props) {
               style={{
                 padding: "0.35rem 0.7rem",
                 borderRadius: 999,
-                background: "rgba(195,21,42,0.07)",
+                background: "rgba(16, 29, 50,0.07)",
                 color: "#9f1239",
                 fontSize: "0.75rem",
                 fontWeight: 700,
-                border: "1px solid rgba(195,21,42,0.12)",
+                border: "1px solid rgba(16, 29, 50,0.12)",
               }}
             >
               {h}

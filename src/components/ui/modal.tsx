@@ -179,7 +179,7 @@ export function Modal({
                   <>
                     <label className="input-label" htmlFor={inputId}>
                       {fieldLabel}
-                      {f.required && <span style={{ color: "#c3152a" }}> *</span>}
+                      {f.required && <span style={{ color: "#101D32" }}> *</span>}
                     </label>
                     {f.type === "select" ? (
                       <select

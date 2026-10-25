@@ -274,9 +274,9 @@ html:not(.homepage-root) .erp-page h3 {
 }
 
 @keyframes pulse-dot {
-  0%   { box-shadow: 0 0 0 0 rgba(195, 21, 42, 0.8); }
-  70%  { box-shadow: 0 0 0 8px rgba(195, 21, 42, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(195, 21, 42, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(16, 29, 50, 0.8); }
+  70%  { box-shadow: 0 0 0 8px rgba(16, 29, 50, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 29, 50, 0); }
 }
 
 @keyframes glow-pulse {
@@ -371,8 +371,8 @@ html:not(.homepage-root) .erp-page h3 {
 
 /* ── Landing motion helpers ──────────────── */
 @keyframes btn-pulse-glow {
-  0%, 100% { box-shadow: 0 4px 20px rgba(195, 21, 42, 0.35); }
-  50%      { box-shadow: 0 8px 36px rgba(195, 21, 42, 0.65); }
+  0%, 100% { box-shadow: 0 4px 20px rgba(16, 29, 50, 0.35); }
+  50%      { box-shadow: 0 8px 36px rgba(16, 29, 50, 0.65); }
 }
 
 .btn-pulse-glow {

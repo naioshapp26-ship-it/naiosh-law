@@ -133,7 +133,7 @@ const PAGE_STYLE = `
   .badge-img  { background:#dbeafe; color:#1d4ed8; }
   .badge-vid  { background:#ede9fe; color:#6d28d9; }
   .badge-on   { background:#dcfce7; color:#15803d; }
-  .badge-off  { background:#fee2e2; color:#b91c1c; }
+  .badge-off  { background:#fee2e2; color:#101D32; }
   .media-btn {
     width:32px; height:32px; border-radius:8px; border:none; cursor:pointer;
     display:flex; align-items:center; justify-content:center; font-size:.8rem;
@@ -145,7 +145,7 @@ const PAGE_STYLE = `
   .media-btn-mute:hover:not(:disabled) { background:#e2e8f0; color:#334155; }
   .media-btn-green  { background:#dcfce7; color:#15803d; }
   .media-btn-green:hover { background:#bbf7d0; }
-  .media-btn-red    { background:#fee2e2; color:#b91c1c; }
+  .media-btn-red    { background:#fee2e2; color:#101D32; }
   .media-btn-red:hover { background:#fecaca; }
 
   .upload-zone {
@@ -637,7 +637,7 @@ export default function SystemSettingsPage() {
             <Link
               href="/login"
               style={{
-                background: "#c3152a",
+                background: "#101D32",
                 color: "#fff",
                 padding: "0.55rem 1.1rem",
                 borderRadius: 10,
@@ -711,7 +711,7 @@ export default function SystemSettingsPage() {
             <div id="naiosh-back-slot" style={{ display: "flex", alignItems: "center", marginBottom: 0 }} />
             <div
               style={{
-                background: "#c3152a",
+                background: "#101D32",
                 color: "#fff",
                 width: 36,
                 height: 36,
@@ -719,7 +719,7 @@ export default function SystemSettingsPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 8px 16px rgba(195,21,42,.25)",
+                boxShadow: "0 8px 16px rgba(16, 29, 50,.25)",
               }}
             >
               <i className="fas fa-palette" style={{ fontSize: "0.85rem" }} />
@@ -905,7 +905,7 @@ export default function SystemSettingsPage() {
                         disabled={uploadingLogo}
                         style={{
                           background: "#fee2e2",
-                          color: "#b91c1c",
+                          color: "#101D32",
                           padding: "0.625rem 1rem",
                           borderRadius: 8,
                           border: "none",
@@ -1529,7 +1529,7 @@ export default function SystemSettingsPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={section.iconUrl} alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
                       ) : (
-                        <i className={section.iconClass || "fas fa-square"} style={{ color: "#c3152a" }} />
+                        <i className={section.iconClass || "fas fa-square"} style={{ color: "#101D32" }} />
                       );
                     return (
                       <div
@@ -1737,7 +1737,7 @@ export default function SystemSettingsPage() {
           }}
         >
         <span style={{ fontSize: "0.875rem", color: "#64748b", display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
-          <i className="fas fa-circle-info" style={{ color: "#c3152a" }} />
+          <i className="fas fa-circle-info" style={{ color: "#101D32" }} />
           سيتم تطبيق جميع التغييرات دفعة واحدة
         </span>
         <button
@@ -1745,7 +1745,7 @@ export default function SystemSettingsPage() {
           onClick={() => void save()}
           disabled={saving || loading}
           style={{
-            background: "#c3152a",
+            background: "#101D32",
             color: "#fff",
             padding: "0.625rem 1.5rem",
             borderRadius: 12,
@@ -1756,7 +1756,7 @@ export default function SystemSettingsPage() {
             display: "inline-flex",
             alignItems: "center",
             gap: "0.5rem",
-            boxShadow: "0 8px 20px rgba(195,21,42,.3)",
+            boxShadow: "0 8px 20px rgba(16, 29, 50,.3)",
             fontFamily: "inherit",
           }}
         >

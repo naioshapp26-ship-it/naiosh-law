@@ -31,12 +31,12 @@ export function PageHeader({ icon, title, subtitle, actions }: HeaderProps) {
               width: 44,
               height: 44,
               borderRadius: "14px",
-              background: "linear-gradient(135deg, #c3152a 0%, #8f0c1e 100%)",
+              background: "linear-gradient(135deg, #101D32 0%, #8f0c1e 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "1.35rem",
-              boxShadow: "0 4px 14px rgba(195,21,42,0.25)",
+              boxShadow: "0 4px 14px rgba(16, 29, 50,0.25)",
             }}
           >
             {icon}
@@ -90,9 +90,9 @@ export function PageTabs({ tabs, active, onChange }: { tabs: Tab[]; active: stri
           style={{
             padding: "0.55rem 1.15rem",
             borderRadius: "12px",
-            border: active === t.key ? "2px solid #c3152a" : "1px solid #e2e8f0",
-            background: active === t.key ? "linear-gradient(135deg, rgba(195,21,42,0.1) 0%, rgba(195,21,42,0.04) 100%)" : "#fff",
-            color: active === t.key ? "#c3152a" : "#475569",
+            border: active === t.key ? "2px solid #101D32" : "1px solid #e2e8f0",
+            background: active === t.key ? "linear-gradient(135deg, rgba(16, 29, 50,0.1) 0%, rgba(16, 29, 50,0.04) 100%)" : "#fff",
+            color: active === t.key ? "#101D32" : "#475569",
             fontWeight: 700,
             cursor: "pointer",
             fontFamily: "var(--font-cairo)",
@@ -105,7 +105,7 @@ export function PageTabs({ tabs, active, onChange }: { tabs: Tab[]; active: stri
             <span
               style={{
                 marginInlineStart: "0.4rem",
-                background: active === t.key ? "#c3152a" : "#e2e8f0",
+                background: active === t.key ? "#101D32" : "#e2e8f0",
                 color: active === t.key ? "#fff" : "#64748b",
                 borderRadius: "20px",
                 padding: "0.1rem 0.45rem",
@@ -198,7 +198,7 @@ export function EmptyState({ icon, title, description, onSeed, onAdd, seeding, c
           width: 72,
           height: 72,
           borderRadius: "20px",
-          background: "rgba(195,21,42,0.08)",
+          background: "rgba(16, 29, 50,0.08)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -232,7 +232,7 @@ export function PageLoader({ label = "جاري التحميل..." }: { label?: s
           height: 40,
           borderRadius: "50%",
           border: "3px solid #e2e8f0",
-          borderTopColor: "#c3152a",
+          borderTopColor: "#101D32",
           animation: "spin-slow 0.9s linear infinite",
           margin: "0 auto 1rem",
         }}
@@ -261,7 +261,7 @@ export function useToast() {
         zIndex: 9999,
         padding: "0.85rem 1.5rem",
         borderRadius: "14px",
-        background: toast.type === "success" ? "#0f172a" : "#c3152a",
+        background: toast.type === "success" ? "#0f172a" : "#101D32",
         color: "#fff",
         fontWeight: 600,
         fontSize: "0.875rem",

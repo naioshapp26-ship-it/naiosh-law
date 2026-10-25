@@ -2,7 +2,7 @@ export type BadgeColor = "green" | "red" | "yellow" | "blue" | "gray" | "purple"
 
 const colorMap: Record<BadgeColor, { bg: string; color: string; border: string }> = {
   green:  { bg: "rgba(34,197,94,0.1)",  color: "#16a34a", border: "rgba(34,197,94,0.22)"  },
-  red:    { bg: "rgba(195,21,42,0.1)",  color: "#c3152a", border: "rgba(195,21,42,0.22)"  },
+  red:    { bg: "rgba(16, 29, 50,0.1)",  color: "#101D32", border: "rgba(16, 29, 50,0.22)"  },
   yellow: { bg: "rgba(245,158,11,0.1)", color: "#b45309", border: "rgba(245,158,11,0.22)" },
   blue:   { bg: "rgba(59,130,246,0.1)", color: "#1d4ed8", border: "rgba(59,130,246,0.22)" },
   gray:   { bg: "rgba(100,116,139,0.1)",color: "#475569", border: "rgba(100,116,139,0.2)" },

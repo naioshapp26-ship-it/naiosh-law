@@ -182,9 +182,9 @@ export default function LegalKnowledgePage() {
                   style={{
                     padding: "0.6rem 1.15rem",
                     borderRadius: "12px",
-                    border: "1px solid #c3152a",
-                    background: "rgba(195,21,42,0.06)",
-                    color: "#c3152a",
+                    border: "1px solid #101D32",
+                    background: "rgba(16, 29, 50,0.06)",
+                    color: "#101D32",
                     fontWeight: 700,
                     cursor: "pointer",
                     fontFamily: "var(--font-cairo)",
@@ -199,7 +199,7 @@ export default function LegalKnowledgePage() {
 
         <PageStats
           stats={[
-            { label: "الفروع القانونية", value: branches.length, icon: "🌳", color: "#c3152a" },
+            { label: "الفروع القانونية", value: branches.length, icon: "🌳", color: "#101D32" },
             { label: "التخصصات", value: totalSpecs || specs.length, icon: "🎯" },
             { label: "المواد القانونية", value: totalSubjects, icon: "📄" },
             { label: "القضايا المرتبطة", value: branches.reduce((n, b) => n + (b._count?.cases ?? 0), 0), icon: "⚖️" },
@@ -231,7 +231,7 @@ export default function LegalKnowledgePage() {
         ) : tab === "branches" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             {branches.map((branch) => (
-              <div key={branch.id} className="card-white" style={{ padding: "1.25rem 1.35rem", borderRight: "4px solid #c3152a" }}>
+              <div key={branch.id} className="card-white" style={{ padding: "1.25rem 1.35rem", borderRight: "4px solid #101D32" }}>
                 <button
                   type="button"
                   onClick={() => setOpenBranch(openBranch === branch.id ? null : branch.id)}
@@ -253,7 +253,7 @@ export default function LegalKnowledgePage() {
                       <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.25rem" }}>{branch.description}</p>
                     )}
                   </div>
-                  <span style={{ color: "#c3152a", fontSize: "0.82rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                  <span style={{ color: "#101D32", fontSize: "0.82rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                     {branch.specializations.length} تخصص • {branch._count?.cases ?? 0} قضية {openBranch === branch.id ? "▲" : "▼"}
                   </span>
                 </button>
@@ -264,7 +264,7 @@ export default function LegalKnowledgePage() {
                     ) : (
                       branch.specializations.map((spec) => (
                         <div key={spec.id} style={{ marginBottom: "0.85rem" }}>
-                          <p style={{ fontWeight: 700, color: "#c3152a", fontSize: "0.9rem", marginBottom: "0.35rem" }}>
+                          <p style={{ fontWeight: 700, color: "#101D32", fontSize: "0.9rem", marginBottom: "0.35rem" }}>
                             ▸ {spec.name}
                           </p>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", paddingInlineStart: "1rem" }}>
@@ -308,7 +308,7 @@ export default function LegalKnowledgePage() {
                   <tr key={s.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                     <td style={{ padding: "0.85rem 1rem", fontWeight: 700, color: "#0a0a12" }}>{s.name}</td>
                     <td style={{ padding: "0.85rem 1rem", color: "#64748b" }}>{s.branch?.name ?? "—"}</td>
-                    <td style={{ padding: "0.85rem 1rem", color: "#c3152a", fontWeight: 700 }}>{s._count?.cases ?? 0}</td>
+                    <td style={{ padding: "0.85rem 1rem", color: "#101D32", fontWeight: 700 }}>{s._count?.cases ?? 0}</td>
                   </tr>
                 ))}
               </tbody>

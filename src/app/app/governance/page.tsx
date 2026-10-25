@@ -315,7 +315,7 @@ export default function GovernancePage() {
         >
           {[
             { label: "طلبات معلقة", value: pendingApprovals, color: "#f59e0b" },
-            { label: "توقيعات معلقة", value: pendingSignatures, color: "#c3152a" },
+            { label: "توقيعات معلقة", value: pendingSignatures, color: "#101D32" },
             { label: "سياسات سارية", value: policies.filter((p) => p.status === "ساري").length, color: "#22c55e" },
             { label: "سجلات تدقيق", value: audit.length, color: "#0a0a12" },
           ].map((s) => (
@@ -349,9 +349,9 @@ export default function GovernancePage() {
               style={{
                 padding: "0.5rem 0.95rem",
                 borderRadius: "10px",
-                border: tab === t.key ? "1px solid #c3152a" : "1px solid #e2e8f0",
-                background: tab === t.key ? "rgba(195,21,42,0.08)" : "#fff",
-                color: tab === t.key ? "#c3152a" : "#475569",
+                border: tab === t.key ? "1px solid #101D32" : "1px solid #e2e8f0",
+                background: tab === t.key ? "rgba(16, 29, 50,0.08)" : "#fff",
+                color: tab === t.key ? "#101D32" : "#475569",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontFamily: "var(--font-cairo)",
@@ -407,7 +407,7 @@ export default function GovernancePage() {
                                 ? "#f59e0b"
                                 : a.statusRaw === "approved"
                                   ? "#22c55e"
-                                  : "#c3152a",
+                                  : "#101D32",
                             fontWeight: 600,
                           }}
                         >
@@ -420,7 +420,7 @@ export default function GovernancePage() {
                                 <button type="button" onClick={() => resolveApproval(a.id, "approved")} style={btnSmall("#22c55e")}>
                                   اعتماد
                                 </button>
-                                <button type="button" onClick={() => resolveApproval(a.id, "rejected")} style={btnSmall("#c3152a")}>
+                                <button type="button" onClick={() => resolveApproval(a.id, "rejected")} style={btnSmall("#101D32")}>
                                   رفض
                                 </button>
                               </div>
@@ -434,7 +434,7 @@ export default function GovernancePage() {
                         <td colSpan={7} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
                           لا توجد طلبات —{" "}
                           {canWrite && (
-                            <button type="button" onClick={() => setAddOpen(true)} style={{ color: "#c3152a", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                            <button type="button" onClick={() => setAddOpen(true)} style={{ color: "#101D32", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
                               ＋ إضافة طلب
                             </button>
                           )}
@@ -451,7 +451,7 @@ export default function GovernancePage() {
                 {policies.map((p) => (
                   <div key={p.id} className="card-white" style={{ padding: "1.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                      <span style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}>{p.category}</span>
+                      <span style={{ fontSize: "0.72rem", color: "#101D32", fontWeight: 700 }}>{p.category}</span>
                       <span style={{ fontSize: "0.72rem", color: "#64748b" }}>v{p.version}</span>
                     </div>
                     <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.4rem", fontSize: "0.95rem" }}>{p.title}</h3>
@@ -505,7 +505,7 @@ export default function GovernancePage() {
                         <td style={tdStyle}>
                           {s.statusRaw === "pending" && (
                             <div style={{ display: "flex", gap: "0.35rem" }}>
-                              <button type="button" onClick={() => signDocument(s.id, "sign")} style={btnSmall("#c3152a")}>
+                              <button type="button" onClick={() => signDocument(s.id, "sign")} style={btnSmall("#101D32")}>
                                 توقيع
                               </button>
                               <button type="button" onClick={() => signDocument(s.id, "reject")} style={btnSmall("#94a3b8")}>
@@ -521,7 +521,7 @@ export default function GovernancePage() {
                         <td colSpan={6} style={{ ...tdStyle, textAlign: "center", color: "#64748b" }}>
                           لا توجد طلبات توقيع —{" "}
                           {canWrite && (
-                            <button type="button" onClick={() => setAddOpen(true)} style={{ color: "#c3152a", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                            <button type="button" onClick={() => setAddOpen(true)} style={{ color: "#101D32", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
                               ＋ إضافة طلب توقيع
                             </button>
                           )}

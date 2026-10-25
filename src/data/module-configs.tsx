@@ -72,7 +72,7 @@ export const moduleConfigs: ModuleConfig[] = [
     entityName: "قضية",
     addLabel: "إضافة قضية جديدة",
     kpis: [
-      { label: "إجمالي القضايا",  value: "128", delta: "+7 هذا الأسبوع", deltaPos: true,  icon: "⚖️", accent: "#c3152a" },
+      { label: "إجمالي القضايا",  value: "128", delta: "+7 هذا الأسبوع", deltaPos: true,  icon: "⚖️", accent: "#101D32" },
       { label: "قضايا نشطة",     value: "89",  delta: "70% من الإجمالي", deltaPos: true,  icon: "🟢", accent: "#22c55e" },
       { label: "جلسات الشهر",    value: "47",  delta: "12 هذا الأسبوع",  deltaPos: true,  icon: "🏛️", accent: "#0ea5e9" },
       { label: "إجمالي الرسوم",   value: "284k",delta: "+23% عن الشهر",   deltaPos: true,  icon: "💰", accent: "#f59e0b" },
@@ -176,7 +176,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "جلسات هذا الشهر",  value: "47",  delta: "+5 عن الشهر السابق", deltaPos: true,  icon: "🏛️", accent: "#0ea5e9" },
       { label: "جلسات هذا الأسبوع",value: "12",  delta: "3 غدًا",              deltaPos: true,  icon: "📅", accent: "#22c55e" },
       { label: "جلسات مؤجلة",     value: "8",   delta: "تتطلب إعادة جدولة",   deltaPos: false, icon: "⏳", accent: "#f59e0b" },
-      { label: "قضايا محددة",      value: "89",  delta: "68 نشطة",             deltaPos: true,  icon: "⚖️", accent: "#c3152a" },
+      { label: "قضايا محددة",      value: "89",  delta: "68 نشطة",             deltaPos: true,  icon: "⚖️", accent: "#101D32" },
     ],
     columns: [
       { key: "caseNo",   label: "رقم القضية" },
@@ -220,7 +220,7 @@ export const moduleConfigs: ModuleConfig[] = [
     addLabel: "إضافة متابعة جديدة",
     kpis: [
       { label: "إجمالي المتابعات", value: "94",  delta: "+6 هذا الأسبوع", deltaPos: true,  icon: "📋", accent: "#0ea5e9" },
-      { label: "متابعات عاجلة",   value: "18",  delta: "تحتاج تدخل",      deltaPos: false, icon: "⚡", accent: "#c3152a" },
+      { label: "متابعات عاجلة",   value: "18",  delta: "تحتاج تدخل",      deltaPos: false, icon: "⚡", accent: "#101D32" },
       { label: "أحكام معلقة",     value: "12",  delta: "منتظرة تنفيذ",    deltaPos: false, icon: "⚖️", accent: "#f59e0b" },
       { label: "مكتملة هذا الشهر",value: "37",  delta: "+15% عن الشهر",   deltaPos: true,  icon: "✅", accent: "#22c55e" },
     ],
@@ -265,7 +265,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "إجمالي الرسوم",       value: "724k",  delta: "+23% عن الشهر",   deltaPos: true,  icon: "💰", accent: "#22c55e"  },
       { label: "مدفوعات هذا الشهر",   value: "184k",  delta: "+18% عن الشهر",   deltaPos: true,  icon: "💳", accent: "#0ea5e9"  },
       { label: "مبالغ معلقة",         value: "312k",  delta: "43% من الإجمالي", deltaPos: false, icon: "⏳", accent: "#f59e0b"  },
-      { label: "فواتير غير مسددة",    value: "28",    delta: "8 متأخرة",         deltaPos: false, icon: "📄", accent: "#c3152a"  },
+      { label: "فواتير غير مسددة",    value: "28",    delta: "8 متأخرة",         deltaPos: false, icon: "📄", accent: "#101D32"  },
     ],
     columns: [
       { key:"invoiceNo", label:"رقم الفاتورة" },
@@ -390,7 +390,7 @@ export const moduleConfigs: ModuleConfig[] = [
     entityName: "طلب",
     addLabel: "فتح طلب جديد",
     kpis: [
-      { label: "طلبات مفتوحة",    value: "23",  delta: "+5 هذا الأسبوع",  deltaPos: false, icon: "📤", accent: "#c3152a" },
+      { label: "طلبات مفتوحة",    value: "23",  delta: "+5 هذا الأسبوع",  deltaPos: false, icon: "📤", accent: "#101D32" },
       { label: "طلبات منجزة",    value: "88",  delta: "هذا الشهر",        deltaPos: true,  icon: "✅", accent: "#22c55e" },
       { label: "متوسط الإنجاز",  value: "2.1", delta: "أيام",             deltaPos: true,  icon: "⚡", accent: "#0ea5e9" },
       { label: "طلبات متأخرة",   value: "4",   delta: "تتجاوز المدة",     deltaPos: false, icon: "⏰", accent: "#f59e0b" },
@@ -430,7 +430,7 @@ export const moduleConfigs: ModuleConfig[] = [
     entityName: "شكوى",
     addLabel: "تسجيل شكوى جديدة",
     kpis: [
-      { label: "شكاوى مفتوحة",   value: "12", delta: "+3 هذا الأسبوع",   deltaPos: false, icon: "🔔", accent: "#c3152a" },
+      { label: "شكاوى مفتوحة",   value: "12", delta: "+3 هذا الأسبوع",   deltaPos: false, icon: "🔔", accent: "#101D32" },
       { label: "شكاوى منجزة",   value: "65", delta: "هذا الربع",         deltaPos: true,  icon: "✅", accent: "#22c55e" },
       { label: "متوسط حل الشكوى",value: "4.5",delta: "أيام",             deltaPos: false, icon: "⏱️", accent: "#f59e0b" },
       { label: "رضا العملاء",   value: "94%", delta: "+2% عن الربع السابق",deltaPos: true, icon: "😊", accent: "#8b5cf6" },
@@ -594,7 +594,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "إشعارات اليوم",    value: "142", delta: "+23 عن أمس",     deltaPos: true,  icon: "🔔", accent: "#f59e0b" },
       { label: "قواعد نشطة",      value: "28",  delta: "قاعدة trigger",   deltaPos: true,  icon: "⚡", accent: "#22c55e" },
       { label: "إشعارات مرسلة",   value: "2.8k",delta: "هذا الشهر",      deltaPos: true,  icon: "📤", accent: "#0ea5e9" },
-      { label: "إشعارات غير مقروءة",value: "14", delta: "تنتظر المراجعة", deltaPos: false, icon: "📭", accent: "#c3152a" },
+      { label: "إشعارات غير مقروءة",value: "14", delta: "تنتظر المراجعة", deltaPos: false, icon: "📭", accent: "#101D32" },
     ],
     columns: [
       { key:"title",    label:"عنوان الإشعار" },

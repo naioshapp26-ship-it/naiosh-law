@@ -85,7 +85,7 @@
 .landing-hub-actions .btn.ghost {
   background: #fff;
   color: #101D32;
-  border: 1px solid rgba(197, 7, 18, 0.35);
+  border: 1px solid rgba(16, 29, 50, 0.35);
 }
 
 /* Hub overview cards (platforms / services style) */
@@ -112,7 +112,7 @@
 .landing-hub-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 24px 42px rgba(10, 14, 22, 0.14);
-  border-color: rgba(197, 7, 18, 0.28);
+  border-color: rgba(16, 29, 50, 0.28);
 }
 
 .landing-hub-card h3 {
@@ -162,7 +162,7 @@
 .landing-hub-detail:hover {
   transform: translateY(-4px);
   box-shadow: 0 24px 42px rgba(10, 14, 22, 0.12);
-  border-color: rgba(197, 7, 18, 0.22);
+  border-color: rgba(16, 29, 50, 0.22);
 }
 
 .landing-hub-detail-wide {
@@ -326,7 +326,7 @@
 .platforms-overview-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 24px 42px rgba(10, 14, 22, 0.14);
-  border-color: rgba(197, 7, 18, 0.28);
+  border-color: rgba(16, 29, 50, 0.28);
 }
 
 .platforms-overview-icon {
@@ -374,7 +374,7 @@
 .platforms-section-card {
   scroll-margin-top: 120px;
   border-radius: 22px;
-  border: 1px solid rgba(197, 7, 18, 0.14);
+  border: 1px solid rgba(16, 29, 50, 0.14);
   background: #fff;
   box-shadow: 0 16px 30px rgba(11, 14, 20, 0.08);
   padding: 24px 22px 20px;
@@ -439,7 +439,7 @@
 
 .platforms-item-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(197, 7, 18, 0.25);
+  border-color: rgba(16, 29, 50, 0.25);
   box-shadow: 0 8px 18px rgba(12, 14, 17, 0.08);
   background: #fff;
 }

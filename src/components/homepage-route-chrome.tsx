@@ -5,15 +5,16 @@ import { usePathname } from "next/navigation";
 
 const STYLESHEETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "/newhome/styles.css?v=legal-navy-gold-20261025b",
-  "/newhome/homepage-premium.css?v=legal-navy-gold-20261025b",
-  "/newhome/dark-mode.css?v=legal-navy-gold-20261025b",
-  "/newhome/homepage-dark-fix.css?v=legal-navy-gold-20261025b",
-  "/newhome/mobile-header.css?v=legal-navy-gold-20261025b",
-  "/newhome/landing-shared.css?v=legal-navy-gold-20261025b",
-  "/newhome/branches-page.css?v=legal-navy-gold-20261025b",
-  "/newhome/ads-page.css?v=legal-navy-gold-20261025b",
-  "/newhome/legal-hero-reference.css?v=legal-ref-20261025c",
+  "/newhome/styles.css?v=identity-purge-20261026",
+  "/newhome/homepage-premium.css?v=identity-purge-20261026",
+  "/newhome/dark-mode.css?v=identity-purge-20261026",
+  "/newhome/homepage-dark-fix.css?v=identity-purge-20261026",
+  "/newhome/mobile-header.css?v=identity-purge-20261026",
+  "/newhome/landing-shared.css?v=identity-purge-20261026",
+  "/newhome/branches-page.css?v=identity-purge-20261026",
+  "/newhome/ads-page.css?v=identity-purge-20261026",
+  "/newhome/legal-hero-reference.css?v=identity-purge-20261026",
+  "/newhome/legal-identity-overrides.css?v=identity-purge-20261026",
 ] as const;
 
 function stylesheetId(href: string) {

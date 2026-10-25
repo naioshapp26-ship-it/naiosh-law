@@ -8,8 +8,8 @@ body.homepage.dark-mode {
   --hp-dm-text: #f3f4f8;
   --hp-dm-muted: #a7afbc;
   --hp-dm-border: #30303a;
-  --hp-dm-brand: #e50914;
-  --hp-dm-brand-soft: rgba(229, 9, 20, 0.18);
+  --hp-dm-brand: #101D32;
+  --hp-dm-brand-soft: rgba(16, 29, 50, 0.18);
   --homepage-bg-main: var(--hp-dm-bg);
   --homepage-bg-section: var(--hp-dm-surface);
   --homepage-bg-card: var(--hp-dm-surface-2);
@@ -33,8 +33,8 @@ html:has(body.homepage.dark-mode) {
 body.homepage.dark-mode {
   background: var(--hp-dm-bg) !important;
   background-image:
-    radial-gradient(circle at 12% 8%, rgba(229, 9, 20, 0.08), transparent 34%),
-    radial-gradient(circle at 88% 92%, rgba(229, 9, 20, 0.06), transparent 36%) !important;
+    radial-gradient(circle at 12% 8%, rgba(16, 29, 50, 0.08), transparent 34%),
+    radial-gradient(circle at 88% 92%, rgba(16, 29, 50, 0.06), transparent 36%) !important;
 }
 
 /* ── Header / nav ─────────────────────────────────────────────── */
@@ -66,7 +66,7 @@ body.homepage.dark-mode .nav-links a.active,
 body.homepage.dark-mode .nav-dropdown[open] summary {
   color: #ff6b6b !important;
   background: var(--hp-dm-brand-soft) !important;
-  box-shadow: inset 0 0 0 1px rgba(229, 9, 20, 0.28) !important;
+  box-shadow: inset 0 0 0 1px rgba(16, 29, 50, 0.28) !important;
 }
 
 body.homepage.dark-mode .nav-dropdown-menu {
@@ -90,7 +90,7 @@ body.homepage.dark-mode .nav-ownership.is-open > .nav-ownership-btn,
 body.homepage.dark-mode .nav-ownership-btn[aria-expanded="true"] {
   background: #0a0a0a !important;
   color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(195, 21, 42, 0.45), 0 10px 22px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 0 0 1px rgba(16, 29, 50, 0.45), 0 10px 22px rgba(0, 0, 0, 0.4) !important;
 }
 
 body.homepage.dark-mode .nav-ownership-menu {
@@ -137,8 +137,8 @@ body.homepage.dark-mode .hero {
   background-color: #000000 !important;
   background-image: linear-gradient(
     92deg,
-    #e50914 0%,
-    #b5000e 16%,
+    #101D32 0%,
+    #0B1424 16%,
     #6a000c 40%,
     #2a0006 62%,
     #000000 82%,
@@ -192,7 +192,7 @@ body.homepage.dark-mode .hero-ctas .btn:hover {
 body.homepage.dark-mode .hero-sidebar-item,
 body.homepage.dark-mode .hero-sidebar-subitem {
   background: rgba(8, 0, 2, 0.72) !important;
-  border-color: rgba(229, 9, 20, 0.32) !important;
+  border-color: rgba(16, 29, 50, 0.32) !important;
   color: rgba(255, 228, 232, 0.92) !important;
 }
 
@@ -214,7 +214,7 @@ body.homepage.dark-mode .hero-note-upload {
 
 body.homepage.dark-mode .hero-note-upload:hover {
   background: var(--hp-dm-brand-soft) !important;
-  border-color: rgba(229, 9, 20, 0.45) !important;
+  border-color: rgba(16, 29, 50, 0.45) !important;
 }
 
 body.homepage.dark-mode .hero-float-card {

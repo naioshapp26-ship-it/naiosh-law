@@ -46,8 +46,8 @@ export function ModuleCard({ item }: Props) {
             width: 46,
             height: 46,
             borderRadius: "13px",
-            background: "rgba(195,21,42,0.07)",
-            border: "1px solid rgba(195,21,42,0.1)",
+            background: "rgba(16, 29, 50,0.07)",
+            border: "1px solid rgba(16, 29, 50,0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -85,8 +85,8 @@ export function ModuleCard({ item }: Props) {
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <span
               style={{
-                background: "rgba(195,21,42,0.07)",
-                color: "#c3152a",
+                background: "rgba(16, 29, 50,0.07)",
+                color: "#101D32",
                 borderRadius: "6px",
                 padding: "0.2rem 0.6rem",
                 fontSize: "0.68rem",
@@ -113,7 +113,7 @@ export function ModuleCard({ item }: Props) {
         {/* Arrow */}
         <div
           style={{
-            color: "#c3152a",
+            color: "#101D32",
             fontSize: "1rem",
             flexShrink: 0,
             marginTop: "0.25rem",

@@ -68,8 +68,8 @@ export default function PublicCreatorPage() {
           <Link href="/" style={{ color: "#94a3b8", fontWeight: 700, textDecoration: "none", fontSize: ".85rem" }}>NAIOSH Law</Link>
         </div>
         <div style={{ overflow: "hidden", borderRadius: 20, border: "1px solid #343a4a", background: "#0b0e13" }}>
-          <div style={{ height: 150, background: "linear-gradient(135deg,#7f1d1d,#1a0505)" }} />
-          <div style={{ width: 96, height: 96, borderRadius: "50%", border: "3px solid #fff", margin: "-48px auto 12px", background: "linear-gradient(135deg,#c3152a,#450a0a)" }} />
+          <div style={{ height: 150, background: "linear-gradient(135deg,#101D32,#0B1424)" }} />
+          <div style={{ width: 96, height: 96, borderRadius: "50%", border: "3px solid #fff", margin: "-48px auto 12px", background: "linear-gradient(135deg,#101D32,#0B1424)" }} />
           <div style={{ padding: "0 18px 22px", textAlign: "center" }}>
             <h1 style={{ margin: "0 0 6px", fontSize: "1.45rem", fontWeight: 900 }}>{page.name}</h1>
             <p style={{ margin: 0, color: "#fda4af", fontWeight: 700, fontSize: ".85rem" }}>

@@ -109,7 +109,7 @@ const GLOBAL_BACK_CSS = `
 
 .global-back-button:hover {
   background: #fff;
-  color: #991b1b;
+  color: #101D32;
   border-color: #fecaca;
 }
 
@@ -144,7 +144,7 @@ const GLOBAL_BACK_CSS = `
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
   border-color: rgba(185, 28, 28, 0.14);
-  color: #991b1b;
+  color: #101D32;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(8px);
 }
