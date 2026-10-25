@@ -58,6 +58,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           data-erp-home="1"
         />
         <link rel="stylesheet" href="/newhome/ads-page.css?v=legal-navy-gold-20261025" data-erp-home="1" />
+        <link
+          rel="stylesheet"
+          href="/newhome/legal-hero-reference.css?v=legal-ref-20261025"
+          data-erp-home="1"
+        />
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}
         <link rel="stylesheet" href="/erp-app/studio.css?v=legal-navy-gold-20261025" data-erp-studio="1" />
         <link rel="stylesheet" href="/erp-app/hq.css?v=legal-navy-gold-20261025" data-erp-hq="1" />

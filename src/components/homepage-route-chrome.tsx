@@ -13,6 +13,7 @@ const STYLESHEETS = [
   "/newhome/landing-shared.css?v=legal-navy-gold-20261025",
   "/newhome/branches-page.css?v=legal-navy-gold-20261025",
   "/newhome/ads-page.css?v=legal-navy-gold-20261025",
+  "/newhome/legal-hero-reference.css?v=legal-ref-20261025",
 ] as const;
 
 function stylesheetId(href: string) {
