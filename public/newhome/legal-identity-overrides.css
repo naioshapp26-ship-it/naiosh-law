@@ -1,0 +1,47 @@
+/* Central legal identity overrides — v=identity-purge-20261026 */
+:root {
+  --primary: #101D32 !important;
+  --primary-dark: #0B1424 !important;
+  --accent: #B79A61 !important;
+  --brand-gold: #B79A61 !important;
+  --brand-red: #101D32 !important;
+  --brand-red-dark: #0B1424 !important;
+  --brand-red-soft: #1A304D !important;
+  --brand-red-mid: #1A304D !important;
+  --brand-red-deep: #0B1424 !important;
+  --brand-red-rgb: 16, 29, 50 !important;
+  --site-bg: #F5F1E8 !important;
+  --announcement-bg: #101D32 !important;
+  --homepage-bg-main: #F5F1E8 !important;
+  --homepage-red: #101D32 !important;
+  --homepage-red-hover: #B79A61 !important;
+  --erp-app-bg: #F5F1E8 !important;
+}
+
+body.homepage .announcement-bar {
+  background-color: #101D32 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(183, 154, 97, 0.22) !important;
+}
+
+body.homepage .announcement-track {
+  color: #ffffff !important;
+}
+
+body.homepage .announcement-track a {
+  color: #B79A61 !important;
+}
+
+/* ERP surfaces */
+body:has(.erp-page),
+body:has(.hq-dashboard),
+.erp-page,
+.hq-dashboard {
+  background: #F5F1E8 !important;
+}
+
+.hq-hero {
+  background: linear-gradient(135deg, #0B1424, #101D32, #1A304D) !important;
+  border-color: rgba(183, 154, 97, 0.28) !important;
+}

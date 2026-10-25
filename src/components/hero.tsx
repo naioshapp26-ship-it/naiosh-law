@@ -154,8 +154,8 @@ function CaseVisual() {
 
         <div
           style={{
-            background: "rgba(195,21,42,0.08)",
-            border: "1px solid rgba(195,21,42,0.18)",
+            background: "rgba(16, 29, 50,0.08)",
+            border: "1px solid rgba(16, 29, 50,0.18)",
             borderRadius: "14px",
             padding: "0.85rem 1rem",
             marginBottom: "1.25rem",
@@ -169,7 +169,7 @@ function CaseVisual() {
               width: 36,
               height: 36,
               borderRadius: "10px",
-              background: "rgba(195,21,42,0.15)",
+              background: "rgba(16, 29, 50,0.15)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -189,7 +189,7 @@ function CaseVisual() {
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
             <span style={{ fontSize: "0.72rem", color: "#64748b" }}>تقدم القضية</span>
             <motion.span
-              style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}
+              style={{ fontSize: "0.72rem", color: "#101D32", fontWeight: 700 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
@@ -208,7 +208,7 @@ function CaseVisual() {
             <motion.div
               style={{
                 height: "100%",
-                background: "linear-gradient(90deg, #c3152a, #ff6b6b)",
+                background: "linear-gradient(90deg, #101D32, #ff6b6b)",
                 borderRadius: "99px",
               }}
               initial={{ width: "0%" }}
@@ -327,8 +327,8 @@ function ShieldVisual() {
               width: 52,
               height: 52,
               borderRadius: "14px",
-              background: "rgba(195,21,42,0.15)",
-              border: "1px solid rgba(195,21,42,0.25)",
+              background: "rgba(16, 29, 50,0.15)",
+              border: "1px solid rgba(16, 29, 50,0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -353,7 +353,7 @@ function ShieldVisual() {
               borderBottom: "1px solid rgba(255,255,255,0.05)",
             }}
           >
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c3152a", flexShrink: 0 }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#101D32", flexShrink: 0 }} />
             <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>{t}</span>
           </div>
         ))}
@@ -472,8 +472,8 @@ function AiVisual() {
         </div>
         <div
           style={{
-            background: "rgba(195,21,42,0.08)",
-            border: "1px solid rgba(195,21,42,0.18)",
+            background: "rgba(16, 29, 50,0.08)",
+            border: "1px solid rgba(16, 29, 50,0.18)",
             borderRadius: "14px",
             padding: "1rem",
             marginBottom: "1rem",
@@ -486,7 +486,7 @@ function AiVisual() {
         </div>
         {["تلخيص القضايا", "صياغة مذكرات", "بحث قانوني"].map((t) => (
           <div key={t} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <span style={{ color: "#c3152a", fontSize: "0.7rem" }}>●</span>
+            <span style={{ color: "#101D32", fontSize: "0.7rem" }}>●</span>
             <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>{t}</span>
           </div>
         ))}
@@ -643,7 +643,7 @@ export function HeroSection({ variant = "default" }: Props) {
             width: 800,
             height: 800,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(195,21,42,0.22) 0%, transparent 65%)",
+            background: "radial-gradient(circle, rgba(16, 29, 50,0.22) 0%, transparent 65%)",
             top: -250,
             left: -150,
             pointerEvents: "none",
@@ -658,7 +658,7 @@ export function HeroSection({ variant = "default" }: Props) {
             width: 500,
             height: 500,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(195,21,42,0.1) 0%, transparent 65%)",
+            background: "radial-gradient(circle, rgba(16, 29, 50,0.1) 0%, transparent 65%)",
             bottom: -100,
             right: -80,
             pointerEvents: "none",
@@ -694,7 +694,7 @@ export function HeroSection({ variant = "default" }: Props) {
                     width: 4 + (i % 3) * 2,
                     height: 4 + (i % 3) * 2,
                     borderRadius: "50%",
-                    background: i % 2 === 0 ? "rgba(195,21,42,0.55)" : "rgba(255,255,255,0.25)",
+                    background: i % 2 === 0 ? "rgba(16, 29, 50,0.55)" : "rgba(255,255,255,0.25)",
                     top: `${18 + i * 12}%`,
                     left: `${8 + i * 14}%`,
                     pointerEvents: "none",
@@ -716,7 +716,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 width: 420,
                 height: 420,
                 borderRadius: "50%",
-                border: "1px solid rgba(195,21,42,0.12)",
+                border: "1px solid rgba(16, 29, 50,0.12)",
                 top: "50%",
                 left: "60%",
                 transform: "translate(-50%, -50%)",
@@ -729,7 +729,7 @@ export function HeroSection({ variant = "default" }: Props) {
                 width: 280,
                 height: 280,
                 borderRadius: "50%",
-                border: "1px solid rgba(195,21,42,0.08)",
+                border: "1px solid rgba(16, 29, 50,0.08)",
                 top: "50%",
                 left: "60%",
                 marginTop: -140,
@@ -797,8 +797,8 @@ export function HeroSection({ variant = "default" }: Props) {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "0.78rem",
-                  background: "rgba(195,21,42,0.1)",
-                  border: "1px solid rgba(195,21,42,0.28)",
+                  background: "rgba(16, 29, 50,0.1)",
+                  border: "1px solid rgba(16, 29, 50,0.28)",
                   borderRadius: "100px",
                   padding: "0.74rem 1.95rem",
                   color: "#fca5a5",
@@ -813,7 +813,7 @@ export function HeroSection({ variant = "default" }: Props) {
                     width: 10,
                     height: 10,
                     borderRadius: "50%",
-                    background: "#c3152a",
+                    background: "#101D32",
                     flexShrink: 0,
                   }}
                 />
@@ -1051,7 +1051,7 @@ export function HeroSection({ variant = "default" }: Props) {
                         width: i === index ? 28 : 8,
                         borderRadius: 99,
                         border: "none",
-                        background: i === index ? "#c3152a" : "rgba(255,255,255,0.25)",
+                        background: i === index ? "#101D32" : "rgba(255,255,255,0.25)",
                         cursor: "pointer",
                         transition: "all 0.25s",
                       }}

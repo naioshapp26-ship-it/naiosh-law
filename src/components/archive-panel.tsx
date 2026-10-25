@@ -266,7 +266,7 @@ export function ArchivePanel() {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ ...td, fontWeight: 800, color: "#c3152a" }}>{row.refNo}</td>
+                    <td style={{ ...td, fontWeight: 800, color: "#101D32" }}>{row.refNo}</td>
                     <td style={{ ...td, fontWeight: 700 }}>{row.title}</td>
                     <td style={td}>{row.sourceModuleLabel}</td>
                     <td style={td}>{row.sourceRef}</td>
@@ -367,7 +367,7 @@ export function ArchivePanel() {
               </div>
             )}
             <div style={{ marginTop: "1.25rem" }}>
-              <Link href="/app/archive" style={{ color: "#c3152a", fontWeight: 700, fontSize: "0.82rem" }}>
+              <Link href="/app/archive" style={{ color: "#101D32", fontWeight: 700, fontSize: "0.82rem" }}>
                 العودة لقائمة الأرشيف
               </Link>
             </div>

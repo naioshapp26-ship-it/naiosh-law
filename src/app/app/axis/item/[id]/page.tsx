@@ -37,7 +37,7 @@ export default function AxisItemPage() {
       <div className="max-w-2xl mx-auto">
         <div
           className="rounded-2xl p-8 text-white mb-6"
-          style={{ background: `linear-gradient(135deg, ${axis?.color ?? "#c3152a"} 0%, #0a0a12 100%)` }}
+          style={{ background: `linear-gradient(135deg, ${axis?.color ?? "#101D32"} 0%, #0a0a12 100%)` }}
         >
           <p className="text-sm opacity-80 mb-1">{item.axisTitle}</p>
           <h1 className="text-2xl font-black mb-3">{item.label}</h1>

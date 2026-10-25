@@ -345,8 +345,8 @@ export default function CreatePage() {
         .cp-custom { border:1px solid #303646; border-radius:12px; padding:10px; margin-bottom:8px; background:#0f131b; display:grid; gap:8px; }
         .cp-preview-wrap { position:sticky; top:14px; align-self:start; }
         .cp-preview { overflow:hidden; border-radius:20px; border:1px solid #343a4a; background:#0b0e13; margin-top:8px; }
-        .cp-cover { height:140px; background:linear-gradient(135deg,#7f1d1d,#1a0505); }
-        .cp-avatar { width:92px; height:92px; border-radius:50%; border:3px solid #fff; margin:-46px auto 10px; background:linear-gradient(135deg,#c3152a,#450a0a); }
+        .cp-cover { height:140px; background:linear-gradient(135deg,#101D32,#0B1424); }
+        .cp-avatar { width:92px; height:92px; border-radius:50%; border:3px solid #fff; margin:-46px auto 10px; background:linear-gradient(135deg,#101D32,#0B1424); }
         .cp-preview-body { padding:0 14px 14px; text-align:center; }
         .cp-socials { display:grid; gap:8px; margin-top:12px; }
         .cp-socials a { text-decoration:none; color:#fff; border-radius:10px; padding:10px; font-weight:800; background:linear-gradient(135deg,#1c2230,#151924); border:1px solid #2d3443; }

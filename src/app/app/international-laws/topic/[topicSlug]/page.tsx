@@ -23,7 +23,7 @@ function TopicContent() {
         <p style={{ color: "#64748b", marginBottom: "1rem", fontSize: "0.9rem" }}>
           لم يتم العثور على صفحة لهذا الموضوع في منظومة التصنيف القانوني.
         </p>
-        <Link href="/app/international-laws" style={{ color: "#c3152a", fontWeight: 700 }}>
+        <Link href="/app/international-laws" style={{ color: "#101D32", fontWeight: 700 }}>
           العودة للتصنيف القانوني
         </Link>
       </div>

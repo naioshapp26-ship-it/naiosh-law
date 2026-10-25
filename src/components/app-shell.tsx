@@ -23,12 +23,12 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  admin: "bg-red-500",
-  lawyer: "bg-blue-500",
-  consultant: "bg-indigo-500",
-  judge: "bg-purple-500",
-  client: "bg-emerald-500",
-  industrial_agent: "bg-amber-500",
+  admin: "bg-[#B79A61]",
+  lawyer: "bg-[#1A304D]",
+  consultant: "bg-[#101D32]",
+  judge: "bg-[#0B1424]",
+  client: "bg-emerald-600",
+  industrial_agent: "bg-[#B79A61]",
   employee: "bg-slate-500",
 };
 
@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!document.querySelector('link[data-erp-hq]')) {
         const hq = document.createElement("link");
         hq.rel = "stylesheet";
-        hq.href = "/erp-app/hq.css";
+        hq.href = "/erp-app/hq.css?v=identity-purge-20261026";
         hq.setAttribute("data-erp-hq", "1");
         document.head.appendChild(hq);
       }
@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!document.querySelector('link[data-erp-studio]')) {
         const studio = document.createElement("link");
         studio.rel = "stylesheet";
-        studio.href = "/erp-app/studio.css?v=first-paint-20260725";
+        studio.href = "/erp-app/studio.css?v=identity-purge-20261026";
         studio.setAttribute("data-erp-studio", "1");
         document.head.appendChild(studio);
       }
@@ -98,10 +98,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   const activeStyle = {
-    background: "#fff",
-    color: theme.primaryColor,
+    background: "#B79A61",
+    color: "#0B1424",
     fontWeight: 700,
-    boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
+    boxShadow: "0 4px 14px rgba(183,154,97,0.28)",
   };
 
   const inactiveStyle = {

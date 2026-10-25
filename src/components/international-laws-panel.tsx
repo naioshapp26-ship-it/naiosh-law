@@ -296,7 +296,7 @@ export function InternationalLawsHub() {
         stats={[
           { label: "المحاور", value: axisCounts.length, icon: "🌐", color: "#0ea5e9" },
           { label: "الموضوعات", value: TOTAL_TOPICS, icon: "📋" },
-          { label: "السجلات", value: entries.length, icon: "📁", color: "#c3152a" },
+          { label: "السجلات", value: entries.length, icon: "📁", color: "#101D32" },
           { label: "القائمة الأولية", value: PRIMARY_TOPIC_CATALOG.length, icon: "📖" },
         ]}
       />
@@ -345,7 +345,7 @@ export function InternationalLawsHub() {
                     <span style={{ fontSize: "0.75rem", color: axis.color, fontWeight: 700 }}>
                       {axis.isCustom ? "محور مخصص" : `${axis.topicsCount} موضوع`}
                     </span>
-                    <span style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700 }}>
+                    <span style={{ fontSize: "0.75rem", color: "#101D32", fontWeight: 700 }}>
                       {axis.count} سجل • ادخل ←
                     </span>
                   </div>
@@ -407,7 +407,7 @@ export function InternationalLawsHub() {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)";
                     e.currentTarget.style.borderColor = "#fecaca";
-                    e.currentTarget.style.color = "#c3152a";
+                    e.currentTarget.style.color = "#101D32";
                     e.currentTarget.style.transform = "translateY(-1px)";
                   }}
                   onMouseLeave={(e) => {
@@ -811,7 +811,7 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
             icon: "📋",
             color: axis.color,
           },
-          { label: "السجلات", value: entries.length, icon: "📁", color: "#c3152a" },
+          { label: "السجلات", value: entries.length, icon: "📁", color: "#101D32" },
           { label: "نشط", value: entries.filter((e) => e.status === "نشط").length, icon: "✅" },
           { label: "قيد المراجعة", value: entries.filter((e) => e.status === "قيد المراجعة").length, icon: "⏳" },
         ]}
@@ -1097,7 +1097,7 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                 <p style={{ fontWeight: 700, fontSize: "0.8rem", color: "#64748b", marginBottom: "0.5rem" }}>مرفقات السجل</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   {viewTarget.attachments.map((a, i) => (
-                    <a key={`entry-${i}`} href={a.fileData} download={a.name} style={{ fontSize: "0.78rem", color: "#c3152a", fontWeight: 600, textDecoration: "none" }}>
+                    <a key={`entry-${i}`} href={a.fileData} download={a.name} style={{ fontSize: "0.78rem", color: "#101D32", fontWeight: 600, textDecoration: "none" }}>
                       📎 {a.name}
                     </a>
                   ))}
@@ -1122,7 +1122,7 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                             key={`${s.id}-${i}`}
                             href={a.fileData}
                             download={a.name}
-                            style={{ fontSize: "0.78rem", color: "#c3152a", fontWeight: 600, textDecoration: "none" }}
+                            style={{ fontSize: "0.78rem", color: "#101D32", fontWeight: 600, textDecoration: "none" }}
                           >
                             📎 {a.name}
                           </a>

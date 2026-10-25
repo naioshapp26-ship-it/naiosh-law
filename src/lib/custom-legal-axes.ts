@@ -85,7 +85,7 @@ function slugify(title: string) {
 }
 
 const AXIS_COLORS = [
-  "#c3152a",
+  "#101D32",
   "#0ea5e9",
   "#8b5cf6",
   "#22c55e",
@@ -211,7 +211,7 @@ export const ADD_AXIS_FORM_FIELDS = [
     key: "color",
     label: "لون المحور",
     type: "text" as const,
-    placeholder: "#c3152a",
+    placeholder: "#101D32",
   },
   { key: "description", label: "وصف المحور", type: "textarea" as const, placeholder: "وصف مختصر للمحور القانوني" },
   { key: "notes", label: "ملاحظات", type: "textarea" as const },

@@ -1438,7 +1438,7 @@ const RP_CSS = `
     border-radius: 10px; padding: .65rem 1.1rem; font-weight: 700; font-size: .875rem;
     display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; border: none;
   }
-  .rp-btn-primary { background: var(--brand); color: #fff; box-shadow: 0 6px 16px rgba(195,21,42,.22); }
+  .rp-btn-primary { background: var(--brand); color: #fff; box-shadow: 0 6px 16px rgba(16, 29, 50,.22); }
   .rp-btn-primary:hover { filter: brightness(.95); }
   .rp-btn-primary.lg { padding: .85rem 1.6rem; }
   .rp-btn-ghost { background: #fff; border: 1px solid #e2e8f0; color: #475569; }
@@ -1521,7 +1521,7 @@ const RP_CSS = `
     font-size: .72rem; font-weight: 700;
   }
   .badge.green { background: #dcfce7; color: #166534; }
-  .badge.red { background: #fee2e2; color: #991b1b; }
+  .badge.red { background: #fee2e2; color: #101D32; }
   .badge.slate { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
   .count {
     display: inline-flex; align-items: center; justify-content: center;
@@ -1563,7 +1563,7 @@ const RP_CSS = `
   }
   .mini.blue { background: #e0f2fe; color: #0369a1; }
   .mini.amber { background: #ffedd5; color: #c2410c; }
-  .mini.red { background: #fee2e2; color: #b91c1c; }
+  .mini.red { background: #fee2e2; color: #101D32; }
   .actions { white-space: nowrap; }
   .rp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: right; margin-bottom: 1rem; }
   @media (max-width: 700px) { .rp-grid-2 { grid-template-columns: 1fr; } }

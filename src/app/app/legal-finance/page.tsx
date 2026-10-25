@@ -605,7 +605,7 @@ ${stamp}` : stamp;
           {[
             { label: "إجمالي الفواتير", value: formatCurrency(totalInvoiced), color: "#0a0a12" },
             { label: "المحصّل", value: formatCurrency(totalPaid), color: "#22c55e" },
-            { label: "المتبقي", value: formatCurrency(totalInvoiced - totalPaid), color: "#c3152a" },
+            { label: "المتبقي", value: formatCurrency(totalInvoiced - totalPaid), color: "#101D32" },
             { label: "كفالات نشطة", value: formatCurrency(totalBail), color: "#f59e0b" },
           ].map((s) => (
             <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
@@ -624,9 +624,9 @@ ${stamp}` : stamp;
               style={{
                 padding: "0.5rem 0.95rem",
                 borderRadius: "10px",
-                border: tab === t.key ? "1px solid #c3152a" : "1px solid #e2e8f0",
-                background: tab === t.key ? "rgba(195,21,42,0.08)" : "#fff",
-                color: tab === t.key ? "#c3152a" : "#475569",
+                border: tab === t.key ? "1px solid #101D32" : "1px solid #e2e8f0",
+                background: tab === t.key ? "rgba(16, 29, 50,0.08)" : "#fff",
+                color: tab === t.key ? "#101D32" : "#475569",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontFamily: "var(--font-cairo)",
@@ -671,7 +671,7 @@ ${stamp}` : stamp;
                         <td style={tdStyle}>{formatCurrency(inv.amount)}</td>
                         <td style={tdStyle}>{formatCurrency(inv.paid)}</td>
                         <td style={tdStyle}>{inv.issueDate}</td>
-                        <td style={{ ...tdStyle, color: inv.status.includes("مسدد") ? "#22c55e" : "#c3152a", fontWeight: 600 }}>
+                        <td style={{ ...tdStyle, color: inv.status.includes("مسدد") ? "#22c55e" : "#101D32", fontWeight: 600 }}>
                           {inv.status}
                         </td>
                         <td style={tdStyle}>
@@ -785,7 +785,7 @@ ${stamp}` : stamp;
                   {calcError && <p style={{ color: "#c3152a", fontSize: "0.85rem" }}>{calcError}</p>}
                   {calcResult && (
                     <div style={{ background: "#f8f9fb", borderRadius: "12px", padding: "1rem", marginTop: "0.5rem" }}>
-                      <p style={{ fontWeight: 800, color: "#c3152a", fontSize: "1.1rem", marginBottom: "0.35rem" }}>
+                      <p style={{ fontWeight: 800, color: "#101D32", fontSize: "1.1rem", marginBottom: "0.35rem" }}>
                         {calcResult.displayForClient}
                       </p>
                       <p style={{ fontSize: "0.82rem", color: "#64748b" }}>القاعدة: {calcResult.ruleName}</p>
@@ -1023,7 +1023,7 @@ const btnStyle: CSSProperties = {
   padding: "0.7rem 1rem",
   borderRadius: "10px",
   border: "none",
-  background: "#c3152a",
+  background: "#101D32",
   color: "#fff",
   fontWeight: 700,
   cursor: "pointer",

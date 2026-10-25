@@ -720,7 +720,7 @@
       --ads-bg-main: #0b0b0b;
       --ads-bg-section: #121212;
       --ads-bg-card: rgba(255, 255, 255, 0.03);
-      --ads-accent: #e50914;
+      --ads-accent: #101D32;
       --ads-accent-hover: #ff3b3b;
       --ads-text-primary: #ffffff;
       --ads-text-secondary: #b3b3b3;
@@ -762,7 +762,7 @@
       background: var(--ads-accent);
       color: #fff;
       border-color: transparent;
-      box-shadow: 0 12px 24px rgba(229, 9, 20, 0.25);
+      box-shadow: 0 12px 24px rgba(16, 29, 50, 0.25);
     }
 
     body.ads-route .nav-dropdown-menu {
@@ -822,12 +822,12 @@
     body.ads-route .ads-hero {
       background: linear-gradient(135deg, #0b0b0b 70%, #1a0000 100%);
       border: 1px solid var(--ads-border);
-      box-shadow: 0 20px 60px rgba(229, 9, 20, 0.15);
+      box-shadow: 0 20px 60px rgba(16, 29, 50, 0.15);
     }
 
     body.ads-route .ads-hero::before,
     body.ads-route .ads-hero::after {
-      background: rgba(229, 9, 20, 0.08);
+      background: rgba(16, 29, 50, 0.08);
     }
 
     body.ads-route .ads-hero h1,
@@ -871,14 +871,14 @@
 
     body.ads-route .ads-search-wrap button,
     body.ads-route .ads-newsletter-btn {
-      background: linear-gradient(135deg, #e50914, #ff3b3b);
+      background: linear-gradient(135deg, #101D32, #ff3b3b);
       color: #fff;
     }
 
     body.ads-route .ads-search-wrap button:hover,
     body.ads-route .ads-newsletter-btn:hover {
       transform: scale(1.05);
-      box-shadow: 0 16px 30px rgba(229, 9, 20, 0.35);
+      box-shadow: 0 16px 30px rgba(16, 29, 50, 0.35);
     }
 
     body.ads-route .ads-stat-card,
@@ -900,7 +900,7 @@
     body.ads-route .ads-testimonial:hover,
     body.ads-route .ads-step-card:hover,
     body.ads-route .ads-feature:hover {
-      border-color: rgba(229, 9, 20, 0.3);
+      border-color: rgba(16, 29, 50, 0.3);
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
 
@@ -914,7 +914,7 @@
     body.ads-route .ads-cat-icon,
     body.ads-route .ads-step-number,
     body.ads-route .ads-avatar {
-      background: linear-gradient(135deg, #e50914, #ff3b3b);
+      background: linear-gradient(135deg, #101D32, #ff3b3b);
       color: #fff;
     }
 
@@ -944,12 +944,12 @@
     }
 
     body.ads-route .ads-progress > span {
-      background: linear-gradient(90deg, #e50914, #ff3b3b);
+      background: linear-gradient(90deg, #101D32, #ff3b3b);
     }
 
     body.ads-route .ads-footer-wrap::before {
-      background: linear-gradient(90deg, transparent, rgba(229, 9, 20, 0.7), transparent);
-      box-shadow: 0 0 16px rgba(229, 9, 20, 0.35);
+      background: linear-gradient(90deg, transparent, rgba(16, 29, 50, 0.7), transparent);
+      box-shadow: 0 0 16px rgba(16, 29, 50, 0.35);
     }
 
     body.ads-route .ads-footer {
@@ -979,7 +979,7 @@
     body.ads-route .floating-actions button:hover {
       background: var(--ads-accent);
       color: #fff;
-      box-shadow: 0 14px 28px rgba(229, 9, 20, 0.3);
+      box-shadow: 0 14px 28px rgba(16, 29, 50, 0.3);
     }
 
     @keyframes adsFadeIn {

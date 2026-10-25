@@ -30,42 +30,47 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/styles.css?v=legal-navy-gold-20261025b" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/styles.css?v=identity-purge-20261026" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/homepage-premium.css?v=legal-navy-gold-20261025b"
+          href="/newhome/homepage-premium.css?v=identity-purge-20261026"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/dark-mode.css?v=legal-navy-gold-20261025b" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/dark-mode.css?v=identity-purge-20261026" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/homepage-dark-fix.css?v=legal-navy-gold-20261025b"
-          data-erp-home="1"
-        />
-        <link
-          rel="stylesheet"
-          href="/newhome/mobile-header.css?v=legal-navy-gold-20261025b"
+          href="/newhome/homepage-dark-fix.css?v=identity-purge-20261026"
           data-erp-home="1"
         />
         <link
           rel="stylesheet"
-          href="/newhome/landing-shared.css?v=legal-navy-gold-20261025b"
+          href="/newhome/mobile-header.css?v=identity-purge-20261026"
           data-erp-home="1"
         />
         <link
           rel="stylesheet"
-          href="/newhome/branches-page.css?v=legal-navy-gold-20261025b"
+          href="/newhome/landing-shared.css?v=identity-purge-20261026"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/ads-page.css?v=legal-navy-gold-20261025b" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/legal-hero-reference.css?v=legal-ref-20261025c"
+          href="/newhome/branches-page.css?v=identity-purge-20261026"
+          data-erp-home="1"
+        />
+        <link rel="stylesheet" href="/newhome/ads-page.css?v=identity-purge-20261026" data-erp-home="1" />
+        <link
+          rel="stylesheet"
+          href="/newhome/legal-hero-reference.css?v=identity-purge-20261026"
+          data-erp-home="1"
+        />
+        <link
+          rel="stylesheet"
+          href="/newhome/legal-identity-overrides.css?v=identity-purge-20261026"
           data-erp-home="1"
         />
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}
-        <link rel="stylesheet" href="/erp-app/studio.css?v=legal-navy-gold-20261025b" data-erp-studio="1" />
-        <link rel="stylesheet" href="/erp-app/hq.css?v=legal-navy-gold-20261025b" data-erp-hq="1" />
+        <link rel="stylesheet" href="/erp-app/studio.css?v=identity-purge-20261026" data-erp-studio="1" />
+        <link rel="stylesheet" href="/erp-app/hq.css?v=identity-purge-20261026" data-erp-hq="1" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark-mode');document.documentElement.style.colorScheme='dark'}}catch(_){}`,

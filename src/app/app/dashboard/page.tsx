@@ -47,44 +47,44 @@ const fadeUp = {
 
 const kpisByDashboard: Record<string, { label: string; value: string; delta: string; icon: string; color: string }[]> = {
   system360: [
-    { label: "المحاور القانونية", value: "8", delta: "هيكل سيادي موحّد", icon: "🌐", color: "#c3152a" },
-    { label: "عناصر النظام", value: String(totalEmpireItems()), delta: "من ملف المواصفات", icon: "📋", color: "#0ea5e9" },
-    { label: "الوحدات التشغيلية", value: String(modules.length), delta: "وحدة نشطة", icon: "⚙️", color: "#22c55e" },
-    { label: "التكاملات", value: "12", delta: "3 نشطة", icon: "🔗", color: "#8b5cf6" },
-    { label: "التنبيهات", value: "5", delta: "2 عاجلة", icon: "🔔", color: "#ef4444" },
-    { label: "القضايا النشطة", value: "128", delta: "+7 هذا الأسبوع", icon: "⚖️", color: "#f59e0b" },
+    { label: "المحاور القانونية", value: "8", delta: "هيكل سيادي موحّد", icon: "🌐", color: "#101D32" },
+    { label: "عناصر النظام", value: String(totalEmpireItems()), delta: "من ملف المواصفات", icon: "📋", color: "#1A304D" },
+    { label: "الوحدات التشغيلية", value: String(modules.length), delta: "وحدة نشطة", icon: "⚙️", color: "#B79A61" },
+    { label: "التكاملات", value: "12", delta: "3 نشطة", icon: "🔗", color: "#1A304D" },
+    { label: "التنبيهات", value: "5", delta: "2 عاجلة", icon: "🔔", color: "#DC2626" },
+    { label: "القضايا النشطة", value: "128", delta: "+7 هذا الأسبوع", icon: "⚖️", color: "#B79A61" },
   ],
   empire: [
-    { label: "فروع نايوش", value: "6", delta: "3 دول", icon: "🌍", color: "#c3152a" },
-    { label: "الشراكات الدولية", value: "24", delta: "+3 جديدة", icon: "🤝", color: "#0ea5e9" },
-    { label: "العمليات العالمية", value: "18", delta: "5 نشطة", icon: "🚢", color: "#22c55e" },
-    { label: "الحوكمة", value: "9", delta: "2 معلقة", icon: "⚙️", color: "#8b5cf6" },
-    { label: "الإيرادات", value: "2.4M", delta: "+14%", icon: "💰", color: "#f59e0b" },
-    { label: "الموكلون", value: "340", delta: "+12", icon: "👥", color: "#06b6d4" },
+    { label: "فروع نايوش", value: "6", delta: "3 دول", icon: "🌍", color: "#101D32" },
+    { label: "الشراكات الدولية", value: "24", delta: "+3 جديدة", icon: "🤝", color: "#1A304D" },
+    { label: "العمليات العالمية", value: "18", delta: "5 نشطة", icon: "🚢", color: "#B79A61" },
+    { label: "الحوكمة", value: "9", delta: "2 معلقة", icon: "⚙️", color: "#1A304D" },
+    { label: "الإيرادات", value: "2.4M", delta: "+14%", icon: "💰", color: "#B79A61" },
+    { label: "الموكلون", value: "340", delta: "+12", icon: "👥", color: "#101D32" },
   ],
   superadmin: [
-    { label: "المستخدمون", value: "48", delta: "6 أدوار", icon: "👥", color: "#0ea5e9" },
-    { label: "الصلاحيات", value: "124", delta: "محدّثة", icon: "🛡️", color: "#c3152a" },
-    { label: "سجل التدقيق", value: "1.2k", delta: "اليوم 34", icon: "📜", color: "#64748b" },
-    { label: "السياسات", value: "18", delta: "سارية", icon: "📋", color: "#22c55e" },
-    { label: "التكاملات", value: "12", delta: "متصلة", icon: "🔗", color: "#8b5cf6" },
-    { label: "النسخ الاحتياطي", value: "✓", delta: "آخر: اليوم", icon: "💾", color: "#22c55e" },
+    { label: "المستخدمون", value: "48", delta: "6 أدوار", icon: "👥", color: "#1A304D" },
+    { label: "الصلاحيات", value: "124", delta: "محدّثة", icon: "🛡️", color: "#101D32" },
+    { label: "سجل التدقيق", value: "1.2k", delta: "اليوم 34", icon: "📜", color: "#526071" },
+    { label: "السياسات", value: "18", delta: "سارية", icon: "📋", color: "#B79A61" },
+    { label: "التكاملات", value: "12", delta: "متصلة", icon: "🔗", color: "#1A304D" },
+    { label: "النسخ الاحتياطي", value: "✓", delta: "آخر: اليوم", icon: "💾", color: "#16A34A" },
   ],
   admin: [
-    { label: "القضايا النشطة", value: "128", delta: "+7", icon: "⚖️", color: "#c3152a" },
-    { label: "جلسات الأسبوع", value: "26", delta: "3 غدًا", icon: "🏛️", color: "#0ea5e9" },
-    { label: "الموكلون", value: "83", delta: "+4", icon: "👥", color: "#8b5cf6" },
-    { label: "الإيرادات", value: "47k", delta: "+12%", icon: "💰", color: "#22c55e" },
-    { label: "مهام اليوم", value: "14", delta: "5 معلقة", icon: "📋", color: "#f59e0b" },
-    { label: "تنبيهات", value: "5", delta: "2 عاجلة", icon: "🔔", color: "#ef4444" },
+    { label: "القضايا النشطة", value: "128", delta: "+7", icon: "⚖️", color: "#101D32" },
+    { label: "جلسات الأسبوع", value: "26", delta: "3 غدًا", icon: "🏛️", color: "#1A304D" },
+    { label: "الموكلون", value: "83", delta: "+4", icon: "👥", color: "#B79A61" },
+    { label: "الإيرادات", value: "47k", delta: "+12%", icon: "💰", color: "#16A34A" },
+    { label: "مهام اليوم", value: "14", delta: "5 معلقة", icon: "📋", color: "#B79A61" },
+    { label: "تنبيهات", value: "5", delta: "2 عاجلة", icon: "🔔", color: "#DC2626" },
   ],
   user: [
-    { label: "مهامي", value: "8", delta: "3 متأخرة", icon: "📋", color: "#f59e0b" },
-    { label: "جلساتي", value: "4", delta: "غدًا 2", icon: "🏛️", color: "#0ea5e9" },
-    { label: "مستنداتي", value: "23", delta: "5 جديدة", icon: "📄", color: "#8b5cf6" },
-    { label: "إشعاراتي", value: "7", delta: "2 غير مقروءة", icon: "🔔", color: "#ef4444" },
-    { label: "قضاياي", value: "12", delta: "نشطة", icon: "⚖️", color: "#c3152a" },
-    { label: "استشاراتي", value: "3", delta: "قادمة", icon: "💬", color: "#22c55e" },
+    { label: "مهامي", value: "8", delta: "3 متأخرة", icon: "📋", color: "#B79A61" },
+    { label: "جلساتي", value: "4", delta: "غدًا 2", icon: "🏛️", color: "#1A304D" },
+    { label: "مستنداتي", value: "23", delta: "5 جديدة", icon: "📄", color: "#101D32" },
+    { label: "إشعاراتي", value: "7", delta: "2 غير مقروءة", icon: "🔔", color: "#DC2626" },
+    { label: "قضاياي", value: "12", delta: "نشطة", icon: "⚖️", color: "#101D32" },
+    { label: "استشاراتي", value: "3", delta: "قادمة", icon: "💬", color: "#B79A61" },
   ],
 };
 
@@ -183,9 +183,9 @@ export default function DashboardPage() {
 
   if (!ready || !user) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f6f9" }}>
-        <div style={{ textAlign: "center", color: "#64748b" }}>
-          <div className="spin-slow" style={{ width: 40, height: 40, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#c3152a", margin: "0 auto 1rem" }} />
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F5F1E8" }}>
+        <div style={{ textAlign: "center", color: "#526071" }}>
+          <div className="spin-slow" style={{ width: 40, height: 40, borderRadius: "50%", border: "3px solid #D9DEE5", borderTopColor: "#B79A61", margin: "0 auto 1rem" }} />
           <p>جاري التحميل...</p>
         </div>
       </div>
@@ -212,19 +212,19 @@ export default function DashboardPage() {
           variants={fadeUp}
           custom={0}
           style={{
-            background: "linear-gradient(145deg, #1a0505 0%, #450a0a 22%, #7f1d1d 48%, #991b1b 72%, #2d0a0a 100%)",
+            background: "linear-gradient(135deg, #0B1424, #101D32, #1A304D)",
             borderRadius: "1.75rem",
             padding: "1.75rem 2rem",
             marginBottom: "1.5rem",
             color: "#fff",
             position: "relative",
             overflow: "hidden",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.08), 0 25px 60px -12px rgba(69,10,10,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
-            border: "1px solid rgba(251,191,36,0.15)",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.08), 0 25px 60px -12px rgba(11,20,36,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
+            border: "1px solid rgba(183,154,97,0.28)",
           }}
           className="hq-hero"
         >
-          <div className="glow-pulse" style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)" }} />
+          <div className="glow-pulse" style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(183,154,97,0.22) 0%, transparent 70%)" }} />
           <div className="glow-pulse" style={{ position: "absolute", bottom: -80, left: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: "1.75rem", flexWrap: "wrap", position: "relative" }}>
@@ -300,9 +300,9 @@ export default function DashboardPage() {
                 style={{
                   padding: "0.6rem 1.1rem",
                   borderRadius: "12px",
-                  border: dashType === d.id ? `2px solid ${d.color}` : "1px solid #e2e8f0",
-                  background: dashType === d.id ? `${d.color}10` : "#fff",
-                  color: dashType === d.id ? d.color : "#475569",
+                  border: dashType === d.id ? "2px solid #B79A61" : "1px solid #D9DEE5",
+                  background: dashType === d.id ? "rgba(183,154,97,0.16)" : "#fff",
+                  color: dashType === d.id ? "#0B1424" : "#526071",
                   fontWeight: 700,
                   fontSize: "0.8rem",
                   cursor: "pointer",
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                       {axis.title}
                     </h3>
                     <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.5rem" }}>{axis.subtitle}</p>
-                    <span style={{ fontSize: "0.7rem", color: "#c3152a", fontWeight: 700 }}>
+                    <span style={{ fontSize: "0.7rem", color: "#B79A61", fontWeight: 700 }}>
                       {"items" in axis || "dropdowns" in axis
                         ? `${countAxisItems(axis as ImperialAxis)} عنصر ←`
                         : "محور مخصص ←"}
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                 >
                   <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0a0a12" }}>{s.case}</p>
                   <p style={{ fontSize: "0.72rem", color: "#64748b" }}>{s.court}</p>
-                  <p style={{ fontSize: "0.72rem", color: "#c3152a", marginTop: "0.2rem", fontWeight: 600 }}>🗓 {s.date}</p>
+                  <p style={{ fontSize: "0.72rem", color: "#B79A61", marginTop: "0.2rem", fontWeight: 600 }}>🗓 {s.date}</p>
                 </motion.div>
               ))}
             </div>

@@ -218,7 +218,7 @@ export default function OfficialEntitiesPage() {
 
         <PageStats
           stats={[
-            { label: "الجهات", value: entities.length, icon: "🏛️", color: "#c3152a" },
+            { label: "الجهات", value: entities.length, icon: "🏛️", color: "#101D32" },
             { label: "المسؤولون", value: officials.length, icon: "👨‍⚖️" },
             { label: "المحاكم", value: entities.filter((e) => e.type.includes("محكمة")).length, icon: "⚖️" },
             {
@@ -252,13 +252,13 @@ export default function OfficialEntitiesPage() {
               }}
             >
               {entities.map((e) => (
-                <div key={e.id} className="card-white" style={{ padding: "1.35rem", borderRight: "4px solid #c3152a" }}>
+                <div key={e.id} className="card-white" style={{ padding: "1.35rem", borderRight: "4px solid #101D32" }}>
                   <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{e.name}</h3>
                   <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
                     {e.type} • {e.city}
                   </p>
                   <p style={{ fontSize: "0.78rem", color: "#475569", marginTop: "0.5rem" }}>📞 {e.phone || "—"}</p>
-                  <p style={{ fontSize: "0.78rem", color: "#c3152a", marginTop: "0.5rem", fontWeight: 700 }}>
+                  <p style={{ fontSize: "0.78rem", color: "#101D32", marginTop: "0.5rem", fontWeight: 700 }}>
                     {e.officials} مسؤول مسجل • {e.status}
                   </p>
                 </div>

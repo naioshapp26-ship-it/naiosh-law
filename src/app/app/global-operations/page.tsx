@@ -344,7 +344,7 @@ export default function GlobalOperationsPage() {
         >
           {[
             { label: "شركاء التوريد", value: partners.length, color: "#0a0a12" },
-            { label: "الشحنات", value: shipments.length, color: "#c3152a" },
+            { label: "الشحنات", value: shipments.length, color: "#101D32" },
             { label: "قضايا دولية", value: matters.length, color: "#2563eb" },
             { label: "فروع نايوش", value: branches.length, color: "#22c55e" },
             { label: "تنبيهات جديدة", value: newAlerts, color: "#f59e0b" },
@@ -376,9 +376,9 @@ export default function GlobalOperationsPage() {
               style={{
                 padding: "0.5rem 0.95rem",
                 borderRadius: "10px",
-                border: tab === t.key ? "1px solid #c3152a" : "1px solid #e2e8f0",
-                background: tab === t.key ? "rgba(195,21,42,0.08)" : "#fff",
-                color: tab === t.key ? "#c3152a" : "#475569",
+                border: tab === t.key ? "1px solid #101D32" : "1px solid #e2e8f0",
+                background: tab === t.key ? "rgba(16, 29, 50,0.08)" : "#fff",
+                color: tab === t.key ? "#101D32" : "#475569",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontFamily: "var(--font-cairo)",
@@ -475,7 +475,7 @@ export default function GlobalOperationsPage() {
                               type="button"
                               onClick={() => setAddOpen(true)}
                               style={{
-                                color: "#c3152a",
+                                color: "#101D32",
                                 fontWeight: 700,
                                 background: "none",
                                 border: "none",
@@ -526,7 +526,7 @@ export default function GlobalOperationsPage() {
                               type="button"
                               onClick={() => setAddOpen(true)}
                               style={{
-                                color: "#c3152a",
+                                color: "#101D32",
                                 fontWeight: 700,
                                 background: "none",
                                 border: "none",
@@ -555,7 +555,7 @@ export default function GlobalOperationsPage() {
               >
                 {branches.map((b) => (
                   <div key={b.id} className="card-white" style={{ padding: "1.25rem" }}>
-                    <span style={{ fontSize: "0.72rem", color: "#c3152a", fontWeight: 700 }}>{b.isHQ}</span>
+                    <span style={{ fontSize: "0.72rem", color: "#101D32", fontWeight: 700 }}>{b.isHQ}</span>
                     <h3 style={{ fontWeight: 800, margin: "0.35rem 0" }}>{b.name}</h3>
                     <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
                       {b.code} • {b.city}, {b.country}
@@ -598,7 +598,7 @@ export default function GlobalOperationsPage() {
                     }}
                   >
                     <div>
-                      <p style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700 }}>
+                      <p style={{ fontSize: "0.75rem", color: "#101D32", fontWeight: 700 }}>
                         {a.circularRef} • {a.branch}
                       </p>
                       <h3 style={{ fontWeight: 800, fontSize: "0.92rem", margin: "0.25rem 0" }}>{a.title}</h3>
@@ -608,7 +608,7 @@ export default function GlobalOperationsPage() {
                       <p
                         style={{
                           fontSize: "0.75rem",
-                          color: a.priority === "عالٍ" ? "#c3152a" : "#64748b",
+                          color: a.priority === "عالٍ" ? "#101D32" : "#64748b",
                           fontWeight: 600,
                         }}
                       >
@@ -624,7 +624,7 @@ export default function GlobalOperationsPage() {
                             padding: "0.3rem 0.6rem",
                             borderRadius: "7px",
                             border: "none",
-                            background: "#c3152a",
+                            background: "#101D32",
                             color: "#fff",
                             fontSize: "0.72rem",
                             fontWeight: 700,
@@ -646,7 +646,7 @@ export default function GlobalOperationsPage() {
                         type="button"
                         onClick={() => setAddOpen(true)}
                         style={{
-                          color: "#c3152a",
+                          color: "#101D32",
                           fontWeight: 700,
                           background: "none",
                           border: "none",

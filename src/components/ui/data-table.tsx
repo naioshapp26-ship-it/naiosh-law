@@ -146,7 +146,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                   >
                     {col.label}
                     {sortKey === col.key && (
-                      <span style={{ marginInlineStart: "0.25rem", color: "#c3152a" }}>
+                      <span style={{ marginInlineStart: "0.25rem", color: "#101D32" }}>
                         {sortAsc ? " ↑" : " ↓"}
                       </span>
                     )}
@@ -264,8 +264,8 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
                     padding: "0.4rem 0.65rem",
                     borderRadius: "8px",
                     border: "1px solid",
-                    borderColor: p === page ? "#c3152a" : "#e2e8f0",
-                    background: p === page ? "#c3152a" : "#fff",
+                    borderColor: p === page ? "#101D32" : "#e2e8f0",
+                    background: p === page ? "#101D32" : "#fff",
                     color: p === page ? "#fff" : "#475569",
                     cursor: "pointer",
                     fontWeight: p === page ? 800 : 400,

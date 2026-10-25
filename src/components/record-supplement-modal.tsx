@@ -87,7 +87,7 @@ export function RecordSupplementModal({ open, recordRef, recordTitle, onSave, on
 
         <div style={{ background: "#f8f9fb", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" }}>
           <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>المرجع</p>
-          <p style={{ fontWeight: 800, color: "#c3152a", fontSize: "0.9rem" }}>{recordRef}</p>
+          <p style={{ fontWeight: 800, color: "#101D32", fontSize: "0.9rem" }}>{recordRef}</p>
           <p style={{ fontSize: "0.85rem", color: "#0a0a12", marginTop: "0.35rem" }}>{recordTitle}</p>
         </div>
 
@@ -95,7 +95,7 @@ export function RecordSupplementModal({ open, recordRef, recordTitle, onSave, on
           <div style={{ display: "grid", gap: "1rem" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }} className="party-grid">
               <div>
-                <label className="input-label">طرف أول <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">طرف أول <span style={{ color: "#101D32" }}>*</span></label>
                 <input
                   className="input-field"
                   required
@@ -105,7 +105,7 @@ export function RecordSupplementModal({ open, recordRef, recordTitle, onSave, on
                 />
               </div>
               <div>
-                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#101D32" }}>*</span></label>
                 <input
                   className="input-field"
                   type="tel"
@@ -116,7 +116,7 @@ export function RecordSupplementModal({ open, recordRef, recordTitle, onSave, on
                 />
               </div>
               <div>
-                <label className="input-label">طرف ثاني <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">طرف ثاني <span style={{ color: "#101D32" }}>*</span></label>
                 <input
                   className="input-field"
                   required
@@ -126,7 +126,7 @@ export function RecordSupplementModal({ open, recordRef, recordTitle, onSave, on
                 />
               </div>
               <div>
-                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#c3152a" }}>*</span></label>
+                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#101D32" }}>*</span></label>
                 <input
                   className="input-field"
                   type="tel"

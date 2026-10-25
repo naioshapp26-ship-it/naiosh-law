@@ -164,8 +164,8 @@ export function FileUploadField({
           void handleFiles(e.dataTransfer.files);
         }}
         style={{
-          border: `1.5px dashed ${dragging ? "#c3152a" : "#cbd5e1"}`,
-          background: dragging ? "rgba(195,21,42,0.06)" : "#f8fafc",
+          border: `1.5px dashed ${dragging ? "#101D32" : "#cbd5e1"}`,
+          background: dragging ? "rgba(16, 29, 50,0.06)" : "#f8fafc",
           borderRadius: 14,
           padding: "0.9rem",
           transition: "border-color 0.15s ease, background 0.15s ease",
@@ -383,7 +383,7 @@ export function FileUploadField({
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#c3152a",
+                    color: "#101D32",
                     cursor: "pointer",
                     fontSize: "0.75rem",
                     fontWeight: 700,

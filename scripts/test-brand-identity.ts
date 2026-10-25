@@ -46,6 +46,21 @@ assert(upgraded.heroBannerPath?.includes("legal-hero-desk"), "legacy hero path n
 assert(isLegacyBrandRed("#d70000"), "d70000 should be legacy");
 assert(!isLegacyBrandRed("#101D32"), "navy should not be legacy");
 
+const broken = upgradeLegacyBrandTheme({
+  ...DEFAULT_SITE_THEME,
+  primaryColor: "#000000",
+  headerBgColor: "#250404",
+  headingColor: "#0e0ef1",
+  heroBannerPath: "/api/site-settings/hero-banner?v=1",
+  heroBannerData: "data:image/jpeg;base64,xxx",
+  heroOverlayStrength: 0,
+});
+assert(broken.primaryColor === "#101D32", "black primary not upgraded");
+assert(broken.headerBgColor === "#0B1424", "burgundy header not upgraded");
+assert(broken.headingColor === "#172338", "broken heading not upgraded");
+assert(broken.heroBannerPath?.includes("legal-hero-desk"), "logo hero path not forced to desk");
+assert(broken.heroBannerData == null, "logo hero data not cleared");
+
 const styles = readFileSync("public/newhome/styles.css", "utf8");
 assert(styles.includes("--brand-red: #101D32"), "landing brand token not navy");
 assert(styles.includes("linear-gradient(135deg, #0B1424, #101D32, #1A304D)"), "hero gradient missing");
@@ -56,7 +71,12 @@ assert(globals.includes("--primary: #101D32"), "globals primary");
 assert(globals.includes("--site-bg: #F5F1E8"), "globals ivory");
 
 const layout = readFileSync("src/app/layout.tsx", "utf8");
-assert(layout.includes("legal-navy-gold-20261025"), "layout cache bust missing");
+assert(layout.includes("identity-purge-20261026"), "layout cache bust missing");
+assert(existsSync("public/newhome/legal-identity-overrides.css"), "identity overrides missing");
+
+const dash = readFileSync("src/app/app/dashboard/page.tsx", "utf8");
+assert(dash.includes("linear-gradient(135deg, #0B1424, #101D32, #1A304D)"), "dashboard banner not navy");
+assert(!dash.includes("#1a0505"), "dashboard still has burgundy banner");
 
 console.log("✅ brand identity verified");
 console.log(`   palette: ${BRAND_IDENTITY.navyPrimary} · ${BRAND_IDENTITY.antiqueGold} · ${BRAND_IDENTITY.ivoryBackground}`);

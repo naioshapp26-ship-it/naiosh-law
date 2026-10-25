@@ -4,6 +4,7 @@ import {
   BRAND_IDENTITY,
   GOLD_RGB,
   NAVY_RGB,
+  isBrokenPrimary,
   isLegacyBrandRed,
   normalizeHex,
 } from "@/lib/brand-identity";
@@ -74,43 +75,76 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   heroActiveVideoDescription: "",
 };
 
-/** ترقية إعدادات DB القديمة (أحمر/نبيتي) إلى الهوية القانونية بدون migration */
+function isUploadedOrLogoHeroPath(path: string | null | undefined): boolean {
+  const p = String(path || "").trim().toLowerCase();
+  if (!p) return true;
+  if (p.includes("legal-hero-desk")) return false;
+  if (p.includes("/api/site-settings/hero-banner")) return true;
+  if (p.includes("/api/uploads/hero/") || p.includes("/uploads/hero/")) return true;
+  if (p.includes("logo") || p.includes("naiosh-logo")) return true;
+  return false;
+}
+
+/** ترقية إعدادات DB القديمة (أحمر/نبيتي/أسود/شعار كخلفية) إلى الهوية القانونية بدون migration */
 export function upgradeLegacyBrandTheme(theme: SiteTheme): SiteTheme {
-  const primaryIsLegacy = isLegacyBrandRed(theme.primaryColor);
+  const primaryBroken = isBrokenPrimary(theme.primaryColor);
   const sidebarIsLegacy = isLegacyBrandRed(theme.sidebarFrom) || isLegacyBrandRed(theme.sidebarVia);
-  if (!primaryIsLegacy && !sidebarIsLegacy) return theme;
+  const headerIsLegacy = isLegacyBrandRed(theme.headerBgColor);
+  const heroIsLogoOrUpload = isUploadedOrLogoHeroPath(theme.heroBannerPath) || Boolean(theme.heroBannerData?.trim());
+  const headingBroken =
+    normalizeHex(theme.headingColor) === "#0a0a12" ||
+    normalizeHex(theme.headingColor) === "#0e0ef1" ||
+    isLegacyBrandRed(theme.headingColor);
 
   return {
     ...theme,
-    primaryColor: primaryIsLegacy ? DEFAULT_SITE_THEME.primaryColor : theme.primaryColor,
-    primaryDark: isLegacyBrandRed(theme.primaryDark) ? DEFAULT_SITE_THEME.primaryDark : theme.primaryDark,
+    primaryColor: primaryBroken ? DEFAULT_SITE_THEME.primaryColor : theme.primaryColor,
+    primaryDark:
+      isLegacyBrandRed(theme.primaryDark) || isBrokenPrimary(theme.primaryDark)
+        ? DEFAULT_SITE_THEME.primaryDark
+        : theme.primaryDark,
     accentColor:
-      isLegacyBrandRed(theme.accentColor) || normalizeHex(theme.accentColor) === "#0ea5e9"
+      isLegacyBrandRed(theme.accentColor) ||
+      normalizeHex(theme.accentColor) === "#0ea5e9" ||
+      !theme.accentColor
         ? DEFAULT_SITE_THEME.accentColor
         : theme.accentColor,
-    sidebarFrom: isLegacyBrandRed(theme.sidebarFrom) ? DEFAULT_SITE_THEME.sidebarFrom : theme.sidebarFrom,
-    sidebarVia: isLegacyBrandRed(theme.sidebarVia) ? DEFAULT_SITE_THEME.sidebarVia : theme.sidebarVia,
-    sidebarTo: isLegacyBrandRed(theme.sidebarTo) ? DEFAULT_SITE_THEME.sidebarTo : theme.sidebarTo,
+    sidebarFrom: sidebarIsLegacy || !theme.sidebarFrom ? DEFAULT_SITE_THEME.sidebarFrom : theme.sidebarFrom,
+    sidebarVia: isLegacyBrandRed(theme.sidebarVia) || !theme.sidebarVia ? DEFAULT_SITE_THEME.sidebarVia : theme.sidebarVia,
+    sidebarTo: isLegacyBrandRed(theme.sidebarTo) || !theme.sidebarTo ? DEFAULT_SITE_THEME.sidebarTo : theme.sidebarTo,
     backgroundColor:
-      normalizeHex(theme.backgroundColor) === "#f8fafc" || normalizeHex(theme.backgroundColor) === "#f4f7f6"
+      normalizeHex(theme.backgroundColor) === "#f8fafc" ||
+      normalizeHex(theme.backgroundColor) === "#f4f7f6" ||
+      normalizeHex(theme.backgroundColor) === "#ffffff" ||
+      !theme.backgroundColor
         ? DEFAULT_SITE_THEME.backgroundColor
         : theme.backgroundColor,
-    buttonColor: isLegacyBrandRed(theme.buttonColor) ? DEFAULT_SITE_THEME.buttonColor : theme.buttonColor,
+    buttonColor:
+      isLegacyBrandRed(theme.buttonColor) || isBrokenPrimary(theme.buttonColor)
+        ? DEFAULT_SITE_THEME.buttonColor
+        : theme.buttonColor,
     secondaryColor: isLegacyBrandRed(theme.secondaryColor)
       ? DEFAULT_SITE_THEME.secondaryColor
       : theme.secondaryColor,
-    headerBgColor: isLegacyBrandRed(theme.headerBgColor)
-      ? DEFAULT_SITE_THEME.headerBgColor
-      : theme.headerBgColor,
-    textColor: normalizeHex(theme.textColor) === "#0a0a12" ? DEFAULT_SITE_THEME.textColor : theme.textColor,
-    headingColor:
-      normalizeHex(theme.headingColor) === "#0a0a12" ? DEFAULT_SITE_THEME.headingColor : theme.headingColor,
+    headerBgColor: headerIsLegacy || !theme.headerBgColor ? DEFAULT_SITE_THEME.headerBgColor : theme.headerBgColor,
+    textColor:
+      normalizeHex(theme.textColor) === "#0a0a12" || !theme.textColor
+        ? DEFAULT_SITE_THEME.textColor
+        : theme.textColor,
+    headingColor: headingBroken ? DEFAULT_SITE_THEME.headingColor : theme.headingColor,
     paragraphColor:
-      normalizeHex(theme.paragraphColor) === "#64748b"
+      normalizeHex(theme.paragraphColor) === "#64748b" || !theme.paragraphColor
         ? DEFAULT_SITE_THEME.paragraphColor
         : theme.paragraphColor,
-    heroBannerPath: theme.heroBannerPath || DEFAULT_SITE_THEME.heroBannerPath,
-    heroMediaKind: theme.heroMediaKind || DEFAULT_SITE_THEME.heroMediaKind,
+    /* Always prefer the approved legal desk hero — never the uploaded crest/logo */
+    heroBannerPath: heroIsLogoOrUpload ? DEFAULT_SITE_THEME.heroBannerPath : theme.heroBannerPath || DEFAULT_SITE_THEME.heroBannerPath,
+    heroBannerData: heroIsLogoOrUpload ? null : theme.heroBannerData,
+    heroMediaKind: "image",
+    heroImageMode: "cover",
+    heroOverlayStrength:
+      !theme.heroOverlayStrength || theme.heroOverlayStrength < 12
+        ? DEFAULT_SITE_THEME.heroOverlayStrength
+        : theme.heroOverlayStrength,
   };
 }
 
@@ -237,28 +271,16 @@ export function hasHeroBannerMedia(
 
 export function getHeroBannerSrc(
   theme: Pick<SiteTheme, "heroBannerPath" | "heroBannerData" | "heroMediaKind">,
-  cacheKey?: string | number | null
+  _cacheKey?: string | number | null
 ) {
-  const path = theme.heroBannerPath?.trim() || null;
-  const data = theme.heroBannerData?.trim() || null;
-  const version =
-    cacheKey != null && String(cacheKey) ? `?v=${encodeURIComponent(String(cacheKey))}` : "";
-
-  if (path) {
-    if (path.startsWith(HERO_BANNER_SERVE_PATH)) return path;
-    if (/^https?:\/\//i.test(path)) return path;
-    if (path.startsWith("/api/uploads/hero/") || path.startsWith("/uploads/hero/")) {
-      return `${HERO_BANNER_SERVE_PATH}${version}`;
-    }
-    return path;
-  }
-
-  if (data) {
-    if (data.startsWith("data:")) return `${HERO_BANNER_SERVE_PATH}${version}`;
-    return data;
-  }
-
-  return DEFAULT_HERO_IMAGE;
+  const resolved = upgradeLegacyBrandTheme({
+    ...DEFAULT_SITE_THEME,
+    heroBannerPath: theme.heroBannerPath,
+    heroBannerData: theme.heroBannerData,
+    heroMediaKind: theme.heroMediaKind,
+  });
+  // Approved legal desk only — never serve the uploaded crest/logo as hero media.
+  return resolved.heroBannerPath || DEFAULT_HERO_IMAGE;
 }
 
 export type SiteSettingsRecord = SiteTheme & {

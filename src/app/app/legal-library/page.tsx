@@ -276,7 +276,7 @@ export default function LegalLibraryPage() {
         >
           {[
             { label: "المستندات", value: stats.documents, color: "#0a0a12" },
-            { label: "المقالات", value: stats.articles, color: "#c3152a" },
+            { label: "المقالات", value: stats.articles, color: "#101D32" },
             { label: "تعليمات سارية", value: stats.circulars, color: "#22c55e" },
           ].map((s) => (
             <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
@@ -323,9 +323,9 @@ export default function LegalLibraryPage() {
               style={{
                 padding: "0.5rem 0.95rem",
                 borderRadius: "10px",
-                border: tab === t.key ? "1px solid #c3152a" : "1px solid #e2e8f0",
-                background: tab === t.key ? "rgba(195,21,42,0.08)" : "#fff",
-                color: tab === t.key ? "#c3152a" : "#475569",
+                border: tab === t.key ? "1px solid #101D32" : "1px solid #e2e8f0",
+                background: tab === t.key ? "rgba(16, 29, 50,0.08)" : "#fff",
+                color: tab === t.key ? "#101D32" : "#475569",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontFamily: "var(--font-cairo)",
@@ -363,7 +363,7 @@ export default function LegalLibraryPage() {
                           border: "1px solid #e2e8f0",
                           borderRadius: "6px",
                           padding: "0.2rem 0.5rem",
-                          color: "#c3152a",
+                          color: "#101D32",
                           fontWeight: 700,
                         }}
                       >
@@ -385,7 +385,7 @@ export default function LegalLibraryPage() {
                         style={{
                           background: "none",
                           border: "none",
-                          color: "#c3152a",
+                          color: "#101D32",
                           fontWeight: 700,
                           fontSize: "0.78rem",
                           cursor: "pointer",
@@ -403,8 +403,8 @@ export default function LegalLibraryPage() {
                             key={tag}
                             style={{
                               fontSize: "0.7rem",
-                              background: "rgba(195,21,42,0.06)",
-                              color: "#c3152a",
+                              background: "rgba(16, 29, 50,0.06)",
+                              color: "#101D32",
                               padding: "0.15rem 0.45rem",
                               borderRadius: "6px",
                             }}
@@ -450,7 +450,7 @@ export default function LegalLibraryPage() {
                               fontSize: "0.85rem",
                               gap: 8,
                               background:
-                                "linear-gradient(135deg, rgba(195,21,42,0.85), rgba(15,23,42,0.95))",
+                                "linear-gradient(135deg, rgba(16, 29, 50,0.85), rgba(15,23,42,0.95))",
                             }}
                           >
                             <span aria-hidden>🎬</span>
@@ -525,7 +525,7 @@ export default function LegalLibraryPage() {
                       }}
                     >
                       <div>
-                        <p style={{ fontSize: "0.75rem", color: "#c3152a", fontWeight: 700, marginBottom: "0.25rem" }}>
+                        <p style={{ fontSize: "0.75rem", color: "#101D32", fontWeight: 700, marginBottom: "0.25rem" }}>
                           {c.circularNo} — {c.issuer}
                         </p>
                         <h3 style={{ fontWeight: 800, color: "#0a0a12", fontSize: "0.92rem", marginBottom: "0.35rem" }}>

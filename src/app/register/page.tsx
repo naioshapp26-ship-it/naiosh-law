@@ -62,16 +62,16 @@ export default function RegisterPage() {
         .reg-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:#f8fafc;font-family:var(--font);position:relative}
         .reg-card{width:100%;max-width:28rem;background:#fff;border-radius:1rem;box-shadow:0 20px 50px -20px rgba(15,23,42,.25);overflow:hidden;border:1px solid #f1f5f9;position:relative}
         .reg-back{position:absolute;top:.75rem;left:.75rem;z-index:2;background:rgba(255,255,255,.95);border:1px solid #e5e7eb;border-radius:.5rem;padding:.4rem .65rem;font-size:.75rem;font-weight:700;color:#4b5563;text-decoration:none}
-        .reg-header{background:var(--primary,#c3152a);padding:2rem;text-align:center;color:#fff}
+        .reg-header{background:var(--primary,#101D32);padding:2rem;text-align:center;color:#fff}
         .reg-brand{font-size:1.5rem;font-weight:900;margin-top:.4rem}
         .reg-header p{margin:.35rem 0 0;opacity:.85;font-size:.875rem}
         .reg-body{padding:1.5rem;display:grid;gap:0.9rem}
         .reg-body label{display:grid;gap:.4rem;font-size:.875rem;font-weight:700;color:#374151}
         .reg-body input{border:1px solid #d1d5db;border-radius:.75rem;padding:.85rem;background:#f9fafb;font-family:inherit}
-        .reg-body button{width:100%;border:0;border-radius:.75rem;padding:.85rem;background:var(--primary,#c3152a);color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
+        .reg-body button{width:100%;border:0;border-radius:.75rem;padding:.85rem;background:var(--primary,#101D32);color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
         .reg-msg{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#166534;border-radius:.75rem;padding:.75rem;font-size:.85rem;font-weight:600}
         .reg-foot{text-align:center;color:#6b7280;font-size:.8rem}
-        .reg-foot a{color:var(--primary,#c3152a);font-weight:800;text-decoration:none}
+        .reg-foot a{color:var(--primary,#101D32);font-weight:800;text-decoration:none}
       `}</style>
     </div>
   );
