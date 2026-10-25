@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!document.querySelector('link[data-erp-hq]')) {
         const hq = document.createElement("link");
         hq.rel = "stylesheet";
-        hq.href = "/erp-app/hq.css?v=identity-purge-20261026";
+        hq.href = "/erp-app/hq.css?v=dark-contrast-20261026";
         hq.setAttribute("data-erp-hq", "1");
         document.head.appendChild(hq);
       }
@@ -65,9 +65,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!document.querySelector('link[data-erp-studio]')) {
         const studio = document.createElement("link");
         studio.rel = "stylesheet";
-        studio.href = "/erp-app/studio.css?v=identity-purge-20261026";
+        studio.href = "/erp-app/studio.css?v=dark-contrast-20261026";
         studio.setAttribute("data-erp-studio", "1");
         document.head.appendChild(studio);
+      }
+      if (!document.querySelector('link[data-erp-theme]')) {
+        const theme = document.createElement("link");
+        theme.rel = "stylesheet";
+        theme.href = "/erp-app/erp-theme.css?v=dark-contrast-20261026";
+        theme.setAttribute("data-erp-theme", "1");
+        document.head.appendChild(theme);
       }
     };
     ensure();

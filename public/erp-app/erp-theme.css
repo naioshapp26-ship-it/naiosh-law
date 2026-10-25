@@ -1,0 +1,542 @@
+/* NAIOSH Law — semantic light/dark theme for ERP + app shell
+ * v=dark-contrast-20261026
+ * Tokens keep light mode ivory/navy/gold; dark mode uses approved navy palette.
+ */
+
+:root {
+  --bg-base: #F5F1E8;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-soft: #F8FAFC;
+  --bg-hover: #F1F5F9;
+  --text-primary: #0B1424;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-on-accent: #0B1424;
+  --text-on-navy: #F8FAFC;
+  --border-color: #D9DEE5;
+  --border-strong: #43536B;
+  --brand-gold: #B79A61;
+  --brand-navy: #101D32;
+  --brand-navy-deep: #0B1424;
+  --icon-color: currentColor;
+  --table-header-bg: #F8FAFC;
+  --table-row-hover: #FAFBFF;
+  --table-border: #E2E8F0;
+  --input-bg: #ffffff;
+  --input-placeholder: #94A3B8;
+  --danger: #F87171;
+  --success: #34D399;
+  --warning: #FBBF24;
+  --info: #60A5FA;
+
+  /* Aliases used by studio/hq/globals */
+  --site-bg: var(--bg-base);
+  --light: var(--bg-card);
+  --light-soft: var(--bg-base);
+  --dark: var(--text-primary);
+  --dark-2: var(--brand-navy-deep);
+  --border: var(--border-color);
+  --muted: var(--text-muted);
+  --ink: var(--text-primary);
+  --text: var(--text-primary);
+  --line: var(--border-color);
+  --surface: var(--bg-base);
+  --erp-app-bg: var(--bg-base);
+  --primary: var(--brand-navy);
+  --primary-dark: var(--brand-navy-deep);
+  --primary-light: var(--bg-base);
+  --primary-border: var(--border-color);
+}
+
+html.dark-mode,
+body.dark-mode {
+  --bg-base: #0B1424;
+  --bg-card: #152238;
+  --bg-elevated: #1D2D45;
+  --bg-soft: #152238;
+  --bg-hover: #243652;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-on-accent: #0B1424;
+  --text-on-navy: #F8FAFC;
+  --border-color: #43536B;
+  --border-strong: #5B6B84;
+  --brand-gold: #B79A61;
+  --brand-navy: #101D32;
+  --brand-navy-deep: #0B1424;
+  --table-header-bg: #1D2D45;
+  --table-row-hover: #1D2D45;
+  --table-border: #43536B;
+  --input-bg: #152238;
+  --input-placeholder: #94A3B8;
+  --danger: #FCA5A5;
+  --success: #6EE7B7;
+  --warning: #FCD34D;
+  --info: #93C5FD;
+
+  --site-bg: var(--bg-base);
+  --light: var(--bg-base);
+  --light-soft: var(--bg-card);
+  --dark: var(--text-primary);
+  --dark-2: var(--bg-elevated);
+  --border: var(--border-color);
+  --muted: var(--text-muted);
+  --ink: var(--text-primary);
+  --text: var(--text-primary);
+  --line: var(--border-color);
+  --surface: var(--bg-base);
+  --erp-app-bg: var(--bg-base);
+  --primary: var(--brand-gold);
+  --primary-dark: #C8AE74;
+  --primary-light: var(--bg-elevated);
+  --primary-border: var(--border-color);
+  color-scheme: dark;
+}
+
+/* ── App shell page canvas ── */
+html:not(.homepage-root) body.dark-mode,
+body.dark-mode.has-app-shell,
+body.dark-mode.erp-studio-standalone {
+  background: var(--bg-base) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .erp-app-content,
+body.dark-mode.has-app-shell .erp-app-content,
+body.dark-mode .erp-page,
+body.dark-mode .erp-workspace,
+body.dark-mode .rp-page,
+body.dark-mode .ss-page,
+body.dark-mode .app-main,
+body.dark-mode .module-shell,
+body.dark-mode .domain-page {
+  background-color: var(--bg-base) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode.erp-studio-standalone {
+  background-color: var(--bg-base) !important;
+  background-image: none !important;
+}
+
+/* Headings: never inherit a mismatched parent color */
+html:not(.homepage-root) .erp-page h1,
+html:not(.homepage-root) .erp-page h2,
+html:not(.homepage-root) .erp-page h3,
+html:not(.homepage-root) .erp-workspace h1,
+html:not(.homepage-root) .erp-workspace h2,
+html:not(.homepage-root) .erp-workspace h3,
+body.has-app-shell h1,
+body.has-app-shell h2,
+body.has-app-shell h3 {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode p,
+body.dark-mode label,
+body.dark-mode span,
+body.dark-mode li,
+body.dark-mode dt,
+body.dark-mode dd,
+body.dark-mode small,
+body.dark-mode .rp-sub,
+body.dark-mode .rp-muted {
+  color: inherit;
+}
+
+body.dark-mode .erp-page,
+body.dark-mode .erp-workspace,
+body.dark-mode .rp-page,
+body.dark-mode .ss-page {
+  color: var(--text-primary);
+}
+
+/* ── Cards / panels / stats ── */
+body.dark-mode .panel,
+body.dark-mode .stat-card,
+body.dark-mode .card-white,
+body.dark-mode .rp-card,
+body.dark-mode .rp-kpi,
+body.dark-mode .section-card,
+body.dark-mode .nav-tile,
+body.dark-mode .form-section,
+body.dark-mode .upload-card,
+body.dark-mode .meta-card,
+body.dark-mode .log-item,
+body.dark-mode .platform-card,
+body.dark-mode .content-type-card,
+body.dark-mode .hq-card,
+body.dark-mode .hq-kpi,
+body.dark-mode .hq-panel {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.dark-mode .stat-card p,
+body.dark-mode .stat-card span,
+body.dark-mode .stat-card h3,
+body.dark-mode .panel h3,
+body.dark-mode .panel p {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .stat-card .text-slate-500,
+body.dark-mode .panel .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .stat-card:hover,
+body.dark-mode .panel:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* ── Tables (studio + shared data-table) ── */
+body.dark-mode .erp-workspace table,
+body.dark-mode .dt-table,
+body.dark-mode .rp-table,
+body.dark-mode table {
+  color: var(--text-primary);
+  border-color: var(--table-border);
+}
+
+body.dark-mode .table-cell,
+body.dark-mode td.table-cell,
+body.dark-mode .dt-td,
+body.dark-mode .rp-table td {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--table-border) !important;
+  background: transparent !important;
+}
+
+body.dark-mode th.table-cell,
+body.dark-mode .dt-th,
+body.dark-mode .rp-table th,
+body.dark-mode thead th {
+  background: var(--table-header-bg) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--table-border) !important;
+}
+
+body.dark-mode tbody tr:hover td.table-cell,
+body.dark-mode .dt-row:hover,
+body.dark-mode .rp-table tr:hover td {
+  background: var(--table-row-hover) !important;
+}
+
+body.dark-mode .dt-wrap {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .dt-cell-primary {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .dt-cell-secondary {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode .dt-count {
+  background: var(--bg-elevated) !important;
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .dt-pagination {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .dt-page-btn {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode .dt-page-btn.is-active {
+  background: var(--brand-navy) !important;
+  border-color: var(--brand-gold) !important;
+  color: #fff !important;
+}
+
+/* ── Inputs ── */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .input-field,
+body.dark-mode .form-input {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder,
+body.dark-mode .input-field::placeholder {
+  color: var(--input-placeholder) !important;
+  opacity: 1 !important;
+}
+
+body.dark-mode select option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+body.dark-mode .field-label,
+body.dark-mode .input-label {
+  color: var(--text-secondary) !important;
+}
+
+/* ── Tailwind slate/gray utilities under dark mode ── */
+body.dark-mode .text-slate-900,
+body.dark-mode .text-slate-800,
+body.dark-mode .text-slate-700,
+body.dark-mode .text-gray-900,
+body.dark-mode .text-gray-800,
+body.dark-mode .text-gray-700,
+body.dark-mode .text-zinc-900,
+body.dark-mode .text-zinc-800,
+body.dark-mode .text-black {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .text-slate-600,
+body.dark-mode .text-slate-500,
+body.dark-mode .text-gray-600,
+body.dark-mode .text-gray-500,
+body.dark-mode .text-zinc-600,
+body.dark-mode .text-zinc-500 {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode .text-slate-400,
+body.dark-mode .text-gray-400,
+body.dark-mode .text-zinc-400 {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .bg-white,
+body.dark-mode .bg-slate-50,
+body.dark-mode .bg-gray-50,
+body.dark-mode .bg-zinc-50 {
+  background-color: var(--bg-card) !important;
+}
+
+body.dark-mode .bg-slate-100,
+body.dark-mode .bg-gray-100,
+body.dark-mode .bg-zinc-100 {
+  background-color: var(--bg-elevated) !important;
+}
+
+body.dark-mode .border-slate-100,
+body.dark-mode .border-slate-200,
+body.dark-mode .border-gray-100,
+body.dark-mode .border-gray-200,
+body.dark-mode .border-zinc-100,
+body.dark-mode .border-zinc-200 {
+  border-color: var(--border-color) !important;
+}
+
+/* Icons inherit readable color */
+body.dark-mode i,
+body.dark-mode svg {
+  color: inherit;
+}
+
+body.dark-mode .stat-card i,
+body.dark-mode .section-icon,
+body.dark-mode .stat-icon {
+  color: var(--brand-gold) !important;
+}
+
+/* Gold / navy buttons keep dark readable text on gold */
+body.dark-mode .btn-primary,
+body.dark-mode .hero-cta-gold,
+body.dark-mode a.btn-primary,
+body.dark-mode button.bg-\[\#B79A61\],
+body.dark-mode .hq-cta-primary {
+  color: var(--text-on-accent) !important;
+}
+
+body.dark-mode .btn-soft,
+body.dark-mode .rp-btn-ghost,
+body.dark-mode .btn-secondary {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Modals / dialogs */
+body.dark-mode [role="dialog"] .panel,
+body.dark-mode .rp-modal,
+body.dark-mode .modal,
+body.dark-mode [class*="modal"] {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Status chips: keep semantic hues, lift contrast on dark */
+body.dark-mode .badge.slate {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* HQ dashboard surfaces */
+body.dark-mode .hq-dashboard,
+body.dark-mode .hq-dashboard * {
+  border-color: var(--border-color);
+}
+
+body.dark-mode .hq-dashboard {
+  color: var(--text-primary);
+}
+
+/* Section headers */
+body.dark-mode .section-header {
+  border-bottom-color: var(--border-color) !important;
+}
+
+body.dark-mode .section-header h2 {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .info-banner {
+  background: rgba(29, 45, 69, 0.9) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Shared data-table chrome (light + dark via tokens) */
+.dt-wrap {
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: var(--bg-card, #fff);
+}
+
+.dt-th {
+  background: var(--table-header-bg, #f8f9fb) !important;
+  color: var(--text-secondary, #475569) !important;
+  border-bottom: 1px solid var(--table-border, #e2e8f0);
+}
+
+.dt-td {
+  border-bottom: 1px solid var(--table-border, #f1f5f9);
+  color: var(--text-primary, #0a0a12);
+}
+
+.dt-row:hover {
+  background: var(--table-row-hover, #fafbfc);
+}
+
+.dt-cell-primary {
+  color: var(--text-primary, #0a0a12) !important;
+}
+
+.dt-cell-secondary {
+  color: var(--text-secondary, #334155) !important;
+}
+
+.dt-count {
+  background: var(--bg-soft, #f1f5f9);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dt-pagination {
+  color: var(--text-muted, #64748b);
+}
+
+.dt-page-btn {
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #475569);
+}
+
+/* Light mode safety: ensure studio ivory canvas uses tokens */
+body.has-app-shell:not(.dark-mode) .erp-app-content,
+body.erp-studio-standalone:not(.dark-mode) {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+body:not(.dark-mode) .panel,
+body:not(.dark-mode) .stat-card,
+body:not(.dark-mode) .card-white {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+body:not(.dark-mode) .table-cell {
+  color: var(--text-secondary);
+}
+
+body:not(.dark-mode) th.table-cell {
+  color: var(--text-muted);
+  background: var(--table-header-bg);
+}
+
+/*
+ * Shared components still use light-mode hex in inline styles.
+ * Force readable dark-mode colors without rewriting every page.
+ */
+body.dark-mode [style*="color: #0a0a12"],
+body.dark-mode [style*="color:#0a0a12"],
+body.dark-mode [style*="color: #0f172a"],
+body.dark-mode [style*="color:#0f172a"],
+body.dark-mode [style*="color: #172338"],
+body.dark-mode [style*="color:#172338"],
+body.dark-mode [style*="color: #1e293b"],
+body.dark-mode [style*="color:#1e293b"],
+body.dark-mode [style*="color: #334155"],
+body.dark-mode [style*="color:#334155"],
+body.dark-mode [style*="color: #475569"],
+body.dark-mode [style*="color:#475569"] {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode [style*="color: #64748b"],
+body.dark-mode [style*="color:#64748b"],
+body.dark-mode [style*="color: #94a3b8"],
+body.dark-mode [style*="color:#94a3b8"],
+body.dark-mode [style*="color: #526071"],
+body.dark-mode [style*="color:#526071"] {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode [style*="background: #fff"],
+body.dark-mode [style*="background:#fff"],
+body.dark-mode [style*="background: #ffffff"],
+body.dark-mode [style*="background:#ffffff"],
+body.dark-mode [style*="background: #f8f9fb"],
+body.dark-mode [style*="background:#f8f9fb"],
+body.dark-mode [style*="background: #f8fafc"],
+body.dark-mode [style*="background:#f8fafc"],
+body.dark-mode [style*="background: #f1f5f9"],
+body.dark-mode [style*="background:#f1f5f9"],
+body.dark-mode [style*="background: #fafbfc"],
+body.dark-mode [style*="background:#fafbfc"],
+body.dark-mode [style*="background: #FAFBFF"],
+body.dark-mode [style*="background:#FAFBFF"] {
+  background: var(--bg-card) !important;
+}
+
+body.dark-mode [style*="border: 1px solid #e2e8f0"],
+body.dark-mode [style*="border:1px solid #e2e8f0"],
+body.dark-mode [style*="borderBottom: 1px solid #e2e8f0"],
+body.dark-mode [style*="border-bottom: 1px solid #e2e8f0"],
+body.dark-mode [style*="borderBottom: 1px solid #f1f5f9"],
+body.dark-mode [style*="border-bottom: 1px solid #f1f5f9"] {
+  border-color: var(--border-color) !important;
+}

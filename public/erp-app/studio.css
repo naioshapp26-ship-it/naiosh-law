@@ -1,15 +1,15 @@
 /* Ported from ERP marketing-campaigns-studio.html */
 
     :root {
-      --primary: #101D32;
-      --primary-dark: #0B1424;
-      --primary-light: #F5F1E8;
-      --primary-border: #D9DEE5;
-      --ink: #172338;
-      --text: #172338;
-      --muted: #526071;
-      --line: #D9DEE5;
-      --surface: #F5F1E8;
+      --primary: var(--brand-navy, #101D32);
+      --primary-dark: var(--brand-navy-deep, #0B1424);
+      --primary-light: var(--bg-base, #F5F1E8);
+      --primary-border: var(--border-color, #D9DEE5);
+      --ink: var(--text-primary, #172338);
+      --text: var(--text-primary, #172338);
+      --muted: var(--text-muted, #526071);
+      --line: var(--border-color, #D9DEE5);
+      --surface: var(--bg-base, #F5F1E8);
       --brand-gold: #B79A61;
     }
     .erp-workspace {
@@ -17,17 +17,24 @@
     color: var(--text);
   }
   body.has-app-shell .erp-app-content {
-    background-color: #F5F1E8;
+    background-color: var(--bg-base, #F5F1E8);
     background-image: radial-gradient(circle at 15% 10%, rgba(16,29,50,0.05), transparent 40%), radial-gradient(circle at 85% 90%, rgba(183,154,97,0.08), transparent 40%);
     border-radius: 0;
     min-height: calc(100vh - 2rem);
+    color: var(--text-primary, var(--text));
+  }
+  body.dark-mode.has-app-shell .erp-app-content {
+    background-image: none;
   }
   body.erp-studio-standalone {
     font-family: 'Cairo', var(--font-cairo), sans-serif;
-    background-color: #F5F1E8 !important;
+    background-color: var(--bg-base, #F5F1E8) !important;
     background-image: radial-gradient(circle at 15% 10%, rgba(16,29,50,0.06), transparent 40%), radial-gradient(circle at 85% 90%, rgba(183,154,97,0.08), transparent 40%) !important;
     color: var(--text);
     min-height: 100vh;
+  }
+  body.dark-mode.erp-studio-standalone {
+    background-image: none !important;
   }
   body.erp-studio-standalone .erp-studio-page {
     min-height: 100vh;
@@ -43,10 +50,11 @@
     display: none !important;
   }
     .panel {
-      background: #ffffff;
+      background: var(--bg-card, #ffffff);
       border: 1px solid var(--line);
       border-radius: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+      color: var(--text-primary, var(--text));
     }
     .section { display: none; animation: fadeIn 0.25s ease-out; }
     .section.active { display: block; }
@@ -54,7 +62,7 @@
 
     /* ─── Navigation Tabs ─── */
     .nav-tile {
-      background: #ffffff;
+      background: var(--bg-card, #ffffff);
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 14px 8px;
@@ -89,10 +97,10 @@
 
     /* ─── Tables ─── */
 .erp-workspace table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .table-cell { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; color: #334155; font-size: 0.875rem; }
-    th.table-cell { background-color: #f8fafc; font-weight: 700; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .table-cell { padding: 11px 14px; border-bottom: 1px solid var(--table-border, #f1f5f9); white-space: nowrap; color: var(--text-secondary, #334155); font-size: 0.875rem; }
+    th.table-cell { background-color: var(--table-header-bg, #f8fafc); font-weight: 700; color: var(--text-muted, var(--muted)); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
     tr:last-child td.table-cell { border-bottom: none; }
-    tbody tr:hover td.table-cell { background-color: #fafbff; }
+    tbody tr:hover td.table-cell { background-color: var(--table-row-hover, #fafbff); }
 
     /* ─── Buttons ─── */
     .btn {
@@ -198,7 +206,7 @@
     .content-type-card:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16, 29, 50,0.1); }
 
     /* ─── Stat Cards ─── */
-    .stat-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card { background: var(--bg-card, #fff); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; transition: transform 0.2s, box-shadow 0.2s; color: var(--text-primary, var(--text)); }
     .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.07); }
     .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 

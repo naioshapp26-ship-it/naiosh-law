@@ -1,6 +1,6 @@
 /* Vendored ERP HQ dashboard chrome (Law app shell) */
 :root {
-  --erp-app-bg: #F5F1E8;
+  --erp-app-bg: var(--bg-base, #F5F1E8);
 }
 
 @keyframes fadeIn {
