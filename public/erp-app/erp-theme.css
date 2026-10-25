@@ -1,5 +1,5 @@
 /* NAIOSH Law — semantic light/dark theme for ERP + app shell
- * v=dark-contrast-20261026
+ * v=dark-contrast-20261026b
  * Tokens keep light mode ivory/navy/gold; dark mode uses approved navy palette.
  */
 
@@ -357,7 +357,6 @@ body.dark-mode .stat-icon {
 body.dark-mode .btn-primary,
 body.dark-mode .hero-cta-gold,
 body.dark-mode a.btn-primary,
-body.dark-mode button.bg-\[\#B79A61\],
 body.dark-mode .hq-cta-primary {
   color: var(--text-on-accent) !important;
 }
