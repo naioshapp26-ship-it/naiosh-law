@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/newhome/ads-page.css?v=identity-purge-20261026" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/legal-hero-reference.css?v=hero-approved-comp-20261026d"
+          href="/newhome/legal-hero-reference.css?v=hero-rtl-right-20261026"
           data-erp-home="1"
         />
         <link
