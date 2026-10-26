@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/styles.css?v=widen-public-20261026" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/styles.css?v=marquee-rtl-v3-20261027" data-erp-home="1" />
         <link
           rel="stylesheet"
           href="/newhome/homepage-premium.css?v=identity-purge-20261026"
@@ -60,12 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/newhome/ads-page.css?v=widen-public-20261026" data-erp-home="1" />
         <link
           rel="stylesheet"
-          href="/newhome/legal-hero-reference.css?v=hero-rtl-right-20261026"
+          href="/newhome/legal-hero-reference.css?v=marquee-rtl-v3-20261027"
           data-erp-home="1"
         />
         <link
           rel="stylesheet"
-          href="/newhome/legal-identity-overrides.css?v=identity-purge-20261026"
+          href="/newhome/legal-identity-overrides.css?v=marquee-rtl-v3-20261027"
           data-erp-home="1"
         />
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}

@@ -378,6 +378,8 @@ body.homepage.dark-mode .announcement-bar {
   border-bottom-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-body.homepage.dark-mode .announcement-track {
+body.homepage.dark-mode .announcement-mover,
+body.homepage.dark-mode .announcement-inner,
+body.homepage.dark-mode .announcement-token {
   color: #ffffff !important;
 }
