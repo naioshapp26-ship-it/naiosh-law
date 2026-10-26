@@ -14,7 +14,7 @@ import {
   LAW_INCUBATORS_TITLE,
 } from "@/data/law-incubators";
 
-const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=platforms-cards-ordered-20260724";
+const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=widen-public-20261026";
 
 export default function IncubatorsPage() {
   useEffect(() => {

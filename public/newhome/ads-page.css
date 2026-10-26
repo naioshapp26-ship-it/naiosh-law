@@ -162,6 +162,7 @@
 
     .ads-categories-grid {
       display: grid;
+      /* Typically 4 categories — expand evenly (do not force empty 6th slots) */
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
     }
@@ -241,7 +242,7 @@
 
     .ads-latest-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
       gap: 16px;
     }
 
@@ -1021,6 +1022,12 @@
       0% { transform: translateY(-3px); }
       40% { transform: translateY(-6px); }
       100% { transform: translateY(-3px); }
+    }
+
+    @media (max-width: 1199px) {
+      .ads-categories-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 1080px) {

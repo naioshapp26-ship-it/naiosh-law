@@ -12,7 +12,7 @@ import {
   type LawBranchType,
 } from "@/data/law-branches";
 
-const BRANCHES_CSS = "/newhome/branches-page.css?v=erp-branches-copy-20260721";
+const BRANCHES_CSS = "/newhome/branches-page.css?v=widen-public-20261026";
 
 function branchWord(count: number) {
   if (count === 1) return "فرع";
@@ -55,7 +55,7 @@ export default function BranchesPage() {
       <LandingPromoBar />
       <Navbar variant="landing" />
 
-      <main className="container" style={{ paddingTop: 24 }}>
+      <main className="container" id="landing-hub-root" style={{ paddingTop: 24 }}>
         <section className="branches-showcase">
           <header className="branches-head">
             <h1>فروعنا حول العالم</h1>

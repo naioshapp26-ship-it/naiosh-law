@@ -12,7 +12,7 @@ import {
   LAW_SERVICES_STATS,
 } from "@/data/law-services";
 
-const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=services-cards-side-20260721";
+const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=widen-public-20261026";
 
 export default function ServicesPage() {
   useEffect(() => {

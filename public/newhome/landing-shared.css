@@ -1,5 +1,19 @@
+/* Public hub pages — near-full width with professional gutters */
+#landing-hub-root.container,
+main.container.ads-page,
+main.container:has(.branches-showcase),
+main.container:has(.landing-hub) {
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: clamp(24px, 3vw, 48px);
+  box-sizing: border-box;
+}
+
 .landing-hub {
   margin: 34px auto 72px;
+  width: 100%;
+  max-width: none;
 }
 
 .landing-hub-head {
@@ -88,10 +102,10 @@
   border: 1px solid rgba(16, 29, 50, 0.35);
 }
 
-/* Hub overview cards (platforms / services style) */
+/* Hub overview cards — up to 6 on wide screens; auto-fit so few cards expand */
 .landing-hub-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -107,6 +121,8 @@
   text-decoration: none;
   color: inherit;
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  min-width: 0;
+  height: 100%;
 }
 
 .landing-hub-card:hover {
@@ -137,11 +153,11 @@
   color: #101D32;
 }
 
-/* Category cards side-by-side */
+/* Category detail cards (services) — dense grid up to 6; equal row heights */
 .landing-hub-details {
   margin-top: 28px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 18px;
   align-items: stretch;
 }
@@ -156,6 +172,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
@@ -170,7 +187,7 @@
 }
 
 .landing-hub-detail-wide .landing-hub-detail-list {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .landing-hub-detail-head {
@@ -209,12 +226,13 @@
   line-height: 1.6;
 }
 
+/* Dense cards: single-column item lists for readability */
 .landing-hub-detail-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
   flex: 1;
 }
@@ -252,39 +270,35 @@
   font-weight: 900;
 }
 
-@media (max-width: 1100px) {
-  .landing-hub-detail-list {
-    grid-template-columns: 1fr;
+/* 1600+: 6 cols (default). 1200–1599: 4. 768–1199: 2–3. Mobile: 1–2 */
+@media (max-width: 1599px) {
+  .landing-hub-grid,
+  .landing-hub-details {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
 
-  .landing-hub-detail-wide .landing-hub-detail-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1199px) {
+  .landing-hub-grid,
+  .landing-hub-details {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 900px) {
-  .landing-hub-grid {
+  .landing-hub-grid,
+  .landing-hub-details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .landing-hub-details {
-    grid-template-columns: 1fr;
-  }
-
-  .landing-hub-detail-wide .landing-hub-detail-list {
-    grid-template-columns: 1fr;
-  }
-
+  /* Wider cards at 2-up — allow 2-col item lists */
   .landing-hub-detail-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
-  .landing-hub-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .landing-hub-grid,
   .landing-hub-details {
     grid-template-columns: 1fr;
   }
@@ -294,14 +308,16 @@
   }
 }
 
-/* ── Platforms catalog: ordered card layout ── */
+/* ── Platforms / incubators catalog ── */
 .platforms-catalog {
   margin-top: 8px;
+  width: 100%;
 }
 
+/* Overview cards (typically 4): expand evenly — do not force empty 6th slots */
 .platforms-overview-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   margin: 8px 0 28px;
 }
@@ -321,6 +337,7 @@
   color: inherit;
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
   min-height: 100%;
+  min-width: 0;
 }
 
 .platforms-overview-card:hover {
@@ -355,7 +372,7 @@
   line-height: 1.7;
   color: #5f6672;
   font-weight: 600;
-  max-width: 34ch;
+  max-width: 42ch;
 }
 
 .platforms-overview-cta {
@@ -414,7 +431,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   direction: rtl;
 }
@@ -433,6 +450,7 @@
   line-height: 1.55;
   min-width: 0;
   min-height: 58px;
+  height: 100%;
   box-shadow: 0 2px 8px rgba(12, 14, 17, 0.04);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
@@ -464,13 +482,31 @@
   text-align: right;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1599px) {
+  .platforms-items-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1199px) {
+  .platforms-items-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
   .platforms-items-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 1199px) {
+  .platforms-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
   .platforms-overview-grid {
     grid-template-columns: 1fr;
   }
