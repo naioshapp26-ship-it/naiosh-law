@@ -88,8 +88,7 @@ body.homepage .announcement-bar {
 }
 
 body.homepage .announcement-mover,
-body.homepage .announcement-inner,
-body.homepage .announcement-token {
+body.homepage .announcement-inner {
   color: #ffffff !important;
 }
 
