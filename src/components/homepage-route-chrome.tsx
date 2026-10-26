@@ -10,7 +10,7 @@ const STYLESHEETS = [
   "/newhome/dark-mode.css?v=identity-purge-20261026",
   "/newhome/homepage-dark-fix.css?v=identity-purge-20261026",
   "/newhome/mobile-header.css?v=identity-purge-20261026",
-  "/newhome/landing-shared.css?v=widen-public-20261026",
+  "/newhome/landing-shared.css?v=ownership-page-20261026",
   "/newhome/branches-page.css?v=widen-public-20261026",
   "/newhome/ads-page.css?v=widen-public-20261026",
   "/newhome/legal-hero-reference.css?v=hero-rtl-right-20261026",
@@ -83,7 +83,9 @@ export function HomepageRouteChrome() {
         pathname === "/incubators" ||
         pathname.startsWith("/incubators/") ||
         pathname === "/ads" ||
-        pathname.startsWith("/ads/")
+        pathname.startsWith("/ads/") ||
+        pathname === "/naiosh-ownership" ||
+        pathname.startsWith("/naiosh-ownership/")
     );
   }, [pathname]);
 
