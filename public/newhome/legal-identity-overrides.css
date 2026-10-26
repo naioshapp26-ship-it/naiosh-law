@@ -25,11 +25,13 @@ body.homepage .announcement-bar {
   border-bottom: 1px solid rgba(183, 154, 97, 0.22) !important;
 }
 
-body.homepage .announcement-track {
+body.homepage .announcement-track,
+body.homepage .announcement-inner {
   color: #ffffff !important;
 }
 
-body.homepage .announcement-track a {
+body.homepage .announcement-track a,
+body.homepage .announcement-inner a {
   color: #B79A61 !important;
 }
 

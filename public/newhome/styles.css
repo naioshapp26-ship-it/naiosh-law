@@ -2223,22 +2223,47 @@ body.homepage .announcement-bar {
   margin: 0;
   flex: 0 0 auto;
   width: 100%;
+  /* LTR layout space so translateX(100%→-100%) enters from the physical right */
+  direction: ltr;
 }
 
-body.homepage .announcement-track {
-  white-space: nowrap;
+/* Animated strip — percentages are relative to this box's width */
+body.homepage .announcement-mover {
   display: inline-block;
-  font-size: 17px;
-  font-weight: 800;
-  padding-inline: 16px;
-  line-height: 1.2;
-  letter-spacing: 0.2px;
   will-change: transform;
   animation: homepageAnnouncementSlide var(--announcement-speed) linear infinite;
 }
 
-body.homepage .announcement-bar:hover .announcement-track {
+body.homepage .announcement-bar:hover .announcement-mover {
   animation-play-state: paused;
+}
+
+/*
+ * Double scaleX(-1): the physical left edge of the mover is the Arabic sentence start,
+ * so the first word enters at the right edge while motion still runs right→left.
+ */
+body.homepage .announcement-track {
+  white-space: nowrap;
+  display: inline-block;
+  transform: scaleX(-1);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+
+body.homepage .announcement-inner {
+  display: inline-block;
+  transform: scaleX(-1);
+  direction: rtl;
+  unicode-bidi: isolate;
+  white-space: nowrap;
+  padding-inline: 16px;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
 
 @keyframes homepageAnnouncementSlide {
@@ -4188,9 +4213,26 @@ body.homepage #main-sections-grid .card:hover .icon-box {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.homepage .announcement-track {
+  body.homepage .announcement-mover {
     animation: none;
     transform: none;
+    width: 100%;
+  }
+
+  body.homepage .announcement-track,
+  body.homepage .announcement-inner {
+    transform: none;
+  }
+
+  body.homepage .announcement-bar {
+    direction: rtl;
+    justify-content: center;
+  }
+
+  body.homepage .announcement-inner {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .btn,
