@@ -41,6 +41,7 @@ model User {
   approvalRequests   ApprovalRequest[] @relation("ApprovalRequester")
   approvalsResolved  ApprovalRequest[] @relation("ApprovalApprover")
   eSignatures        ESignature[]
+  clientProfile      Client?
 }
 
 // ─── Core ERP (Phase 0) ─────────────────────────────────────
@@ -59,7 +60,86 @@ model Client {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  cases Case[]
+  /// Linked portal user (Client role) — null for legacy CRM-only records
+  userId             String?  @unique
+  user               User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  avatarUrl          String?
+  country            String?
+  city               String?
+  address            String?
+  preferredLanguage  String   @default("ar")
+  companyName        String?
+  authorizedPerson   String?
+  authorizedPhone    String?
+  internalNo         String?
+  linkedOffice       String?
+  lawyerName         String?
+  profileComplete    Boolean  @default(false)
+  isDemo             Boolean  @default(false)
+  notificationPrefs  String?
+  activityLog        String?
+
+  cases              Case[]
+  serviceRequests    ClientServiceRequest[]
+  notifications      ClientPortalNotification[]
+  portalDocuments    ClientPortalDocument[]
+  financialRecords   FinancialRecord[]
+  consultations      Consultation[]
+}
+
+/// Client portal service requests (استشارة، فتح ملف، مراجعة عقد، …)
+model ClientServiceRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  refNo       String   @unique
+  type        String
+  title       String
+  status      String   @default("جديد")
+  assignee    String?
+  notes       String?
+  lastUpdate  String?
+  attachments String?
+  timeline    String?
+  isDemo      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+model ClientPortalNotification {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  category  String   @default("عام")
+  href      String?
+  read      Boolean  @default(false)
+  isDemo    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+}
+
+model ClientPortalDocument {
+  id         String   @id @default(cuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  caseId     String?
+  title      String
+  category   String   @default("عام")
+  fileName   String?
+  fileUrl    String?
+  mimeType   String?
+  sizeBytes  Int?
+  status     String   @default("متاح")
+  isDemo     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 model Case {
@@ -116,8 +196,12 @@ model Consultation {
   date             String?
   fees             String?
   notes            String?
+  clientId         String?
+  client           Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 // ─── Legal Knowledge Base (Phase 1) ─────────────────────────
@@ -335,10 +419,15 @@ model FinancialRecord {
   paymentMethod PaymentMethod?
   caseRef       String?
   notes         String?
+  clientId      String?
+  client        Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  isDemo        Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   payments Payment[]
+
+  @@index([clientId])
 }
 
 model Payment {

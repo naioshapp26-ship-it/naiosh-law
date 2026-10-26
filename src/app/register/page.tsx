@@ -10,12 +10,36 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [office, setOffice] = useState("");
+  const [phone, setPhone] = useState("");
+  const [type, setType] = useState("فرد");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setMessage("تم استلام طلب إنشاء الحساب. يمكنك الدخول الآن بالحساب التجريبي أو التواصل لتفعيل مكتبك.");
+    setLoading(true);
+    setMessage("");
+    setError("");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name, email, password, phone, type }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "تعذر إنشاء الحساب");
+        setLoading(false);
+        return;
+      }
+      setMessage("تم إنشاء حساب العميل — جاري التحويل لاستكمال الملف…");
+      window.location.assign(data.redirect || "/portal/profile?onboarding=1");
+    } catch {
+      setError("تعذر الاتصال بالخادم");
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,7 +54,7 @@ export default function RegisterPage() {
         <div className="reg-header">
           <BrandLogo size={88} showText={false} variant="light" />
           <div className="reg-brand">{BRAND.name}</div>
-          <p>إنشاء حساب جديد في المنظومة القانونية</p>
+          <p>إنشاء حساب عميل قانوني — بوابة العميل 360</p>
         </div>
         <form className="reg-body" onSubmit={onSubmit}>
           <label>
@@ -38,40 +62,63 @@ export default function RegisterPage() {
             <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="أ. محمد" />
           </label>
           <label>
-            اسم المكتب (اختياري)
-            <input value={office} onChange={(e) => setOffice(e.target.value)} placeholder="مكتب ..." />
+            نوع العميل
+            <select value={type} onChange={(e) => setType(e.target.value)}>
+              <option value="فرد">فرد</option>
+              <option value="شركة">شركة</option>
+            </select>
+          </label>
+          <label>
+            رقم الهاتف
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05xxxxxxxx" />
           </label>
           <label>
             البريد الإلكتروني
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@naioshlaw.com" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@email.com" />
           </label>
           <label>
             كلمة المرور
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              placeholder="٨ أحرف على الأقل"
+            />
           </label>
+          {error ? <p className="reg-err">{error}</p> : null}
           {message ? <p className="reg-msg">{message}</p> : null}
-          <button type="submit">إنشاء الحساب</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "جاري الإنشاء…" : "إنشاء حساب العميل"}
+          </button>
           <p className="reg-foot">
             لديك حساب؟ <Link href="/login">تسجيل الدخول</Link>
             {" · "}
-            <Link href="/rent-system">استأجر النظام الآن</Link>
+            <Link href="/login">تجربة العميل التجريبي</Link>
           </p>
         </form>
       </div>
       <style>{`
-        .reg-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:#f8fafc;font-family:var(--font);position:relative}
+        .reg-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:#F5F1E8;font-family:var(--font);position:relative}
         .reg-card{width:100%;max-width:28rem;background:#fff;border-radius:1rem;box-shadow:0 20px 50px -20px rgba(15,23,42,.25);overflow:hidden;border:1px solid #f1f5f9;position:relative}
         .reg-back{position:absolute;top:.75rem;left:.75rem;z-index:2;background:rgba(255,255,255,.95);border:1px solid #e5e7eb;border-radius:.5rem;padding:.4rem .65rem;font-size:.75rem;font-weight:700;color:#4b5563;text-decoration:none}
-        .reg-header{background:var(--primary,#101D32);padding:2rem;text-align:center;color:#fff}
+        .reg-header{background:#101D32;padding:2rem;text-align:center;color:#fff}
         .reg-brand{font-size:1.5rem;font-weight:900;margin-top:.4rem}
         .reg-header p{margin:.35rem 0 0;opacity:.85;font-size:.875rem}
         .reg-body{padding:1.5rem;display:grid;gap:0.9rem}
         .reg-body label{display:grid;gap:.4rem;font-size:.875rem;font-weight:700;color:#374151}
-        .reg-body input{border:1px solid #d1d5db;border-radius:.75rem;padding:.85rem;background:#f9fafb;font-family:inherit}
-        .reg-body button{width:100%;border:0;border-radius:.75rem;padding:.85rem;background:var(--primary,#101D32);color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
+        .reg-body input,.reg-body select{border:1px solid #d1d5db;border-radius:.75rem;padding:.85rem;background:#f9fafb;font-family:inherit}
+        .reg-body button{width:100%;border:0;border-radius:.75rem;padding:.85rem;background:#101D32;color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
+        .reg-body button:disabled{opacity:.7}
         .reg-msg{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#166534;border-radius:.75rem;padding:.75rem;font-size:.85rem;font-weight:600}
+        .reg-err{background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.25);color:#991b1b;border-radius:.75rem;padding:.75rem;font-size:.85rem;font-weight:600}
         .reg-foot{text-align:center;color:#6b7280;font-size:.8rem}
-        .reg-foot a{color:var(--primary,#101D32);font-weight:800;text-decoration:none}
+        .reg-foot a{color:#101D32;font-weight:800;text-decoration:none}
+        body.dark-mode .reg-page{background:#0b1220}
+        body.dark-mode .reg-card{background:#121a2a;border-color:rgba(255,255,255,.08)}
+        body.dark-mode .reg-body label{color:#F5F1E8}
+        body.dark-mode .reg-body input,body.dark-mode .reg-body select{background:#0f1724;color:#F5F1E8;border-color:rgba(255,255,255,.12)}
       `}</style>
     </div>
   );

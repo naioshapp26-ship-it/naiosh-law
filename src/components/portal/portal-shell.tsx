@@ -1,0 +1,156 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useState } from "react";
+import { DarkModeToggle } from "@/components/color-mode";
+import { BrandLogo } from "@/components/brand-logo";
+
+type PortalUser = { name: string; email: string; role: string };
+
+const NAV = [
+  { href: "/portal", label: "الرئيسية", icon: "fa-house" },
+  { href: "/portal/profile", label: "ملفي الشخصي", icon: "fa-user" },
+  { href: "/portal/cases", label: "قضاياي", icon: "fa-scale-balanced" },
+  { href: "/portal/sessions", label: "جلساتي", icon: "fa-calendar-days" },
+  { href: "/portal/documents", label: "مستنداتي", icon: "fa-folder-open" },
+  { href: "/portal/requests", label: "طلباتي", icon: "fa-clipboard-list" },
+  { href: "/portal/finance", label: "المالية", icon: "fa-file-invoice-dollar" },
+  { href: "/portal/messages", label: "الرسائل", icon: "fa-envelope" },
+  { href: "/portal/notifications", label: "الإشعارات", icon: "fa-bell" },
+  { href: "/portal/settings", label: "الإعدادات", icon: "fa-gear" },
+];
+
+export function PortalShell({
+  title,
+  children,
+  demoBanner,
+}: {
+  title: string;
+  children: ReactNode;
+  demoBanner?: boolean;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<PortalUser | null>(null);
+  const [ready, setReady] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!document.querySelector('link[data-portal-css]')) {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "/newhome/portal.css?v=portal-360-20261026";
+      css.setAttribute("data-portal-css", "1");
+      document.head.appendChild(css);
+    }
+    if (!document.querySelector('link[data-portal-fa]')) {
+      const fa = document.createElement("link");
+      fa.rel = "stylesheet";
+      fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+      fa.setAttribute("data-portal-fa", "1");
+      document.head.appendChild(fa);
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const data = await res.json();
+        return (data.user as PortalUser) ?? null;
+      })
+      .then((u) => {
+        if (cancelled) return;
+        setUser(u);
+        setReady(true);
+        if (!u) {
+          window.location.assign("/login");
+          return;
+        }
+        if (u.role !== "client") {
+          router.replace("/app/dashboard");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setReady(true);
+          window.location.assign("/login");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    window.location.assign("/login");
+  };
+
+  if (!ready || !user || user.role !== "client") {
+    return (
+      <div className="portal-loading" dir="rtl">
+        جاري تحميل بوابة العميل…
+      </div>
+    );
+  }
+
+  return (
+    <div className="portal-root" dir="rtl">
+      <aside className={`portal-sidebar${open ? " is-open" : ""}`}>
+        <div className="portal-brand">
+          <BrandLogo href="/portal" size={44} showText={false} variant="light" />
+          <div>
+            <strong>بوابة العميل</strong>
+            <span>Client Portal 360</span>
+          </div>
+        </div>
+        <nav aria-label="قائمة بوابة العميل">
+          {NAV.map((item) => {
+            const active = pathname === item.href || (item.href !== "/portal" && pathname.startsWith(item.href));
+            return (
+              <Link key={item.href} href={item.href} className={active ? "active" : undefined} onClick={() => setOpen(false)}>
+                <i className={`fas ${item.icon}`} aria-hidden />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        <button type="button" className="portal-logout" onClick={logout}>
+          <i className="fas fa-right-from-bracket" aria-hidden />
+          تسجيل الخروج
+        </button>
+      </aside>
+
+      <div className="portal-main">
+        <header className="portal-top">
+          <button type="button" className="portal-menu-btn" aria-label="القائمة" onClick={() => setOpen((v) => !v)}>
+            <i className={`fas ${open ? "fa-xmark" : "fa-bars"}`} />
+          </button>
+          <div>
+            <h1>{title}</h1>
+            <p>مرحباً، {user.name}</p>
+          </div>
+          <div className="portal-top-actions">
+            <DarkModeToggle />
+            <Link href="/portal/notifications" className="portal-icon-btn" aria-label="الإشعارات">
+              <i className="fas fa-bell" />
+            </Link>
+          </div>
+        </header>
+
+        {demoBanner ? (
+          <div className="portal-demo-banner" role="status">
+            حساب تجريبي معزول — البيانات وهمية ومعلّمة بوضوح ولا تمس بيانات الإنتاج.
+          </div>
+        ) : null}
+
+        <div className="portal-content">{children}</div>
+      </div>
+
+      {open ? <button type="button" className="portal-backdrop" aria-label="إغلاق" onClick={() => setOpen(false)} /> : null}
+    </div>
+  );
+}
