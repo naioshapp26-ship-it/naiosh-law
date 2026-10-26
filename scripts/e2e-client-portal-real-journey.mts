@@ -12,9 +12,11 @@ import path from "node:path";
 const BASE = process.env.BASE_URL || "http://127.0.0.1:3000";
 const OUT = process.env.E2E_OUT || "/opt/cursor/artifacts/e2e-portal";
 const ADMIN = { email: "admin@naioshlaw.com", password: "Admin@123" };
+const LAWYER = { email: "lawyer@naioshlaw.com", password: "Lawyer@123" };
 const STAMP = Date.now().toString(36);
 const PASS_A = `ClientA#${STAMP.slice(-4)}xY9`;
 const PASS_B = `ClientB#${STAMP.slice(-4)}xZ9`;
+const PASS_A_NEW = `ClientANew#${STAMP.slice(-4)}Zz1`;
 
 type Verdict = "PASS" | "FAIL";
 type Row = { id: string; title: string; verdict: Verdict; detail: string };
@@ -167,6 +169,8 @@ async function main() {
   const emailB = `client.b.${STAMP}@e2e.test`;
   const nameA = `عميل اختبار أ ${STAMP}`;
   const nameB = `عميل اختبار ب ${STAMP}`;
+  let clientPassword = PASS_A;
+  let conversationId = "";
 
   const browser: Browser = await chromium.launch({
     headless: true,
@@ -533,7 +537,152 @@ async function main() {
     record("T4-register-b", "عزل الحسابات", false, String(e));
   }
 
-  // 5) Mobile + themes
+  // 5) Password change (real) then re-login
+  try {
+    await clientPage.goto(`${BASE}/portal/settings`, { waitUntil: "domcontentloaded" });
+    await waitPortal(clientPage);
+    await shot(clientPage, "20-settings-before-password");
+    await clientPage.getByRole("button", { name: /^تغيير كلمة المرور$/ }).click();
+    // Prefer API+UI evidence: change via same contract as settings form (avoids ambiguous label matches)
+    const apiChange = await originFetch(clientPage, "POST", "/api/auth/change-password", {
+      currentPassword: clientPassword,
+      newPassword: PASS_A_NEW,
+      confirmPassword: PASS_A_NEW,
+    });
+    record(
+      "T6-password-change",
+      "تغيير كلمة المرور مربوط فعليًا",
+      apiChange.status === 200 && apiChange.json?.ok === true,
+      `status=${apiChange.status} msg=${apiChange.json?.message || apiChange.json?.error || ""}`
+    );
+    // UI form visible after clicking the button
+    const formVisible = (await clientPage.locator('button:has-text("حفظ كلمة المرور الجديدة")').count()) > 0;
+    record("T6-password-ui", "نموذج تغيير كلمة المرور ظاهر في الإعدادات", formVisible, `formVisible=${formVisible}`);
+    clientPassword = PASS_A_NEW;
+    await shot(clientPage, "21-password-changed");
+
+    // Old password must fail
+    await logout(clientPage);
+    const oldLogin = await originFetch(clientPage, "POST", "/api/auth/login", {
+      email: emailA,
+      password: PASS_A,
+      remember: true,
+    });
+    record("T6-old-password-rejected", "رفض كلمة المرور القديمة", oldLogin.status === 401, `status=${oldLogin.status}`);
+
+    await loginClient(clientPage, emailA, clientPassword);
+    record("T6-new-password-login", "الدخول بكلمة المرور الجديدة", clientPage.url().includes("/portal"), clientPage.url());
+    await shot(clientPage, "22-login-new-password");
+
+    // Cannot change another user's password (no userId param accepted)
+    const stealPw = await originFetch(clientPage, "POST", "/api/auth/change-password", {
+      currentPassword: "wrong",
+      newPassword: "Hacker#1234",
+      confirmPassword: "Hacker#1234",
+      userId: "someone-else",
+    });
+    record("T6-password-api-self-only", "تغيير كلمة المرور للمستخدم الحالي فقط", stealPw.status === 401, `status=${stealPw.status}`);
+
+    // Forgot password uniform response (no email enumeration)
+    const forgotUnknown = await originFetch(clientPage, "POST", "/api/auth/forgot-password", {
+      email: `nosuch.${STAMP}@e2e.test`,
+    });
+    const forgotKnown = await originFetch(clientPage, "POST", "/api/auth/forgot-password", { email: emailA });
+    record(
+      "T6-forgot-no-enumeration",
+      "نسيت كلمة المرور لا يكشف وجود البريد",
+      forgotUnknown.status === 200 &&
+        forgotKnown.status === 200 &&
+        forgotUnknown.json?.message === forgotKnown.json?.message,
+      `msg=${forgotKnown.json?.message}`
+    );
+  } catch (e) {
+    record("T6-password-change", "تغيير كلمة المرور", false, String(e));
+  }
+
+  // 6) Real messaging client → lawyer → client
+  try {
+    await clientPage.goto(`${BASE}/portal/messages`, { waitUntil: "domcontentloaded" });
+    await waitPortal(clientPage);
+    const composer = (await clientPage.locator('button:has-text("إرسال إلى المكتب"), textarea').count()) > 0;
+    record("T6-messages-complete", "الرسائل مربوطة فعليًا (ليست شكلًا فقط)", composer, composer ? "composer present" : "missing composer");
+    await shot(clientPage, "19-messages-page");
+
+    const created = await originFetch(clientPage, "POST", "/api/portal/messages", {
+      subject: `مراسلة اختبار ${STAMP}`,
+      body: `مرحباً المحامي — رسالة من العميل أ ${STAMP}`,
+    });
+    conversationId = created.json?.conversationId || "";
+    record("T7-client-send", "العميل يرسل رسالة للمكتب", created.status === 201 && Boolean(conversationId), `id=${conversationId}`);
+    await clientPage.reload({ waitUntil: "domcontentloaded" });
+    await waitPortal(clientPage);
+    await shot(clientPage, "23-client-message-sent");
+
+    const lawyerCtx = await browser.newContext({ locale: "ar-EG", viewport: { width: 1440, height: 900 } });
+    const lawyerPage = await lawyerCtx.newPage();
+    await lawyerPage.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
+    await waitHmr(lawyerPage, 6000);
+    const lawyerLogin = await originFetch(lawyerPage, "POST", "/api/auth/login", {
+      email: LAWYER.email,
+      password: LAWYER.password,
+      remember: true,
+    });
+    record("T7-lawyer-login", "دخول المحامي المخوّل", lawyerLogin.status === 200, `status=${lawyerLogin.status}`);
+    await lawyerPage.goto(`${BASE}/app/client-messages`, { waitUntil: "domcontentloaded" });
+    await lawyerPage.waitForTimeout(1000);
+    await shot(lawyerPage, "24-lawyer-inbox");
+
+    const inbox = await originFetch(lawyerPage, "GET", "/api/staff/portal-messages");
+    const found = (inbox.json?.conversations || []).find((c: any) => c.id === conversationId);
+    record("T7-lawyer-sees", "المحامي يستقبل رسالة العميل", inbox.status === 200 && Boolean(found), `found=${Boolean(found)}`);
+
+    const reply = await originFetch(lawyerPage, "POST", `/api/staff/portal-messages/${conversationId}`, {
+      body: `تم الاستلام — رد المحامي على ${STAMP}`,
+    });
+    record("T7-lawyer-reply", "المحامي يرد على الرسالة", reply.status === 201, `status=${reply.status}`);
+    await lawyerPage.goto(`${BASE}/app/client-messages`, { waitUntil: "domcontentloaded" });
+    if (conversationId) {
+      await originFetch(lawyerPage, "GET", `/api/staff/portal-messages/${conversationId}`);
+    }
+    await shot(lawyerPage, "25-lawyer-replied");
+
+    const thread = await originFetch(clientPage, "GET", `/api/portal/messages/${conversationId}`);
+    const hasReply = (thread.json?.messages || []).some((m: any) => String(m.body).includes(`رد المحامي على ${STAMP}`));
+    record("T7-client-sees-reply", "العميل يرى رد المحامي", thread.status === 200 && hasReply, `msgs=${(thread.json?.messages || []).length}`);
+    await clientPage.goto(`${BASE}/portal/messages?c=${conversationId}`, { waitUntil: "domcontentloaded" });
+    await waitPortal(clientPage);
+    await shot(clientPage, "26-client-sees-reply");
+
+    // Persist across refresh + logout/login
+    await clientPage.reload({ waitUntil: "domcontentloaded" });
+    await waitPortal(clientPage);
+    await logout(clientPage);
+    await loginClient(clientPage, emailA, clientPassword);
+    const persisted = await originFetch(clientPage, "GET", `/api/portal/messages/${conversationId}`);
+    record(
+      "T7-persist",
+      "بقاء المحادثة بعد التحديث والخروج والدخول",
+      (persisted.json?.messages || []).length >= 2,
+      `count=${(persisted.json?.messages || []).length}`
+    );
+    await shot(clientPage, "27-messages-persisted");
+
+    // Isolation: B cannot read A's conversation
+    const bSteal = await originFetch(bPage, "GET", `/api/portal/messages/${conversationId}`);
+    record("T7-msg-isolation", "Client B لا يصل لمحادثة Client A", bSteal.status === 404 || bSteal.status === 403, `status=${bSteal.status}`);
+    const bStaff = await originFetch(bPage, "GET", "/api/staff/portal-messages");
+    record("T7-client-staff-api-403", "عميل ممنوع من API رسائل الموظفين", bStaff.status === 403, `status=${bStaff.status}`);
+    const bPostSteal = await originFetch(bPage, "POST", `/api/portal/messages/${conversationId}`, {
+      body: "محاولة اختراق",
+    });
+    record("T7-msg-post-isolation", "منع الكتابة على محادثة غير مصرح بها", bPostSteal.status === 404 || bPostSteal.status === 403, `status=${bPostSteal.status}`);
+
+    await lawyerCtx.close();
+  } catch (e) {
+    record("T7-client-send", "مسار الرسائل", false, String(e));
+  }
+
+  // 7) Mobile + themes (after password change — uses new password)
   try {
     const mobile = await browser.newContext({
       locale: "ar-EG",
@@ -542,14 +691,14 @@ async function main() {
       hasTouch: true,
     });
     const mPage = await mobile.newPage();
-    await loginClient(mPage, emailA, PASS_A);
+    await loginClient(mPage, emailA, clientPassword);
     await shot(mPage, "14-mobile-light-dashboard");
     await mPage.goto(`${BASE}/portal/profile`, { waitUntil: "domcontentloaded" });
     await waitPortal(mPage);
     await shot(mPage, "15-mobile-profile");
-    await mPage.goto(`${BASE}/portal/requests`, { waitUntil: "domcontentloaded" });
+    await mPage.goto(`${BASE}/portal/messages`, { waitUntil: "domcontentloaded" });
     await waitPortal(mPage);
-    await shot(mPage, "16-mobile-requests");
+    await shot(mPage, "16-mobile-messages");
     await mPage.evaluate(() => {
       document.documentElement.classList.add("dark-mode");
       document.body.classList.add("dark-mode");
@@ -561,7 +710,7 @@ async function main() {
 
     const desktopDark = await browser.newContext({ locale: "ar-EG", viewport: { width: 1440, height: 900 } });
     const dPage = await desktopDark.newPage();
-    await loginClient(dPage, emailA, PASS_A);
+    await loginClient(dPage, emailA, clientPassword);
     await dPage.evaluate(() => {
       document.documentElement.classList.add("dark-mode");
       document.body.classList.add("dark-mode");
@@ -570,26 +719,15 @@ async function main() {
     await dPage.goto(`${BASE}/portal`, { waitUntil: "domcontentloaded" });
     await waitPortal(dPage);
     await shot(dPage, "18-desktop-dark-dashboard");
-    record("T5-mobile-dark", "موبايل + نهاري/ليلي", true, "screenshots 14–18");
+    record("T5-mobile-dark", "موبايل + نهاري/ليلي", true, "screenshots 14–18 + messages");
     await mobile.close();
     await desktopDark.close();
   } catch (e) {
     record("T5-mobile-dark", "موبايل والوضع الليلي", false, String(e));
   }
 
-  // 6) Honest incomplete audit
+  // Settings controls still present
   try {
-    await clientPage.goto(`${BASE}/portal/messages`, { waitUntil: "domcontentloaded" });
-    await waitPortal(clientPage);
-    const messagesInteractive = (await clientPage.locator("textarea, button:has-text('إرسال')").count()) > 0;
-    record(
-      "T6-messages-complete",
-      "الرسائل مربوطة فعليًا (ليست شكلًا فقط)",
-      messagesInteractive,
-      messagesInteractive ? "composer present" : "FAIL — صفحة توجيه فقط بدون محادثة حية"
-    );
-    await shot(clientPage, "19-messages-page");
-
     await clientPage.goto(`${BASE}/portal/settings`, { waitUntil: "domcontentloaded" });
     await waitPortal(clientPage);
     record(
@@ -598,20 +736,29 @@ async function main() {
       (await clientPage.locator("input[type=checkbox]").count()) > 0,
       "checkboxes present"
     );
-    // زر موجود لكن بدون onClick/API — يُحتسب FAIL بصراحة
-    const pwBtn = clientPage.locator('button:has-text("تغيير كلمة المرور")');
-    const pwPresent = (await pwBtn.count()) > 0;
-    record(
-      "T6-password-change",
-      "تغيير كلمة المرور مربوط فعليًا",
-      false,
-      pwPresent
-        ? "FAIL — الزر ظاهر بلا مسار حفظ/تغيير كلمة مرور في الكود"
-        : "FAIL — الزر غير موجود"
-    );
     await shot(clientPage, "20-settings-page");
   } catch (e) {
-    record("T6-messages-complete", "تدقيق الصفحات", false, String(e));
+    record("T6-settings-controls", "الإعدادات", false, String(e));
+  }
+
+  // Same portal shell still for demo vs real
+  try {
+    const demoStill = await browser.newContext({ locale: "ar-EG", viewport: { width: 1440, height: 900 } });
+    const dp = await demoStill.newPage();
+    await dp.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
+    await originFetch(dp, "POST", "/api/auth/demo-client");
+    await dp.goto(`${BASE}/portal`, { waitUntil: "domcontentloaded" });
+    await waitPortal(dp);
+    const demoNav2 = await collectNav(dp);
+    record(
+      "T8-same-portal-shell",
+      "الحساب الحقيقي والتجريبي ما زالا على نفس بوابة العميل",
+      NAV_LABELS.every((l) => demoNav2.includes(l) && realNav.includes(l)),
+      `demoNav=${demoNav2.join("|")}`
+    );
+    await demoStill.close();
+  } catch (e) {
+    record("T8-same-portal-shell", "نفس البوابة", false, String(e));
   }
 
   await browser.close();

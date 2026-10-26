@@ -29,6 +29,8 @@ model User {
   role      UserRole @default(client)
   phone     String?
   active    Boolean  @default(true)
+  /// Bumped on password change — JWTs issued before this instant are rejected
+  passwordChangedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -42,6 +44,8 @@ model User {
   approvalsResolved  ApprovalRequest[] @relation("ApprovalApprover")
   eSignatures        ESignature[]
   clientProfile      Client?
+  passwordResetTokens PasswordResetToken[]
+  staffConversations  PortalConversation[] @relation("ConversationStaff")
 }
 
 // ─── Core ERP (Phase 0) ─────────────────────────────────────
@@ -85,6 +89,59 @@ model Client {
   portalDocuments    ClientPortalDocument[]
   financialRecords   FinancialRecord[]
   consultations      Consultation[]
+  conversations      PortalConversation[]
+}
+
+/// Secure one-time password reset tokens (hashed at rest)
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Client ↔ office/lawyer messaging thread (portal)
+model PortalConversation {
+  id            String   @id @default(cuid())
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  staffUserId   String?
+  staffUser     User?    @relation("ConversationStaff", fields: [staffUserId], references: [id], onDelete: SetNull)
+  subject       String
+  caseId        String?
+  requestId     String?
+  status        String   @default("مفتوحة")
+  isDemo        Boolean  @default(false)
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  messages      PortalMessage[]
+
+  @@index([clientId])
+  @@index([staffUserId])
+  @@index([lastMessageAt])
+}
+
+model PortalMessage {
+  id             String    @id @default(cuid())
+  conversationId String
+  conversation   PortalConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderUserId   String
+  senderRole     String
+  body           String
+  attachmentName String?
+  attachmentUrl  String?
+  attachmentMime String?
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderUserId])
 }
 
 /// Client portal service requests (استشارة، فتح ملف، مراجعة عقد، …)

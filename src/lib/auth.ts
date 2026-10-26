@@ -9,6 +9,8 @@ export type AuthPayload = {
   email: string;
   name: string;
   role: UserRole;
+  /** JWT issued-at (seconds) — used to invalidate sessions after password change */
+  iat?: number;
 };
 
 function getSecret() {
@@ -38,6 +40,7 @@ export async function verifyToken(token: string): Promise<AuthPayload | null> {
       email: payload.email,
       name: payload.name,
       role: payload.role as UserRole,
+      iat: typeof payload.iat === "number" ? payload.iat : undefined,
     };
   } catch {
     return null;
@@ -57,4 +60,8 @@ export function canWrite(role: UserRole) {
 
 export function canManageUsers(role: UserRole) {
   return role === "admin" || role === "industrial_agent";
+}
+
+export function isStaffRole(role: UserRole | string) {
+  return canWrite(role as UserRole) || role === "judge";
 }

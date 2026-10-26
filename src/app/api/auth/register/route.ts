@@ -16,8 +16,10 @@ export async function POST(request: Request) {
     if (!name || !email || !password) {
       return NextResponse.json({ error: "الاسم والبريد وكلمة المرور مطلوبة" }, { status: 400 });
     }
-    if (password.length < 8) {
-      return NextResponse.json({ error: "كلمة المرور يجب ألا تقل عن 8 أحرف" }, { status: 400 });
+    const { validatePasswordStrength } = await import("@/lib/password-policy");
+    const strength = validatePasswordStrength(password);
+    if (!strength.ok) {
+      return NextResponse.json({ error: strength.error }, { status: 400 });
     }
 
     const prisma = getPrisma();
