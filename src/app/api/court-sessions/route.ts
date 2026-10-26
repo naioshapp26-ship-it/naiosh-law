@@ -28,10 +28,21 @@ export async function POST(request: Request) {
   if (error) return error;
   const body = await request.json();
 
+  const caseId = body.caseId ? String(body.caseId) : null;
+  let caseNo = body.caseNo ? String(body.caseNo) : null;
+  let client = body.client ? String(body.client) : null;
+  if (caseId) {
+    const linkedCase = await prisma.case.findUnique({ where: { id: caseId } });
+    if (!linkedCase) return NextResponse.json({ error: "القضية غير موجودة" }, { status: 404 });
+    caseNo = caseNo ?? linkedCase.caseNo;
+    client = client ?? linkedCase.clientName;
+  }
+
   const created = await prisma.courtSession.create({
     data: {
-      caseNo: body.caseNo ? String(body.caseNo) : null,
-      client: body.client ? String(body.client) : null,
+      caseId,
+      caseNo,
+      client,
       court: String(body.court ?? ""),
       room: body.room ? String(body.room) : null,
       date: String(body.date ?? ""),
@@ -42,5 +53,5 @@ export async function POST(request: Request) {
       notes: body.notes ? String(body.notes) : null,
     },
   });
-  return NextResponse.json({ id: created.id }, { status: 201 });
+  return NextResponse.json({ id: created.id, caseId: created.caseId }, { status: 201 });
 }

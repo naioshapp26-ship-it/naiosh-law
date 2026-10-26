@@ -60,6 +60,54 @@ function ProfileInner() {
         <div className="portal-card">جاري التحميل…</div>
       ) : (
         <form className="portal-card portal-form" onSubmit={onSubmit}>
+          <h2>الصورة الشخصية</h2>
+          <div className="portal-grid" style={{ gridTemplateColumns: "auto 1fr", alignItems: "center", gap: "1rem" }}>
+            <div
+              aria-hidden
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "2px solid rgba(183,154,97,.55)",
+                background: "#101D32",
+                display: "grid",
+                placeItems: "center",
+                color: "#F5F1E8",
+                fontWeight: 800,
+              }}
+            >
+              {profile.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                (profile.name || "?").slice(0, 1)
+              )}
+            </div>
+            <label>
+              رفع صورة شخصية
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 1_500_000) {
+                    setError("حجم الصورة يجب ألا يتجاوز 1.5 ميجابايت");
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = typeof reader.result === "string" ? reader.result : "";
+                    setProfile({ ...profile, avatarUrl: dataUrl });
+                    setMsg("تم تجهيز الصورة — اضغط حفظ التعديلات لتثبيتها");
+                  };
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+          </div>
+
           <h2>البيانات الأساسية</h2>
           <div className="portal-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
             <label>
