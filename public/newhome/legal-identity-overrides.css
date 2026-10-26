@@ -25,13 +25,15 @@ body.homepage .announcement-bar {
   border-bottom: 1px solid rgba(183, 154, 97, 0.22) !important;
 }
 
-body.homepage .announcement-track,
-body.homepage .announcement-inner {
+body.homepage .announcement-mover,
+body.homepage .announcement-inner,
+body.homepage .announcement-token {
   color: #ffffff !important;
 }
 
-body.homepage .announcement-track a,
-body.homepage .announcement-inner a {
+body.homepage .announcement-mover a,
+body.homepage .announcement-inner a,
+body.homepage .announcement-token[href] {
   color: #B79A61 !important;
 }
 

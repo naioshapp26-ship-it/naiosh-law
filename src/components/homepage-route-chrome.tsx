@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const STYLESHEETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "/newhome/styles.css?v=marquee-rtl-20261027",
+  "/newhome/styles.css?v=marquee-rtl-v3-20261027",
   "/newhome/homepage-premium.css?v=identity-purge-20261026",
   "/newhome/dark-mode.css?v=identity-purge-20261026",
   "/newhome/homepage-dark-fix.css?v=identity-purge-20261026",
@@ -13,8 +13,8 @@ const STYLESHEETS = [
   "/newhome/landing-shared.css?v=ownership-page-20261026",
   "/newhome/branches-page.css?v=widen-public-20261026",
   "/newhome/ads-page.css?v=widen-public-20261026",
-  "/newhome/legal-hero-reference.css?v=marquee-rtl-20261027",
-  "/newhome/legal-identity-overrides.css?v=marquee-rtl-20261027",
+  "/newhome/legal-hero-reference.css?v=marquee-rtl-v3-20261027",
+  "/newhome/legal-identity-overrides.css?v=marquee-rtl-v3-20261027",
 ] as const;
 
 function stylesheetId(href: string) {

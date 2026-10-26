@@ -2223,39 +2223,36 @@ body.homepage .announcement-bar {
   margin: 0;
   flex: 0 0 auto;
   width: 100%;
-  /* LTR layout space so translateX(100%→-100%) enters from the physical right */
+  /*
+   * Layout space stays LTR so translateX(100%→-100%) enters from the physical right.
+   * Semantic RTL is on the bar (dir=rtl) and each token; visual token order is LTR
+   * so the sentence start is the leading edge.
+   */
   direction: ltr;
 }
 
-/* Animated strip — percentages are relative to this box's width */
 body.homepage .announcement-mover {
   display: inline-block;
+  white-space: nowrap;
   will-change: transform;
   animation: homepageAnnouncementSlide var(--announcement-speed) linear infinite;
-}
-
-body.homepage .announcement-bar:hover .announcement-mover {
-  animation-play-state: paused;
-}
-
-/*
- * Double scaleX(-1): the physical left edge of the mover is the Arabic sentence start,
- * so the first word enters at the right edge while motion still runs right→left.
- */
-body.homepage .announcement-track {
-  white-space: nowrap;
-  display: inline-block;
-  transform: scaleX(-1);
   font-size: 17px;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: 0.2px;
 }
 
+body.homepage .announcement-bar:hover .announcement-mover {
+  animation-play-state: paused;
+}
+
 body.homepage .announcement-inner {
-  display: inline-block;
-  transform: scaleX(-1);
-  direction: rtl;
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35em;
+  direction: ltr;
   unicode-bidi: isolate;
   white-space: nowrap;
   padding-inline: 16px;
@@ -2266,8 +2263,18 @@ body.homepage .announcement-inner {
   color: inherit;
 }
 
+body.homepage .announcement-token {
+  display: inline-block;
+  direction: rtl;
+  unicode-bidi: isolate;
+  white-space: nowrap;
+  color: inherit;
+  font: inherit;
+}
+
 @keyframes homepageAnnouncementSlide {
-  from { transform: translateX(100%); }
+  /* 100vw: fully off-screen to the right on every viewport width */
+  from { transform: translateX(100vw); }
   to { transform: translateX(-100%); }
 }
 
@@ -3596,7 +3603,7 @@ body.homepage #main-sections-grid .card:hover .icon-box {
     box-sizing: border-box;
   }
 
-  body.homepage .announcement-track {
+  body.homepage .announcement-mover {
     font-size: 14px;
   }
 
@@ -4219,20 +4226,19 @@ body.homepage #main-sections-grid .card:hover .icon-box {
     width: 100%;
   }
 
-  body.homepage .announcement-track,
   body.homepage .announcement-inner {
-    transform: none;
+    /* Static: restore natural RTL reading (start on the right) */
+    direction: rtl;
+    flex-direction: row-reverse;
+    justify-content: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   body.homepage .announcement-bar {
     direction: rtl;
     justify-content: center;
-  }
-
-  body.homepage .announcement-inner {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .btn,
@@ -4415,7 +4421,7 @@ body.homepage #main-sections-grid .card:hover .icon-box {
     --announcement-bar-height: 36px;
   }
 
-  body.homepage .announcement-track {
+  body.homepage .announcement-mover {
     font-size: 12px;
   }
 
