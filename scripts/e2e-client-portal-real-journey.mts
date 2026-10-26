@@ -68,25 +68,20 @@ async function waitHmr(page: Page, ms = 15000) {
 }
 
 async function originFetch(page: Page, method: string, urlPath: string, body?: unknown) {
-  return page.evaluate(
-    async ({ method, urlPath, body }) => {
-      const res = await fetch(urlPath, {
-        method,
-        credentials: "include",
-        headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
-      const text = await res.text();
-      let json: any = null;
-      try {
-        json = text ? JSON.parse(text) : null;
-      } catch {
-        json = { raw: text };
-      }
-      return { status: res.status, json };
-    },
-    { method, urlPath, body }
-  );
+  // Playwright APIRequestContext shares the browser cookie jar (survives page navigations)
+  const res = await page.context().request.fetch(`${BASE}${urlPath}`, {
+    method,
+    headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+    data: body !== undefined ? body : undefined,
+    failOnStatusCode: false,
+  });
+  let json: any = null;
+  try {
+    json = await res.json();
+  } catch {
+    json = { raw: await res.text().catch(() => "") };
+  }
+  return { status: res.status(), json };
 }
 
 async function registerClient(page: Page, name: string, email: string, password: string, phone: string) {
@@ -641,9 +636,7 @@ async function main() {
     });
     record("T7-lawyer-reply", "المحامي يرد على الرسالة", reply.status === 201, `status=${reply.status}`);
     await lawyerPage.goto(`${BASE}/app/client-messages`, { waitUntil: "domcontentloaded" });
-    if (conversationId) {
-      await originFetch(lawyerPage, "GET", `/api/staff/portal-messages/${conversationId}`);
-    }
+    await lawyerPage.waitForTimeout(1200);
     await shot(lawyerPage, "25-lawyer-replied");
 
     const thread = await originFetch(clientPage, "GET", `/api/portal/messages/${conversationId}`);
@@ -675,11 +668,16 @@ async function main() {
     const bPostSteal = await originFetch(bPage, "POST", `/api/portal/messages/${conversationId}`, {
       body: "محاولة اختراق",
     });
-    record("T7-msg-post-isolation", "منع الكتابة على محادثة غير مصرح بها", bPostSteal.status === 404 || bPostSteal.status === 403, `status=${bPostSteal.status}`);
+    record(
+      "T7-msg-post-isolation",
+      "منع الكتابة على محادثة غير مصرح بها",
+      bPostSteal.status === 404 || bPostSteal.status === 403,
+      `status=${bPostSteal.status}`
+    );
 
     await lawyerCtx.close();
   } catch (e) {
-    record("T7-client-send", "مسار الرسائل", false, String(e));
+    record("T7-messaging-suite", "مسار الرسائل (استثناء)", false, String(e));
   }
 
   // 7) Mobile + themes (after password change — uses new password)
