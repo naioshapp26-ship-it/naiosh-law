@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies, canWrite } from "@/lib/auth";
+import { assertSessionNotRevoked } from "@/lib/auth-session-guard";
 import type { UserRole } from "@/generated/prisma/client";
 
 export async function requireAuth(roles?: UserRole[]) {
   const session = await getSessionFromCookies();
   if (!session) {
     return { error: NextResponse.json({ error: "غير مصرح" }, { status: 401 }), session: null };
+  }
+  const stillValid = await assertSessionNotRevoked(session);
+  if (!stillValid) {
+    return {
+      error: NextResponse.json(
+        { error: "انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجددًا" },
+        { status: 401 }
+      ),
+      session: null,
+    };
   }
   if (roles && !roles.includes(session.role)) {
     return { error: NextResponse.json({ error: "صلاحية غير كافية" }, { status: 403 }), session: null };

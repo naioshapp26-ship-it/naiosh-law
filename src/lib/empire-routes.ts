@@ -154,6 +154,7 @@ export function getAxisForPath(pathname: string): ImperialAxis | undefined {
 /** روابط القائمة الجانبية الرئيسية — كلها صفحات موجودة */
 export const PRIMARY_NAV = [
   { href: "/app/dashboard", label: "لوحة التحكم الإمبراطورية", icon: "👑" },
+  { href: "/app/client-messages", label: "رسائل العملاء", icon: "✉️" },
   { href: "/app/modules/case-management", label: "القضايا", icon: "⚖️" },
   { href: "/app/modules/clients-management", label: "العملاء", icon: "👥" },
   { href: "/app/modules/court-sessions", label: "التقويم والجلسات", icon: "📅" },

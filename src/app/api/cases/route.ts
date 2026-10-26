@@ -35,10 +35,23 @@ export async function POST(request: Request) {
   const count = await prisma.case.count();
   const caseNo = body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
 
+  const clientId = body.clientId ? String(body.clientId) : null;
+  let clientName = String(body.client ?? body.clientName ?? "");
+  if (clientId) {
+    const linked = await prisma.client.findUnique({ where: { id: clientId } });
+    if (!linked) return NextResponse.json({ error: "العميل غير موجود" }, { status: 404 });
+    if (!clientName) clientName = linked.name;
+    await prisma.client.update({
+      where: { id: clientId },
+      data: { casesCount: { increment: 1 } },
+    });
+  }
+
   const created = await prisma.case.create({
     data: {
       caseNo,
-      clientName: String(body.client ?? ""),
+      clientId,
+      clientName,
       type: String(body.type ?? "مدني"),
       court: String(body.court ?? ""),
       status: String(body.status ?? "نشطة"),
@@ -48,5 +61,5 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ id: created.id, caseNo: created.caseNo }, { status: 201 });
+  return NextResponse.json({ id: created.id, caseNo: created.caseNo, clientId: created.clientId }, { status: 201 });
 }

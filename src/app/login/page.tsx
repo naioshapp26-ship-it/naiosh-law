@@ -225,7 +225,9 @@ export default function LoginPage() {
                 />
                 <span>تذكرني</span>
               </label>
-              <span className="erp-login-forgot">نسيت كلمة المرور؟</span>
+              <Link href="/forgot-password" className="erp-login-forgot">
+                نسيت كلمة المرور؟
+              </Link>
             </div>
 
             <button type="submit" disabled={loading} className="erp-login-submit">

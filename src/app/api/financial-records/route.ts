@@ -30,10 +30,19 @@ export async function POST(request: Request) {
   const count = await prisma.financialRecord.count();
   const invoiceNo = body.invoiceNo ?? `INV-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`;
 
+  const clientId = body.clientId ? String(body.clientId) : null;
+  let clientName = String(body.client ?? body.clientName ?? "");
+  if (clientId) {
+    const linked = await prisma.client.findUnique({ where: { id: clientId } });
+    if (!linked) return NextResponse.json({ error: "العميل غير موجود" }, { status: 404 });
+    if (!clientName) clientName = linked.name;
+  }
+
   const created = await prisma.financialRecord.create({
     data: {
       invoiceNo,
-      clientName: String(body.client ?? body.clientName ?? ""),
+      clientId,
+      clientName,
       type: String(body.type ?? "رسوم قضية"),
       amount: Number(body.amount ?? 0),
       paid: Number(body.paid ?? 0),
@@ -43,7 +52,8 @@ export async function POST(request: Request) {
       paymentMethod: body.paymentMethod as PaymentMethod | undefined,
       caseRef: body.caseRef ? String(body.caseRef) : null,
       notes: body.notes ? String(body.notes) : null,
+      isDemo: false,
     },
   });
-  return NextResponse.json({ id: created.id }, { status: 201 });
+  return NextResponse.json({ id: created.id, clientId: created.clientId }, { status: 201 });
 }
