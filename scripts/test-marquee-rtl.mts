@@ -1,5 +1,7 @@
 /**
- * Verify announcement marquee: Arabic first word enters at the right edge, then moves left.
+ * Verify announcement marquee:
+ * - Enters from the far LEFT, travels toward the RIGHT
+ * - First Arabic word (ابدأ) appears first; natural RTL inside the sentence
  * Run: BASE_URL=http://127.0.0.1:3000 npx tsx scripts/test-marquee-rtl.mts
  */
 import { chromium, type Page } from "playwright";
@@ -7,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const BASE = process.env.BASE_URL || "http://127.0.0.1:3000";
-const OUT = process.env.E2E_OUT || "/opt/cursor/artifacts/marquee-rtl";
+const OUT = process.env.E2E_OUT || "/opt/cursor/artifacts/marquee-ltr-motion";
 const EXPECTED =
   "ابدأ الآن | عروض محدودة على منظومة نايوش القانونية 360 — سجّل مجانًا";
 
@@ -43,10 +45,11 @@ async function probe(page: Page) {
     const innerRect = inner.getBoundingClientRect();
     const y = barRect.top + barRect.height / 2;
 
+    // Sample near the LEFT edge (entry side for left→right motion)
     const samples: string[] = [];
-    const right = Math.floor(barRect.right - 2);
-    const leftBound = Math.floor(Math.max(barRect.left, barRect.right - 160));
-    for (let x = right; x >= leftBound; x -= 6) {
+    const left = Math.floor(barRect.left + 2);
+    const rightBound = Math.floor(Math.min(barRect.right, barRect.left + 160, innerRect.right));
+    for (let x = left; x <= rightBound; x += 5) {
       if (x < innerRect.left || x > innerRect.right) continue;
       const range = document.caretRangeFromPoint?.(x, y);
       if (!range) continue;
@@ -60,58 +63,40 @@ async function probe(page: Page) {
     const style = getComputedStyle(mover);
     const matrix = (style.transform || "").match(/matrix\(([^)]+)\)/);
     const tx = matrix ? parseFloat(matrix[1].split(",")[4]) : null;
-    const tokenEls = Array.from(inner.querySelectorAll(".announcement-token"));
-    const tokens = tokenEls.map((el) => (el.textContent || "").trim());
 
-    // Which token intersects the rightmost 80px of the bar?
-    const rightTokens: string[] = [];
-    for (const el of tokenEls) {
-      const r = el.getBoundingClientRect();
-      if (r.right < barRect.right - 80 || r.left > barRect.right - 1) continue;
-      if (r.bottom < barRect.top || r.top > barRect.bottom) continue;
-      rightTokens.push((el.textContent || "").trim());
-    }
+    // Just entering from left: right edge of text past bar.left, most of text still left of bar
+    const justEntering =
+      innerRect.right > barRect.left + 2 &&
+      innerRect.left < barRect.left - 20 &&
+      innerRect.right < barRect.left + 120;
 
     return {
-      barWidth: barRect.width,
       innerText: (inner.innerText || "").replace(/\s+/g, " ").trim(),
-      tokens,
-      token0: tokens[0] || "",
+      startsWithIbda: (inner.innerText || "").trim().startsWith("ابدأ"),
       barDir: bar.getAttribute("dir"),
-      innerDir: inner.getAttribute("dir"),
-      rightSamples: joined,
-      rightTokens,
-      // Start word (or a fragment of it) at the right — never the closing CTA
-      rightHasIbda:
-        rightTokens.includes("ابدأ") ||
-        rightTokens.includes("الآن") ||
-        /ابد|بدأ|دأ/.test(joined),
-      rightHasSajil:
-        rightTokens.some((t) => /سج[ّ]?ل|مجان/.test(t)) ||
-        (/سج[ّ]?ل|مجان/.test(joined) && !rightTokens.includes("ابدأ")),
-      partial:
-        innerRect.left < barRect.right - 4 &&
-        innerRect.left > barRect.left + 8 &&
-        innerRect.right > barRect.right - 2,
+      innerDir: inner.getAttribute("dir") || getComputedStyle(inner).direction,
+      leftSamples: joined,
+      leftHasIbda: /ابد|بدأ|دأ/.test(joined),
+      leftHasSajil: /سج[ّ]?ل|مجان/.test(joined),
+      justEntering,
       innerLeft: innerRect.left,
+      innerRight: innerRect.right,
       tx,
       animName: style.animationName || "",
     };
   });
 }
 
-/** Seek until the strip is partially entering from the right. */
-async function seekPartialEntry(page: Page, width: number) {
-  for (let i = 0; i <= 50; i++) {
-    const frac = i / 100;
+async function seekJustEntering(page: Page) {
+  for (let i = 0; i <= 100; i++) {
+    const frac = i / 400;
     await setAnimProgress(page, frac);
     const p = await probe(page);
     if ("error" in p) continue;
-    if (p.partial) return { frac, p };
+    if (p.justEntering && p.leftHasIbda) return { frac, p };
   }
-  // Fallback early frame
-  await setAnimProgress(page, 0.08);
-  return { frac: 0.08, p: await probe(page) };
+  await setAnimProgress(page, 0.01);
+  return { frac: 0.01, p: await probe(page) };
 }
 
 async function captureViewport(page: Page, width: number, height: number, label: string) {
@@ -120,18 +105,18 @@ async function captureViewport(page: Page, width: number, height: number, label:
   await page.waitForSelector(".announcement-mover", { timeout: 20000 });
   await page.waitForTimeout(250);
 
-  const { frac, p: t0 } = await seekPartialEntry(page, width);
+  const { frac, p: t0 } = await seekJustEntering(page);
   await page.waitForTimeout(40);
   await page.screenshot({
-    path: path.join(OUT, `${label}-t0-right-entry.png`),
+    path: path.join(OUT, `${label}-t0-left-entry.png`),
     clip: { x: 0, y: 0, width, height: Math.min(120, height) },
   });
 
-  await setAnimProgress(page, Math.min(0.95, frac + 0.25));
+  await setAnimProgress(page, Math.min(0.95, frac + 0.2));
   await page.waitForTimeout(40);
-  const t35 = await probe(page);
+  const t1 = await probe(page);
   await page.screenshot({
-    path: path.join(OUT, `${label}-t35-moving-left.png`),
+    path: path.join(OUT, `${label}-t-moving-right.png`),
     clip: { x: 0, y: 0, width, height: Math.min(120, height) },
   });
 
@@ -139,45 +124,41 @@ async function captureViewport(page: Page, width: number, height: number, label:
     return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1;
   });
 
-  const textOk =
-    !("error" in t0) &&
-    t0.token0 === "ابدأ" &&
-    t0.innerText.replace(/\s+/g, " ") === EXPECTED.replace(/\s+/g, " ");
   record(
     `${label}-text`,
-    Boolean(textOk),
-    `token0="${!('error' in t0) ? t0.token0 : ''}" text="${!('error' in t0) ? t0.innerText : t0.error}"`
+    !("error" in t0) && t0.startsWithIbda && t0.innerText === EXPECTED,
+    `text="${!("error" in t0) ? t0.innerText : t0.error}"`
   );
-
   record(
-    `${label}-dirs`,
+    `${label}-rtl`,
     !("error" in t0) && t0.barDir === "rtl" && t0.innerDir === "rtl",
-    `barDir=${!('error' in t0) ? t0.barDir : ''} innerDir=${!('error' in t0) ? t0.innerDir : ''}`
+    `barDir=${!("error" in t0) ? t0.barDir : ""} innerDir=${!("error" in t0) ? t0.innerDir : ""}`
   );
-
   record(
     `${label}-anim`,
     !("error" in t0) && (t0.animName || "").includes("homepageAnnouncementSlide"),
-    `anim=${!('error' in t0) ? t0.animName : ''} tx0=${!('error' in t0) ? t0.tx : null} tx1=${!('error' in t35) ? t35.tx : null}`
+    `anim=${!("error" in t0) ? t0.animName : ""}`
   );
 
-  const movedLeft =
+  // Left→right means translateX increases over time
+  const movesRight =
     !("error" in t0) &&
-    !("error" in t35) &&
+    !("error" in t1) &&
     t0.tx != null &&
-    t35.tx != null &&
-    t35.tx < t0.tx;
-  record(`${label}-moves-left`, movedLeft, `tx0=${!('error' in t0) ? t0.tx : null} tx1=${!('error' in t35) ? t35.tx : null}`);
-
-  // Critical: at partial right-edge entry, start must show and end must not lead
-  const entryOk =
-    !("error" in t0) &&
-    t0.rightHasIbda &&
-    !t0.rightHasSajil;
+    t1.tx != null &&
+    t1.tx > t0.tx;
   record(
-    `${label}-right-entry-start`,
+    `${label}-moves-right`,
+    movesRight,
+    `tx0=${!("error" in t0) ? t0.tx : null} tx1=${!("error" in t1) ? t1.tx : null}`
+  );
+
+  const entryOk =
+    !("error" in t0) && t0.leftHasIbda && !t0.leftHasSajil;
+  record(
+    `${label}-left-entry-start`,
     entryOk,
-    `frac=${frac} partial=${!('error' in t0) ? t0.partial : false} rightTokens=${JSON.stringify(!('error' in t0) ? t0.rightTokens : [])} samples="${!('error' in t0) ? t0.rightSamples : ''}" hasIbda=${!('error' in t0) ? t0.rightHasIbda : false} hasSajil=${!('error' in t0) ? t0.rightHasSajil : false}`
+    `frac=${frac} just=${!("error" in t0) ? t0.justEntering : false} samples="${!("error" in t0) ? t0.leftSamples : ""}" hasIbda=${!("error" in t0) ? t0.leftHasIbda : false} hasSajil=${!("error" in t0) ? t0.leftHasSajil : false}`
   );
 
   record(`${label}-no-hscroll`, noHScroll, `noHScroll=${noHScroll}`);
@@ -196,13 +177,12 @@ async function captureFrames(
   const framesDir = path.join(OUT, dirName);
   fs.mkdirSync(framesDir, { recursive: true });
 
-  // Find entry start, then capture through mid-travel
-  const { frac } = await seekPartialEntry(page, width);
-  const start = Math.max(0, frac - 0.02);
-  for (let i = 0; i < 24; i++) {
-    const f = start + (i / 23) * 0.4;
+  const { frac } = await seekJustEntering(page);
+  const start = Math.max(0, frac - 0.005);
+  for (let i = 0; i < 32; i++) {
+    const f = start + (i / 31) * 0.35;
     await setAnimProgress(page, f);
-    await page.waitForTimeout(25);
+    await page.waitForTimeout(20);
     await page.screenshot({
       path: path.join(framesDir, `f${String(i).padStart(2, "0")}.png`),
       clip: { x: 0, y: 0, width, height: clipH },
@@ -241,16 +221,16 @@ async function main() {
   });
   record(
     "reduced-motion",
-    !("error" in red) && red.token0 === "ابدأ" && redAnimNone,
-    `token0=${!('error' in red) ? red.token0 : ''} anim=${!('error' in red) ? red.animName : ''}`
+    !("error" in red) && red.startsWithIbda && redAnimNone,
+    `startsWithIbda=${!("error" in red) ? red.startsWithIbda : false} anim=${!("error" in red) ? red.animName : ""}`
   );
   await reduced.screenshot({
     path: path.join(OUT, "reduced-motion-header.png"),
     clip: { x: 0, y: 0, width: 1280, height: 140 },
   });
 
-  await captureFrames(page, 1440, 900, "frames-desktop", 100);
-  await captureFrames(page, 390, 844, "frames-mobile", 90);
+  await captureFrames(page, 1440, 900, "frames-desktop", 110);
+  await captureFrames(page, 390, 844, "frames-mobile", 100);
 
   await browser.close();
 

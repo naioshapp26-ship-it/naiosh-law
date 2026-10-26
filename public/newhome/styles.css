@@ -2224,9 +2224,9 @@ body.homepage .announcement-bar {
   flex: 0 0 auto;
   width: 100%;
   /*
-   * Layout space stays LTR so translateX(100%→-100%) enters from the physical right.
-   * Semantic RTL is on the bar (dir=rtl) and each token; visual token order is LTR
-   * so the sentence start is the leading edge.
+   * LTR layout coords for translateX: -100% → 100vw moves the strip left→right.
+   * Natural RTL text keeps «ابدأ» on the physical right of the strip, so it is
+   * the first glyph to enter at the far left of the viewport.
    */
   direction: ltr;
 }
@@ -2247,12 +2247,8 @@ body.homepage .announcement-bar:hover .announcement-mover {
 }
 
 body.homepage .announcement-inner {
-  display: inline-flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.35em;
-  direction: ltr;
+  display: inline-block;
+  direction: rtl;
   unicode-bidi: isolate;
   white-space: nowrap;
   padding-inline: 16px;
@@ -2263,19 +2259,10 @@ body.homepage .announcement-inner {
   color: inherit;
 }
 
-body.homepage .announcement-token {
-  display: inline-block;
-  direction: rtl;
-  unicode-bidi: isolate;
-  white-space: nowrap;
-  color: inherit;
-  font: inherit;
-}
-
 @keyframes homepageAnnouncementSlide {
-  /* 100vw: fully off-screen to the right on every viewport width */
-  from { transform: translateX(100vw); }
-  to { transform: translateX(-100%); }
+  /* Enter from far left, travel toward the right; exit off-screen right */
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100vw); }
 }
 
 body.homepage .brand,
@@ -4227,10 +4214,7 @@ body.homepage #main-sections-grid .card:hover .icon-box {
   }
 
   body.homepage .announcement-inner {
-    /* Static: restore natural RTL reading (start on the right) */
     direction: rtl;
-    flex-direction: row-reverse;
-    justify-content: center;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;

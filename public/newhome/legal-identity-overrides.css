@@ -26,14 +26,12 @@ body.homepage .announcement-bar {
 }
 
 body.homepage .announcement-mover,
-body.homepage .announcement-inner,
-body.homepage .announcement-token {
+body.homepage .announcement-inner {
   color: #ffffff !important;
 }
 
 body.homepage .announcement-mover a,
-body.homepage .announcement-inner a,
-body.homepage .announcement-token[href] {
+body.homepage .announcement-inner a {
   color: #B79A61 !important;
 }
 

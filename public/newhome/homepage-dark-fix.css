@@ -379,7 +379,6 @@ body.homepage.dark-mode .announcement-bar {
 }
 
 body.homepage.dark-mode .announcement-mover,
-body.homepage.dark-mode .announcement-inner,
-body.homepage.dark-mode .announcement-token {
+body.homepage.dark-mode .announcement-inner {
   color: #ffffff !important;
 }
