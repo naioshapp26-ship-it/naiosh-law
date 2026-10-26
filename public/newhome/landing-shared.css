@@ -515,3 +515,105 @@ main.container:has(.landing-hub) {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── صفحة ملكية نايوش المستقلة ── */
+.ownership-hub .landing-hub-head h1 {
+  color: #101D32;
+}
+
+.ownership-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+  align-items: stretch;
+}
+
+.ownership-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 20px;
+  border: 1px solid #eceef4;
+  background: #fff;
+  box-shadow: 0 16px 30px rgba(11, 14, 20, 0.08);
+  padding: 22px 20px 18px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  height: 100%;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.ownership-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 42px rgba(10, 14, 22, 0.14);
+  border-color: rgba(183, 154, 97, 0.55);
+}
+
+.ownership-card h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #101D32;
+  line-height: 1.35;
+}
+
+.ownership-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5f6672;
+  font-weight: 600;
+  flex: 1;
+}
+
+.ownership-card .landing-hub-card-cta {
+  color: #B79A61;
+}
+
+.ownership-card-accent {
+  border-color: rgba(183, 154, 97, 0.45);
+  background: linear-gradient(180deg, #fffef9 0%, #fff 70%);
+}
+
+.ownership-card-accent .landing-hub-card-icon {
+  background: linear-gradient(135deg, #B79A61, #101D32);
+  color: #fff;
+}
+
+@media (max-width: 1599px) {
+  .ownership-cards-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1199px) {
+  .ownership-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .ownership-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ownership-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* رابط ملكية نايوش في الهيدر — بدون قائمة منسدلة */
+.nav-links a.nav-ownership-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-links a.nav-ownership-link i {
+  font-size: 0.85em;
+  color: #B79A61;
+}

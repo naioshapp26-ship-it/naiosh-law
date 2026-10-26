@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/color-mode";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DEFAULT_PUBLIC_LOGO } from "@/lib/site-settings";
-import { NAIOSH_OWNERSHIP_ADD_HREF, NAIOSH_OWNERSHIP_MENU } from "@/data/naiosh-ownership-menu";
+import { NAIOSH_OWNERSHIP_PAGE_HREF } from "@/data/naiosh-ownership-menu";
 
 type Props = {
   variant?: "dark" | "landing";
@@ -27,14 +26,13 @@ const LANDING_LINKS = [
   { href: "/#footer-support", label: "اتصل بنا" },
   { href: "/#footer-support", label: "مركز المعلومات", icon: "fa-info-circle", className: "nav-info-center" },
   { href: "/register", label: "سجل مجانًا", icon: "fa-user-plus", className: "nav-register-with-us" },
+  {
+    href: NAIOSH_OWNERSHIP_PAGE_HREF,
+    label: "ملكية نايوش",
+    icon: "fa-copyright",
+    className: "nav-ownership-link",
+  },
 ];
-
-type OwnershipMenuPos = {
-  top: number;
-  left: number;
-  width: number;
-  maxHeight: number;
-};
 
 /**
  * Landing navbar uses ERP `/newhome` top-nav chrome exactly.
@@ -47,11 +45,6 @@ export function Navbar({ variant = "dark" }: Props) {
   const isLanding = variant === "landing";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [ownershipOpen, setOwnershipOpen] = useState(false);
-  const [ownershipPos, setOwnershipPos] = useState<OwnershipMenuPos | null>(null);
-  const ownershipWrapRef = useRef<HTMLDivElement>(null);
-  const ownershipBtnRef = useRef<HTMLButtonElement>(null);
-  const ownershipMenuRef = useRef<HTMLDivElement>(null);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [myPageHref, setMyPageHref] = useState("/my-page");
   const [logoFailed, setLogoFailed] = useState(false);
@@ -67,6 +60,9 @@ export function Navbar({ variant = "dark" }: Props) {
     if (label === "المنصات") return pathname === "/platforms" || pathname.startsWith("/platforms/");
     if (label === "الحاضنات") return pathname === "/incubators" || pathname.startsWith("/incubators/");
     if (label === "الإعلانات") return pathname === "/ads" || pathname.startsWith("/ads/");
+    if (label === "ملكية نايوش") {
+      return pathname === NAIOSH_OWNERSHIP_PAGE_HREF || pathname.startsWith(`${NAIOSH_OWNERSHIP_PAGE_HREF}/`);
+    }
     if (label === "الرئيسية") return pathname === "/";
     return false;
   };
@@ -108,66 +104,6 @@ export function Navbar({ variant = "dark" }: Props) {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, [isLanding]);
-
-  const updateOwnershipPos = () => {
-    const btn = ownershipBtnRef.current;
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    const gap = 8;
-    const menuWidth = Math.max(240, Math.min(320, rect.width + 40));
-    const viewportPadding = 12;
-    const preferredLeft = rect.right - menuWidth;
-    const left = Math.min(
-      Math.max(viewportPadding, preferredLeft),
-      window.innerWidth - menuWidth - viewportPadding
-    );
-    const spaceBelow = window.innerHeight - rect.bottom - gap - viewportPadding;
-    const spaceAbove = rect.top - gap - viewportPadding;
-    const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
-    const maxHeight = Math.max(160, Math.min(520, openUp ? spaceAbove : spaceBelow));
-    const top = openUp ? Math.max(viewportPadding, rect.top - gap - maxHeight) : rect.bottom + gap;
-    setOwnershipPos({ top, left, width: menuWidth, maxHeight });
-  };
-
-  useLayoutEffect(() => {
-    if (!ownershipOpen) {
-      setOwnershipPos(null);
-      return;
-    }
-    updateOwnershipPos();
-  }, [ownershipOpen, menuOpen]);
-
-  useEffect(() => {
-    if (!ownershipOpen) return;
-
-    const onPointerDown = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (ownershipWrapRef.current?.contains(target)) return;
-      if (ownershipMenuRef.current?.contains(target)) return;
-      setOwnershipOpen(false);
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOwnershipOpen(false);
-    };
-
-    const onReposition = () => updateOwnershipPos();
-
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("touchstart", onPointerDown, { passive: true });
-    document.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", onReposition);
-    window.addEventListener("scroll", onReposition, true);
-
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("touchstart", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("resize", onReposition);
-      window.removeEventListener("scroll", onReposition, true);
-    };
-  }, [ownershipOpen]);
 
   const logout = async () => {
     try {
@@ -223,91 +159,15 @@ export function Navbar({ variant = "dark" }: Props) {
                     className={[link.className, active ? "active" : ""].filter(Boolean).join(" ") || undefined}
                     aria-label={link.label}
                     aria-current={active ? "page" : undefined}
-                    onClick={() => {
-                      setOwnershipOpen(false);
-                      setMenuOpen(false);
-                    }}
+                    onClick={() => setMenuOpen(false)}
                   >
                     {link.icon ? <i className={`fas ${link.icon}`} aria-hidden="true" /> : null}
                     <span>{link.label}</span>
                   </Link>
                 );
               })}
-
-              <div
-                className={`nav-dropdown nav-ownership${ownershipOpen ? " is-open" : ""}`}
-                ref={ownershipWrapRef}
-              >
-                <button
-                  type="button"
-                  ref={ownershipBtnRef}
-                  className="nav-ownership-btn"
-                  aria-label="ملكية نايوش"
-                  aria-haspopup="menu"
-                  aria-expanded={ownershipOpen}
-                  aria-controls="naiosh-ownership-menu"
-                  onClick={() => {
-                    if (ownershipOpen) {
-                      setOwnershipOpen(false);
-                      return;
-                    }
-                    updateOwnershipPos();
-                    setOwnershipOpen(true);
-                  }}
-                >
-                  <i className="fas fa-copyright" aria-hidden="true" />
-                  <span>ملكية نايوش</span>
-                </button>
-              </div>
             </nav>
           </div>
-
-              {typeof document !== "undefined" &&
-              ownershipOpen &&
-              ownershipPos &&
-              createPortal(
-                <div
-                  id="naiosh-ownership-menu"
-                  ref={ownershipMenuRef}
-                  className="nav-dropdown-menu nav-ownership-menu is-open"
-                  role="menu"
-                  aria-label="قائمة ملكية نايوش"
-                  style={{
-                    position: "fixed",
-                    top: ownershipPos.top,
-                    left: ownershipPos.left,
-                    width: ownershipPos.width,
-                    maxHeight: ownershipPos.maxHeight,
-                    zIndex: 5000,
-                  }}
-                >
-                  <Link
-                    href={NAIOSH_OWNERSHIP_ADD_HREF}
-                    role="menuitem"
-                    className="nav-ownership-add"
-                    onClick={() => {
-                      setOwnershipOpen(false);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    إضافة ملكية جديدة
-                  </Link>
-                  {NAIOSH_OWNERSHIP_MENU.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      role="menuitem"
-                      onClick={() => {
-                        setOwnershipOpen(false);
-                        setMenuOpen(false);
-                      }}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>,
-                document.body
-              )}
 
           <Link href="/login" className="mobile-header-login" aria-label="تسجيل الدخول">
             دخول
@@ -318,10 +178,7 @@ export function Navbar({ variant = "dark" }: Props) {
             className="mobile-nav-toggle"
             aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={menuOpen}
-            onClick={() => {
-              setOwnershipOpen(false);
-              setMenuOpen((v) => !v);
-            }}
+            onClick={() => setMenuOpen((v) => !v)}
           >
             <i className={`fas ${menuOpen ? "fa-xmark" : "fa-bars"}`} aria-hidden="true" />
           </button>

@@ -49,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link
           rel="stylesheet"
-          href="/newhome/landing-shared.css?v=widen-public-20261026"
+          href="/newhome/landing-shared.css?v=ownership-page-20261026"
           data-erp-home="1"
         />
         <link
