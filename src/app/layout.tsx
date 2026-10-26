@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/styles.css?v=identity-purge-20261026" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/styles.css?v=widen-public-20261026" data-erp-home="1" />
         <link
           rel="stylesheet"
           href="/newhome/homepage-premium.css?v=identity-purge-20261026"
@@ -49,15 +49,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link
           rel="stylesheet"
-          href="/newhome/landing-shared.css?v=identity-purge-20261026"
+          href="/newhome/landing-shared.css?v=widen-public-20261026"
           data-erp-home="1"
         />
         <link
           rel="stylesheet"
-          href="/newhome/branches-page.css?v=identity-purge-20261026"
+          href="/newhome/branches-page.css?v=widen-public-20261026"
           data-erp-home="1"
         />
-        <link rel="stylesheet" href="/newhome/ads-page.css?v=identity-purge-20261026" data-erp-home="1" />
+        <link rel="stylesheet" href="/newhome/ads-page.css?v=widen-public-20261026" data-erp-home="1" />
         <link
           rel="stylesheet"
           href="/newhome/legal-hero-reference.css?v=hero-rtl-right-20261026"

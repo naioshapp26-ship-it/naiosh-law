@@ -79,7 +79,7 @@
 
     .branch-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 18px;
     }
 
@@ -209,7 +209,19 @@
       transform: translateY(-2px);
     }
 
-    @media (max-width: 1020px) {
+    @media (max-width: 1599px) {
+      .branch-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 1199px) {
+      .branch-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
       .branch-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }

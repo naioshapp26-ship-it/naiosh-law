@@ -17,7 +17,7 @@ import {
   LAW_ADS_TESTIMONIALS,
 } from "@/data/law-ads";
 
-const ADS_CSS = "/newhome/ads-page.css?v=erp-ads-copy-20260721";
+const ADS_CSS = "/newhome/ads-page.css?v=widen-public-20261026";
 
 type TabId = (typeof LAW_ADS_TABS)[number]["id"];
 
