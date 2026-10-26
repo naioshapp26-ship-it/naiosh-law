@@ -74,7 +74,8 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.assign("/app/dashboard");
+      const role = String(data.user?.role ?? "");
+      window.location.assign(role === "client" ? "/portal" : "/app/dashboard");
     } catch {
       setError("تعذر الاتصال بالخادم — حاول مرة أخرى");
       setLoading(false);
@@ -84,8 +85,30 @@ export default function LoginPage() {
   const fillDemo = (role: "admin" | "client") => {
     const user = demoUsers.find((u) => u.role === role)!;
     setEmail(user.email);
-    setPassword(user.password);
+    // Client demo uses server-side /api/auth/demo-client — no password in the browser.
+    setPassword(role === "admin" ? "Admin@123" : "");
     setError("");
+  };
+
+  const startDemoClient = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/demo-client", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "تعذر فتح تجربة العميل");
+        setLoading(false);
+        return;
+      }
+      window.location.assign(data.redirect || "/portal");
+    } catch {
+      setError("تعذر فتح تجربة العميل التجريبي");
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,8 +144,12 @@ export default function LoginPage() {
                 أنت مسجّل دخولًا كـ <strong>{existingUser.name}</strong>
               </p>
               <div className="erp-login-session-actions">
-                <Link href="/app/dashboard" className="erp-login-submit" style={{ textDecoration: "none" }}>
-                  الدخول للوحة التحكم
+                <Link
+                  href={existingUser.role === "client" ? "/portal" : "/app/dashboard"}
+                  className="erp-login-submit"
+                  style={{ textDecoration: "none" }}
+                >
+                  {existingUser.role === "client" ? "الدخول لبوابة العميل" : "الدخول للوحة التحكم"}
                 </Link>
                 <button type="button" className="erp-login-session-logout" onClick={logoutExisting} disabled={loggingOut}>
                   {loggingOut ? "جاري الخروج..." : "تسجيل الخروج والدخول بحساب آخر"}
@@ -228,11 +255,11 @@ export default function LoginPage() {
                 <small>admin@naioshlaw.com</small>
               </span>
             </button>
-            <button type="button" onClick={() => fillDemo("client")} className="erp-login-demo">
+            <button type="button" onClick={startDemoClient} className="erp-login-demo" disabled={loading}>
               <span className="erp-login-demo-icon erp-login-demo-icon-alt">👤</span>
               <span>
                 <strong>عميل تجريبي</strong>
-                <small>client@naioshlaw.com</small>
+                <small>بوابة عميل 360 — بيانات وهمية معزولة</small>
               </span>
             </button>
           </div>
