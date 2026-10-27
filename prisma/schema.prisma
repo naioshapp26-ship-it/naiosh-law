@@ -46,6 +46,8 @@ model User {
   clientProfile      Client?
   passwordResetTokens PasswordResetToken[]
   staffConversations  PortalConversation[] @relation("ConversationStaff")
+  pageSettingsUpdated PageSetting[]      @relation("PageSettingUpdater")
+  pageSettingsAudits  PageSettingAudit[] @relation("PageSettingAuditor")
 }
 
 // ─── Core ERP (Phase 0) ─────────────────────────────────────
@@ -1032,4 +1034,44 @@ model RecordParty {
 
   @@unique([sourceModule, sourceId])
   @@index([sourceModule])
+}
+
+// ─── Page Settings Center ───────────────────────────────────
+
+/// Saved settings values for an operational/admin page (PostgreSQL source of truth).
+/// Priority when resolving: user > role > office > global > code defaults.
+model PageSetting {
+  id          String   @id @default(cuid())
+  pageKey     String
+  /// global | office | role | user
+  scope       String   @default("global")
+  /// officeBranchId | UserRole | userId — empty string when scope=global
+  scopeId     String   @default("")
+  values      Json
+  version     Int      @default(1)
+  updatedById String?
+  updatedBy   User?    @relation("PageSettingUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([pageKey, scope, scopeId])
+  @@index([pageKey])
+  @@index([scope, scopeId])
+}
+
+model PageSettingAudit {
+  id          String   @id @default(cuid())
+  pageKey     String
+  scope       String
+  scopeId     String   @default("")
+  /// create | update | reset | restore
+  action      String
+  beforeJson  Json?
+  afterJson   Json?
+  changedById String?
+  changedBy   User?    @relation("PageSettingAuditor", fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([pageKey, createdAt])
+  @@index([changedById])
 }

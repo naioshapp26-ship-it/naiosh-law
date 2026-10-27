@@ -9,17 +9,27 @@ import { BrandLogo } from "@/components/brand-logo";
 type PortalUser = { name: string; email: string; role: string };
 
 const NAV = [
-  { href: "/portal", label: "الرئيسية", icon: "fa-house" },
-  { href: "/portal/profile", label: "ملفي الشخصي", icon: "fa-user" },
-  { href: "/portal/cases", label: "قضاياي", icon: "fa-scale-balanced" },
-  { href: "/portal/sessions", label: "جلساتي", icon: "fa-calendar-days" },
-  { href: "/portal/documents", label: "مستنداتي", icon: "fa-folder-open" },
-  { href: "/portal/requests", label: "طلباتي", icon: "fa-clipboard-list" },
-  { href: "/portal/finance", label: "المالية", icon: "fa-file-invoice-dollar" },
-  { href: "/portal/messages", label: "الرسائل", icon: "fa-envelope" },
-  { href: "/portal/notifications", label: "الإشعارات", icon: "fa-bell" },
-  { href: "/portal/settings", label: "الإعدادات", icon: "fa-gear" },
+  { href: "/portal", label: "الرئيسية", icon: "fa-house", flag: null },
+  { href: "/portal/profile", label: "ملفي الشخصي", icon: "fa-user", flag: "allowProfileEdit" as const },
+  { href: "/portal/cases", label: "قضاياي", icon: "fa-scale-balanced", flag: "showCases" as const },
+  { href: "/portal/sessions", label: "جلساتي", icon: "fa-calendar-days", flag: "showSessions" as const },
+  { href: "/portal/documents", label: "مستنداتي", icon: "fa-folder-open", flag: "showDocuments" as const },
+  { href: "/portal/requests", label: "طلباتي", icon: "fa-clipboard-list", flag: "showRequests" as const },
+  { href: "/portal/finance", label: "المالية", icon: "fa-file-invoice-dollar", flag: "showFinance" as const },
+  { href: "/portal/messages", label: "الرسائل", icon: "fa-envelope", flag: "showMessages" as const },
+  { href: "/portal/notifications", label: "الإشعارات", icon: "fa-bell", flag: null },
+  { href: "/portal/settings", label: "الإعدادات", icon: "fa-gear", flag: null },
 ];
+
+type PortalFlags = {
+  showCases?: boolean;
+  showSessions?: boolean;
+  showDocuments?: boolean;
+  showFinance?: boolean;
+  showRequests?: boolean;
+  showMessages?: boolean;
+  allowProfileEdit?: boolean;
+};
 
 export function PortalShell({
   title,
@@ -35,6 +45,7 @@ export function PortalShell({
   const [user, setUser] = useState<PortalUser | null>(null);
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
+  const [flags, setFlags] = useState<PortalFlags>({});
 
   useEffect(() => {
     if (!document.querySelector('link[data-portal-css]')) {
@@ -61,17 +72,30 @@ export function PortalShell({
         const data = await res.json();
         return (data.user as PortalUser) ?? null;
       })
-      .then((u) => {
+      .then(async (u) => {
         if (cancelled) return;
         setUser(u);
-        setReady(true);
         if (!u) {
+          setReady(true);
           window.location.assign("/login");
           return;
         }
         if (u.role !== "client") {
+          setReady(true);
           router.replace("/app/dashboard");
+          return;
         }
+        try {
+          const sRes = await fetch("/api/page-settings/client-portal", { credentials: "include" });
+          if (sRes.ok) {
+            const sBody = await sRes.json();
+            const specialized = (sBody.resolved?.values?.specialized ?? {}) as PortalFlags;
+            if (!cancelled) setFlags(specialized);
+          }
+        } catch {
+          /* defaults: all visible */
+        }
+        if (!cancelled) setReady(true);
       })
       .catch(() => {
         if (!cancelled) {
@@ -83,6 +107,14 @@ export function PortalShell({
       cancelled = true;
     };
   }, [router]);
+
+  const visibleNav = NAV.filter((item) => {
+    if (!item.flag) return true;
+    // Profile link stays visible even if edit is disabled (read-only profile)
+    if (item.flag === "allowProfileEdit") return true;
+    const v = flags[item.flag];
+    return v !== false;
+  });
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -108,7 +140,7 @@ export function PortalShell({
           </div>
         </div>
         <nav aria-label="قائمة بوابة العميل">
-          {NAV.map((item) => {
+          {visibleNav.map((item) => {
             const active = pathname === item.href || (item.href !== "/portal" && pathname.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href} className={active ? "active" : undefined} onClick={() => setOpen(false)}>

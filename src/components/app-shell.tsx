@@ -38,6 +38,12 @@ const ADMIN_NAV = {
   icon: "🎨",
 } as const;
 
+const PAGE_SETTINGS_NAV = {
+  href: "/app/page-settings",
+  label: "إعدادات الصفحات",
+  icon: "⚙️",
+} as const;
+
 const MOBILE_BOTTOM_NAV = [
   { href: "/app/dashboard", icon: "⊞", label: "الرئيسية" },
   { href: "/app/modules/case-management", icon: "⚖️", label: "القضايا" },
@@ -118,32 +124,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navLinkStyle = (active: boolean): React.CSSProperties =>
     active ? activeStyle : { ...inactiveStyle, background: "transparent" };
 
-  const SystemSettingsLink = ({
+  const isStaff = role !== "client";
+
+  const NavSettingsLink = ({
+    href,
+    label,
+    icon,
     onNavigate,
     collapsed = false,
+    visible,
   }: {
+    href: string;
+    label: string;
+    icon: string;
     onNavigate?: () => void;
     collapsed?: boolean;
+    visible: boolean;
   }) => {
-    if (!isAdmin) return null;
-    const active = isActive(ADMIN_NAV.href);
+    if (!visible) return null;
+    const active = isActive(href);
     if (collapsed) {
       return (
         <Link
-          href={ADMIN_NAV.href}
-          title={ADMIN_NAV.label}
+          href={href}
+          title={label}
           onClick={onNavigate}
           className="p-2.5 rounded-xl text-lg transition-all mx-auto block w-fit"
           style={active ? { background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" } : { background: "rgba(255,255,255,0.12)" }}
         >
-          {ADMIN_NAV.icon}
+          {icon}
         </Link>
       );
     }
     return (
       <Link
-        href={ADMIN_NAV.href}
-        title={ADMIN_NAV.label}
+        href={href}
+        title={label}
         onClick={onNavigate}
         className="flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 hover:bg-white/15"
         style={{
@@ -156,11 +172,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               }),
         }}
       >
-        <span className="text-base shrink-0 w-5 text-center">{ADMIN_NAV.icon}</span>
-        <span className="truncate leading-snug font-bold">{ADMIN_NAV.label}</span>
+        <span className="text-base shrink-0 w-5 text-center">{icon}</span>
+        <span className="truncate leading-snug font-bold">{label}</span>
       </Link>
     );
   };
+
+  const SystemSettingsLink = ({
+    onNavigate,
+    collapsed = false,
+  }: {
+    onNavigate?: () => void;
+    collapsed?: boolean;
+  }) => (
+    <>
+      <NavSettingsLink
+        href={PAGE_SETTINGS_NAV.href}
+        label={PAGE_SETTINGS_NAV.label}
+        icon={PAGE_SETTINGS_NAV.icon}
+        onNavigate={onNavigate}
+        collapsed={collapsed}
+        visible={isStaff}
+      />
+      <NavSettingsLink
+        href={ADMIN_NAV.href}
+        label={ADMIN_NAV.label}
+        icon={ADMIN_NAV.icon}
+        onNavigate={onNavigate}
+        collapsed={collapsed}
+        visible={isAdmin}
+      />
+    </>
+  );
 
   const SidebarNavBody = ({ onNavigate, showEmpire }: { onNavigate?: () => void; showEmpire: boolean }) => (
     <>

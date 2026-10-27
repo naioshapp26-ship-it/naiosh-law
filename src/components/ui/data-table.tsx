@@ -15,15 +15,18 @@ type Props = {
   onArchive?: (row: Record<string, unknown>) => void;
   onSupplement?: (row: Record<string, unknown>) => void;
   searchPlaceholder?: string;
+  /** Override default page size (from page settings) */
+  pageSize?: number;
 };
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
-export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, onSupplement, searchPlaceholder = "بحث في السجلات..." }: Props) {
+export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, onSupplement, searchPlaceholder = "بحث في السجلات...", pageSize }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const PAGE_SIZE = Math.min(100, Math.max(5, pageSize ?? DEFAULT_PAGE_SIZE));
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc((a) => !a);

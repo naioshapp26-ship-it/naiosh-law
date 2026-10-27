@@ -1,0 +1,453 @@
+/* Page Settings Center — NAIOSH navy / gold / beige */
+.psc-hub,
+.psc-editor {
+  width: 100%;
+  max-width: 100%;
+  padding: 1.25rem 1.5rem 3rem;
+  direction: rtl;
+  font-family: var(--font-cairo), Cairo, sans-serif;
+  color: #0b1424;
+}
+
+.psc-hub-header,
+.psc-editor-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1.5px solid #1a304d;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f1e8 100%);
+}
+
+.psc-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #b79a61;
+  letter-spacing: 0.04em;
+}
+
+.psc-hub-header h1,
+.psc-editor-header h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-weight: 900;
+  color: #101d32;
+}
+
+.psc-lead {
+  margin: 0.45rem 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+  max-width: 52rem;
+}
+
+.psc-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.psc-coverage {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.psc-coverage > div {
+  background: #0b1424;
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(183, 154, 97, 0.35);
+}
+
+.psc-coverage strong {
+  display: block;
+  font-size: 1.35rem;
+  color: #b79a61;
+}
+
+.psc-coverage span {
+  font-size: 0.78rem;
+  opacity: 0.9;
+}
+
+.psc-filters {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr auto;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.psc-filters input,
+.psc-filters select,
+.psc-field input,
+.psc-field select,
+.psc-field textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-family: inherit;
+  background: #fff;
+  color: #0b1424;
+  width: 100%;
+}
+
+.psc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.85rem;
+}
+
+.psc-card {
+  background: #fff;
+  border: 1.5px solid rgba(26, 48, 77, 0.2);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  box-shadow: 0 1px 2px rgba(16, 29, 50, 0.04);
+}
+
+.psc-card-top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.psc-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.psc-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.psc-card-title h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #0b1424;
+}
+
+.psc-status {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+.psc-desc {
+  margin: 0;
+  color: #475569;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  flex: 1;
+}
+
+.psc-meta {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.psc-gap {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #8a7340;
+  background: rgba(183, 154, 97, 0.1);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+}
+
+.psc-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.psc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  color: inherit;
+}
+
+.psc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.psc-btn.primary {
+  background: #101d32;
+  color: #fff;
+  border-color: #101d32;
+}
+
+.psc-btn.primary:hover:not(:disabled) {
+  background: #1a304d;
+}
+
+.psc-btn.gold {
+  background: #b79a61;
+  color: #0b1424;
+  border-color: #b79a61;
+}
+
+.psc-btn.ghost {
+  background: transparent;
+  color: #101d32;
+  border-color: #cbd5e1;
+}
+
+.psc-btn.danger {
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.psc-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.psc-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.psc-toast.success {
+  background: #15803d;
+}
+
+.psc-toast.error {
+  background: #b91c1c;
+}
+
+.psc-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.65rem;
+}
+
+.psc-tab {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  color: #334155;
+}
+
+.psc-tab.active {
+  background: #101d32;
+  color: #fff;
+  border-color: #101d32;
+}
+
+.psc-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.15rem;
+}
+
+.psc-fields {
+  display: grid;
+  gap: 1rem;
+}
+
+.psc-field label {
+  display: block;
+  font-weight: 800;
+  font-size: 0.88rem;
+  margin-bottom: 0.35rem;
+  color: #0b1424;
+}
+
+.psc-field .hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0.25rem 0 0;
+}
+
+.psc-field .locked {
+  font-size: 0.72rem;
+  color: #b79a61;
+  font-weight: 700;
+}
+
+.psc-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.psc-multi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.psc-chip {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #fff;
+  font-family: inherit;
+}
+
+.psc-chip.on {
+  background: #101d32;
+  color: #fff;
+  border-color: #101d32;
+}
+
+.psc-footer-bar {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.psc-audit {
+  margin-top: 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 0.9rem 1rem;
+}
+
+.psc-audit h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.psc-audit li {
+  font-size: 0.8rem;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+body.dark-mode .psc-hub,
+body.dark-mode .psc-editor,
+.dark-mode .psc-hub,
+.dark-mode .psc-editor {
+  color: #f8fafc;
+}
+
+body.dark-mode .psc-hub-header,
+body.dark-mode .psc-editor-header,
+body.dark-mode .psc-card,
+body.dark-mode .psc-panel,
+body.dark-mode .psc-tab,
+.dark-mode .psc-hub-header,
+.dark-mode .psc-editor-header,
+.dark-mode .psc-card,
+.dark-mode .psc-panel,
+.dark-mode .psc-tab {
+  background: #101d32;
+  border-color: rgba(183, 154, 97, 0.35);
+  color: #f8fafc;
+}
+
+body.dark-mode .psc-card-title h2,
+body.dark-mode .psc-hub-header h1,
+body.dark-mode .psc-editor-header h1,
+body.dark-mode .psc-field label,
+.dark-mode .psc-card-title h2,
+.dark-mode .psc-hub-header h1,
+.dark-mode .psc-editor-header h1,
+.dark-mode .psc-field label {
+  color: #f8fafc;
+}
+
+body.dark-mode .psc-desc,
+body.dark-mode .psc-lead,
+body.dark-mode .psc-field .hint,
+.dark-mode .psc-desc,
+.dark-mode .psc-lead,
+.dark-mode .psc-field .hint {
+  color: #cbd5e1;
+}
+
+body.dark-mode .psc-filters input,
+body.dark-mode .psc-filters select,
+body.dark-mode .psc-field input,
+body.dark-mode .psc-field select,
+body.dark-mode .psc-field textarea,
+body.dark-mode .psc-chip,
+.dark-mode .psc-filters input,
+.dark-mode .psc-filters select,
+.dark-mode .psc-field input,
+.dark-mode .psc-field select,
+.dark-mode .psc-field textarea,
+.dark-mode .psc-chip {
+  background: #0b1424;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+body.dark-mode .psc-audit,
+.dark-mode .psc-audit {
+  background: #0b1424;
+  border-color: #334155;
+}
+
+@media (max-width: 900px) {
+  .psc-coverage {
+    grid-template-columns: 1fr 1fr;
+  }
+  .psc-filters {
+    grid-template-columns: 1fr;
+  }
+  .psc-hub,
+  .psc-editor {
+    padding: 1rem;
+  }
+}

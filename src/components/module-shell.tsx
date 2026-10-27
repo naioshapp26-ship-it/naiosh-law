@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
@@ -18,8 +19,37 @@ import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
 import { saveRecordSupplement } from "@/lib/record-supplement-client";
 import type { ArchiveAttachment } from "@/lib/archive-types";
+import { pageSettingsMap } from "@/lib/page-settings/registry";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
+
+type PageSettingsValues = {
+  display?: {
+    title?: string;
+    subtitle?: string;
+    showKpis?: boolean;
+    pageSize?: number;
+    visibleColumns?: string[];
+  };
+  actions?: {
+    allowCreate?: boolean;
+    allowView?: boolean;
+    allowEdit?: boolean;
+    allowDelete?: boolean;
+    allowArchive?: boolean;
+    allowExport?: boolean;
+  };
+  permissions?: {
+    canCreateRoles?: string[];
+    canEditRoles?: string[];
+    canDeleteRoles?: string[];
+    canExportRoles?: string[];
+    canManageSettingsRoles?: string[];
+  };
+  fields?: {
+    hiddenOptionalFields?: string[];
+  };
+};
 
 let toastCounter = 0;
 
@@ -28,6 +58,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const config = moduleConfigMap[slug];
   const apiEndpoint = getModuleApiEndpoint(slug);
   const fallbackData = config?.data ?? [];
+  const settingsDef = pageSettingsMap[slug];
 
   const [rows, setRows] = useState<Record<string, unknown>[]>(fallbackData);
   const [loadingData, setLoadingData] = useState(!!apiEndpoint);
@@ -41,6 +72,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const [archiving, setArchiving] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const [pageSettings, setPageSettings] = useState<PageSettingsValues | null>(null);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -89,7 +121,83 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     loadRows();
   }, [loadRows]);
 
+  useEffect(() => {
+    if (!settingsDef) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/page-settings/${encodeURIComponent(slug)}`, {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const body = await res.json();
+        if (!cancelled) setPageSettings((body.resolved?.values ?? null) as PageSettingsValues);
+      } catch {
+        /* keep defaults */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, settingsDef]);
+
   const canWrite = user ? canWriteRole(user.role) : false;
+  const role = user?.role ?? "";
+
+  const displayTitle =
+    pageSettings?.display?.title?.trim() ||
+    moduleMap[slug]?.title ||
+    config?.entityName ||
+    slug;
+  const displaySubtitle =
+    pageSettings?.display?.subtitle?.trim() ||
+    (usingDemo ? "بيانات تجريبية غنية" : "بيانات مباشرة من الخادم");
+  const showKpis = pageSettings?.display?.showKpis !== false;
+  const pageSize = pageSettings?.display?.pageSize ?? 10;
+
+  const visibleColumns = useMemo(() => {
+    if (!config) return [];
+    const keys = pageSettings?.display?.visibleColumns;
+    if (!keys || keys.length === 0) return config.columns;
+    const set = new Set(keys);
+    const filtered = config.columns.filter((c) => set.has(c.key));
+    return filtered.length > 0 ? filtered : config.columns;
+  }, [config, pageSettings]);
+
+  const formFields = useMemo(() => {
+    if (!config) return [];
+    const hidden = new Set(pageSettings?.fields?.hiddenOptionalFields ?? []);
+    return config.formFields.filter((f) => !hidden.has(f.key));
+  }, [config, pageSettings]);
+
+  const actions = pageSettings?.actions;
+  const perms = pageSettings?.permissions;
+  const roleAllowed = (list?: string[]) => !list || list.includes(role);
+
+  const allowCreate =
+    canWrite &&
+    actions?.allowCreate !== false &&
+    roleAllowed(perms?.canCreateRoles);
+  const allowEdit =
+    canWrite &&
+    actions?.allowEdit !== false &&
+    roleAllowed(perms?.canEditRoles);
+  const allowDelete =
+    canWrite &&
+    actions?.allowDelete !== false &&
+    roleAllowed(perms?.canDeleteRoles);
+  const allowArchive =
+    canWrite &&
+    actions?.allowArchive !== false &&
+    roleAllowed(perms?.canDeleteRoles);
+  const allowExport =
+    actions?.allowExport !== false &&
+    roleAllowed(perms?.canExportRoles);
+  const canOpenSettings =
+    Boolean(settingsDef) &&
+    (perms?.canManageSettingsRoles
+      ? perms.canManageSettingsRoles.includes(role)
+      : settingsDef?.manageRoles.includes(role as never));
 
   if (!ready || !user) {
     return (
@@ -341,21 +449,30 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {moduleIcon} {moduleMap[slug]?.title ?? config.entityName}
+                {moduleIcon} {displayTitle}
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {config.entityName}
-                {usingDemo ? " — بيانات تجريبية غنية" : " — بيانات مباشرة من الخادم"}
+                إجمالي {rows.length} {config.entityName} — {displaySubtitle}
               </p>
             </div>
             <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
-              <button
-                onClick={() => setReportOpen(true)}
-                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569" }}
-              >
-                📊 تقارير
-              </button>
-              {canWrite && (
+              {canOpenSettings && (
+                <Link
+                  href={`/app/page-settings/${slug}`}
+                  style={{ background: "#101D32", color: "#fff", border: "1px solid #101D32", borderRadius: "10px", padding: "0.6rem 1.2rem", fontFamily: "var(--font-cairo)", fontWeight: 700, fontSize: "0.85rem", textDecoration: "none" }}
+                >
+                  ⚙️ إعدادات الصفحة
+                </Link>
+              )}
+              {allowExport && (
+                <button
+                  onClick={() => setReportOpen(true)}
+                  style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569" }}
+                >
+                  📊 تقارير
+                </button>
+              )}
+              {allowCreate && (
                 <button
                   onClick={openAdd}
                   className="btn-primary"
@@ -368,7 +485,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           </div>
         </div>
 
-        <StatsRow cards={config.kpis} />
+        {showKpis && <StatsRow cards={config.kpis} />}
 
         <div className="card-white" style={{ padding: "1.5rem" }}>
           {loadingData ? (
@@ -377,7 +494,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             <div style={{ textAlign: "center", padding: "3rem" }}>
               <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>
               <p style={{ color: "#64748b", marginBottom: "1rem" }}>لا توجد بيانات بعد</p>
-              {canWrite && (
+              {allowCreate && (
                 <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
                   ＋ {config.addLabel}
                 </button>
@@ -385,13 +502,14 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             </div>
           ) : (
             <DataTable
-              columns={config.columns}
+              columns={visibleColumns}
               data={rows}
-              onView={setViewTarget}
-              onEdit={canWrite ? openEdit : undefined}
-              onSupplement={canWrite && !usingDemo ? setSupplementTarget : undefined}
-              onArchive={canWrite && !usingDemo ? setArchiveTarget : undefined}
-              onDelete={canWrite ? setDeleteTarget : undefined}
+              pageSize={pageSize}
+              onView={actions?.allowView === false ? undefined : setViewTarget}
+              onEdit={allowEdit ? openEdit : undefined}
+              onSupplement={allowEdit && !usingDemo ? setSupplementTarget : undefined}
+              onArchive={allowArchive && !usingDemo ? setArchiveTarget : undefined}
+              onDelete={allowDelete ? setDeleteTarget : undefined}
               searchPlaceholder={`بحث في ${config.entityName}ات...`}
             />
           )}
@@ -401,7 +519,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       <Modal
         open={modalOpen}
         title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
-        fields={config.formFields}
+        fields={formFields}
         initial={editTarget ?? undefined}
         onSave={handleSave}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}
