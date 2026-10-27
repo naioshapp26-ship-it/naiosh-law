@@ -22,6 +22,7 @@ import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type Tab = "supply" | "shipments" | "international" | "branches" | "alerts";
 
@@ -353,6 +354,7 @@ export default function GlobalOperationsPage() {
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey="global-operations" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="global-operations" />
         <PageHeader
           icon="🌍"
           title={pageSettings.display?.title?.trim() || "العمليات العالمية"}

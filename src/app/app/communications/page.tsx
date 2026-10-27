@@ -22,6 +22,7 @@ import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type Tab = "branches" | "rules" | "logs" | "integrations" | "send";
 
@@ -359,6 +360,7 @@ export default function CommunicationsPage() {
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey="communications" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="communications" />
         <PageHeader
           icon="🛎️"
           title={pageSettings.display?.title?.trim() || "الإشعارات والتكاملات"}

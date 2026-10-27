@@ -22,6 +22,7 @@ import {
 import { resolveItemHref } from "@/lib/empire-routes";
 import { useSession, canWriteRole } from "@/lib/session";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import {
   SettingsAppliedChrome,
   SettingsLinkButton,
@@ -289,6 +290,7 @@ export default function DashboardPage() {
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
           <SettingsLinkButton pageKey="dashboard" />
         </div>
+        <SettingsDrivenSections pageKey="dashboard" />
         {/* Imperial hero + animated logo */}
         <motion.div
           variants={fadeUp}

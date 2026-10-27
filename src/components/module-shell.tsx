@@ -26,6 +26,11 @@ import {
   type PageSectionDef,
 } from "@/lib/page-settings/custom-field-types";
 import {
+  PageDynamicSections,
+  recordScopedCustomFields,
+  type SectionDataMap,
+} from "@/components/page-settings/page-dynamic-sections";
+import {
   exportCsv,
   exportPdf,
   exportXlsx,
@@ -66,6 +71,7 @@ type PageSettingsValues = {
   };
   customFields?: CustomFieldDef[];
   sections?: PageSectionDef[];
+  sectionData?: SectionDataMap;
   reports?: {
     allowPdf?: boolean;
     allowExcel?: boolean;
@@ -248,10 +254,15 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     });
   }, [config?.kpis, usingDemo, loadingData, rows]);
 
+  const recordCustomDefs = useMemo(
+    () => recordScopedCustomFields(pageSettings?.customFields, pageSettings?.sections),
+    [pageSettings?.customFields, pageSettings?.sections]
+  );
+
   const visibleColumns = useMemo(() => {
     if (!config) return [];
     const keys = pageSettings?.display?.visibleColumns;
-    const customDefs = (pageSettings?.customFields ?? []).filter((f) => f.visible !== false);
+    const customDefs = recordCustomDefs;
     const baseCols =
       !keys || keys.length === 0
         ? config.columns
@@ -266,7 +277,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       type: "text" as const,
     }));
     return [...baseCols, ...customCols];
-  }, [config, pageSettings]);
+  }, [config, pageSettings, recordCustomDefs]);
 
   const formFields = useMemo(() => {
     if (!config) return [];
@@ -280,9 +291,22 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         }
         return f;
       });
-    const custom = customFieldsToFormFields(pageSettings?.customFields ?? []);
+    const custom = customFieldsToFormFields(recordCustomDefs);
     return [...base, ...custom];
-  }, [config, pageSettings]);
+  }, [config, pageSettings, recordCustomDefs]);
+
+  const orderedSections = useMemo(() => {
+    const list = Array.isArray(pageSettings?.sections) ? [...pageSettings!.sections!] : [];
+    if (list.length === 0) {
+      return [
+        { id: "kpis", title: "kpis", kind: "kpis" as const, visible: true, order: 0 },
+        { id: "table", title: "table", kind: "table" as const, visible: true, order: 1 },
+      ];
+    }
+    return list
+      .filter((s) => s && s.visible !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [pageSettings?.sections]);
 
   const createInitial = useMemo(() => {
     const initialStatus =
@@ -625,37 +649,63 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           </div>
         </div>
 
-        {showKpis && <StatsRow cards={kpiCards} />}
-
-        {showTable && (
-        <div className="card-white" style={{ padding: "1.5rem" }}>
-          {loadingData ? (
-            <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
-          ) : rows.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "3rem" }}>
-              <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>
-              <p style={{ color: "#64748b", marginBottom: "1rem" }}>لا توجد بيانات بعد</p>
-              {allowCreate && (
-                <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
-                  ＋ {config.addLabel}
-                </button>
-              )}
-            </div>
-          ) : (
-            <DataTable
-              columns={visibleColumns}
-              data={rows}
-              pageSize={pageSize}
-              onView={actions?.allowView === false ? undefined : setViewTarget}
-              onEdit={allowEdit ? openEdit : undefined}
-              onSupplement={allowEdit && !usingDemo ? setSupplementTarget : undefined}
-              onArchive={allowArchive && !usingDemo ? setArchiveTarget : undefined}
-              onDelete={allowDelete ? setDeleteTarget : undefined}
-              searchPlaceholder={`بحث في ${config.entityName}ات...`}
-            />
-          )}
-        </div>
-        )}
+        {orderedSections.map((sec) => {
+          if (sec.kind === "kpis") {
+            return showKpis ? <StatsRow key={sec.id} cards={kpiCards} /> : null;
+          }
+          if (sec.kind === "actions") {
+            return null; // actions live in the header bar
+          }
+          if (sec.kind === "table") {
+            if (!showTable) return null;
+            return (
+              <div key={sec.id} className="card-white" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
+                {loadingData ? (
+                  <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
+                ) : rows.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "3rem" }}>
+                    <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>
+                    <p style={{ color: "#64748b", marginBottom: "1rem" }}>لا توجد بيانات بعد</p>
+                    {allowCreate && (
+                      <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
+                        ＋ {config.addLabel}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <DataTable
+                    columns={visibleColumns}
+                    data={rows}
+                    pageSize={pageSize}
+                    onView={actions?.allowView === false ? undefined : setViewTarget}
+                    onEdit={allowEdit ? openEdit : undefined}
+                    onSupplement={allowEdit && !usingDemo ? setSupplementTarget : undefined}
+                    onArchive={allowArchive && !usingDemo ? setArchiveTarget : undefined}
+                    onDelete={allowDelete ? setDeleteTarget : undefined}
+                    searchPlaceholder={`بحث في ${config.entityName}ات...`}
+                  />
+                )}
+              </div>
+            );
+          }
+          if (sec.kind === "notes" || sec.kind === "custom") {
+            return (
+              <PageDynamicSections
+                key={sec.id}
+                pageKey={slug}
+                sections={[sec]}
+                customFields={pageSettings?.customFields}
+                sectionData={pageSettings?.sectionData}
+                canWrite={canWrite}
+                includeBuiltins={false}
+                onSaved={(next) =>
+                  setPageSettings((prev) => (prev ? { ...prev, sectionData: next } : prev))
+                }
+              />
+            );
+          }
+          return null;
+        })}
       </div>
 
       <Modal

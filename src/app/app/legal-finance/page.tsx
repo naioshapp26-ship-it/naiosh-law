@@ -19,6 +19,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import Link from "next/link";
 
 type Tab =
@@ -588,6 +589,7 @@ ${stamp}` : stamp;
       {Toast}
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsDrivenSections pageKey="legal-finance" />
         <PageHeader
           icon="💰"
           title={pageSettings.display?.title?.trim() || "المالية القانونية المتقدمة"}

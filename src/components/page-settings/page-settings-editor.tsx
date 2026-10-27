@@ -175,6 +175,11 @@ function asCustomFields(raw: unknown): CustomFieldDef[] {
       placeholder: x.placeholder != null ? String(x.placeholder) : undefined,
       order: Number(x.order ?? i),
       visible: x.visible !== false,
+      sectionId: x.sectionId != null && String(x.sectionId).trim() ? String(x.sectionId) : undefined,
+      storage:
+        x.storage === "page" || x.storage === "record"
+          ? (x.storage as CustomFieldDef["storage"])
+          : undefined,
     }));
 }
 
@@ -370,27 +375,32 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
 
   const addCustomField = () => {
     const n = customFields.length + 1;
+    const targetSection =
+      sections.find((s) => (s.kind === "custom" || s.kind === "notes") && s.visible !== false) ||
+      sections.find((s) => s.kind === "custom" || s.kind === "notes");
     setCustomFields([
       ...customFields,
       {
         key: `cf_field_${Date.now().toString(36)}`,
         label: `حقل مخصص ${n}`,
-        type: "text",
+        type: "textarea",
         required: false,
         order: customFields.length,
         visible: true,
         options: [],
+        sectionId: targetSection?.id,
+        storage: targetSection ? "page" : "record",
       },
     ]);
   };
 
   const addSection = () => {
-    const n = sections.length + 1;
+    const n = sections.filter((s) => s.kind === "custom" || s.kind === "notes").length + 1;
     setSections([
       ...sections,
       {
         id: `custom_${Date.now().toString(36)}`,
-        title: `قسم إضافي ${n}`,
+        title: `ملاحظات ${n}`,
         kind: "custom",
         visible: true,
         order: sections.length,
@@ -504,10 +514,10 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
 
                 {tabId === "fields" && (
                   <div className="psc-field">
-                    <label>الحقول المخصصة (تُحفظ في PostgreSQL مع كل سجل)</label>
+                    <label>الحقول المخصصة (سجل أو قسم صفحة)</label>
                     <p className="hint">
-                      إضافة حقل يظهر في نموذج الإضافة/التعديل للصفحة الأصلية، وتُخزَّن قيمته مع السجل.
-                      حذف الحقل من التصميم لا يحذف السجلات الفعلية.
+                      اربط الحقل بقسم No-Code ليظهر داخل القسم في الصفحة الأصلية ويُحفظ في PostgreSQL
+                      (مستوى الصفحة)، أو اتركه بلا قسم ليظهر في نموذج السجل/الجدول.
                     </p>
                     <div className="psc-builder">
                       {customFields.map((cf, idx) => (
@@ -539,6 +549,36 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                                 {t.label}
                               </option>
                             ))}
+                          </select>
+                          <select
+                            value={cf.sectionId ?? ""}
+                            disabled={!canManage}
+                            title="القسم"
+                            onChange={(e) => {
+                              const sectionId = e.target.value || undefined;
+                              const sec = sections.find((s) => s.id === sectionId);
+                              const next = [...customFields];
+                              next[idx] = {
+                                ...cf,
+                                sectionId,
+                                storage:
+                                  sec && (sec.kind === "custom" || sec.kind === "notes")
+                                    ? "page"
+                                    : sectionId
+                                      ? cf.storage
+                                      : "record",
+                              };
+                              setCustomFields(next);
+                            }}
+                          >
+                            <option value="">نموذج السجل (بدون قسم)</option>
+                            {sections
+                              .filter((s) => s.kind === "custom" || s.kind === "notes")
+                              .map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  قسم: {s.title}
+                                </option>
+                              ))}
                           </select>
                           <input
                             value={(cf.options ?? []).join("، ")}
@@ -610,7 +650,8 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                   <div className="psc-field">
                     <label>أقسام الصفحة (إظهار / إخفاء / ترتيب)</label>
                     <p className="hint">
-                      إخفاء قسم من العرض لا يحذف بيانات القضايا أو الموكلين. حذف قسم مخصص يزيل التصميم فقط.
+                      الأقسام المخصصة وقسم الملاحظات تظهر فعليًا في الصفحة الأصلية بعد الحفظ، مع حقول قابلة
+                      للتعبئة. إخفاء القسم لا يحذف بيانات القضايا أو الموكلين. حذف قسم مخصص يزيل التصميم فقط.
                     </p>
                     <div className="psc-builder">
                       {sections

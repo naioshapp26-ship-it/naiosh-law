@@ -25,6 +25,7 @@ import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { isRemoteMediaAttachment, mediaKindFromAttachment } from "@/lib/file-upload";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type Tab = "documents" | "articles" | "circulars";
 
@@ -283,6 +284,7 @@ export default function LegalLibraryPage() {
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey="legal-library" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="legal-library" />
         <PageHeader
           icon="📖"
           title={pageSettings.display?.title?.trim() || "المكتبة القانونية"}

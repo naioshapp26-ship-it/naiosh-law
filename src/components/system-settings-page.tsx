@@ -18,6 +18,7 @@ import {
 } from "@/lib/site-settings";
 import { isHeroVideoSrc } from "@/lib/hero-media";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type HeroMediaItem = {
   id: string;
@@ -795,6 +796,7 @@ export default function SystemSettingsPage() {
 
       <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "2rem 1rem 6rem" }}>
         <SettingsAppliedChrome pageKey="system-settings" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="system-settings" />
         {loading ? (
           <div className="section-card" style={{ textAlign: "center", color: "#64748b" }}>
             <i className="fas fa-circle-notch fa-spin" style={{ marginLeft: 8 }} />

@@ -13,6 +13,7 @@ import { MODULE_LABELS } from "@/lib/archive-types";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { formatDate } from "@/lib/format";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 const th: React.CSSProperties = {
   textAlign: "right",
@@ -198,6 +199,7 @@ export function ArchivePanel() {
     <AppShell>
       {Toast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsDrivenSections pageKey="archive" />
         <PageHeader
           icon="📦"
           title={pageSettings.display?.title?.trim() || "الأرشيف المركزي"}

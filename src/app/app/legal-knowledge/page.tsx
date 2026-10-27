@@ -24,6 +24,7 @@ import { extractAttachments, persistFormAttachments, stripAttachments } from "@/
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type Branch = {
   id: string;
@@ -177,6 +178,7 @@ export default function LegalKnowledgePage() {
       {Toast}
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey="legal-knowledge" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="legal-knowledge" />
         <PageHeader
           icon="📚"
           title={pageSettings.display?.title?.trim() || "التصنيف القانوني"}

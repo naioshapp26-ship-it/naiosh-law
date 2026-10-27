@@ -41,6 +41,7 @@ export function getDefaultValues(pageKey: string): Record<string, unknown> {
     ...base,
     customFields: [],
     sections: defaultSectionsFor(pageKey),
+    sectionData: {},
   };
 }
 
@@ -166,6 +167,30 @@ export function validateAndNormalizeValues(
     merged.sections = defaultSectionsFor(pageKey);
   }
 
+  // Page-level No-Code section values (notes/custom panels)
+  if (incoming.sectionData != null) {
+    if (!isPlainObject(incoming.sectionData)) {
+      return { ok: false, error: "sectionData يجب أن يكون كائنًا" };
+    }
+    const out: Record<string, Record<string, unknown>> = {};
+    for (const [sid, payload] of Object.entries(incoming.sectionData)) {
+      if (!isPlainObject(payload)) continue;
+      const cleaned: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(payload)) {
+        const key = String(k).slice(0, 64);
+        if (v == null) cleaned[key] = "";
+        else if (typeof v === "boolean" || typeof v === "number") cleaned[key] = v;
+        else cleaned[key] = String(v).slice(0, 8000);
+      }
+      out[String(sid).slice(0, 64)] = cleaned;
+    }
+    merged.sectionData = out;
+  } else if (isPlainObject(merged.sectionData)) {
+    // keep existing from merge
+  } else {
+    merged.sectionData = {};
+  }
+
   return { ok: true, values: merged };
 }
 
@@ -193,6 +218,13 @@ function sanitizeCustomFields(
     const options = Array.isArray(item.options)
       ? item.options.map((o) => String(o)).filter(Boolean).slice(0, 50)
       : [];
+    const sectionId =
+      item.sectionId != null && String(item.sectionId).trim()
+        ? String(item.sectionId).trim().slice(0, 64)
+        : undefined;
+    const storageRaw = String(item.storage ?? "").trim();
+    const storage =
+      storageRaw === "page" || storageRaw === "record" ? storageRaw : undefined;
     fields.push({
       key,
       label: label.slice(0, 80),
@@ -202,6 +234,8 @@ function sanitizeCustomFields(
       placeholder: item.placeholder != null ? String(item.placeholder).slice(0, 120) : undefined,
       order: Number.isFinite(Number(item.order)) ? Number(item.order) : fields.length,
       visible: item.visible !== false,
+      sectionId,
+      storage,
     });
   }
   return { ok: true, fields };
@@ -232,18 +266,13 @@ function sanitizeSections(
 }
 
 export function defaultSectionsFor(pageKey: string): Array<Record<string, unknown>> {
-  const base = [
+  void pageKey;
+  return [
     { id: "kpis", title: "بطاقات المؤشرات", kind: "kpis", visible: true, order: 0 },
     { id: "table", title: "جدول البيانات", kind: "table", visible: true, order: 1 },
     { id: "actions", title: "شريط الإجراءات", kind: "actions", visible: true, order: 2 },
+    { id: "notes", title: "ملاحظات الصفحة", kind: "notes", visible: false, order: 3 },
   ];
-  if (pageKey === "case-management" || pageKey === "clients-management") {
-    return [
-      ...base,
-      { id: "notes", title: "ملاحظات الصفحة", kind: "notes", visible: false, order: 3 },
-    ];
-  }
-  return base;
 }
 
 export async function resolvePageSettings(opts: {

@@ -9,6 +9,7 @@ import {
   specNumber,
 } from "@/components/page-settings/settings-applied-chrome";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import type { PortalConversationDto, PortalMessageDto } from "@/lib/portal-messages-types";
 
 export default function StaffClientMessagesPage() {
@@ -91,6 +92,7 @@ export default function StaffClientMessagesPage() {
     <AppShell>
       <div className="p-4 md:p-6" dir="rtl">
         <SettingsAppliedChrome pageKey="client-messages" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="client-messages" />
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black text-[#101D32] mb-1">{title}</h1>

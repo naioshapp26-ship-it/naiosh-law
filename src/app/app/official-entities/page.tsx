@@ -24,6 +24,7 @@ import { extractAttachments, persistFormAttachments, stripAttachments } from "@/
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type Entity = {
   id: string;
@@ -195,6 +196,7 @@ export default function OfficialEntitiesPage() {
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey="official-entities" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="official-entities" />
         <PageHeader
           icon="🏢"
           title={pageSettings.display?.title?.trim() || "الجهات الرسمية والمحاكم"}

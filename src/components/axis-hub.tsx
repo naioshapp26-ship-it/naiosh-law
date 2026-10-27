@@ -14,6 +14,7 @@ import {
   SettingsLinkButton,
   specBool,
 } from "@/components/page-settings/settings-applied-chrome";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import {
   ADD_AXIS_ITEM_FORM_FIELDS,
   appendCustomAxisItem,
@@ -379,6 +380,7 @@ export function AxisHubPage({ axis, userName }: Props) {
         </div>
       </div>
       <SettingsAppliedChrome pageKey={pageKey} settings={pageSettings} />
+      <SettingsDrivenSections pageKey={pageKey} />
 
       {/* Stats */}
       <div

@@ -24,6 +24,7 @@ import {
   type RoleDef,
 } from "@/data/roles-permissions-data";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type TabId =
   | "roles"
@@ -593,6 +594,7 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
   const content = (
     <div className="rp-page">
       <style>{RP_CSS}</style>
+      <SettingsDrivenSections pageKey="administration" />
 
       <div className="rp-header">
         <div>

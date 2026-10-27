@@ -13,6 +13,7 @@ import {
   SettingsLinkButton,
   specBool,
 } from "@/components/page-settings/settings-applied-chrome";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import { moduleMap } from "@/data/modules";
 import {
   LANDING_SPECIALTIES,
@@ -284,6 +285,7 @@ export function SpecialtyWorkspace({ slug }: Props) {
     <AppShell>
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey={pageKey} settings={pageSettings} />
+        <SettingsDrivenSections pageKey={pageKey} />
         <SpecialtyRail activeSlug={specialty.slug} />
 
         <PageHeader

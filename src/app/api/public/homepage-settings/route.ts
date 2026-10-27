@@ -16,6 +16,21 @@ export async function GET() {
       display?: { title?: string; subtitle?: string };
       specialized?: Record<string, boolean>;
     };
+    const allValues = resolved.values as {
+      display?: { title?: string; subtitle?: string };
+      specialized?: Record<string, boolean>;
+      sections?: Array<{ id: string; title: string; kind: string; visible?: boolean; order?: number }>;
+      sectionData?: Record<string, Record<string, unknown>>;
+    };
+    const publicSections = (allValues.sections ?? [])
+      .filter((s) => s && s.visible !== false && (s.kind === "custom" || s.kind === "notes"))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map((s) => ({
+        id: s.id,
+        title: s.title,
+        kind: s.kind,
+        data: (allValues.sectionData ?? {})[s.id] ?? {},
+      }));
     return NextResponse.json({
       pageKey: "public-homepage",
       display: {
@@ -25,6 +40,7 @@ export async function GET() {
           (getDefaultValues("public-homepage").display as { subtitle?: string })?.subtitle,
       },
       specialized: values.specialized ?? {},
+      sections: publicSections,
     });
   } catch {
     const defaults = getDefaultValues("public-homepage");

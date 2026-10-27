@@ -19,6 +19,8 @@ export type AppliedPageSettings = {
   specialized?: Record<string, unknown>;
   customFields?: unknown[];
   sections?: unknown[];
+  /** Page-level values for notes/custom No-Code sections */
+  sectionData?: Record<string, Record<string, unknown>>;
   loading: boolean;
   previewMode: boolean;
 };

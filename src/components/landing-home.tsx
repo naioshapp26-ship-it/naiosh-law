@@ -61,6 +61,7 @@ export default function LandingHome() {
     showFeatures: boolean;
     showModules: boolean;
     showPromoBar: boolean;
+    sections: Array<{ id: string; title: string; kind: string; data: Record<string, unknown> }>;
   }>({
     title: "NAIOSH Law — النظام القانوني السيادي 360",
     subtitle: "إدارة القضايا والموكلين بذكاء قانوني",
@@ -68,6 +69,7 @@ export default function LandingHome() {
     showFeatures: true,
     showModules: true,
     showPromoBar: true,
+    sections: [],
   });
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export default function LandingHome() {
           showFeatures: data.specialized?.showFeatures !== false,
           showModules: data.specialized?.showModules !== false,
           showPromoBar: data.specialized?.showPromoBar !== false,
+          sections: Array.isArray(data.sections) ? data.sections : [],
         });
         if (typeof document !== "undefined" && data.display?.title) {
           document.title = String(data.display.title);
@@ -238,6 +241,32 @@ export default function LandingHome() {
           ))}
         </section>
           </>
+        ) : null}
+
+        {homeSettings.sections.length > 0 ? (
+          <section className="container" style={{ maxWidth: 1100, margin: "1.5rem auto", padding: "0 1rem" }} aria-label="أقسام الصفحة العامة">
+            {homeSettings.sections.map((sec) => (
+              <article
+                key={sec.id}
+                data-page-section={sec.id}
+                style={{
+                  marginBottom: "1rem",
+                  borderRadius: "1rem",
+                  border: "1px solid #e2e8f0",
+                  background: "#fff",
+                  padding: "1.25rem 1.5rem",
+                  boxShadow: "0 8px 24px rgba(16,29,50,0.06)",
+                }}
+              >
+                <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.15rem", fontWeight: 900, color: "#101D32" }}>
+                  {sec.title}
+                </h2>
+                <p style={{ margin: 0, color: "#475569", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+                  {String(sec.data?.__body ?? Object.values(sec.data || {}).filter((v) => typeof v === "string").join("\n") ?? "")}
+                </p>
+              </article>
+            ))}
+          </section>
         ) : null}
 
         <section className="newsletter-section" aria-label="ابدأ الآن">

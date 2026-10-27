@@ -23,6 +23,7 @@ import {
   SettingsLinkButton,
   specBool,
 } from "@/components/page-settings/settings-applied-chrome";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import type { FormField } from "@/data/module-configs";
 import {
   internationalLawAxes,
@@ -274,6 +275,7 @@ export function InternationalLawsHub() {
     <div className="erp-page" style={{ width: "100%" }}>
       {Toast}
       <SettingsAppliedChrome pageKey="international-laws" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="international-laws" />
 
       {/* Hero */}
       <div

@@ -22,6 +22,7 @@ import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 
 type Tab = "approvals" | "policies" | "signatures" | "audit";
 
@@ -309,6 +310,7 @@ export default function GovernancePage() {
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
         <SettingsAppliedChrome pageKey="governance" settings={pageSettings} />
+      <SettingsDrivenSections pageKey="governance" />
         <PageHeader
           icon="⚙️"
           title={pageSettings.display?.title?.trim() || "الحوكمة والتوقيع الإلكتروني"}

@@ -9,6 +9,13 @@ export type CustomFieldDef = {
   placeholder?: string;
   order?: number;
   visible?: boolean;
+  /** Bind field to a page section id (notes/custom panels or record forms). */
+  sectionId?: string;
+  /**
+   * record = per-row (module create/edit + table columns)
+   * page = page-level panel value stored in sectionData
+   */
+  storage?: "record" | "page";
 };
 
 export type PageSectionDef = {
@@ -16,7 +23,7 @@ export type PageSectionDef = {
   title: string;
   visible: boolean;
   order: number;
-  /** kpis | table | actions | custom */
+  /** kpis | table | actions | notes | custom */
   kind: "kpis" | "table" | "actions" | "notes" | "custom";
 };
 

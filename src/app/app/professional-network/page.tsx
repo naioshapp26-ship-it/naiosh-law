@@ -20,6 +20,7 @@ import { extractAttachments, persistFormAttachments, stripAttachments } from "@/
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import Link from "next/link";
 
 type Professional = {
@@ -202,6 +203,7 @@ export default function ProfessionalNetworkPage() {
       {Toast}
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsDrivenSections pageKey="professional-network" />
         <PageHeader
           icon="🤝"
           title={pageSettings.display?.title?.trim() || "الشبكة المهنية"}
