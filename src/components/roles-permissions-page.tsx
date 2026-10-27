@@ -23,6 +23,7 @@ import {
   type AuditEntry,
   type RoleDef,
 } from "@/data/roles-permissions-data";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type TabId =
   | "roles"
@@ -111,6 +112,7 @@ function recountRoleUsers(roles: RoleDef[], users: AdminUser[]): RoleDef[] {
 
 export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean }) {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("administration");
   const [store, setStore] = useState<Store>(defaultStore);
   const [hydrated, setHydrated] = useState(false);
   const [tab, setTab] = useState<TabId>("roles");
@@ -596,11 +598,17 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
         <div>
           <h1 className="rp-title">
             <i className="fas fa-shield-alt" style={{ color: "var(--brand)", marginLeft: 8 }} />
-            الإدارة والصلاحيات
+            {pageSettings.display?.title?.trim() || "الإدارة والصلاحيات"}
           </h1>
-          <p className="rp-sub">نظام التحكم الكامل في الأدوار والصلاحيات — بيانات تشغيلية غنية</p>
+          <p className="rp-sub">
+            {pageSettings.display?.subtitle?.trim() ||
+              "نظام التحكم الكامل في الأدوار والصلاحيات — بيانات تشغيلية غنية"}
+          </p>
         </div>
         <div className="rp-header-actions">
+          <Link href="/app/page-settings/administration" className="rp-btn-ghost">
+            ⚙️ إعدادات الصفحة
+          </Link>
           <button type="button" className="rp-btn-primary" onClick={openCreateUser}>
             <i className="fas fa-user-plus" /> إضافة مستخدم جديد
           </button>

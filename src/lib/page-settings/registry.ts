@@ -1,4 +1,3 @@
-import { modules } from "@/data/modules";
 import { ERP_SIDEBAR_MODULES, erpModuleHref } from "@/data/erp-sidebar-modules";
 import type { PageSettingsDefinition, PageSettingsCategory, SettingTabDef } from "./types";
 import {
@@ -11,6 +10,7 @@ import {
   workflowTab,
   field,
 } from "./defaults";
+import { allModuleShellDefinitions } from "./from-module-config";
 
 const STAFF_MANAGE = ["admin", "industrial_agent"] as const;
 
@@ -641,43 +641,10 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
   },
 ];
 
-/** Partial: legal modules with basic settings wired via ModuleShell */
-const MODULE_PARTIAL: PageSettingsDefinition[] = modules
-  .filter((m) => !CORE_OPERATIONAL.some((c) => c.pageKey === m.slug))
-  .map((m) => ({
-    pageKey: m.slug,
-    title: m.title,
-    description: m.subtitle,
-    category: (m.slug.includes("report")
-      ? "reports"
-      : m.slug.includes("notif")
-        ? "communications"
-        : m.slug.includes("admin")
-          ? "admin"
-          : "other") as PageSettingsCategory,
-    pageHref: `/app/modules/${m.slug}`,
-    settingsHref: `/app/page-settings/${m.slug}`,
-    status: "partial" as const,
-    icon: "📌",
-    manageRoles: [...STAFF_MANAGE],
-    gapReason:
-      "محرك ModuleShell يطبّق العنوان/الأعمدة/الأزرار/الأقسام/تعريفات الحقول المخصصة؛ التخصص العميق وربط قيم الحقول المخصصة بـAPI هذه الوحدة لم يُثبت بعد كسيناريو كامل",
-    tabs: [
-      displayTab({
-        defaultTitle: m.title,
-        defaultSubtitle: m.subtitle,
-        columnOptions: [{ value: "name", label: "الاسم" }],
-        defaultVisibleColumns: ["name"],
-      }),
-      fieldsTab({
-        fieldOptions: [{ value: "name", label: "الاسم" }],
-        defaultRequired: ["name"],
-      }),
-      actionsTab(),
-      permissionsTab(),
-      reportsTab(),
-    ],
-  }));
+/** Remaining ModuleShell units — rich shared engine defs from module-configs */
+const MODULE_ENGINE: PageSettingsDefinition[] = allModuleShellDefinitions(
+  new Set(CORE_OPERATIONAL.map((c) => c.pageKey))
+);
 
 const FIXED_STAFF: PageSettingsDefinition[] = [
   planned("dashboard", "لوحة التحكم", "مؤشرات الأداء اليومية", "admin", "/app/dashboard", "📊", "تخصيص الودجات في مرحلة لاحقة"),
@@ -751,7 +718,7 @@ function dedupe(defs: PageSettingsDefinition[]): PageSettingsDefinition[] {
 
 export const PAGE_SETTINGS_REGISTRY: PageSettingsDefinition[] = dedupe([
   ...CORE_OPERATIONAL,
-  ...MODULE_PARTIAL,
+  ...MODULE_ENGINE,
   ...FIXED_STAFF,
   ...SPECIALTY,
   ...ERP_PLANNED,

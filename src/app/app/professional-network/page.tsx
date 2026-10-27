@@ -19,6 +19,8 @@ import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import Link from "next/link";
 
 type Professional = {
   id: string;
@@ -64,6 +66,7 @@ const typeLabel: Record<string, string> = { lawyer: "محامٍ", consultant: "�
 
 export default function ProfessionalNetworkPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("professional-network");
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [network, setNetwork] = useState<NetworkItem[]>([]);
   const [tab, setTab] = useState("professionals");
@@ -201,14 +204,31 @@ export default function ProfessionalNetworkPage() {
       <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="🤝"
-          title="الشبكة المهنية"
-          subtitle="محامون ومستشارون وقضاة — طلبات تعاون وإحالة قضايا وتبادل آراء"
+          title={pageSettings.display?.title?.trim() || "الشبكة المهنية"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "محامون ومستشارون وقضاة — طلبات تعاون وإحالة قضايا وتبادل آراء"
+          }
           actions={
             <>
-              {canWrite && tab === "professionals" && (
+              <Link
+                href="/app/page-settings/professional-network"
+                style={{
+                  background: "#101D32",
+                  color: "#fff",
+                  borderRadius: 10,
+                  padding: "0.55rem 1rem",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                }}
+              >
+                ⚙️ إعدادات الصفحة
+              </Link>
+              {canWrite && pageSettings.actions?.allowCreate !== false && tab === "professionals" && (
                 <BtnPrimary onClick={() => setModalOpen(true)}>＋ إضافة محترف</BtnPrimary>
               )}
-              {canWrite && tab === "network" && (
+              {canWrite && pageSettings.actions?.allowCreate !== false && tab === "network" && (
                 <BtnPrimary onClick={() => setNetworkModalOpen(true)}>＋ إضافة طلب شبكة</BtnPrimary>
               )}
               {canWrite && <BtnSecondary onClick={seed}>{seeding ? "⏳ ..." : "📦 بيانات تجريبية"}</BtnSecondary>}

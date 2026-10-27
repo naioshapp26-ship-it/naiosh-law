@@ -12,6 +12,7 @@ import type { ArchiveRecordDto } from "@/lib/archive-types";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { formatDate } from "@/lib/format";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 const th: React.CSSProperties = {
   textAlign: "right",
@@ -32,6 +33,7 @@ const td: React.CSSProperties = {
 export function ArchivePanel() {
   const { user, ready } = useSession(true);
   const { show, Toast } = useToast();
+  const pageSettings = usePageSettings("archive");
   const [rows, setRows] = useState<ArchiveRecordDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -198,14 +200,33 @@ export function ArchivePanel() {
       <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="📦"
-          title="الأرشيف المركزي"
-          subtitle="جميع السجلات المؤرشفة من أنظمة المنصة — مع دعم المرفقات والبحث"
+          title={pageSettings.display?.title?.trim() || "الأرشيف المركزي"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "جميع السجلات المؤرشفة من أنظمة المنصة — مع دعم المرفقات والبحث"
+          }
           actions={
-            canWrite ? (
-              <BtnPrimary onClick={() => { setEditTarget(null); setModalOpen(true); }}>
-                ＋ إضافة للأرشيف
-              </BtnPrimary>
-            ) : undefined
+            <>
+              <a
+                href="/app/page-settings/archive"
+                style={{
+                  background: "#101D32",
+                  color: "#fff",
+                  borderRadius: 10,
+                  padding: "0.55rem 1rem",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                }}
+              >
+                ⚙️ إعدادات الصفحة
+              </a>
+              {canWrite && pageSettings.actions?.allowCreate !== false ? (
+                <BtnPrimary onClick={() => { setEditTarget(null); setModalOpen(true); }}>
+                  ＋ إضافة للأرشيف
+                </BtnPrimary>
+              ) : null}
+            </>
           }
         />
 

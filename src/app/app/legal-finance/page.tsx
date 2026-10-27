@@ -18,6 +18,8 @@ import { useSession, canWriteRole } from "@/lib/session";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import Link from "next/link";
 
 type Tab =
   | "invoices"
@@ -273,6 +275,7 @@ function numOrNull(v: unknown): number | null {
 
 export default function LegalFinancePage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("legal-finance");
   const [tab, setTab] = useState<Tab>("invoices");
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -587,11 +590,28 @@ ${stamp}` : stamp;
       <div className="erp-page" style={{ width: "100%" }}>
         <PageHeader
           icon="💰"
-          title="المالية القانونية المتقدمة"
-          subtitle="الفواتير، قواعد الأتعاب، الكفالات، الضمانات، الإشعارات الرسمية والمدفوعات"
+          title={pageSettings.display?.title?.trim() || "المالية القانونية المتقدمة"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "الفواتير، قواعد الأتعاب، الكفالات، الضمانات، الإشعارات الرسمية والمدفوعات"
+          }
           actions={
             <>
-              {canWrite && canAdd && (
+              <Link
+                href="/app/page-settings/legal-finance"
+                style={{
+                  background: "#101D32",
+                  color: "#fff",
+                  borderRadius: 10,
+                  padding: "0.55rem 1rem",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                }}
+              >
+                ⚙️ إعدادات الصفحة
+              </Link>
+              {canWrite && pageSettings.actions?.allowCreate !== false && canAdd && (
                 <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
               )}
               {canWrite && (
