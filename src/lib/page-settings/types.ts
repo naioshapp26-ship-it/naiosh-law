@@ -53,7 +53,9 @@ export type SettingTabId =
   | "workflow"
   | "reports"
   | "links"
-  | "specialized";
+  | "specialized"
+  | "notifications"
+  | "sections";
 
 export type SettingTabDef = {
   id: SettingTabId;

@@ -21,6 +21,13 @@ import {
 } from "@/data/empire-structure";
 import { resolveItemHref } from "@/lib/empire-routes";
 import { useSession, canWriteRole } from "@/lib/session";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+  specString,
+} from "@/components/page-settings/settings-applied-chrome";
 import {
   ADD_AXIS_FORM_FIELDS,
   appendCustomLegalAxis,
@@ -96,8 +103,16 @@ const upcomingSessions = [
 
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("dashboard");
+  const defaultDash = specString(pageSettings, "defaultDashboardType", "system360");
   const [dashType, setDashType] = useState("system360");
   const [customAxes, setCustomAxes] = useState<CustomLegalAxis[]>([]);
+
+  useEffect(() => {
+    if (!pageSettings.loading && defaultDash) {
+      setDashType(defaultDash);
+    }
+  }, [pageSettings.loading, defaultDash]);
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([]);
   const [overrides, setOverrides] = useState<Record<string, AxisPresentationOverride>>({});
   const [addAxisOpen, setAddAxisOpen] = useState(false);
@@ -193,6 +208,22 @@ export default function DashboardPage() {
   }
 
   const canWrite = canWriteRole(user.role);
+  const allowAxisEdit =
+    canWrite &&
+    specBool(pageSettings, "allowAxisEdit", true) &&
+    pageSettings.actions?.allowEdit !== false;
+  const allowAxisCreate =
+    canWrite &&
+    specBool(pageSettings, "allowAxisEdit", true) &&
+    pageSettings.actions?.allowCreate !== false;
+  const showKpis =
+    pageSettings.display?.showKpis !== false && specBool(pageSettings, "showKpiSection", true);
+  const showAxes = specBool(pageSettings, "showAxes", true);
+  const showSessions = specBool(pageSettings, "showSessions", true);
+  const showQuickLinks = specBool(pageSettings, "showQuickLinks", true);
+  const showModules = specBool(pageSettings, "showModules", true);
+  const dashTitle = pageSettings.display?.title?.trim() || empireIntro.title;
+  const dashSubtitle = pageSettings.display?.subtitle?.trim() || empireIntro.subtitle;
   const kpis = (kpisByDashboard[dashType] ?? kpisByDashboard.system360).map((k) =>
     k.label === "المحاور القانونية" ? { ...k, value: String(allAxes.length) } : k
   );
@@ -207,6 +238,10 @@ export default function DashboardPage() {
         className="erp-page hq-dashboard"
         style={{ width: "100%" }}
       >
+        <SettingsAppliedChrome pageKey="dashboard" settings={pageSettings} />
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
+          <SettingsLinkButton pageKey="dashboard" />
+        </div>
         {/* Imperial hero + animated logo */}
         <motion.div
           variants={fadeUp}
@@ -255,7 +290,7 @@ export default function DashboardPage() {
                 transition={{ delay: 0.2 }}
                 style={{ fontSize: "0.75rem", opacity: 0.85, marginBottom: "0.35rem" }}
               >
-                👑 {empireIntro.subtitle}
+                👑 {dashSubtitle}
               </motion.p>
               <motion.h1
                 initial={{ opacity: 0, x: 20 }}
@@ -263,7 +298,7 @@ export default function DashboardPage() {
                 transition={{ delay: 0.3 }}
                 style={{ fontSize: "1.65rem", fontWeight: 900, marginBottom: "0.5rem", lineHeight: 1.35 }}
               >
-                {empireIntro.title}
+                {dashTitle}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, x: 20 }}
@@ -321,6 +356,7 @@ export default function DashboardPage() {
           <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.65rem" }}>{activeDash.description}</p>
         </motion.div>
 
+        {showKpis ? (
         <AnimatePresence mode="wait">
           <motion.div
             key={dashType}
@@ -353,7 +389,9 @@ export default function DashboardPage() {
             ))}
           </motion.div>
         </AnimatePresence>
+        ) : null}
 
+        {showAxes ? (
         <motion.div variants={fadeUp} custom={2} style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "0.75rem", flexWrap: "wrap" }}>
             <h2 style={{ fontSize: "1rem", fontWeight: 800, color: "#0a0a12", margin: 0 }}>المحاور القانونية</h2>
@@ -361,7 +399,7 @@ export default function DashboardPage() {
               <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
                 {allAxes.length} محور · {totalEmpireItems()} عنصر في الهيكل السيادي
               </span>
-              {canWrite && (
+              {allowAxisCreate && (
                 <button
                   type="button"
                   onClick={() => setAddAxisOpen(true)}
@@ -408,7 +446,7 @@ export default function DashboardPage() {
                         : "محور مخصص ←"}
                     </span>
                   </Link>
-                  {canWrite ? (
+                  {allowAxisEdit ? (
                     <RowActions
                       actions={standardRowActions({
                         onEdit: () =>
@@ -424,12 +462,15 @@ export default function DashboardPage() {
                                 ? axis.description
                                 : axis.subtitle,
                           }),
-                        onDelete: () =>
-                          setDeleteAxis({
-                            slug: axis.slug,
-                            isCustom: !!axis.isCustom,
-                            title: axis.title,
-                          }),
+                        onDelete:
+                          pageSettings.actions?.allowDelete === false
+                            ? undefined
+                            : () =>
+                                setDeleteAxis({
+                                  slug: axis.slug,
+                                  isCustom: !!axis.isCustom,
+                                  title: axis.title,
+                                }),
                       })}
                     />
                   ) : null}
@@ -438,8 +479,11 @@ export default function DashboardPage() {
             ))}
           </div>
         </motion.div>
+        ) : null}
 
-        <motion.div variants={fadeUp} custom={3} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "1.75rem" }} className="two-col">
+        {(showSessions || showQuickLinks) ? (
+        <motion.div variants={fadeUp} custom={3} style={{ display: "grid", gridTemplateColumns: showSessions && showQuickLinks ? "1fr 1fr" : "1fr", gap: "1.25rem", marginBottom: "1.75rem" }} className="two-col">
+          {showSessions ? (
           <div className="card-white" style={{ padding: "1.5rem" }}>
             <h2 style={{ fontSize: "0.95rem", fontWeight: 800, marginBottom: "1rem" }}>الجلسات القادمة</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -458,7 +502,9 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
+          ) : null}
 
+          {showQuickLinks ? (
           <div className="card-white" style={{ padding: "1.5rem" }}>
             <h2 style={{ fontSize: "0.95rem", fontWeight: 800, marginBottom: "1rem" }}>لوحة التحكم السيادية — وصول سريع</h2>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
@@ -485,8 +531,11 @@ export default function DashboardPage() {
                 ))}
             </div>
           </div>
+          ) : null}
         </motion.div>
+        ) : null}
 
+        {showModules ? (
         <motion.div variants={fadeUp} custom={4} id="modules" className="card-white" style={{ padding: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.25rem" }}>
             <h2 style={{ fontSize: "0.95rem", fontWeight: 800 }}>الوحدات التشغيلية</h2>
@@ -506,6 +555,7 @@ export default function DashboardPage() {
             ))}
           </div>
         </motion.div>
+        ) : null}
       </motion.div>
 
       <style>{`
