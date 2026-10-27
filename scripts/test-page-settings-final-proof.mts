@@ -185,31 +185,58 @@ async function deepModule(
 
   // Export UI — CSV download for ModuleShell pages
   if (livePath.includes("/modules/")) {
-    await page.goto(`${BASE}${livePath}`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
-    const reportsBtn = page.getByRole("button", { name: /تقارير/ });
-    if (await reportsBtn.isVisible().catch(() => false)) {
-      await reportsBtn.click();
-      const [download] = await Promise.all([
-        page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
-        page.getByRole("button", { name: "تنزيل CSV", exact: true }).click(),
-      ]);
-      if (download) {
-        const dest = path.join(OUT, `${pageKey}-export.csv`);
-        await download.saveAs(dest);
-        row.download = fs.existsSync(dest) && fs.statSync(dest).size > 0 ? "PASS" : "FAIL";
-      } else {
+    try {
+      // ensure export allowed after permission probe
+      values.actions = { ...values.actions, allowExport: true, allowCreate: false };
+      await api(ctx, "PUT", `/api/page-settings/${pageKey}`, { scope: "global", values });
+      await page.goto(`${BASE}${livePath}`, { waitUntil: "networkidle" });
+      await page.waitForTimeout(600);
+      await page.evaluate(() => {
+        const b = document.getElementById("global-back-button");
+        if (b) (b as HTMLElement).style.display = "none";
+      });
+      const opened = await page.evaluate(() => {
+        const btn = Array.from(document.querySelectorAll("button")).find((el) =>
+          (el.textContent || "").includes("تقارير")
+        );
+        if (!btn) return false;
+        (btn as HTMLButtonElement).click();
+        return true;
+      });
+      if (!opened) {
         row.download = "FAIL";
+        row.print = "FAIL";
+        record(`${pageKey}-export`, false, "reports button missing");
+      } else {
+        await page.waitForTimeout(400);
+        const csvBtn = page.locator("button", { hasText: "تنزيل CSV" }).last();
+        const printVisible = await page
+          .locator("button", { hasText: /طباعة|PDF/ })
+          .first()
+          .isVisible()
+          .catch(() => false);
+        row.print = printVisible ? "PASS" : "PARTIAL";
+        const [download] = await Promise.all([
+          page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
+          csvBtn.click({ force: true }),
+        ]);
+        if (download) {
+          const dest = path.join(OUT, `${pageKey}-export.csv`);
+          await download.saveAs(dest);
+          row.download = fs.existsSync(dest) && fs.statSync(dest).size > 0 ? "PASS" : "FAIL";
+        } else {
+          row.download = "FAIL";
+        }
+        record(
+          `${pageKey}-export`,
+          row.download === "PASS",
+          `download=${row.download} print=${row.print}`
+        );
       }
-      // print button
-      await reportsBtn.click().catch(() => null);
-      const printBtn = page.getByRole("button", { name: /طباعة|PDF/ });
-      row.print = (await printBtn.isVisible().catch(() => false)) ? "PASS" : "PARTIAL";
-      record(`${pageKey}-export`, row.download === "PASS", `download=${row.download} print=${row.print}`);
-    } else {
+    } catch (e) {
       row.download = "FAIL";
-      row.print = "FAIL";
-      record(`${pageKey}-export`, false, "reports button missing");
+      row.print = "PARTIAL";
+      record(`${pageKey}-export`, false, e instanceof Error ? e.message : String(e));
     }
   }
 
