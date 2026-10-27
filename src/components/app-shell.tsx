@@ -10,6 +10,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
 import { useSiteTheme } from "@/components/theme-provider";
 import { PRIMARY_NAV } from "@/lib/empire-routes";
+import { NAV_HREF_TO_PAGE_KEY } from "@/lib/page-settings/nav-page-keys";
 import type { UserRole } from "@/lib/session";
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -57,6 +58,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { theme } = useSiteTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [navTitles, setNavTitles] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = Object.entries(NAV_HREF_TO_PAGE_KEY).filter(([, key]) => Boolean(key));
+      const pairs = await Promise.all(
+        entries.map(async ([href, pageKey]) => {
+          try {
+            const res = await fetch(`/api/page-settings/${pageKey}`, { credentials: "include" });
+            if (!res.ok) return [href, ""] as const;
+            const body = await res.json();
+            const title = String(body.resolved?.values?.display?.title || "").trim();
+            return [href, title] as const;
+          } catch {
+            return [href, ""] as const;
+          }
+        })
+      );
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      for (const [href, title] of pairs) {
+        if (title) map[href] = title;
+      }
+      setNavTitles(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  const navLabel = (href: string, fallback: string) => navTitles[href]?.trim() || fallback;
 
   useEffect(() => {
     const ensure = () => {
@@ -216,17 +249,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </p>
         {PRIMARY_NAV.map((item) => {
           const active = isActive(item.href);
+          const label = navLabel(item.href, item.label);
           return (
             <Link
               key={item.href}
               href={item.href}
-              title={item.label}
+              title={label}
               onClick={onNavigate}
               className="flex items-center gap-2.5 mx-2 px-3 py-2.5 rounded-xl text-sm transition-all shrink-0 hover:bg-white/15"
               style={navLinkStyle(active)}
             >
               <span className="text-base shrink-0 w-5 text-center">{item.icon}</span>
-              <span className="truncate leading-snug">{item.label}</span>
+              <span className="truncate leading-snug">{label}</span>
             </Link>
           );
         })}
@@ -669,10 +703,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         {MOBILE_BOTTOM_NAV.map((item) => {
           const active = isActive(item.href);
+          const label = navLabel(item.href, item.label);
           return (
             <Link
               key={item.href}
               href={item.href}
+              title={label}
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -693,7 +729,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   color: active ? "#101D32" : "#94a3b8",
                 }}
               >
-                {item.label}
+                {label}
               </span>
             </Link>
           );

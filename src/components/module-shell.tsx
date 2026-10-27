@@ -25,6 +25,11 @@ import {
   type CustomFieldDef,
   type PageSectionDef,
 } from "@/lib/page-settings/custom-field-types";
+import {
+  exportCsv,
+  exportPdf,
+  exportXlsx,
+} from "@/lib/page-settings/export-reports";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -64,40 +69,13 @@ type PageSettingsValues = {
   reports?: {
     allowPdf?: boolean;
     allowExcel?: boolean;
+    allowCsv?: boolean;
     showLogo?: boolean;
     headerText?: string;
     footerText?: string;
+    paperOrientation?: string;
   };
 };
-
-function escapeCsvCell(v: unknown) {
-  const s = v == null ? "" : String(v);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-function downloadTextFile(filename: string, content: string, mime: string) {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function buildCsv(
-  columns: { key: string; label: string }[],
-  data: Record<string, unknown>[]
-) {
-  const header = columns.map((c) => escapeCsvCell(c.label)).join(",");
-  const lines = data.map((row) =>
-    columns.map((c) => escapeCsvCell(row[c.key])).join(",")
-  );
-  return "\uFEFF" + [header, ...lines].join("\n");
-}
 
 function readPreviewDraft(slug: string): PageSettingsValues | null {
   if (typeof window === "undefined") return null;
@@ -707,6 +685,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               const reports = pageSettings?.reports;
               const allowPdf = reports?.allowPdf !== false;
               const allowExcel = reports?.allowExcel !== false;
+              const allowCsv = reports?.allowCsv !== false;
               const headerText =
                 reports?.headerText?.trim() ||
                 "NAIOSH Law — منظومة نايوش القانونية 360";
@@ -714,63 +693,58 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
                 reports?.footerText?.trim() || "سري — للاستخدام الداخلي";
               const stamp = new Date().toISOString().slice(0, 10);
               const baseName = `${slug}-${stamp}`;
+              const pageTitle = pageSettings?.display?.title?.trim() || config.entityName;
+              const common = {
+                title: pageTitle,
+                columns: cols,
+                rows,
+                headerText,
+                footerText,
+                showLogo: reports?.showLogo !== false,
+                paperOrientation: reports?.paperOrientation || "portrait",
+                fileBase: baseName,
+              };
 
-              const runCsv = () => {
-                downloadTextFile(
-                  `${baseName}.csv`,
-                  buildCsv(cols, rows),
-                  "text/csv;charset=utf-8"
-                );
+              const assertExportAllowed = async () => {
+                const res = await fetch("/api/exports/gate", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ pageKey: slug }),
+                });
+                if (!res.ok) {
+                  const j = await res.json().catch(() => ({}));
+                  pushToast("error", j.error || "التصدير غير مسموح حسب الصلاحيات");
+                  return false;
+                }
+                return true;
+              };
+
+              const runCsv = async () => {
+                if (!(await assertExportAllowed())) return;
+                exportCsv(common);
                 pushToast("success", "✅ تم تنزيل CSV");
                 setReportOpen(false);
               };
-              const runExcel = () => {
-                // Excel يفتح CSV بترميز UTF-8 مع BOM بشكل موثوق
-                downloadTextFile(
-                  `${baseName}.csv`,
-                  buildCsv(cols, rows),
-                  "text/csv;charset=utf-8"
-                );
-                pushToast("success", "✅ تم تنزيل ملف متوافق مع Excel (CSV)");
-                setReportOpen(false);
-              };
-              const runPdfPrint = () => {
-                const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
-                if (!w) {
-                  pushToast("error", "تعذر فتح نافذة الطباعة — اسمح بالنوافذ المنبثقة");
-                  return;
+              const runExcel = async () => {
+                if (!(await assertExportAllowed())) return;
+                try {
+                  await exportXlsx(common);
+                  pushToast("success", "✅ تم تنزيل Excel (.xlsx)");
+                  setReportOpen(false);
+                } catch (e) {
+                  pushToast("error", e instanceof Error ? e.message : "فشل تصدير Excel");
                 }
-                const showLogo = reports?.showLogo !== false;
-                const th = cols.map((c) => `<th>${escapeCsvCell(c.label)}</th>`).join("");
-                const body = rows
-                  .map(
-                    (r) =>
-                      `<tr>${cols
-                        .map((c) => `<td>${escapeCsvCell(r[c.key])}</td>`)
-                        .join("")}</tr>`
-                  )
-                  .join("");
-                w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/><title>${headerText}</title>
-<style>
-body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#0a0a12}
-h1{font-size:18px;margin:0 0 8px}
-.meta{color:#64748b;font-size:12px;margin-bottom:16px}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:right}
-th{background:#f1f5f9}
-.footer{margin-top:18px;font-size:11px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:8px}
-@media print{button{display:none}}
-</style></head><body>
-${showLogo ? `<div class="meta">NAIOSH Law 360</div>` : ""}
-<h1>${headerText}</h1>
-<div class="meta">${pageSettings?.display?.title || config.entityName} — ${rows.length} سجل — ${stamp}</div>
-<table><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table>
-<div class="footer">${footerText}</div>
-<script>window.onload=function(){window.focus();window.print();}</script>
-</body></html>`);
-                w.document.close();
-                pushToast("success", "✅ فُتحت معاينة الطباعة / PDF");
-                setReportOpen(false);
+              };
+              const runPdf = async () => {
+                if (!(await assertExportAllowed())) return;
+                try {
+                  await exportPdf(common);
+                  pushToast("success", "✅ تم تنزيل PDF");
+                  setReportOpen(false);
+                } catch (e) {
+                  pushToast("error", e instanceof Error ? e.message : "فشل تصدير PDF");
+                }
               };
 
               return (
@@ -778,30 +752,32 @@ ${showLogo ? `<div class="meta">NAIOSH Law 360</div>` : ""}
                   {allowPdf ? (
                     <button
                       type="button"
-                      onClick={runPdfPrint}
+                      onClick={() => void runPdf()}
                       style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
                     >
-                      طباعة / PDF
+                      تنزيل PDF
                     </button>
                   ) : null}
                   {allowExcel ? (
                     <button
                       type="button"
-                      onClick={runExcel}
+                      onClick={() => void runExcel()}
                       style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
                     >
-                      تنزيل Excel (CSV)
+                      تنزيل Excel (.xlsx)
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    onClick={runCsv}
-                    style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
-                  >
-                    تنزيل CSV
-                  </button>
+                  {allowCsv ? (
+                    <button
+                      type="button"
+                      onClick={() => void runCsv()}
+                      style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                    >
+                      تنزيل CSV
+                    </button>
+                  ) : null}
                   <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.75rem", lineHeight: 1.5 }}>
-                    التصدير يستخدم الأعمدة الظاهرة من إعدادات الصفحة والترويسة/التذييل من تبويب التقارير.
+                    التصدير يطبّق الأعمدة الظاهرة والترويسة والشعار والتذييل واتجاه الورقة من إعدادات التقارير، مع فرض صلاحية التصدير من الخادم.
                   </p>
                 </>
               );

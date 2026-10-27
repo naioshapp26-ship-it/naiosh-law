@@ -17,6 +17,7 @@ import {
   INTERNATIONAL_LAWS_SETTINGS,
   SPECIALTY_PAGE_SETTINGS,
 } from "./axis-and-specialty";
+import { PUBLIC_HOMEPAGE_SETTINGS } from "./public-homepage";
 
 const STAFF_MANAGE = ["admin", "industrial_agent"] as const;
 
@@ -703,6 +704,7 @@ export const PAGE_SETTINGS_REGISTRY: PageSettingsDefinition[] = dedupe([
   ...FIXED_STAFF,
   ...AXIS_AND_LAWS,
   ...SPECIALTY,
+  PUBLIC_HOMEPAGE_SETTINGS,
   ...ERP_PLANNED,
 ]);
 
