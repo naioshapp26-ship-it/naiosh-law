@@ -396,14 +396,19 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
 
   const addSection = () => {
     const n = sections.filter((s) => s.kind === "custom" || s.kind === "notes").length + 1;
+    // Insert after KPIs (order 0) so the new panel is visible above the data table
+    const insertAt = 1;
+    const shifted = sections.map((s) =>
+      (s.order ?? 0) >= insertAt ? { ...s, order: (s.order ?? 0) + 1 } : s
+    );
     setSections([
-      ...sections,
+      ...shifted,
       {
         id: `custom_${Date.now().toString(36)}`,
-        title: `ملاحظات ${n}`,
+        title: n <= 1 ? "ملاحظات" : `ملاحظات ${n}`,
         kind: "custom",
         visible: true,
-        order: sections.length,
+        order: insertAt,
       },
     ]);
   };
