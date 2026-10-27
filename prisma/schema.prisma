@@ -1108,3 +1108,19 @@ model RecordCustomValue {
   @@index([sourceModule, sourceId])
   @@index([fieldKey])
 }
+
+/// Generic module records for units without dedicated tables (no-code ModuleShell data).
+model ModuleRecord {
+  id          String   @id @default(cuid())
+  moduleKey   String
+  /// Flattened display fields + extras as JSON
+  data        Json
+  status      String   @default("نشط")
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([moduleKey, createdAt])
+  @@index([moduleKey, status])
+}

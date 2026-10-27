@@ -53,6 +53,11 @@ type PageSettingsValues = {
   };
   fields?: {
     hiddenOptionalFields?: string[];
+    defaultStatus?: string;
+  };
+  workflow?: {
+    statuses?: string[];
+    initialStatus?: string;
   };
   customFields?: CustomFieldDef[];
   sections?: PageSectionDef[];
@@ -118,7 +123,8 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       const res = await fetch(apiEndpoint, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
+          // Empty array is a real empty store — do not fall back to demo rows
           setRows(data);
           setUsingDemo(false);
         } else {
@@ -221,10 +227,26 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const formFields = useMemo(() => {
     if (!config) return [];
     const hidden = new Set(pageSettings?.fields?.hiddenOptionalFields ?? []);
-    const base = config.formFields.filter((f) => !hidden.has(f.key));
+    const workflowStatuses = pageSettings?.workflow?.statuses;
+    const base = config.formFields
+      .filter((f) => !hidden.has(f.key))
+      .map((f) => {
+        if (f.key === "status" && f.type === "select" && workflowStatuses?.length) {
+          return { ...f, options: workflowStatuses };
+        }
+        return f;
+      });
     const custom = customFieldsToFormFields(pageSettings?.customFields ?? []);
     return [...base, ...custom];
   }, [config, pageSettings]);
+
+  const createInitial = useMemo(() => {
+    const initialStatus =
+      pageSettings?.fields?.defaultStatus?.trim() ||
+      pageSettings?.workflow?.initialStatus?.trim() ||
+      "";
+    return initialStatus ? { status: initialStatus } : undefined;
+  }, [pageSettings]);
 
   const actions = pageSettings?.actions;
   const perms = pageSettings?.permissions;
@@ -596,7 +618,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         open={modalOpen}
         title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
         fields={formFields}
-        initial={editTarget ?? undefined}
+        initial={editTarget ?? createInitial}
         onSave={handleSave}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}
         saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}

@@ -1,4 +1,6 @@
-/** Maps module slugs to REST API endpoints (Phase 0) */
+import { GENERIC_MODULE_KEYS } from "@/lib/page-settings/page-action-auth";
+
+/** Maps module slugs to REST API endpoints */
 export const moduleApiMap: Record<string, string> = {
   "case-management": "/api/cases",
   "clients-management": "/api/clients",
@@ -7,6 +9,10 @@ export const moduleApiMap: Record<string, string> = {
   "notifications-center": "/api/notification-rules",
   "integrations": "/api/integrations",
 };
+
+for (const key of GENERIC_MODULE_KEYS) {
+  moduleApiMap[key] = `/api/module-records/${key}`;
+}
 
 export function getModuleApiEndpoint(slug: string) {
   return moduleApiMap[slug] ?? null;

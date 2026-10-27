@@ -5,6 +5,7 @@ import {
   attachCustomValuesToRows,
   persistCustomFieldsFromBody,
 } from "@/lib/page-settings/record-custom-api";
+import { assertPageAction } from "@/lib/page-settings/page-action-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,15 @@ export async function GET(_request: Request, { params }: Params) {
 export async function PATCH(request: Request, { params }: Params) {
   const { error, session } = await requireWrite();
   if (error) return error;
+
+  const gate = await assertPageAction({
+    pageKey: "case-management",
+    action: "edit",
+    role: session!.role,
+    userId: session!.sub,
+  });
+  if (!gate.ok) return gate.response;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -62,8 +72,17 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
+
+  const gate = await assertPageAction({
+    pageKey: "case-management",
+    action: "delete",
+    role: session!.role,
+    userId: session!.sub,
+  });
+  if (!gate.ok) return gate.response;
+
   const { id } = await params;
   await prisma.case.delete({ where: { id } });
   return NextResponse.json({ ok: true });
