@@ -11,6 +11,7 @@ import {
   field,
 } from "./defaults";
 import { allModuleShellDefinitions } from "./from-module-config";
+import { FIXED_STAFF_OPERATIONAL } from "./fixed-staff";
 
 const STAFF_MANAGE = ["admin", "industrial_agent"] as const;
 
@@ -646,17 +647,8 @@ const MODULE_ENGINE: PageSettingsDefinition[] = allModuleShellDefinitions(
   new Set(CORE_OPERATIONAL.map((c) => c.pageKey))
 );
 
-const FIXED_STAFF: PageSettingsDefinition[] = [
-  planned("dashboard", "لوحة التحكم", "مؤشرات الأداء اليومية", "admin", "/app/dashboard", "📊", "تخصيص الودجات في مرحلة لاحقة"),
-  planned("client-messages", "رسائل العملاء", "محادثات الموظفين مع العملاء", "communications", "/app/client-messages", "💬", "قواعد التصعيد المتقدمة لاحقًا"),
-  planned("communications", "الاتصالات والفروع", "قواعد الإشعار والفروع", "communications", "/app/communications", "📢", "محرر القواعد التفصيلي لاحقًا"),
-  planned("legal-library", "المكتبة القانونية", "المقالات والمراجع", "knowledge", "/app/legal-library", "📚", "إعدادات التصنيف العميق لاحقًا"),
-  planned("legal-knowledge", "الفروع والتخصصات", "شجرة التخصصات", "knowledge", "/app/legal-knowledge", "🌳", "محرر الشجرة لاحقًا"),
-  planned("governance", "الحوكمة والتوقيع", "السياسات والتواقيع", "admin", "/app/governance", "🔏", "مستويات الموافقة التفصيلية لاحقًا"),
-  planned("global-operations", "العمليات العالمية", "التنسيق عبر الفروع", "operations", "/app/global-operations", "🌍", "قواعد التصعيد عبر الفروع لاحقًا"),
-  planned("official-entities", "الجهات الرسمية", "دليل الجهات", "clients", "/app/official-entities", "🏛️", "حقول مخصصة لاحقًا"),
-  planned("system-settings", "إعدادات الهوية / الصفحة الرئيسية", "موجودة عبر SiteSettings", "admin", "/app/system-settings", "🎨", "مُدارة عبر إعدادات الهوية الحالية"),
-];
+/** Real NAIOSH staff pages with nature-specific No-Code tabs (not ERP catalog). */
+const FIXED_STAFF: PageSettingsDefinition[] = FIXED_STAFF_OPERATIONAL;
 
 const SPECIALTY: PageSettingsDefinition[] = [
   "cases",

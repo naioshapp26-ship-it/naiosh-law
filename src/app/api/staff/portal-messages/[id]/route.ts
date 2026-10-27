@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { assertPageAction } from "@/lib/page-settings/page-action-auth";
+import { resolvePageSettings } from "@/lib/page-settings/server";
 import { getPrisma } from "@/lib/prisma";
 import {
   loadConversationMessages,
@@ -27,6 +29,31 @@ export async function POST(request: Request, { params }: Params) {
   if (error || !session) return error!;
   if (session.role === "client") {
     return NextResponse.json({ error: "صلاحية غير كافية" }, { status: 403 });
+  }
+
+  const gate = await assertPageAction({
+    pageKey: "client-messages",
+    action: "edit",
+    role: session.role,
+    userId: session.sub,
+  });
+  if (!gate.ok) return gate.response;
+
+  const resolved = await resolvePageSettings({
+    pageKey: "client-messages",
+    role: session.role,
+    userId: session.sub,
+  });
+  const specialized = (
+    resolved.values as {
+      specialized?: { allowReply?: boolean; notifyClientOnReply?: boolean };
+    }
+  ).specialized;
+  if (specialized?.allowReply === false) {
+    return NextResponse.json(
+      { error: "الرد متوقف من إعدادات صفحة رسائل العملاء" },
+      { status: 403 }
+    );
   }
 
   const { id } = await params;
@@ -66,17 +93,19 @@ export async function POST(request: Request, { params }: Params) {
     },
   });
 
-  await prisma.clientPortalNotification.create({
-    data: {
-      clientId: conversation.clientId,
-      title: "رد جديد من المكتب",
-      body: text.slice(0, 160) || "لديك رد جديد على محادثتك",
-      category: "رسائل",
-      href: `/portal/messages?c=${id}`,
-      read: false,
-      isDemo: false,
-    },
-  });
+  if (specialized?.notifyClientOnReply !== false) {
+    await prisma.clientPortalNotification.create({
+      data: {
+        clientId: conversation.clientId,
+        title: "رد جديد من المكتب",
+        body: text.slice(0, 160) || "لديك رد جديد على محادثتك",
+        category: "رسائل",
+        href: `/portal/messages?c=${id}`,
+        read: false,
+        isDemo: false,
+      },
+    });
+  }
 
   return NextResponse.json({ message: { id: msg.id, createdAt: msg.createdAt.toISOString() } }, { status: 201 });
 }
