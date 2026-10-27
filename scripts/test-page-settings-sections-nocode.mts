@@ -257,23 +257,35 @@ async function main() {
     await page.screenshot({ path: path.join(OUT, "02-cases-with-notes-section.png"), fullPage: false });
 
     if (appeared) {
-      await sec.locator("textarea").first().fill(`ملاحظة تشغيلية ${stamp}`);
-      await sec.locator("button", { hasText: "حفظ محتوى القسم" }).click({ force: true });
-      await page.waitForTimeout(1000);
-      await page.reload({ waitUntil: "networkidle" });
-      await page.waitForTimeout(1000);
-      const persisted = (await page.locator(`[data-page-section="${sectionId}"]`).innerText()).includes(
-        String(stamp)
+      const note = `ملاحظة تشغيلية ${stamp}`;
+      await sec.locator("textarea").first().fill(note);
+      const saveResp = page.waitForResponse(
+        (r) => r.url().includes("/section-data") && r.request().method() === "PUT",
+        { timeout: 15000 }
       );
-      record("case-section-content-persist-reload", persisted, `ok=${persisted}`);
+      await sec.locator("button", { hasText: "حفظ محتوى القسم" }).click({ force: true });
+      const resp = await saveResp;
+      record("case-section-save-api", resp.ok(), `status=${resp.status()}`);
+      await page.waitForTimeout(500);
+      // verify via API before reload
+      const verify = await api(ctx, "GET", "/api/page-settings/case-management");
+      const stored = JSON.stringify(verify.json?.resolved?.values?.sectionData ?? {});
+      record("case-section-stored-pg", stored.includes(String(stamp)), `storedHasStamp=${stored.includes(String(stamp))}`);
+      await page.reload({ waitUntil: "networkidle" });
+      await page.waitForSelector(`[data-page-section="${sectionId}"] textarea`, { timeout: 15000 });
+      await page.waitForTimeout(800);
+      const taVal = await page.locator(`[data-page-section="${sectionId}"] textarea`).first().inputValue();
+      const persisted = taVal.includes(String(stamp));
+      record("case-section-content-persist-reload", persisted, `value=${taVal.slice(0, 60)}`);
       await page.screenshot({ path: path.join(OUT, "03-cases-notes-filled.png"), fullPage: false });
 
       await api(ctx, "POST", "/api/auth/logout");
       await loginAs(ctx, page, ADMIN);
       await page.goto(`${BASE}/app/modules/case-management`, { waitUntil: "networkidle" });
-      await page.waitForTimeout(1000);
+      await page.waitForSelector(`[data-page-section="${sectionId}"] textarea`, { timeout: 15000 });
+      await page.waitForTimeout(800);
       const afterLogin = (
-        await page.locator(`[data-page-section="${sectionId}"]`).innerText()
+        await page.locator(`[data-page-section="${sectionId}"] textarea`).first().inputValue()
       ).includes(String(stamp));
       record("case-section-persist-relogin", afterLogin, `ok=${afterLogin}`);
     }
