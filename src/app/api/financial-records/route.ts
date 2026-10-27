@@ -2,28 +2,31 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
 import type { PaymentMethod } from "@/generated/prisma/client";
+import {
+  attachCustomValuesToRows,
+  persistCustomFieldsFromBody,
+} from "@/lib/page-settings/record-custom-api";
 
 export async function GET() {
   const { error } = await requireAuth();
   if (error) return error;
 
   const records = await prisma.financialRecord.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(
-    records.map((r) => ({
-      id: r.id,
-      invoiceNo: r.invoiceNo,
-      client: r.clientName,
-      type: r.type,
-      amount: String(r.amount),
-      paid: String(r.paid),
-      issueDate: r.issueDate,
-      status: r.status,
-    }))
-  );
+  const base = records.map((r) => ({
+    id: r.id,
+    invoiceNo: r.invoiceNo,
+    client: r.clientName,
+    type: r.type,
+    amount: String(r.amount),
+    paid: String(r.paid),
+    issueDate: r.issueDate,
+    status: r.status,
+  }));
+  return NextResponse.json(await attachCustomValuesToRows("legal-accounting", base));
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
   const body = await request.json();
 
@@ -55,5 +58,14 @@ export async function POST(request: Request) {
       isDemo: false,
     },
   });
+
+  await persistCustomFieldsFromBody({
+    sourceModule: "legal-accounting",
+    sourceId: created.id,
+    body: body as Record<string, unknown>,
+    userId: session!.sub,
+    role: session!.role,
+  });
+
   return NextResponse.json({ id: created.id, clientId: created.clientId }, { status: 201 });
 }
