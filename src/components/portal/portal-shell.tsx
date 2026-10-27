@@ -8,6 +8,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { PageDynamicSections } from "@/components/page-settings/page-dynamic-sections";
 import type { CustomFieldDef, PageSectionDef } from "@/lib/page-settings/custom-field-types";
 import type { SectionDataMap } from "@/components/page-settings/page-dynamic-sections";
+import { forcePortalLogin, portalJson } from "@/lib/portal-fetch";
 
 type PortalUser = { name: string; email: string; role: string };
 
@@ -55,6 +56,7 @@ export function PortalShell({
   const router = useRouter();
   const [user, setUser] = useState<PortalUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [authError, setAuthError] = useState("");
   const [open, setOpen] = useState(false);
   const [flags, setFlags] = useState<PortalFlags>({});
   const [portalSettings, setPortalSettings] = useState<PortalPageSettings>({});
@@ -63,7 +65,7 @@ export function PortalShell({
     if (!document.querySelector('link[data-portal-css]')) {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "/newhome/portal.css?v=portal-360-20261026";
+      css.href = "/newhome/portal.css?v=portal-360-20261028";
       css.setAttribute("data-portal-css", "1");
       document.head.appendChild(css);
     }
@@ -78,47 +80,40 @@ export function PortalShell({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/auth/me", { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) return null;
-        const data = await res.json();
-        return (data.user as PortalUser) ?? null;
-      })
-      .then(async (u) => {
-        if (cancelled) return;
-        setUser(u);
-        if (!u) {
-          setReady(true);
-          window.location.assign("/login");
-          return;
-        }
-        if (u.role !== "client") {
-          setReady(true);
-          router.replace("/app/dashboard");
-          return;
-        }
-        try {
-          const sRes = await fetch("/api/page-settings/client-portal", { credentials: "include" });
-          if (sRes.ok) {
-            const sBody = await sRes.json();
-            const values = (sBody.resolved?.values ?? {}) as PortalPageSettings;
-            const specialized = (values.specialized ?? {}) as PortalFlags;
-            if (!cancelled) {
-              setFlags(specialized);
-              setPortalSettings(values);
-            }
+    (async () => {
+      const me = await portalJson<{ user?: PortalUser }>("/api/auth/me");
+      if (cancelled) return;
+      if (!me.ok || !me.data?.user) {
+        const errMsg = !me.ok ? me.error : "انتهت صلاحية الجلسة";
+        setAuthError(errMsg);
+        setReady(true);
+        forcePortalLogin(errMsg);
+        return;
+      }
+      const u = me.data.user;
+      setUser(u);
+      if (u.role !== "client") {
+        setReady(true);
+        router.replace("/app/dashboard");
+        return;
+      }
+      try {
+        const sRes = await portalJson<{ resolved?: { values?: PortalPageSettings } }>(
+          "/api/page-settings/client-portal"
+        );
+        if (sRes.ok) {
+          const values = (sRes.data.resolved?.values ?? {}) as PortalPageSettings;
+          const specialized = (values.specialized ?? {}) as PortalFlags;
+          if (!cancelled) {
+            setFlags(specialized);
+            setPortalSettings(values);
           }
-        } catch {
-          /* defaults: all visible */
         }
-        if (!cancelled) setReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setReady(true);
-          window.location.assign("/login");
-        }
-      });
+      } catch {
+        /* defaults: all visible */
+      }
+      if (!cancelled) setReady(true);
+    })();
     return () => {
       cancelled = true;
     };
@@ -126,7 +121,6 @@ export function PortalShell({
 
   const visibleNav = NAV.filter((item) => {
     if (!item.flag) return true;
-    // Profile link stays visible even if edit is disabled (read-only profile)
     if (item.flag === "allowProfileEdit") return true;
     const v = flags[item.flag];
     return v !== false;
@@ -137,10 +131,21 @@ export function PortalShell({
     window.location.assign("/login");
   };
 
-  if (!ready || !user || user.role !== "client") {
+  if (!ready) {
     return (
       <div className="portal-loading" dir="rtl">
         جاري تحميل بوابة العميل…
+      </div>
+    );
+  }
+
+  if (authError || !user || user.role !== "client") {
+    return (
+      <div className="portal-loading" dir="rtl" style={{ display: "grid", gap: "0.75rem", placeItems: "center" }}>
+        <p style={{ margin: 0, fontWeight: 700 }}>{authError || "جارٍ التوجيه لتسجيل الدخول…"}</p>
+        <a className="portal-btn primary" href="/login">
+          تسجيل الدخول
+        </a>
       </div>
     );
   }
@@ -178,9 +183,7 @@ export function PortalShell({
             <i className={`fas ${open ? "fa-xmark" : "fa-bars"}`} />
           </button>
           <div>
-            <h1 data-portal-title="1">
-              {portalSettings.display?.title?.trim() || title}
-            </h1>
+            <h1 data-portal-title="1">{portalSettings.display?.title?.trim() || title}</h1>
             <p>مرحباً، {user.name}</p>
             {portalSettings.display?.subtitle?.trim() ? (
               <p style={{ margin: "0.25rem 0 0", fontSize: "0.82rem", color: "#64748b" }}>

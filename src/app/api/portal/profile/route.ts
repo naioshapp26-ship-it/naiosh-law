@@ -26,7 +26,11 @@ export async function PATCH(request: Request) {
   const body = await request.json();
   try {
     const prisma = getPrisma();
-    const client = await prisma.client.findFirst({ where: { userId: session.sub } });
+    const { ensurePortalClientRecord } = await import("@/lib/client-portal-data");
+    let client = await prisma.client.findFirst({ where: { userId: session.sub } });
+    if (!client) {
+      client = await ensurePortalClientRecord(session);
+    }
     if (!client) return NextResponse.json({ error: "الملف غير موجود" }, { status: 404 });
 
     const data: Record<string, unknown> = {};

@@ -3,6 +3,8 @@
 import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PortalEmptyState, PortalErrorCard } from "@/components/portal/portal-empty";
+import { portalJson } from "@/lib/portal-fetch";
 import type { PortalConversationDto, PortalMessageDto } from "@/lib/portal-messages-types";
 
 function MessagesInner() {
@@ -22,30 +24,35 @@ function MessagesInner() {
   const [loading, setLoading] = useState(true);
 
   const loadList = useCallback(async () => {
+    setError("");
     const [cRes, pRes, casesRes] = await Promise.all([
-      fetch("/api/portal/messages", { credentials: "include" }),
-      fetch("/api/portal/profile", { credentials: "include" }),
-      fetch("/api/portal/cases", { credentials: "include" }),
+      portalJson<{ conversations?: PortalConversationDto[] }>("/api/portal/messages"),
+      portalJson<{ profile?: { isDemo?: boolean } }>("/api/portal/profile"),
+      portalJson<{ cases?: { id: string; caseNo: string }[] }>("/api/portal/cases"),
     ]);
-    const cJson = await cRes.json();
-    const pJson = await pRes.json();
-    const casesJson = await casesRes.json();
-    setConversations(cJson.conversations || []);
-    setDemo(Boolean(pJson.profile?.isDemo));
-    setCases((casesJson.cases || []).map((c: { id: string; caseNo: string }) => ({ id: c.id, caseNo: c.caseNo })));
+    if (!cRes.ok) {
+      setError(cRes.error);
+      setConversations([]);
+      setLoading(false);
+      return;
+    }
+    setConversations(cRes.data.conversations || []);
+    setDemo(Boolean(pRes.ok && pRes.data.profile?.isDemo));
+    setCases(casesRes.ok ? casesRes.data.cases || [] : []);
     setLoading(false);
   }, []);
 
   const loadThread = useCallback(async (id: string) => {
-    const res = await fetch(`/api/portal/messages/${id}`, { credentials: "include" });
-    const json = await res.json();
+    const res = await portalJson<{ messages?: PortalMessageDto[]; conversation?: { subject?: string } }>(
+      `/api/portal/messages/${id}`
+    );
     if (!res.ok) {
-      setError(json.error || "تعذر تحميل المحادثة");
+      setError(res.error || "تعذر تحميل المحادثة");
       return;
     }
     setActiveId(id);
-    setMessages(json.messages || []);
-    setActiveSubject(json.conversation?.subject || "");
+    setMessages(res.data.messages || []);
+    setActiveSubject(res.data.conversation?.subject || "");
   }, []);
 
   useEffect(() => {
@@ -68,15 +75,13 @@ function MessagesInner() {
     e.preventDefault();
     setError("");
     setMsg("");
-    const res = await fetch("/api/portal/messages", {
+    const res = await portalJson<{ conversationId?: string }>("/api/portal/messages", {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subject, body, caseId: caseId || undefined }),
     });
-    const json = await res.json();
     if (!res.ok) {
-      setError(json.error || "تعذر الإرسال");
+      setError(res.error || "تعذر الإرسال");
       return;
     }
     setSubject("");
@@ -84,22 +89,20 @@ function MessagesInner() {
     setCaseId("");
     setMsg("تم إرسال الرسالة إلى المكتب");
     await loadList();
-    if (json.conversationId) await loadThread(json.conversationId);
+    if (res.data.conversationId) await loadThread(res.data.conversationId);
   };
 
   const sendReply = async (e: FormEvent) => {
     e.preventDefault();
     if (!activeId) return;
     setError("");
-    const res = await fetch(`/api/portal/messages/${activeId}`, {
+    const res = await portalJson(`/api/portal/messages/${activeId}`, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body: reply }),
     });
-    const json = await res.json();
     if (!res.ok) {
-      setError(json.error || "تعذر الإرسال");
+      setError(res.error || "تعذر الإرسال");
       return;
     }
     setReply("");
@@ -109,7 +112,7 @@ function MessagesInner() {
 
   return (
     <PortalShell title="الرسائل" demoBanner={demo}>
-      {error ? <div className="portal-card" style={{ color: "#b91c1c" }}>{error}</div> : null}
+      {error ? <PortalErrorCard message={error} onRetry={loadList} /> : null}
       {msg ? <div className="portal-card" style={{ color: "#166534" }}>{msg}</div> : null}
 
       <div className="portal-grid" style={{ gridTemplateColumns: "minmax(240px, 0.9fr) 1.4fr", gap: "1rem", alignItems: "start" }}>
@@ -117,7 +120,10 @@ function MessagesInner() {
           <h2>محادثاتي</h2>
           {loading ? <div className="portal-empty">جاري التحميل…</div> : null}
           {!loading && conversations.length === 0 ? (
-            <div className="portal-empty">لا محادثات بعد. ابدأ مراسلة المكتب من النموذج.</div>
+            <PortalEmptyState
+              title="لا محادثات بعد"
+              description="ابدأ مراسلة المكتب أو المحامي المسؤول من النموذج."
+            />
           ) : (
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: "0.5rem" }}>
               {conversations.map((c) => (

@@ -78,6 +78,37 @@ export async function resolvePortalClientId(session: AuthPayload): Promise<strin
   }
 }
 
+export async function ensurePortalClientRecord(session: AuthPayload) {
+  if (isDemoPortalSession(session)) return null;
+  const prisma = getPrisma();
+  let client = await prisma.client.findFirst({ where: { userId: session.sub } });
+  if (!client && session.email) {
+    client = await prisma.client.findFirst({ where: { email: session.email } });
+    if (client && !client.userId) {
+      client = await prisma.client.update({
+        where: { id: client.id },
+        data: { userId: session.sub },
+      });
+    }
+  }
+  if (client) return client;
+  // Auto-provision CRM Client for a portal user that somehow lacks a linked row
+  return prisma.client.create({
+    data: {
+      userId: session.sub,
+      name: session.name || session.email,
+      email: session.email,
+      type: "فرد",
+      internalNo: `CL-${Date.now().toString().slice(-8)}`,
+      preferredLanguage: "ar",
+      profileComplete: false,
+      isDemo: false,
+      status: "نشط",
+      notes: "أُنشئ تلقائياً عند أول دخول لبوابة العميل",
+    },
+  });
+}
+
 export async function loadPortalProfile(session: AuthPayload): Promise<PortalProfile | null> {
   if (isDemoPortalSession(session) && !(await tryDb())) {
     return demoPortalBundle().profile;
@@ -87,11 +118,18 @@ export async function loadPortalProfile(session: AuthPayload): Promise<PortalPro
     let client = await prisma.client.findFirst({ where: { userId: session.sub } });
     if (!client && session.email) {
       client = await prisma.client.findFirst({ where: { email: session.email } });
+      if (client && !client.userId) {
+        client = await prisma.client.update({
+          where: { id: client.id },
+          data: { userId: session.sub },
+        });
+      }
     }
     if (!client) {
       if (isDemoPortalSession(session)) return demoPortalBundle().profile;
-      return null;
+      client = await ensurePortalClientRecord(session);
     }
+    if (!client) return null;
     return {
       id: client.id,
       userId: client.userId ?? session.sub,
@@ -162,7 +200,7 @@ async function loadDashboardFromDb(session: AuthPayload): Promise<PortalDashboar
   const [cases, sessions, documents, requests, invoices, notifications] = await Promise.all([
     prisma.case.findMany({ where: { clientId }, orderBy: { updatedAt: "desc" } }),
     prisma.courtSession.findMany({
-      where: { OR: [{ client: profile.name }, { case: { clientId } }] },
+      where: { case: { clientId } },
       orderBy: { date: "asc" },
       take: 20,
     }),
@@ -269,8 +307,9 @@ export async function loadPortalSessions(session: AuthPayload): Promise<PortalSe
   if (!profile) return isDemoPortalSession(session) ? demoPortalBundle().sessions : [];
   try {
     const prisma = getPrisma();
+    // Strict ownership: only sessions linked to this client's cases (never match by name alone)
     const rows = await prisma.courtSession.findMany({
-      where: { OR: [{ client: profile.name }, { case: { clientId: profile.id } }] },
+      where: { case: { clientId: profile.id } },
       orderBy: { date: "desc" },
     });
     if (!rows.length && profile.isDemo) return demoPortalBundle().sessions;
@@ -309,7 +348,8 @@ export async function loadPortalDocuments(session: AuthPayload): Promise<PortalD
       title: d.title,
       category: d.category,
       fileName: d.fileName,
-      fileUrl: d.fileUrl,
+      // Do not ship base64 payloads in list responses — download via /api/portal/documents/:id?download=1
+      fileUrl: d.fileUrl ? `/api/portal/documents/${d.id}?download=1` : null,
       status: d.status,
       caseId: d.caseId,
       createdAt: d.createdAt.toISOString().slice(0, 10),

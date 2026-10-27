@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PortalErrorCard, PortalLoadingCard } from "@/components/portal/portal-empty";
+import { portalJson } from "@/lib/portal-fetch";
 import type { PortalProfile } from "@/lib/client-portal";
 
 function ProfileInner() {
@@ -11,17 +13,26 @@ function ProfileInner() {
   const [profile, setProfile] = useState<PortalProfile | null>(null);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/portal/profile", { credentials: "include" })
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "فشل التحميل");
-        setProfile(json.profile);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "خطأ"));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    const res = await portalJson<{ profile: PortalProfile }>("/api/portal/profile");
+    if (!res.ok) {
+      setError(res.error);
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    setProfile(res.data.profile);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,22 +40,19 @@ function ProfileInner() {
     setSaving(true);
     setMsg("");
     setError("");
-    try {
-      const res = await fetch("/api/portal/profile", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "تعذر الحفظ");
-      setMsg(json.profileComplete ? "تم حفظ الملف بنجاح" : "تم الحفظ — أكمل البيانات الناقصة");
-      setProfile((p) => (p ? { ...p, profileComplete: Boolean(json.profileComplete) } : p));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "خطأ");
-    } finally {
+    const res = await portalJson<{ profileComplete?: boolean; error?: string }>("/api/portal/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    });
+    if (!res.ok) {
+      setError(res.error);
       setSaving(false);
+      return;
     }
+    setMsg(res.data.profileComplete ? "تم حفظ الملف بنجاح" : "تم الحفظ — أكمل البيانات الناقصة");
+    setProfile((p) => (p ? { ...p, profileComplete: Boolean(res.data.profileComplete) } : p));
+    setSaving(false);
   };
 
   return (
@@ -54,11 +62,10 @@ function ProfileInner() {
           أكمل بياناتك الأساسية للانتقال بسلاسة إلى خدماتك القانونية.
         </div>
       ) : null}
-      {error ? <div className="portal-card">{error}</div> : null}
       {msg ? <div className="portal-card" style={{ color: "#166534" }}>{msg}</div> : null}
-      {!profile ? (
-        <div className="portal-card">جاري التحميل…</div>
-      ) : (
+      {error ? <PortalErrorCard message={error} onRetry={load} /> : null}
+      {loading && !error ? <PortalLoadingCard /> : null}
+      {!loading && profile ? (
         <form className="portal-card portal-form" onSubmit={onSubmit}>
           <h2>الصورة الشخصية</h2>
           <div className="portal-grid" style={{ gridTemplateColumns: "auto 1fr", alignItems: "center", gap: "1rem" }}>
@@ -89,6 +96,7 @@ function ProfileInner() {
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
+                disabled={profile.isDemo}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -112,7 +120,12 @@ function ProfileInner() {
           <div className="portal-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
             <label>
               الاسم الكامل
-              <input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required />
+              <input
+                value={profile.name}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                required
+                disabled={profile.isDemo}
+              />
             </label>
             <label>
               البريد الإلكتروني
@@ -120,32 +133,53 @@ function ProfileInner() {
             </label>
             <label>
               رقم الهاتف
-              <input value={profile.phone || ""} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+              <input
+                value={profile.phone || ""}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                disabled={profile.isDemo}
+              />
             </label>
             <label>
               نوع العميل
-              <select value={profile.type} onChange={(e) => setProfile({ ...profile, type: e.target.value })}>
+              <select
+                value={profile.type}
+                onChange={(e) => setProfile({ ...profile, type: e.target.value })}
+                disabled={profile.isDemo}
+              >
                 <option value="فرد">فرد</option>
                 <option value="شركة">شركة</option>
               </select>
             </label>
             <label>
               الدولة
-              <input value={profile.country || ""} onChange={(e) => setProfile({ ...profile, country: e.target.value })} />
+              <input
+                value={profile.country || ""}
+                onChange={(e) => setProfile({ ...profile, country: e.target.value })}
+                disabled={profile.isDemo}
+              />
             </label>
             <label>
               المدينة
-              <input value={profile.city || ""} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
+              <input
+                value={profile.city || ""}
+                onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                disabled={profile.isDemo}
+              />
             </label>
             <label style={{ gridColumn: "1 / -1" }}>
               العنوان
-              <input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} />
+              <input
+                value={profile.address || ""}
+                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                disabled={profile.isDemo}
+              />
             </label>
             <label>
               اللغة المفضلة
               <select
                 value={profile.preferredLanguage}
                 onChange={(e) => setProfile({ ...profile, preferredLanguage: e.target.value })}
+                disabled={profile.isDemo}
               >
                 <option value="ar">العربية</option>
                 <option value="en">English</option>
@@ -164,6 +198,7 @@ function ProfileInner() {
               <input
                 value={profile.companyName || ""}
                 onChange={(e) => setProfile({ ...profile, companyName: e.target.value })}
+                disabled={profile.isDemo}
               />
             </label>
             <label>
@@ -171,6 +206,7 @@ function ProfileInner() {
               <input
                 value={profile.authorizedPerson || ""}
                 onChange={(e) => setProfile({ ...profile, authorizedPerson: e.target.value })}
+                disabled={profile.isDemo}
               />
             </label>
             <label>
@@ -178,6 +214,7 @@ function ProfileInner() {
               <input
                 value={profile.authorizedPhone || ""}
                 onChange={(e) => setProfile({ ...profile, authorizedPhone: e.target.value })}
+                disabled={profile.isDemo}
               />
             </label>
             <label>
@@ -191,12 +228,12 @@ function ProfileInner() {
           </div>
 
           <div className="portal-actions">
-            <button className="portal-btn primary" type="submit" disabled={saving}>
-              {saving ? "جاري الحفظ…" : "حفظ التعديلات"}
+            <button className="portal-btn primary" type="submit" disabled={saving || profile.isDemo}>
+              {profile.isDemo ? "عرض فقط (تجريبي)" : saving ? "جاري الحفظ…" : "حفظ التعديلات"}
             </button>
           </div>
         </form>
-      )}
+      ) : null}
     </PortalShell>
   );
 }

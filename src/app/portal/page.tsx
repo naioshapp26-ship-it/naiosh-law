@@ -1,29 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PortalEmptyState, PortalErrorCard, PortalLoadingCard } from "@/components/portal/portal-empty";
+import { portalJson } from "@/lib/portal-fetch";
 import type { PortalDashboard } from "@/lib/client-portal";
 
 export default function PortalHomePage() {
   const [data, setData] = useState<PortalDashboard | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    const res = await portalJson<PortalDashboard>("/api/portal/dashboard");
+    if (!res.ok) {
+      setError(res.error);
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    setData(res.data);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    fetch("/api/portal/dashboard", { credentials: "include" })
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "تعذر التحميل");
-        setData(json);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "خطأ"));
-  }, []);
+    void load();
+  }, [load]);
 
   return (
     <PortalShell title="لوحة العميل" demoBanner={Boolean(data?.profile.isDemo)}>
-      {error ? <div className="portal-card">{error}</div> : null}
-      {!data && !error ? <div className="portal-card">جاري تحميل بياناتك…</div> : null}
-      {data ? (
+      {error ? <PortalErrorCard message={error} onRetry={load} /> : null}
+      {loading && !error ? <PortalLoadingCard label="جاري تحميل بياناتك…" /> : null}
+      {data && !loading ? (
         <>
           <section className="portal-card" aria-label="ترحيب">
             <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
@@ -32,6 +43,7 @@ export default function PortalHomePage() {
                   width: 64,
                   height: 64,
                   borderRadius: "50%",
+                  overflow: "hidden",
                   background: "linear-gradient(135deg,#101D32,#B79A61)",
                   color: "#fff",
                   display: "grid",
@@ -40,7 +52,12 @@ export default function PortalHomePage() {
                   fontSize: "1.3rem",
                 }}
               >
-                {data.profile.name.slice(0, 1)}
+                {data.profile.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={data.profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  data.profile.name.slice(0, 1)
+                )}
               </div>
               <div style={{ flex: 1, minWidth: 200 }}>
                 <h2 style={{ margin: 0 }}>أهلاً {data.profile.name}</h2>
@@ -67,29 +84,41 @@ export default function PortalHomePage() {
 
           <section className="portal-grid" aria-label="مؤشرات">
             {[
-              { label: "القضايا", value: data.stats.casesTotal },
-              { label: "نشطة", value: data.stats.casesActive },
-              { label: "مغلقة", value: data.stats.casesClosed },
-              { label: "جلسات قادمة", value: data.stats.upcomingSessions },
-              { label: "مستندات", value: data.stats.documents },
-              { label: "طلبات مفتوحة", value: data.stats.openRequests },
-              { label: "مستحق", value: `${data.stats.dueAmount.toLocaleString("ar-EG")} ر.س` },
-              { label: "إشعارات", value: data.stats.unreadNotifications },
+              { label: "القضايا", value: data.stats.casesTotal, href: "/portal/cases" },
+              { label: "نشطة", value: data.stats.casesActive, href: "/portal/cases" },
+              { label: "مغلقة", value: data.stats.casesClosed, href: "/portal/cases" },
+              { label: "جلسات قادمة", value: data.stats.upcomingSessions, href: "/portal/sessions" },
+              { label: "مستندات", value: data.stats.documents, href: "/portal/documents" },
+              { label: "طلبات مفتوحة", value: data.stats.openRequests, href: "/portal/requests" },
+              {
+                label: "مستحق",
+                value: `${data.stats.dueAmount.toLocaleString("ar-EG")} ر.س`,
+                href: "/portal/finance",
+              },
+              { label: "إشعارات", value: data.stats.unreadNotifications, href: "/portal/notifications" },
             ].map((kpi) => (
-              <article key={kpi.label} className="portal-card portal-kpi">
+              <Link key={kpi.label} href={kpi.href} className="portal-card portal-kpi" style={{ textDecoration: "none" }}>
                 <strong>{kpi.value}</strong>
                 <span>{kpi.label}</span>
-              </article>
+              </Link>
             ))}
           </section>
 
           <section className="portal-grid" style={{ gridTemplateColumns: "1.2fr 1fr" }}>
             <article className="portal-card">
-              <h3>الجلسات القادمة</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+                <h3 style={{ margin: 0 }}>الجلسات القادمة</h3>
+                <Link className="portal-btn ghost" href="/portal/sessions">
+                  الكل
+                </Link>
+              </div>
               {data.upcomingSessions.length === 0 ? (
-                <div className="portal-empty">
-                  لا جلسات قادمة. يمكنك <Link href="/portal/requests">طلب موعد</Link>.
-                </div>
+                <PortalEmptyState
+                  title="لا جلسات قادمة"
+                  description="يمكنك طلب موعد أو استشارة من صفحة الطلبات."
+                  actionHref="/portal/requests"
+                  actionLabel="طلب موعد"
+                />
               ) : (
                 <table className="portal-table">
                   <thead>
@@ -119,9 +148,14 @@ export default function PortalHomePage() {
             </article>
 
             <article className="portal-card">
-              <h3>آخر الإشعارات</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+                <h3 style={{ margin: 0 }}>آخر الإشعارات</h3>
+                <Link className="portal-btn ghost" href="/portal/notifications">
+                  الكل
+                </Link>
+              </div>
               {data.recentNotifications.length === 0 ? (
-                <div className="portal-empty">لا إشعارات حالياً.</div>
+                <PortalEmptyState title="لا إشعارات حالياً" description="ستظهر هنا تحديثات قضاياك وطلباتك." />
               ) : (
                 <div style={{ display: "grid", gap: "0.7rem" }}>
                   {data.recentNotifications.map((n) => (
@@ -133,6 +167,41 @@ export default function PortalHomePage() {
                 </div>
               )}
             </article>
+          </section>
+
+          <section className="portal-card">
+            <h3>آخر الطلبات</h3>
+            {data.recentRequests.length === 0 ? (
+              <PortalEmptyState
+                title="لا طلبات بعد"
+                description="أنشئ طلب استشارة أو خدمة قانونية."
+                actionHref="/portal/requests"
+                actionLabel="طلب جديد"
+              />
+            ) : (
+              <table className="portal-table">
+                <thead>
+                  <tr>
+                    <th>المرجع</th>
+                    <th>النوع</th>
+                    <th>العنوان</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recentRequests.map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.refNo}</td>
+                      <td>{r.type}</td>
+                      <td>{r.title}</td>
+                      <td>
+                        <span className="portal-badge gold">{r.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </section>
         </>
       ) : null}

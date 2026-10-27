@@ -1,20 +1,31 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies, canWrite } from "@/lib/auth";
+import { AUTH_COOKIE, getSessionFromCookies, canWrite } from "@/lib/auth";
 import { assertSessionNotRevoked } from "@/lib/auth-session-guard";
 import type { UserRole } from "@/generated/prisma/client";
+
+function unauthorized(message: string, clearCookie = false) {
+  const res = NextResponse.json({ error: message }, { status: 401 });
+  if (clearCookie) {
+    res.cookies.set(AUTH_COOKIE, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+  }
+  return res;
+}
 
 export async function requireAuth(roles?: UserRole[]) {
   const session = await getSessionFromCookies();
   if (!session) {
-    return { error: NextResponse.json({ error: "غير مصرح" }, { status: 401 }), session: null };
+    return { error: unauthorized("غير مصرح", true), session: null };
   }
   const stillValid = await assertSessionNotRevoked(session);
   if (!stillValid) {
     return {
-      error: NextResponse.json(
-        { error: "انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجددًا" },
-        { status: 401 }
-      ),
+      error: unauthorized("انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجددًا", true),
       session: null,
     };
   }

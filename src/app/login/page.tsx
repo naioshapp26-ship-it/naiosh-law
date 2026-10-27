@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { demoUsers } from "@/data/auth";
 import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
@@ -9,15 +11,28 @@ import { BRAND } from "@/lib/brand";
 
 type ExistingUser = { name: string; email: string; role: string };
 
-export default function LoginPage() {
+function LoginInner() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@naioshlaw.com");
   const [password, setPassword] = useState("Admin@123");
   const [error, setError] = useState("");
+  const [sessionNotice, setSessionNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(true);
   const [existingUser, setExistingUser] = useState<ExistingUser | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const reason = searchParams.get("reason");
+    if (reason) {
+      setSessionNotice(
+        reason === "session" || /جلسة|صلاحية/i.test(reason)
+          ? "انتهت صلاحية جلستك أو تم إنهاؤها — سجّل الدخول مجددًا للمتابعة."
+          : reason
+      );
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +173,12 @@ export default function LoginPage() {
             </div>
           ) : null}
 
+          {sessionNotice ? (
+            <div className="erp-login-alert" role="status" style={{ background: "rgba(183,154,97,.15)", color: "#7a6230" }}>
+              {sessionNotice}
+            </div>
+          ) : null}
+
           {error ? (
             <div className="erp-login-alert" role="alert">
               {error}
@@ -244,6 +265,13 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <p style={{ textAlign: "center", marginTop: "1rem", fontWeight: 700 }}>
+            عميل جديد؟{" "}
+            <Link href="/register" style={{ color: "#B79A61", textDecoration: "underline" }}>
+              إنشاء حساب بوابة العميل
+            </Link>
+          </p>
 
           <div className="erp-login-divider">
             <span>دخول تجريبي سريع</span>
@@ -630,5 +658,13 @@ export default function LoginPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>جاري التحميل…</div>}>
+      <LoginInner />
+    </Suspense>
   );
 }
