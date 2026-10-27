@@ -218,6 +218,36 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const showTable = sectionVisible("table");
   const showActionsBar = sectionVisible("actions");
 
+  /** Static module-config KPIs are illustrative — never present them as live DB metrics. */
+  const kpiCards = useMemo(() => {
+    if (!config?.kpis?.length) return [];
+    if (usingDemo || loadingData) {
+      return config.kpis.map((k) => ({
+        ...k,
+        delta: "أرقام توضيحية — ليست من قاعدة البيانات",
+        deltaPos: true,
+      }));
+    }
+    const total = rows.length;
+    const active = rows.filter((r) => {
+      const s = String((r as Record<string, unknown>).status ?? "");
+      return s.includes("نشط") || s.toLowerCase() === "open" || s.toLowerCase() === "active";
+    }).length;
+    return config.kpis.map((k, i) => {
+      if (i === 0) {
+        return { ...k, value: total, delta: "حية من البيانات المعروضة", deltaPos: true };
+      }
+      if (i === 1) {
+        return { ...k, value: active, delta: "حية من البيانات المعروضة", deltaPos: true };
+      }
+      return {
+        ...k,
+        delta: "توضيحي — العدد الفعلي في الجدول",
+        deltaPos: true,
+      };
+    });
+  }, [config?.kpis, usingDemo, loadingData, rows]);
+
   const visibleColumns = useMemo(() => {
     if (!config) return [];
     const keys = pageSettings?.display?.visibleColumns;
@@ -595,7 +625,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           </div>
         </div>
 
-        {showKpis && <StatsRow cards={config.kpis} />}
+        {showKpis && <StatsRow cards={kpiCards} />}
 
         {showTable && (
         <div className="card-white" style={{ padding: "1.5rem" }}>
