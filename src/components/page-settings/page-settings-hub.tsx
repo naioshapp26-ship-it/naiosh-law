@@ -33,18 +33,18 @@ type Coverage = {
   planned: number;
 };
 
-const STATUS_COLORS: Record<PageSettingsStatus, { bg: string; fg: string }> = {
-  operational: { bg: "rgba(22,163,74,0.12)", fg: "#15803d" },
-  partial: { bg: "rgba(183,154,97,0.18)", fg: "#8a7340" },
-  planned: { bg: "rgba(100,116,139,0.14)", fg: "#475569" },
-};
-
 function ensureCss() {
   if (typeof document === "undefined") return;
-  if (document.querySelector('link[data-page-settings-css]')) return;
+  const existing = document.querySelector('link[data-page-settings-css]') as HTMLLinkElement | null;
+  const href = "/erp-app/page-settings.css?v=page-settings-erp-ref-20261027c";
+  if (existing) {
+    if (existing.href.includes("page-settings-erp-ref-20261027c")) return;
+    existing.href = href;
+    return;
+  }
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/page-settings.css?v=page-settings-20261027b";
+  link.href = href;
   link.setAttribute("data-page-settings-css", "1");
   document.head.appendChild(link);
 }
@@ -58,6 +58,7 @@ export function PageSettingsHub() {
   const [status, setStatus] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
 
   useEffect(() => {
     ensureCss();
@@ -116,120 +117,110 @@ export function PageSettingsHub() {
 
   return (
     <AppShell>
-      <div className="psc-hub" dir="rtl">
-        <header className="psc-hub-header">
-          <div>
-            <p className="psc-eyebrow">NAIOSH Law 360 · مركز التحكم بدون برمجة</p>
-            <h1>إعدادات الصفحات</h1>
-            <p className="psc-lead">
-              قائمة بكل صفحات النظام — اضغط على اسم الصفحة لفتح إعداداتها الكاملة. التغييرات تُحفظ في
-              PostgreSQL وتُطبَّق فورًا على الصفحة الأصلية.
-            </p>
-          </div>
-          <div className="psc-actions">
-            <Link href="/app/dashboard" className="psc-btn ghost">
+      <div className="psc-hub psc-hub-erp" dir="rtl">
+        <div className="psc-erp-column">
+          <div className="psc-erp-topbar">
+            <Link href="/app/dashboard" className="psc-erp-top-btn">
               رجوع
             </Link>
-            <Link href="/app/system-settings" className="psc-btn ghost">
-              إعدادات الهوية
-            </Link>
+            <button
+              type="button"
+              className="psc-erp-top-btn"
+              onClick={() => setToolsOpen((v) => !v)}
+              aria-expanded={toolsOpen}
+            >
+              بحث وفلاتر
+            </button>
           </div>
-        </header>
 
-        {coverage && (
-          <div className="psc-coverage">
-            <div>
-              <strong>{coverage.total}</strong>
-              <span>إجمالي الصفحات في السجل</span>
-            </div>
-            <div>
-              <strong>{coverage.operational}</strong>
-              <span>تشغيلية بالكامل</span>
-            </div>
-            <div>
-              <strong>{coverage.partial}</strong>
-              <span>جزئية</span>
-            </div>
-            <div>
-              <strong>{coverage.planned}</strong>
-              <span>مخططة / غير منفذة كصفحة مستقلة</span>
-            </div>
+          <div className="psc-erp-title-box">
+            <h1>إعدادات الصفحات</h1>
           </div>
-        )}
+          <p className="psc-erp-lead">
+            كل بند يفتح محرر إعدادات يُحفظ في PostgreSQL ويُطبَّق على الوظيفة المرتبطة.
+          </p>
 
-        <div className="psc-filters">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="بحث سريع عن صفحة..."
-            aria-label="بحث"
-          />
-          <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="التصنيف">
-            <option value="all">كل الأقسام</option>
-            {categories.map(([k, label]) => (
-              <option key={k} value={k}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
-            <option value="all">كل الحالات</option>
-            {(Object.keys(STATUS_LABELS) as PageSettingsStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-          <button type="button" className="psc-btn primary" onClick={load}>
-            تحديث
-          </button>
+          {toolsOpen && (
+            <div className="psc-erp-tools">
+              {coverage && (
+                <div className="psc-erp-stats" aria-label="إحصائيات التغطية">
+                  <span>
+                    <strong>{coverage.total}</strong> سجل
+                  </span>
+                  <span>
+                    <strong>{coverage.operational}</strong> تشغيلية
+                  </span>
+                  <span>
+                    <strong>{coverage.partial}</strong> جزئية
+                  </span>
+                  <span>
+                    <strong>{coverage.planned}</strong> مخططة
+                  </span>
+                </div>
+              )}
+              <div className="psc-erp-filters">
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="بحث عن صفحة..."
+                  aria-label="بحث"
+                />
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  aria-label="التصنيف"
+                >
+                  <option value="all">كل الأقسام</option>
+                  {categories.map(([k, label]) => (
+                    <option key={k} value={k}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  aria-label="الحالة"
+                >
+                  <option value="all">كل الحالات</option>
+                  {(Object.keys(STATUS_LABELS) as PageSettingsStatus[]).map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="psc-erp-filter-btn" onClick={load}>
+                  تحديث
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && <div className="psc-error">{error}</div>}
+
+          {loading ? (
+            <p className="psc-erp-loading">جاري التحميل...</p>
+          ) : (
+            <div className="psc-erp-list" role="list">
+              {pages.map((p) => (
+                <Link
+                  key={p.pageKey}
+                  href={p.settingsHref}
+                  className="psc-erp-card"
+                  role="listitem"
+                >
+                  <div className="psc-erp-card-title-row">
+                    <h2>{p.title}</h2>
+                    <span className={`psc-erp-status psc-erp-status-${p.status}`}>
+                      {STATUS_LABELS[p.status]}
+                    </span>
+                  </div>
+                  <p className="psc-erp-card-desc">{p.description}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
-
-        {error && <div className="psc-error">{error}</div>}
-        {loading ? (
-          <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري التحميل...</p>
-        ) : (
-          <div className="psc-list" role="list">
-            {pages.map((p) => {
-              const colors = STATUS_COLORS[p.status];
-              return (
-                <article key={p.pageKey} className="psc-card" role="listitem">
-                  <div className="psc-card-main">
-                    <div className="psc-card-top">
-                      <span className="psc-icon" aria-hidden>
-                        {p.icon}
-                      </span>
-                      <div className="psc-card-title">
-                        <h2>
-                          <Link href={p.settingsHref}>{p.title}</Link>
-                        </h2>
-                        <span className="psc-status" style={{ background: colors.bg, color: colors.fg }}>
-                          {STATUS_LABELS[p.status]}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="psc-desc">{p.description}</p>
-                    <p className="psc-meta">
-                      {CATEGORY_LABELS[p.category]} · {p.pageKey}
-                      {p.saved ? " · محفوظة في قاعدة البيانات" : " · قيم افتراضية"}
-                    </p>
-                    {p.gapReason && p.status !== "operational" && (
-                      <p className="psc-gap">{p.gapReason}</p>
-                    )}
-                  </div>
-                  <div className="psc-card-actions">
-                    <Link href={p.settingsHref} className="psc-btn primary">
-                      فتح الإعدادات
-                    </Link>
-                    <Link href={p.pageHref} className="psc-btn ghost">
-                      الصفحة
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
       </div>
     </AppShell>
   );

@@ -48,7 +48,7 @@ function ensureCss() {
   if (document.querySelector('link[data-page-settings-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/page-settings.css?v=page-settings-20261027b";
+  link.href = "/erp-app/page-settings.css?v=page-settings-erp-ref-20261027c";
   link.setAttribute("data-page-settings-css", "1");
   document.head.appendChild(link);
 }
