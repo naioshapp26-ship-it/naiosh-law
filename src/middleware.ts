@@ -32,7 +32,9 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/api/portal") ||
       pathname.startsWith("/api/health") ||
       pathname.startsWith("/api/setup") ||
-      pathname.startsWith("/api/creator-pages");
+      pathname.startsWith("/api/creator-pages") ||
+      // Resolved portal page-settings only (staff catalog remains blocked)
+      pathname === "/api/page-settings/client-portal";
     if (!clientAllowed && session?.ok && session.role === "client") {
       return NextResponse.json({ error: "صلاحية غير كافية — بوابة العميل فقط" }, { status: 403 });
     }

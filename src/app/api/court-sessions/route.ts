@@ -5,6 +5,7 @@ import {
   attachCustomValuesToRows,
   persistCustomFieldsFromBody,
 } from "@/lib/page-settings/record-custom-api";
+import { assertPageAction } from "@/lib/page-settings/page-action-auth";
 
 export async function GET() {
   const { error } = await requireAuth();
@@ -29,6 +30,13 @@ export async function GET() {
 export async function POST(request: Request) {
   const { error, session } = await requireWrite();
   if (error) return error;
+  const gate = await assertPageAction({
+    pageKey: "court-sessions",
+    action: "create",
+    role: session!.role,
+    userId: session!.sub,
+  });
+  if (!gate.ok) return gate.response;
   const body = await request.json();
 
   const caseId = body.caseId ? String(body.caseId) : null;
