@@ -87,6 +87,60 @@ const DEEP_TARGETS: Array<{
     apiList: "/api/module-records/general-tools",
     createPayload: { title: "مهمة اختبار", assignee: "موظف", status: "معلق", priority: "متوسط" },
   },
+  {
+    pageKey: "legal-consultations",
+    livePath: "/app/modules/legal-consultations",
+    apiList: "/api/module-records/legal-consultations",
+    createPayload: { client: "موكل", topic: "استشارة", status: "مجدولة" },
+  },
+  {
+    pageKey: "internal-requests",
+    livePath: "/app/modules/internal-requests",
+    apiList: "/api/module-records/internal-requests",
+    createPayload: { title: "طلب داخلي", requester: "موظف", status: "مفتوح" },
+  },
+  {
+    pageKey: "smart-templates",
+    livePath: "/app/modules/smart-templates",
+    apiList: "/api/module-records/smart-templates",
+    createPayload: { name: "قالب", category: "عقود", status: "نشط" },
+  },
+  {
+    pageKey: "reports-center",
+    livePath: "/app/modules/reports-center",
+    apiList: "/api/module-records/reports-center",
+    createPayload: { name: "تقرير", type: "قضايا", status: "جاهز" },
+  },
+  {
+    pageKey: "ai-center",
+    livePath: "/app/modules/ai-center",
+    apiList: "/api/module-records/ai-center",
+    createPayload: { type: "تلخيص", input: "نص", status: "مكتمل" },
+  },
+  {
+    pageKey: "court-sessions",
+    livePath: "/app/modules/court-sessions",
+    apiList: "/api/court-sessions",
+    createPayload: { caseNo: "#D", court: "محكمة", date: "2026-12-01", status: "مجدولة" },
+  },
+  {
+    pageKey: "legal-accounting",
+    livePath: "/app/modules/legal-accounting",
+    apiList: "/api/financial-records",
+    createPayload: { client: "عميل", type: "رسوم", amount: 50, paid: 0, status: "غير مسدد" },
+  },
+  {
+    pageKey: "notifications-center",
+    livePath: "/app/modules/notifications-center",
+    apiList: "/api/notification-rules",
+    createPayload: { title: "قاعدة", trigger: "حدث", status: "نشط" },
+  },
+  {
+    pageKey: "integrations",
+    livePath: "/app/modules/integrations",
+    apiList: "/api/integrations",
+    createPayload: { name: `تكامل ${Date.now()}`, status: "متصل" },
+  },
 ];
 
 async function deepOne(
@@ -163,7 +217,8 @@ async function deepOne(
   // Live after save (no preview)
   await page.goto(`${BASE}${t.livePath}`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
-  const h1 = (await page.locator("h1").first().textContent()) || "";
+  await page.waitForSelector("h1", { timeout: 20000 }).catch(() => null);
+  const h1 = (await page.locator("h1").first().textContent().catch(() => "")) || "";
   record(`${prefix}-live-title`, h1.includes(String(stamp)), `h1=${h1}`);
 
   const exportVisible = await page
@@ -281,25 +336,46 @@ async function main() {
   });
 
   // Client portal isolation — client cannot read staff page-settings catalog
-  const clientCtx = await browser.newContext({ locale: "ar" });
-  const clientPage = await clientCtx.newPage();
-  await loginAs(clientCtx, clientPage, CLIENT);
-  const clientCatalog = await api(clientCtx, "GET", "/api/page-settings");
-  record("portal-deny-staff-catalog", clientCatalog.status === 403 || clientCatalog.status === 401, `status=${clientCatalog.status}`);
-  const clientPortalSettings = await api(clientCtx, "GET", "/api/page-settings/client-portal");
-  record(
-    "portal-read-own-settings",
-    clientPortalSettings.status === 200,
-    `status=${clientPortalSettings.status}`
-  );
-  await clientPage.goto(`${BASE}/portal`, { waitUntil: "networkidle" });
-  await clientPage.waitForTimeout(800);
-  const portalOk = clientPage.url().includes("/portal");
-  record("portal-opens", portalOk, `url=${clientPage.url()}`);
-  await clientPage.screenshot({ path: path.join(OUT, "portal-client.png") });
-  await clientCtx.close();
+  try {
+    const clientCtx = await browser.newContext({ locale: "ar" });
+    const clientPage = await clientCtx.newPage();
+    await loginAs(clientCtx, clientPage, CLIENT);
+    const clientCatalog = await api(clientCtx, "GET", "/api/page-settings");
+    record(
+      "portal-deny-staff-catalog",
+      clientCatalog.status === 403 || clientCatalog.status === 401,
+      `status=${clientCatalog.status}`
+    );
+    const clientPortalSettings = await api(clientCtx, "GET", "/api/page-settings/client-portal");
+    record(
+      "portal-read-own-settings",
+      clientPortalSettings.status === 200,
+      `status=${clientPortalSettings.status}`
+    );
+    // Client must not create cases via staff API
+    const clientCase = await api(clientCtx, "POST", "/api/cases", {
+      client: "اختراق",
+      type: "مدني",
+      court: "x",
+      status: "نشطة",
+    });
+    record(
+      "portal-deny-staff-case-write",
+      clientCase.status === 401 || clientCase.status === 403,
+      `status=${clientCase.status}`
+    );
+    await clientPage.goto(`${BASE}/portal`, { waitUntil: "networkidle" });
+    await clientPage.waitForTimeout(800);
+    const portalOk = clientPage.url().includes("/portal");
+    record("portal-opens", portalOk, `url=${clientPage.url()}`);
+    await clientPage.screenshot({ path: path.join(OUT, "portal-client.png") });
+    await clientCtx.close();
+  } catch (e) {
+    record("portal-suite", false, e instanceof Error ? e.message : String(e));
+  }
 
   // Dashboard + messages smoke as admin
+  await loginAs(ctx, page, ADMIN);
   await page.goto(`${BASE}/app/dashboard`, { waitUntil: "networkidle" });
   await page.waitForTimeout(500);
   record("dashboard-opens", page.url().includes("/dashboard"), `url=${page.url()}`);
@@ -307,9 +383,49 @@ async function main() {
   await page.waitForTimeout(500);
   record(
     "messages-opens",
-    page.url().includes("client-messages") || page.url().includes("login"),
+    page.url().includes("client-messages"),
     `url=${page.url()}`
   );
+
+  // Title-only apply for standalone pages without ModuleRecord CRUD in this suite
+  for (const stand of [
+    { pageKey: "archive", livePath: "/app/archive" },
+    { pageKey: "professional-network", livePath: "/app/professional-network" },
+    { pageKey: "legal-finance", livePath: "/app/legal-finance" },
+    { pageKey: "administration", livePath: "/app/modules/administration" },
+    { pageKey: "client-portal", livePath: "/portal" },
+  ]) {
+    const get = await api(ctx, "GET", `/api/page-settings/${stand.pageKey}`);
+    if (get.status !== 200) {
+      record(`${stand.pageKey}-standalone-load`, false, `status=${get.status}`);
+      continue;
+    }
+    const values = structuredClone(get.json.resolved?.values ?? get.json.defaults);
+    const prev = structuredClone(values);
+    const title = `Standalone ${stand.pageKey} ${stamp}`;
+    values.display = { ...(values.display ?? {}), title };
+    const save = await api(ctx, "PUT", `/api/page-settings/${stand.pageKey}`, {
+      scope: "global",
+      values,
+    });
+    if (stand.pageKey === "client-portal") {
+      // portal title may not show to staff the same way — just verify save + restore
+      record(`${stand.pageKey}-save`, save.status === 200, `status=${save.status}`);
+    } else {
+      await page.goto(`${BASE}${stand.livePath}`, { waitUntil: "networkidle" });
+      await page.waitForTimeout(600);
+      const text = await page.locator("body").innerText();
+      record(
+        `${stand.pageKey}-standalone-title`,
+        save.status === 200 && text.includes(String(stamp)),
+        `save=${save.status}`
+      );
+    }
+    await api(ctx, "PUT", `/api/page-settings/${stand.pageKey}`, {
+      scope: "global",
+      values: prev,
+    });
+  }
 
   // Inventory: classify planned registry
   const catalog = await api(ctx, "GET", "/api/page-settings");
