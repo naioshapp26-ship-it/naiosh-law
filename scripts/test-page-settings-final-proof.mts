@@ -192,7 +192,7 @@ async function deepModule(
       await reportsBtn.click();
       const [download] = await Promise.all([
         page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
-        page.getByRole("button", { name: /CSV/ }).click(),
+        page.getByRole("button", { name: "تنزيل CSV", exact: true }).click(),
       ]);
       if (download) {
         const dest = path.join(OUT, `${pageKey}-export.csv`);
