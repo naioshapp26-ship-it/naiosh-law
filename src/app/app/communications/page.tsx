@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   PageHeader,
@@ -11,11 +11,17 @@ import {
   useSeedDemo,
   useToast,
 } from "@/components/domain-page";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type Tab = "branches" | "rules" | "logs" | "integrations" | "send";
 
@@ -166,6 +172,7 @@ const btnStyle: React.CSSProperties = {
 
 export default function CommunicationsPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("communications");
   const [tab, setTab] = useState<Tab>("branches");
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -314,6 +321,33 @@ export default function CommunicationsPage() {
     }
   };
 
+  const showBranches = specBool(pageSettings, "showBranches", true);
+  const showRules = specBool(pageSettings, "showRules", true);
+  const showLogs = specBool(pageSettings, "showLogs", true);
+  const showIntegrations = specBool(pageSettings, "showIntegrations", true);
+  const allowSendTest = specBool(pageSettings, "allowSendTest", true);
+  const allowSeedDemo = specBool(pageSettings, "allowSeedDemo", true);
+  const allowCreate = pageSettings.actions?.allowCreate !== false;
+
+  const visibleTabs = useMemo(
+    () =>
+      tabs.filter((t) => {
+        if (t.key === "branches") return showBranches;
+        if (t.key === "rules") return showRules;
+        if (t.key === "logs") return showLogs;
+        if (t.key === "integrations") return showIntegrations;
+        if (t.key === "send") return allowSendTest;
+        return true;
+      }),
+    [showBranches, showRules, showLogs, showIntegrations, allowSendTest]
+  );
+
+  useEffect(() => {
+    if (visibleTabs.length && !visibleTabs.some((t) => t.key === tab)) {
+      setTab(visibleTabs[0].key);
+    }
+  }, [visibleTabs, tab]);
+
   if (!ready || !user) return null;
 
   const canWrite = canWriteRole(user.role);
@@ -324,56 +358,63 @@ export default function CommunicationsPage() {
       {Toast}
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsAppliedChrome pageKey="communications" settings={pageSettings} />
         <PageHeader
           icon="🛎️"
-          title="الإشعارات والتكاملات"
-          subtitle="فروع متعددة، قواعد إشعار، Resend للبريد، Twilio للرسائل والواتساب"
+          title={pageSettings.display?.title?.trim() || "الإشعارات والتكاملات"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "فروع متعددة، قواعد إشعار، Resend للبريد، Twilio للرسائل والواتساب"
+          }
           actions={
             <>
-              {canWrite && canAdd && (
+              <SettingsLinkButton pageKey="communications" />
+              {canWrite && allowCreate && canAdd && (
                 <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
               )}
-              {canWrite && (
+              {canWrite && allowSeedDemo && (
                 <BtnSecondary onClick={seed}>{seeding ? "⏳ ..." : "📦 بيانات تجريبية"}</BtnSecondary>
               )}
             </>
           }
         />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-            gap: "0.75rem",
-            marginBottom: "1.25rem",
-          }}
-        >
-          {[
-            { label: "الفروع", value: branches.length, color: "#0a0a12" },
-            { label: "قواعد نشطة", value: rules.filter((r) => r.status === "نشط").length, color: "#22c55e" },
-            { label: "تكاملات", value: integrations.length, color: "#0ea5e9" },
-            { label: "إشعارات اليوم", value: logs.length, color: "#101D32" },
-          ].map((s) => (
-            <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
-              <p
-                style={{
-                  fontWeight: 800,
-                  fontSize: "1.05rem",
-                  color: s.color,
-                  fontVariantNumeric: "tabular-nums",
-                  direction: "ltr",
-                  unicodeBidi: "isolate",
-                }}
-              >
-                {formatNumber(s.value, { maximumFractionDigits: 0 })}
-              </p>
-            </div>
-          ))}
-        </div>
+        {pageSettings.display?.showKpis !== false ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              gap: "0.75rem",
+              marginBottom: "1.25rem",
+            }}
+          >
+            {[
+              { label: "الفروع", value: branches.length, color: "#0a0a12" },
+              { label: "قواعد نشطة", value: rules.filter((r) => r.status === "نشط").length, color: "#22c55e" },
+              { label: "تكاملات", value: integrations.length, color: "#0ea5e9" },
+              { label: "إشعارات اليوم", value: logs.length, color: "#101D32" },
+            ].map((s) => (
+              <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
+                <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
+                <p
+                  style={{
+                    fontWeight: 800,
+                    fontSize: "1.05rem",
+                    color: s.color,
+                    fontVariantNumeric: "tabular-nums",
+                    direction: "ltr",
+                    unicodeBidi: "isolate",
+                  }}
+                >
+                  {formatNumber(s.value, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.25rem" }}>
-          {tabs.map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t.key}
               type="button"
@@ -402,8 +443,8 @@ export default function CommunicationsPage() {
             icon="🛎️"
             title="لا توجد بيانات اتصالات"
             description="أضف فرعاً أو قاعدة إشعار، أو حمّل البيانات التجريبية"
-            onSeed={seed}
-            onAdd={canWrite && canAdd ? () => setAddOpen(true) : undefined}
+            onSeed={allowSeedDemo ? seed : undefined}
+            onAdd={canWrite && allowCreate && canAdd ? () => setAddOpen(true) : undefined}
             seeding={seeding}
             canWrite={canWrite}
           />

@@ -6,12 +6,18 @@ import { useSession } from "@/lib/session";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DarkModeToggle } from "@/components/color-mode";
 import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
+import {
   DEFAULT_SITE_THEME,
   getHeroBannerSrc,
   getLogoSrc,
   type SiteTheme,
 } from "@/lib/site-settings";
 import { isHeroVideoSrc } from "@/lib/hero-media";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type HeroMediaItem = {
   id: string;
@@ -227,6 +233,7 @@ function themeFromApi(data: Partial<SiteTheme>): SiteTheme {
 
 export default function SystemSettingsPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("system-settings");
   const { updateLocal, refresh } = useSiteTheme();
 
   const [form, setForm] = useState<SiteTheme>(DEFAULT_SITE_THEME);
@@ -563,6 +570,14 @@ export default function SystemSettingsPage() {
   };
 
   const save = async () => {
+    if (
+      !(
+        specBool(pageSettings, "allowSave", true) &&
+        pageSettings.actions?.allowEdit !== false
+      )
+    ) {
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -671,6 +686,11 @@ export default function SystemSettingsPage() {
   const heroIsVideo = isHeroVideoSrc(heroPreview, form.heroMediaKind);
   const orderedMedia = [...heroMedia].sort((a, b) => a.orderIndex - b.orderIndex);
   const orderedSections = [...sections].sort((a, b) => a.orderIndex - b.orderIndex);
+  const showBranding = specBool(pageSettings, "showBranding", true);
+  const showHero = specBool(pageSettings, "showHero", true);
+  const showHomepageSections = specBool(pageSettings, "showHomepageSections", true);
+  const allowSave =
+    specBool(pageSettings, "allowSave", true) && pageSettings.actions?.allowEdit !== false;
 
   return (
     <div className="ss-page">
@@ -726,14 +746,16 @@ export default function SystemSettingsPage() {
             </div>
             <div>
               <h1 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", lineHeight: 1.25, margin: 0 }}>
-                إعدادات الصفحة الرئيسية
+                {pageSettings.display?.title?.trim() || "إعدادات الصفحة الرئيسية"}
               </h1>
               <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0 }}>
-                تحكم في مظهر وهوية الصفحة الرئيسية (إعدادات الهوية)
+                {pageSettings.display?.subtitle?.trim() ||
+                  "تحكم في مظهر وهوية الصفحة الرئيسية (إعدادات الهوية)"}
               </p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <SettingsLinkButton pageKey="system-settings" />
             <DarkModeToggle />
             <a
               href="/"
@@ -772,6 +794,7 @@ export default function SystemSettingsPage() {
       </header>
 
       <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "2rem 1rem 6rem" }}>
+        <SettingsAppliedChrome pageKey="system-settings" settings={pageSettings} />
         {loading ? (
           <div className="section-card" style={{ textAlign: "center", color: "#64748b" }}>
             <i className="fas fa-circle-notch fa-spin" style={{ marginLeft: 8 }} />
@@ -852,7 +875,8 @@ export default function SystemSettingsPage() {
             </div>
 
             {/* C. Logo */}
-            <div className="section-card">
+            {showBranding ? (
+            <div className="section-card" id="branding-section">
               <h2 className="section-title">
                 <span className="section-icon" style={{ background: "#d1fae5", color: "#059669" }}>
                   <i className="fas fa-image" />
@@ -973,8 +997,10 @@ export default function SystemSettingsPage() {
                 </div>
               </div>
             </div>
+            ) : null}
 
             {/* D + E + F. Hero */}
+            {showHero ? (
             <div className="section-card" id="hero-section">
               <h2 className="section-title">
                 <span className="section-icon" style={{ background: "#dbeafe", color: "#2563eb" }}>
@@ -1474,9 +1500,11 @@ export default function SystemSettingsPage() {
                 )}
               </div>
             </div>
+            ) : null}
 
             {/* G. Dynamic sections */}
-            <div className="section-card">
+            {showHomepageSections ? (
+            <div className="section-card" id="homepage-sections">
               <h2 className="section-title">
                 <span className="section-icon" style={{ background: "#ede9fe", color: "#7c3aed" }}>
                   <i className="fas fa-table-cells-large" />
@@ -1708,6 +1736,7 @@ export default function SystemSettingsPage() {
                 )}
               </div>
             </div>
+            ) : null}
           </>
         )}
       </main>
@@ -1743,7 +1772,7 @@ export default function SystemSettingsPage() {
         <button
           type="button"
           onClick={() => void save()}
-          disabled={saving || loading}
+          disabled={saving || loading || !allowSave}
           style={{
             background: "#101D32",
             color: "#fff",
@@ -1752,7 +1781,8 @@ export default function SystemSettingsPage() {
             border: "none",
             fontWeight: 700,
             fontSize: "0.875rem",
-            cursor: saving ? "wait" : "pointer",
+            cursor: saving || !allowSave ? (saving ? "wait" : "not-allowed") : "pointer",
+            opacity: allowSave ? 1 : 0.55,
             display: "inline-flex",
             alignItems: "center",
             gap: "0.5rem",

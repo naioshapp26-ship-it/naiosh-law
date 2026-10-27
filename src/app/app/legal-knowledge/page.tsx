@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import {
@@ -12,12 +12,18 @@ import {
   PageLoader,
   useSeedDemo,
 } from "@/components/domain-page";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type Branch = {
   id: string;
@@ -53,6 +59,7 @@ const subjectFields: FormField[] = [
 
 export default function LegalKnowledgePage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("legal-knowledge");
   const [tab, setTab] = useState("branches");
   const [branches, setBranches] = useState<Branch[]>([]);
   const [specs, setSpecs] = useState<Spec[]>([]);
@@ -138,6 +145,26 @@ export default function LegalKnowledgePage() {
   const totalSpecs = branches.reduce((n, b) => n + b.specializations.length, 0);
   const totalSubjects = subjects.length;
   const isEmpty = branches.length === 0 && specs.length === 0 && subjects.length === 0;
+  const allowCreate = pageSettings.actions?.allowCreate !== false;
+  const showBranches = specBool(pageSettings, "showBranches", true);
+  const showSpecs = specBool(pageSettings, "showSpecs", true);
+  const showSubjects = specBool(pageSettings, "showSubjects", true);
+
+  const knowledgeTabs = useMemo(
+    () =>
+      [
+        showBranches ? { key: "branches", label: "الفروع", count: branches.length } : null,
+        showSpecs ? { key: "specs", label: "التخصصات", count: specs.length } : null,
+        showSubjects ? { key: "subjects", label: "المواد", count: subjects.length } : null,
+      ].filter(Boolean) as { key: string; label: string; count: number }[],
+    [showBranches, showSpecs, showSubjects, branches.length, specs.length, subjects.length]
+  );
+
+  useEffect(() => {
+    if (knowledgeTabs.length && !knowledgeTabs.some((t) => t.key === tab)) {
+      setTab(knowledgeTabs[0].key);
+    }
+  }, [knowledgeTabs, tab]);
 
   const specFieldsWithOptions: FormField[] = specFields.map((f) =>
     f.key === "branchName" ? { ...f, options: branchOptions } : f
@@ -149,12 +176,17 @@ export default function LegalKnowledgePage() {
     <AppShell>
       {Toast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsAppliedChrome pageKey="legal-knowledge" settings={pageSettings} />
         <PageHeader
           icon="📚"
-          title="التصنيف القانوني"
-          subtitle="شجرة الفروع والتخصصات والمواد القانونية — فلترة القضايا والاستشارات حسب التخصص"
+          title={pageSettings.display?.title?.trim() || "التصنيف القانوني"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "شجرة الفروع والتخصصات والمواد القانونية — فلترة القضايا والاستشارات حسب التخصص"
+          }
           actions={
             <>
+              <SettingsLinkButton pageKey="legal-knowledge" />
               <Link
                 href="/app/international-laws"
                 style={{
@@ -171,9 +203,11 @@ export default function LegalKnowledgePage() {
               >
                 🌐 منظومة القوانين الدولية (8 محاور)
               </Link>
-              <BtnPrimary onClick={() => openAdd(tab === "subjects" ? "subject" : tab === "specs" ? "spec" : "branch")} disabled={!canWrite}>
-                ➕ إضافة {tab === "subjects" ? "مادة" : tab === "specs" ? "تخصص" : "فرع"}
-              </BtnPrimary>
+              {allowCreate ? (
+                <BtnPrimary onClick={() => openAdd(tab === "subjects" ? "subject" : tab === "specs" ? "spec" : "branch")} disabled={!canWrite}>
+                  ➕ إضافة {tab === "subjects" ? "مادة" : tab === "specs" ? "تخصص" : "فرع"}
+                </BtnPrimary>
+              ) : null}
               {isEmpty && (
                 <button
                   type="button"
@@ -197,24 +231,18 @@ export default function LegalKnowledgePage() {
           }
         />
 
-        <PageStats
-          stats={[
-            { label: "الفروع القانونية", value: branches.length, icon: "🌳", color: "#101D32" },
-            { label: "التخصصات", value: totalSpecs || specs.length, icon: "🎯" },
-            { label: "المواد القانونية", value: totalSubjects, icon: "📄" },
-            { label: "القضايا المرتبطة", value: branches.reduce((n, b) => n + (b._count?.cases ?? 0), 0), icon: "⚖️" },
-          ]}
-        />
+        {pageSettings.display?.showKpis !== false ? (
+          <PageStats
+            stats={[
+              { label: "الفروع القانونية", value: branches.length, icon: "🌳", color: "#101D32" },
+              { label: "التخصصات", value: totalSpecs || specs.length, icon: "🎯" },
+              { label: "المواد القانونية", value: totalSubjects, icon: "📄" },
+              { label: "القضايا المرتبطة", value: branches.reduce((n, b) => n + (b._count?.cases ?? 0), 0), icon: "⚖️" },
+            ]}
+          />
+        ) : null}
 
-        <PageTabs
-          active={tab}
-          onChange={setTab}
-          tabs={[
-            { key: "branches", label: "الفروع", count: branches.length },
-            { key: "specs", label: "التخصصات", count: specs.length },
-            { key: "subjects", label: "المواد", count: subjects.length },
-          ]}
-        />
+        <PageTabs active={tab} onChange={setTab} tabs={knowledgeTabs} />
 
         {loading ? (
           <PageLoader />
@@ -224,7 +252,7 @@ export default function LegalKnowledgePage() {
             title="لا توجد بيانات تصنيف قانوني"
             description="ابدأ بتحميل البيانات التجريبية الجاهزة أو أضف فرعاً قانونياً جديداً يدوياً"
             onSeed={seed}
-            onAdd={() => openAdd("branch")}
+            onAdd={allowCreate ? () => openAdd("branch") : undefined}
             seeding={seeding}
             canWrite={canWrite}
           />

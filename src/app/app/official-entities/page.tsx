@@ -12,12 +12,18 @@ import {
   useSeedDemo,
   useToast,
 } from "@/components/domain-page";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type Entity = {
   id: string;
@@ -54,6 +60,7 @@ const entityFields: FormField[] = [
 
 export default function OfficialEntitiesPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("official-entities");
   const [entities, setEntities] = useState<Entity[]>([]);
   const [officials, setOfficials] = useState<Official[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,6 +183,10 @@ export default function OfficialEntitiesPage() {
     await load();
   };
 
+  const allowCreate = pageSettings.actions?.allowCreate !== false;
+  const showEntities = specBool(pageSettings, "showEntities", true);
+  const showOfficials = specBool(pageSettings, "showOfficials", true);
+
   if (!ready || !user) return null;
 
   return (
@@ -183,14 +194,19 @@ export default function OfficialEntitiesPage() {
       {Toast}
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsAppliedChrome pageKey="official-entities" settings={pageSettings} />
         <PageHeader
           icon="🏢"
-          title="الجهات الرسمية والمحاكم"
-          subtitle="جهات حكومية ومحاكم ودوائر — قضاة وأمناء سر وخبراء"
+          title={pageSettings.display?.title?.trim() || "الجهات الرسمية والمحاكم"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "جهات حكومية ومحاكم ودوائر — قضاة وأمناء سر وخبراء"
+          }
           actions={
             <>
-              {canWrite && <BtnPrimary onClick={() => setModalOpen(true)}>＋ إضافة جهة</BtnPrimary>}
-              {canWrite && (
+              <SettingsLinkButton pageKey="official-entities" />
+              {canWrite && allowCreate && <BtnPrimary onClick={() => setModalOpen(true)}>＋ إضافة جهة</BtnPrimary>}
+              {canWrite && allowCreate && (
                 <BtnSecondary onClick={() => setOfficialModalOpen(true)}>＋ إضافة مسؤول</BtnSecondary>
               )}
               {canWrite && (
@@ -216,18 +232,20 @@ export default function OfficialEntitiesPage() {
           }
         />
 
-        <PageStats
-          stats={[
-            { label: "الجهات", value: entities.length, icon: "🏛️", color: "#101D32" },
-            { label: "المسؤولون", value: officials.length, icon: "👨‍⚖️" },
-            { label: "المحاكم", value: entities.filter((e) => e.type.includes("محكمة")).length, icon: "⚖️" },
-            {
-              label: "الجهات الحكومية",
-              value: entities.filter((e) => e.type === "جهة حكومية").length,
-              icon: "🏢",
-            },
-          ]}
-        />
+        {pageSettings.display?.showKpis !== false ? (
+          <PageStats
+            stats={[
+              { label: "الجهات", value: entities.length, icon: "🏛️", color: "#101D32" },
+              { label: "المسؤولون", value: officials.length, icon: "👨‍⚖️" },
+              { label: "المحاكم", value: entities.filter((e) => e.type.includes("محكمة")).length, icon: "⚖️" },
+              {
+                label: "الجهات الحكومية",
+                value: entities.filter((e) => e.type === "جهة حكومية").length,
+                icon: "🏢",
+              },
+            ]}
+          />
+        ) : null}
 
         {loading ? (
           <PageLoader />
@@ -237,72 +255,78 @@ export default function OfficialEntitiesPage() {
             title="لا توجد جهات مسجلة"
             description="أضف محكمة أو جهة حكومية، أو حمّل البيانات التجريبية"
             onSeed={seed}
-            onAdd={() => setModalOpen(true)}
+            onAdd={allowCreate ? () => setModalOpen(true) : undefined}
             seeding={seeding}
             canWrite={canWrite}
           />
         ) : (
           <>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: "1rem",
-                marginBottom: "2rem",
-              }}
-            >
-              {entities.map((e) => (
-                <div key={e.id} className="card-white" style={{ padding: "1.35rem", borderRight: "4px solid #101D32" }}>
-                  <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{e.name}</h3>
-                  <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                    {e.type} • {e.city}
-                  </p>
-                  <p style={{ fontSize: "0.78rem", color: "#475569", marginTop: "0.5rem" }}>📞 {e.phone || "—"}</p>
-                  <p style={{ fontSize: "0.78rem", color: "#101D32", marginTop: "0.5rem", fontWeight: 700 }}>
-                    {e.officials} مسؤول مسجل • {e.status}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12" }}>المسؤولون القضائيون</h2>
-              {canWrite && (
-                <button
-                  type="button"
-                  onClick={() => setOfficialModalOpen(true)}
-                  className="btn-primary"
-                  style={{ padding: "0.45rem 1rem", fontSize: "0.8rem" }}
-                >
-                  ＋ إضافة مسؤول
-                </button>
-              )}
-            </div>
-            <div className="card-white" style={{ padding: "0.5rem 1rem" }}>
-              {officials.length === 0 ? (
-                <p style={{ color: "#64748b", textAlign: "center", padding: "1.5rem" }}>لا يوجد مسؤولون مسجلون</p>
-              ) : (
-                officials.map((o) => (
-                  <div
-                    key={o.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "0.85rem 0",
-                      borderBottom: "1px solid #f1f5f9",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    <span>
-                      <strong>{o.name}</strong> — {o.role}
-                    </span>
-                    <span style={{ color: "#64748b" }}>
-                      {o.entity?.name ?? o.court} {o.chamber ? `• ${o.chamber}` : ""}
-                    </span>
+            {showEntities ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                  gap: "1rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                {entities.map((e) => (
+                  <div key={e.id} className="card-white" style={{ padding: "1.35rem", borderRight: "4px solid #101D32" }}>
+                    <h3 style={{ fontWeight: 800, color: "#0a0a12", marginBottom: "0.35rem" }}>{e.name}</h3>
+                    <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                      {e.type} • {e.city}
+                    </p>
+                    <p style={{ fontSize: "0.78rem", color: "#475569", marginTop: "0.5rem" }}>📞 {e.phone || "—"}</p>
+                    <p style={{ fontSize: "0.78rem", color: "#101D32", marginTop: "0.5rem", fontWeight: 700 }}>
+                      {e.officials} مسؤول مسجل • {e.status}
+                    </p>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            ) : null}
+
+            {showOfficials ? (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                  <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0a0a12" }}>المسؤولون القضائيون</h2>
+                  {canWrite && allowCreate && (
+                    <button
+                      type="button"
+                      onClick={() => setOfficialModalOpen(true)}
+                      className="btn-primary"
+                      style={{ padding: "0.45rem 1rem", fontSize: "0.8rem" }}
+                    >
+                      ＋ إضافة مسؤول
+                    </button>
+                  )}
+                </div>
+                <div className="card-white" style={{ padding: "0.5rem 1rem" }}>
+                  {officials.length === 0 ? (
+                    <p style={{ color: "#64748b", textAlign: "center", padding: "1.5rem" }}>لا يوجد مسؤولون مسجلون</p>
+                  ) : (
+                    officials.map((o) => (
+                      <div
+                        key={o.id}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          padding: "0.85rem 0",
+                          borderBottom: "1px solid #f1f5f9",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        <span>
+                          <strong>{o.name}</strong> — {o.role}
+                        </span>
+                        <span style={{ color: "#64748b" }}>
+                          {o.entity?.name ?? o.court} {o.chamber ? `• ${o.chamber}` : ""}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : null}
           </>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   PageHeader,
@@ -11,11 +11,17 @@ import {
   useSeedDemo,
   useToast,
 } from "@/components/domain-page";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
 import type { FormField } from "@/data/module-configs";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type Tab = "supply" | "shipments" | "international" | "branches" | "alerts";
 
@@ -180,6 +186,7 @@ const ENDPOINTS: Record<Tab, string> = {
 
 export default function GlobalOperationsPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("global-operations");
   const [tab, setTab] = useState<Tab>("supply");
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -300,6 +307,33 @@ export default function GlobalOperationsPage() {
     }
   };
 
+  const showSupply = specBool(pageSettings, "showSupply", true);
+  const showShipments = specBool(pageSettings, "showShipments", true);
+  const showInternational = specBool(pageSettings, "showInternational", true);
+  const showBranches = specBool(pageSettings, "showBranches", true);
+  const showAlerts = specBool(pageSettings, "showAlerts", true);
+  const allowAcknowledgeAlerts = specBool(pageSettings, "allowAcknowledgeAlerts", true);
+  const allowCreate = pageSettings.actions?.allowCreate !== false;
+
+  const visibleTabs = useMemo(
+    () =>
+      tabs.filter((t) => {
+        if (t.key === "supply") return showSupply;
+        if (t.key === "shipments") return showShipments;
+        if (t.key === "international") return showInternational;
+        if (t.key === "branches") return showBranches;
+        if (t.key === "alerts") return showAlerts;
+        return true;
+      }),
+    [showSupply, showShipments, showInternational, showBranches, showAlerts]
+  );
+
+  useEffect(() => {
+    if (visibleTabs.length && !visibleTabs.some((t) => t.key === tab)) {
+      setTab(visibleTabs[0].key);
+    }
+  }, [visibleTabs, tab]);
+
   if (!ready || !user) return null;
 
   const canWrite = canWriteRole(user.role);
@@ -318,13 +352,18 @@ export default function GlobalOperationsPage() {
       {Toast}
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsAppliedChrome pageKey="global-operations" settings={pageSettings} />
         <PageHeader
           icon="🌍"
-          title="العمليات العالمية"
-          subtitle="سلسلة التوريد، القانون الدولي، فروع نايوش العالمية، وتنبيهات التعليمات الدائرية"
+          title={pageSettings.display?.title?.trim() || "العمليات العالمية"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "سلسلة التوريد، القانون الدولي، فروع نايوش العالمية، وتنبيهات التعليمات الدائرية"
+          }
           actions={
             <>
-              {canWrite && (
+              <SettingsLinkButton pageKey="global-operations" />
+              {canWrite && allowCreate && (
                 <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
               )}
               {canWrite && (
@@ -334,41 +373,43 @@ export default function GlobalOperationsPage() {
           }
         />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-            gap: "0.75rem",
-            marginBottom: "1.25rem",
-          }}
-        >
-          {[
-            { label: "شركاء التوريد", value: partners.length, color: "#0a0a12" },
-            { label: "الشحنات", value: shipments.length, color: "#101D32" },
-            { label: "قضايا دولية", value: matters.length, color: "#2563eb" },
-            { label: "فروع نايوش", value: branches.length, color: "#22c55e" },
-            { label: "تنبيهات جديدة", value: newAlerts, color: "#f59e0b" },
-          ].map((s) => (
-            <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
-              <p
-                style={{
-                  fontWeight: 800,
-                  fontSize: "1.05rem",
-                  color: s.color,
-                  fontVariantNumeric: "tabular-nums",
-                  direction: "ltr",
-                  unicodeBidi: "isolate",
-                }}
-              >
-                {formatNumber(s.value, { maximumFractionDigits: 0 })}
-              </p>
-            </div>
-          ))}
-        </div>
+        {pageSettings.display?.showKpis !== false ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              gap: "0.75rem",
+              marginBottom: "1.25rem",
+            }}
+          >
+            {[
+              { label: "شركاء التوريد", value: partners.length, color: "#0a0a12" },
+              { label: "الشحنات", value: shipments.length, color: "#101D32" },
+              { label: "قضايا دولية", value: matters.length, color: "#2563eb" },
+              { label: "فروع نايوش", value: branches.length, color: "#22c55e" },
+              { label: "تنبيهات جديدة", value: newAlerts, color: "#f59e0b" },
+            ].map((s) => (
+              <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
+                <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
+                <p
+                  style={{
+                    fontWeight: 800,
+                    fontSize: "1.05rem",
+                    color: s.color,
+                    fontVariantNumeric: "tabular-nums",
+                    direction: "ltr",
+                    unicodeBidi: "isolate",
+                  }}
+                >
+                  {formatNumber(s.value, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.25rem" }}>
-          {tabs.map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t.key}
               type="button"
@@ -398,7 +439,7 @@ export default function GlobalOperationsPage() {
             title="لا توجد بيانات عمليات"
             description="أضف شريكاً أو فرعاً، أو حمّل البيانات التجريبية"
             onSeed={seed}
-            onAdd={canWrite ? () => setAddOpen(true) : undefined}
+            onAdd={canWrite && allowCreate ? () => setAddOpen(true) : undefined}
             seeding={seeding}
             canWrite={canWrite}
           />
@@ -615,7 +656,7 @@ export default function GlobalOperationsPage() {
                         {a.priority}
                       </p>
                       <p style={{ fontSize: "0.75rem", color: "#64748b" }}>موعد: {a.dueDate}</p>
-                      {a.status === "جديد" && (
+                      {a.status === "جديد" && allowAcknowledgeAlerts && (
                         <button
                           type="button"
                           onClick={() => ackAlert(a.id)}

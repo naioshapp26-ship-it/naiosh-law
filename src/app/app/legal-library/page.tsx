@@ -11,6 +11,11 @@ import {
   useSeedDemo,
   useToast,
 } from "@/components/domain-page";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import { Modal } from "@/components/ui/modal";
 import { useSession, canWriteRole } from "@/lib/session";
 import { formatNumber } from "@/lib/format";
@@ -19,6 +24,7 @@ import { extractAttachments, persistFormAttachments, stripAttachments } from "@/
 import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { isRemoteMediaAttachment, mediaKindFromAttachment } from "@/lib/file-upload";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 
 type Tab = "documents" | "articles" | "circulars";
 
@@ -117,6 +123,7 @@ const circularFields: FormField[] = [
 
 export default function LegalLibraryPage() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("legal-library");
   const [tab, setTab] = useState<Tab>("documents");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -241,6 +248,29 @@ export default function LegalLibraryPage() {
     }
   };
 
+  const showDocuments = specBool(pageSettings, "showDocuments", true);
+  const showArticles = specBool(pageSettings, "showArticles", true);
+  const showCirculars = specBool(pageSettings, "showCirculars", true);
+  const enableSearch = specBool(pageSettings, "enableSearch", true);
+  const allowCreate = pageSettings.actions?.allowCreate !== false;
+
+  const visibleTabs = useMemo(
+    () =>
+      tabs.filter((t) => {
+        if (t.key === "documents") return showDocuments;
+        if (t.key === "articles") return showArticles;
+        if (t.key === "circulars") return showCirculars;
+        return true;
+      }),
+    [showDocuments, showArticles, showCirculars]
+  );
+
+  useEffect(() => {
+    if (visibleTabs.length && !visibleTabs.some((t) => t.key === tab)) {
+      setTab(visibleTabs[0].key);
+    }
+  }, [visibleTabs, tab]);
+
   if (!ready || !user) return null;
 
   const canWrite = canWriteRole(user.role);
@@ -252,13 +282,18 @@ export default function LegalLibraryPage() {
       {Toast}
       {ActionToast}
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsAppliedChrome pageKey="legal-library" settings={pageSettings} />
         <PageHeader
           icon="📖"
-          title="المكتبة القانونية"
-          subtitle="مستندات، مقالات قانونية، وتعليمات دائرية — بحث وفلترة حسب الفرع والتخصص"
+          title={pageSettings.display?.title?.trim() || "المكتبة القانونية"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "مستندات، مقالات قانونية، وتعليمات دائرية — بحث وفلترة حسب الفرع والتخصص"
+          }
           actions={
             <>
-              {canWrite && (
+              <SettingsLinkButton pageKey="legal-library" />
+              {canWrite && allowCreate && (
                 <BtnPrimary onClick={() => setAddOpen(true)}>＋ {activeTab.addLabel}</BtnPrimary>
               )}
               {canWrite && <BtnSecondary onClick={seed}>{seeding ? "⏳ ..." : "📦 بيانات تجريبية"}</BtnSecondary>}
@@ -266,56 +301,60 @@ export default function LegalLibraryPage() {
           }
         />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: "0.75rem",
-            marginBottom: "1.25rem",
-          }}
-        >
-          {[
-            { label: "المستندات", value: stats.documents, color: "#0a0a12" },
-            { label: "المقالات", value: stats.articles, color: "#101D32" },
-            { label: "تعليمات سارية", value: stats.circulars, color: "#22c55e" },
-          ].map((s) => (
-            <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
-              <p
-                style={{
-                  fontWeight: 800,
-                  fontSize: "1.05rem",
-                  color: s.color,
-                  fontVariantNumeric: "tabular-nums",
-                  direction: "ltr",
-                  unicodeBidi: "isolate",
-                }}
-              >
-                {formatNumber(s.value, { maximumFractionDigits: 0 })}
-              </p>
-            </div>
-          ))}
-        </div>
+        {pageSettings.display?.showKpis !== false ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+              gap: "0.75rem",
+              marginBottom: "1.25rem",
+            }}
+          >
+            {[
+              { label: "المستندات", value: stats.documents, color: "#0a0a12" },
+              { label: "المقالات", value: stats.articles, color: "#101D32" },
+              { label: "تعليمات سارية", value: stats.circulars, color: "#22c55e" },
+            ].map((s) => (
+              <div key={s.label} className="card-white" style={{ padding: "1rem 1.1rem" }}>
+                <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem" }}>{s.label}</p>
+                <p
+                  style={{
+                    fontWeight: 800,
+                    fontSize: "1.05rem",
+                    color: s.color,
+                    fontVariantNumeric: "tabular-nums",
+                    direction: "ltr",
+                    unicodeBidi: "isolate",
+                  }}
+                >
+                  {formatNumber(s.value, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
-        <input
-          type="search"
-          placeholder="بحث في المكتبة..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: "100%",
-            maxWidth: 420,
-            padding: "0.65rem 0.9rem",
-            borderRadius: "10px",
-            border: "1px solid #e2e8f0",
-            fontFamily: "var(--font-cairo)",
-            fontSize: "0.85rem",
-            marginBottom: "1rem",
-          }}
-        />
+        {enableSearch ? (
+          <input
+            type="search"
+            placeholder="بحث في المكتبة..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              padding: "0.65rem 0.9rem",
+              borderRadius: "10px",
+              border: "1px solid #e2e8f0",
+              fontFamily: "var(--font-cairo)",
+              fontSize: "0.85rem",
+              marginBottom: "1rem",
+            }}
+          />
+        ) : null}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.25rem" }}>
-          {tabs.map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t.key}
               type="button"
@@ -345,7 +384,7 @@ export default function LegalLibraryPage() {
             title="المكتبة فارغة"
             description="أضف قانونًا أو مقالة أو تعليمة، أو حمّل البيانات التجريبية"
             onSeed={seed}
-            onAdd={canWrite ? () => setAddOpen(true) : undefined}
+            onAdd={canWrite && allowCreate ? () => setAddOpen(true) : undefined}
             seeding={seeding}
             canWrite={canWrite}
           />
