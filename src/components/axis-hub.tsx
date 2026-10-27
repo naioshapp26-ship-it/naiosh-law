@@ -8,6 +8,12 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession, canWriteRole } from "@/lib/session";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import {
   ADD_AXIS_ITEM_FORM_FIELDS,
   appendCustomAxisItem,
@@ -171,8 +177,19 @@ function AddAxisItemButton({ onClick }: { onClick: () => void }) {
 }
 
 export function AxisHubPage({ axis, userName }: Props) {
+  const pageKey = `axis-${axis.slug}`;
+  const pageSettings = usePageSettings(pageKey);
   const { user } = useSession();
-  const canWrite = user ? canWriteRole(user.role) : false;
+  const canWriteBase = user ? canWriteRole(user.role) : false;
+  const allowItemEdit =
+    canWriteBase &&
+    specBool(pageSettings, "allowItemEdit", true) &&
+    pageSettings.actions?.allowCreate !== false;
+  const canWrite = allowItemEdit;
+  const showItems = specBool(pageSettings, "showItems", true);
+  const showDescription = specBool(pageSettings, "showDescription", true);
+  const axisTitle = pageSettings.display?.title?.trim() || axis.title;
+  const axisSubtitle = pageSettings.display?.subtitle?.trim() || axis.subtitle;
   const [customItems, setCustomItems] = useState<CustomAxisItem[]>([]);
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
   const [overrides, setOverrides] = useState<Record<string, AxisItemOverride>>({});
@@ -345,17 +362,23 @@ export function AxisHubPage({ axis, userName }: Props) {
                 {axis.icon}
               </span>
               <div>
-                <p style={{ fontSize: "0.75rem", opacity: 0.8, marginBottom: "0.15rem" }}>{axis.subtitle}</p>
-                <h1 style={{ fontSize: "1.55rem", fontWeight: 900 }}>{axis.title}</h1>
+                <p style={{ fontSize: "0.75rem", opacity: 0.8, marginBottom: "0.15rem" }}>{axisSubtitle}</p>
+                <h1 style={{ fontSize: "1.55rem", fontWeight: 900 }}>{axisTitle}</h1>
               </div>
             </div>
+            {showDescription ? (
             <p style={{ fontSize: "0.9rem", opacity: 0.85, maxWidth: 560, lineHeight: 1.7 }}>
               مرحبًا {userName} — هذا المحور يحتوي على {itemCount} عنصرًا ضمن الهيكل السيادي الموحّد.
             </p>
+            ) : null}
           </div>
-          {canWrite && <AddAxisItemButton onClick={() => setAddOpen(true)} />}
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <SettingsLinkButton pageKey={pageKey} />
+            {canWrite && <AddAxisItemButton onClick={() => setAddOpen(true)} />}
+          </div>
         </div>
       </div>
+      <SettingsAppliedChrome pageKey={pageKey} settings={pageSettings} />
 
       {/* Stats */}
       <div
@@ -381,7 +404,9 @@ export function AxisHubPage({ axis, userName }: Props) {
       </div>
 
       {/* Content */}
-      {axis.dropdowns ? (
+      {!showItems ? (
+        <p style={{ color: "#64748b", fontWeight: 700 }}>عناصر المحور مخفية من إعدادات الصفحة.</p>
+      ) : axis.dropdowns ? (
         <div>
           <div
             style={{

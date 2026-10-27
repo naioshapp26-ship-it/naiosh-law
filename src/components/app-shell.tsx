@@ -45,10 +45,10 @@ const PAGE_SETTINGS_NAV = {
 } as const;
 
 const MOBILE_BOTTOM_NAV = [
-  { href: "/app/dashboard", icon: "⊞", label: "الرئيسية" },
-  { href: "/app/modules/case-management", icon: "⚖️", label: "القضايا" },
-  { href: "/app/modules/court-sessions", icon: "🏛️", label: "الجلسات" },
-  { href: "/app/legal-finance", icon: "💰", label: "المالية" },
+  { href: "/app/dashboard", icon: "⊞", label: "لوحة التحكم" },
+  { href: "/app/modules/case-management", icon: "⚖️", label: "إدارة القضايا" },
+  { href: "/app/modules/court-sessions", icon: "🏛️", label: "إدارة الجلسات" },
+  { href: "/app/legal-finance", icon: "💰", label: "المالية القانونية" },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {

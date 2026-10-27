@@ -17,6 +17,12 @@ import { formatDateTime } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession, canWriteRole } from "@/lib/session";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import type { FormField } from "@/data/module-configs";
 import {
   internationalLawAxes,
@@ -110,6 +116,15 @@ const td: React.CSSProperties = {
 /* ── Hub page ── */
 export function InternationalLawsHub() {
   const { user, ready } = useSession(true);
+  const pageSettings = usePageSettings("international-laws");
+  const showAxes = specBool(pageSettings, "showAxes", true);
+  const allowAxisEdit =
+    specBool(pageSettings, "allowAxisEdit", true) && pageSettings.actions?.allowCreate !== false;
+  const hubTitle =
+    pageSettings.display?.title?.trim() || "التصنيف القانوني الدولي والمحلي";
+  const hubSubtitle =
+    pageSettings.display?.subtitle?.trim() ||
+    "محاور القوانين والسجلات عبر المواضيع القانونية";
   const [entries, setEntries] = useState<LawEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
@@ -172,7 +187,7 @@ export function InternationalLawsHub() {
 
   if (!ready || !user) return null;
 
-  const canWrite = canWriteRole(user.role);
+  const canWrite = Boolean(canWriteRole(user.role) && allowAxisEdit);
   const intlCustom = customAxes.filter((a) => a.source === "international" || a.source === "both");
   const withOverride = <T extends { slug: string; title: string; subtitle: string; icon: string; color: string; description: string }>(
     axis: T
@@ -258,6 +273,7 @@ export function InternationalLawsHub() {
   return (
     <div className="erp-page" style={{ width: "100%" }}>
       {Toast}
+      <SettingsAppliedChrome pageKey="international-laws" settings={pageSettings} />
 
       {/* Hero */}
       <div
@@ -270,16 +286,22 @@ export function InternationalLawsHub() {
         }}
       >
         <p style={{ fontSize: "0.75rem", opacity: 0.8, marginBottom: "0.35rem" }}>منظومة نايوش 360</p>
-        <h1 style={{ fontSize: "1.6rem", fontWeight: 900, marginBottom: "0.75rem" }}>التصنيف القانوني الدولي والمحلي</h1>
-        <p style={{ fontSize: "0.9rem", opacity: 0.9, maxWidth: 720, lineHeight: 1.8 }}>{NAIOSH_360_INTRO}</p>
+        <h1 style={{ fontSize: "1.6rem", fontWeight: 900, marginBottom: "0.75rem" }}>{hubTitle}</h1>
+        <p style={{ fontSize: "0.9rem", opacity: 0.9, maxWidth: 720, lineHeight: 1.8 }}>
+          {hubSubtitle || NAIOSH_360_INTRO}
+        </p>
       </div>
 
       <PageHeader
         icon="📚"
-        title="المحاور القانونية"
-        subtitle={`${TOTAL_TOPICS} موضوع قانوني عبر ${axisCounts.length} محور — ${PRIMARY_TOPIC_CATALOG.length} موضوع في القائمة الأولية`}
+        title={hubTitle}
+        subtitle={
+          pageSettings.display?.subtitle?.trim() ||
+          `${TOTAL_TOPICS} موضوع قانوني عبر ${axisCounts.length} محور — ${PRIMARY_TOPIC_CATALOG.length} موضوع في القائمة الأولية`
+        }
         actions={
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <SettingsLinkButton pageKey="international-laws" />
             {canWrite && (
               <BtnPrimary onClick={() => setAddAxisOpen(true)}>＋ إضافة محور</BtnPrimary>
             )}
@@ -291,6 +313,11 @@ export function InternationalLawsHub() {
           </div>
         }
       />
+      {!showAxes ? (
+        <p style={{ color: "#64748b", fontWeight: 700, marginBottom: "1rem" }}>
+          بطاقات المحاور مخفية من إعدادات الصفحة.
+        </p>
+      ) : null}
 
       <PageStats
         stats={[

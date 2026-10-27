@@ -7,6 +7,12 @@ import { ModuleShell } from "@/components/module-shell";
 import { RolesPermissionsPage } from "@/components/roles-permissions-page";
 import { PageHeader, PageStats, PageLoader } from "@/components/domain-page";
 import { useSession } from "@/lib/session";
+import { usePageSettings } from "@/lib/page-settings/use-page-settings";
+import {
+  SettingsAppliedChrome,
+  SettingsLinkButton,
+  specBool,
+} from "@/components/page-settings/settings-applied-chrome";
 import { moduleMap } from "@/data/modules";
 import {
   LANDING_SPECIALTIES,
@@ -246,10 +252,17 @@ function ProfileHub() {
 }
 
 export function SpecialtyWorkspace({ slug }: Props) {
+  const pageKey = `specialty-${slug}`;
+  const pageSettings = usePageSettings(pageKey);
   const specialty = landingSpecialtyMap[slug];
   const moduleMeta = specialty?.moduleSlug ? moduleMap[specialty.moduleSlug] : null;
 
   const highlights = useMemo(() => specialty?.highlights ?? [], [specialty]);
+  const showHighlights = specBool(pageSettings, "showHighlights", true);
+  const showModulePanel = specBool(pageSettings, "showModulePanel", true);
+  const showDomainLink = specBool(pageSettings, "showDomainLink", true);
+  const title = pageSettings.display?.title?.trim() || specialty?.title || "";
+  const subtitle = pageSettings.display?.subtitle?.trim() || specialty?.subtitle || "";
 
   if (!specialty) {
     return (
@@ -270,15 +283,17 @@ export function SpecialtyWorkspace({ slug }: Props) {
   return (
     <AppShell>
       <div className="erp-page" style={{ width: "100%" }}>
+        <SettingsAppliedChrome pageKey={pageKey} settings={pageSettings} />
         <SpecialtyRail activeSlug={specialty.slug} />
 
         <PageHeader
           icon={specialty.icon}
-          title={specialty.title}
-          subtitle={specialty.subtitle}
+          title={title}
+          subtitle={subtitle}
           actions={
             <>
-              {specialty.domainHref && (
+              <SettingsLinkButton pageKey={pageKey} />
+              {showDomainLink && specialty.domainHref && (
                 <Link href={specialty.domainHref} className="btn-ghost-dark" style={{ padding: "0.55rem 1rem", fontSize: "0.85rem" }}>
                   الواجهة الكاملة ←
                 </Link>
@@ -292,6 +307,7 @@ export function SpecialtyWorkspace({ slug }: Props) {
           }
         />
 
+        {showHighlights ? (
         <div
           style={{
             display: "flex",
@@ -317,8 +333,9 @@ export function SpecialtyWorkspace({ slug }: Props) {
             </span>
           ))}
         </div>
+        ) : null}
 
-        {moduleMeta && (
+        {showModulePanel && moduleMeta && (
           <div className="card-white" style={{ padding: "1.15rem 1.25rem", marginBottom: "1.25rem" }}>
             <p style={{ fontWeight: 800, marginBottom: "0.45rem" }}>{moduleMeta.title}</p>
             <p style={{ color: "#64748b", fontSize: "0.88rem", marginBottom: "0.75rem", lineHeight: 1.7 }}>

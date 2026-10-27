@@ -61,7 +61,43 @@ type PageSettingsValues = {
   };
   customFields?: CustomFieldDef[];
   sections?: PageSectionDef[];
+  reports?: {
+    allowPdf?: boolean;
+    allowExcel?: boolean;
+    showLogo?: boolean;
+    headerText?: string;
+    footerText?: string;
+  };
 };
+
+function escapeCsvCell(v: unknown) {
+  const s = v == null ? "" : String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function downloadTextFile(filename: string, content: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function buildCsv(
+  columns: { key: string; label: string }[],
+  data: Record<string, unknown>[]
+) {
+  const header = columns.map((c) => escapeCsvCell(c.label)).join(",");
+  const lines = data.map((row) =>
+    columns.map((c) => escapeCsvCell(row[c.key])).join(",")
+  );
+  return "\uFEFF" + [header, ...lines].join("\n");
+}
 
 function readPreviewDraft(slug: string): PageSettingsValues | null {
   if (typeof window === "undefined") return null;
@@ -666,15 +702,110 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               {rows.length} سجل في {config.entityName}ات
             </p>
-            {["PDF", "Excel", "CSV"].map((fmt) => (
-              <button
-                key={fmt}
-                onClick={() => { pushToast("success", `✅ جاري تحضير ${fmt}...`); setReportOpen(false); }}
-                style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
-              >
-                تصدير {fmt}
-              </button>
-            ))}
+            {(() => {
+              const cols = visibleColumns.map((c) => ({ key: c.key, label: c.label }));
+              const reports = pageSettings?.reports;
+              const allowPdf = reports?.allowPdf !== false;
+              const allowExcel = reports?.allowExcel !== false;
+              const headerText =
+                reports?.headerText?.trim() ||
+                "NAIOSH Law — منظومة نايوش القانونية 360";
+              const footerText =
+                reports?.footerText?.trim() || "سري — للاستخدام الداخلي";
+              const stamp = new Date().toISOString().slice(0, 10);
+              const baseName = `${slug}-${stamp}`;
+
+              const runCsv = () => {
+                downloadTextFile(
+                  `${baseName}.csv`,
+                  buildCsv(cols, rows),
+                  "text/csv;charset=utf-8"
+                );
+                pushToast("success", "✅ تم تنزيل CSV");
+                setReportOpen(false);
+              };
+              const runExcel = () => {
+                // Excel يفتح CSV بترميز UTF-8 مع BOM بشكل موثوق
+                downloadTextFile(
+                  `${baseName}.csv`,
+                  buildCsv(cols, rows),
+                  "text/csv;charset=utf-8"
+                );
+                pushToast("success", "✅ تم تنزيل ملف متوافق مع Excel (CSV)");
+                setReportOpen(false);
+              };
+              const runPdfPrint = () => {
+                const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+                if (!w) {
+                  pushToast("error", "تعذر فتح نافذة الطباعة — اسمح بالنوافذ المنبثقة");
+                  return;
+                }
+                const showLogo = reports?.showLogo !== false;
+                const th = cols.map((c) => `<th>${escapeCsvCell(c.label)}</th>`).join("");
+                const body = rows
+                  .map(
+                    (r) =>
+                      `<tr>${cols
+                        .map((c) => `<td>${escapeCsvCell(r[c.key])}</td>`)
+                        .join("")}</tr>`
+                  )
+                  .join("");
+                w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/><title>${headerText}</title>
+<style>
+body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#0a0a12}
+h1{font-size:18px;margin:0 0 8px}
+.meta{color:#64748b;font-size:12px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:right}
+th{background:#f1f5f9}
+.footer{margin-top:18px;font-size:11px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:8px}
+@media print{button{display:none}}
+</style></head><body>
+${showLogo ? `<div class="meta">NAIOSH Law 360</div>` : ""}
+<h1>${headerText}</h1>
+<div class="meta">${pageSettings?.display?.title || config.entityName} — ${rows.length} سجل — ${stamp}</div>
+<table><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table>
+<div class="footer">${footerText}</div>
+<script>window.onload=function(){window.focus();window.print();}</script>
+</body></html>`);
+                w.document.close();
+                pushToast("success", "✅ فُتحت معاينة الطباعة / PDF");
+                setReportOpen(false);
+              };
+
+              return (
+                <>
+                  {allowPdf ? (
+                    <button
+                      type="button"
+                      onClick={runPdfPrint}
+                      style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                    >
+                      طباعة / PDF
+                    </button>
+                  ) : null}
+                  {allowExcel ? (
+                    <button
+                      type="button"
+                      onClick={runExcel}
+                      style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                    >
+                      تنزيل Excel (CSV)
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={runCsv}
+                    style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                  >
+                    تنزيل CSV
+                  </button>
+                  <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.75rem", lineHeight: 1.5 }}>
+                    التصدير يستخدم الأعمدة الظاهرة من إعدادات الصفحة والترويسة/التذييل من تبويب التقارير.
+                  </p>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -152,16 +152,17 @@ export function getAxisForPath(pathname: string): ImperialAxis | undefined {
 }
 
 /** روابط القائمة الجانبية الرئيسية — كلها صفحات موجودة */
+/** Labels must match Page Settings registry titles (no confusing aliases). */
 export const PRIMARY_NAV = [
-  { href: "/app/dashboard", label: "لوحة التحكم الإمبراطورية", icon: "👑" },
+  { href: "/app/dashboard", label: "لوحة التحكم", icon: "👑" },
   { href: "/app/client-messages", label: "رسائل العملاء", icon: "✉️" },
-  { href: "/app/modules/case-management", label: "القضايا", icon: "⚖️" },
-  { href: "/app/modules/clients-management", label: "العملاء", icon: "👥" },
-  { href: "/app/modules/court-sessions", label: "التقويم والجلسات", icon: "📅" },
-  { href: "/app/legal-finance", label: "المالية", icon: "💰" },
+  { href: "/app/modules/case-management", label: "إدارة القضايا", icon: "⚖️" },
+  { href: "/app/modules/clients-management", label: "إدارة الموكلين", icon: "👥" },
+  { href: "/app/modules/court-sessions", label: "إدارة الجلسات", icon: "📅" },
+  { href: "/app/legal-finance", label: "المالية القانونية (لوحة)", icon: "💰" },
   { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
-  { href: "/app/archive", label: "الأرشيف", icon: "📦" },
-  { href: "/app/modules/reports-center", label: "التقارير", icon: "📊" },
+  { href: "/app/archive", label: "الأرشيف والمستندات", icon: "📦" },
+  { href: "/app/modules/reports-center", label: "مركز التقارير", icon: "📊" },
   { href: "/app/modules/administration", label: "الإدارة والصلاحيات", icon: "⚙️" },
 ] as const;
 
