@@ -25,6 +25,11 @@ export type PageSectionDef = {
   order: number;
   /** kpis | table | actions | notes | custom */
   kind: "kpis" | "table" | "actions" | "notes" | "custom";
+  /**
+   * page = shared panel on the page (sectionData)
+   * record = per-row values (RecordCustomValue) — isolated between cases/clients
+   */
+  scope?: "page" | "record";
 };
 
 export function sanitizeFieldKey(raw: string): string {

@@ -30,6 +30,7 @@ import {
   recordScopedCustomFields,
   type SectionDataMap,
 } from "@/components/page-settings/page-dynamic-sections";
+import { RecordScopedSectionsPanel } from "@/components/page-settings/record-scoped-sections";
 import {
   exportCsv,
   exportPdf,
@@ -119,6 +120,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const [reportOpen, setReportOpen] = useState(false);
   const [pageSettings, setPageSettings] = useState<PageSettingsValues | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [notesRecordId, setNotesRecordId] = useState<string | null>(null);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -689,6 +691,11 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             );
           }
           if (sec.kind === "notes" || sec.kind === "custom") {
+            const scope = sec.scope === "record" ? "record" : "page";
+            if (scope === "record") {
+              // Rendered once below via RecordScopedSectionsPanel
+              return null;
+            }
             return (
               <PageDynamicSections
                 key={sec.id}
@@ -706,6 +713,22 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           }
           return null;
         })}
+
+        <RecordScopedSectionsPanel
+          sections={pageSettings?.sections}
+          customFields={pageSettings?.customFields}
+          rows={rows}
+          selectedId={notesRecordId}
+          onSelectId={setNotesRecordId}
+          canWrite={canWrite}
+          entityName={config.entityName}
+          apiEndpoint={apiEndpoint}
+          onSavedRow={(id, patch) => {
+            setRows((prev) =>
+              prev.map((r) => (String(r.id) === String(id) ? { ...r, ...patch } : r))
+            );
+          }}
+        />
       </div>
 
       <Modal

@@ -34,10 +34,20 @@ function asFields(raw: unknown): CustomFieldDef[] {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
-function fieldStorage(f: CustomFieldDef, sectionKind?: string): "record" | "page" {
+function fieldStorage(
+  f: CustomFieldDef,
+  section?: Pick<PageSectionDef, "kind" | "scope">
+): "record" | "page" {
   if (f.storage === "record" || f.storage === "page") return f.storage;
-  if (f.sectionId && (sectionKind === "notes" || sectionKind === "custom")) return "page";
+  if (section?.scope === "record") return "record";
+  if (section?.scope === "page") return "page";
+  if (f.sectionId && (section?.kind === "notes" || section?.kind === "custom")) return "page";
   return "record";
+}
+
+export function sectionScope(sec: PageSectionDef): "page" | "record" {
+  if (sec.scope === "record" || sec.scope === "page") return sec.scope;
+  return "page";
 }
 
 export function pageScopedFieldsForSection(
@@ -46,7 +56,7 @@ export function pageScopedFieldsForSection(
 ): CustomFieldDef[] {
   return fields.filter((f) => {
     if (f.sectionId !== section.id) return false;
-    return fieldStorage(f, section.kind) === "page";
+    return fieldStorage(f, section) === "page";
   });
 }
 
@@ -74,7 +84,10 @@ export function PageDynamicSections({
   const panels = useMemo(() => {
     return sections.filter((s) => {
       if (s.visible === false) return false;
-      if (s.kind === "notes" || s.kind === "custom") return true;
+      if (s.kind === "notes" || s.kind === "custom") {
+        // Only shared page-level panels here; record-scoped render elsewhere
+        return sectionScope(s) === "page";
+      }
       if (includeBuiltins) return s.kind === "kpis" || s.kind === "table" || s.kind === "actions";
       return false;
     });
@@ -122,7 +135,17 @@ export function PageDynamicSections({
   if (panels.length === 0) return null;
 
   return (
-    <div className={className} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginBottom: "1.5rem" }}>
+    <div
+      className={className}
+      style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginBottom: "1.5rem" }}
+    >
+      <style>{`
+        @media (max-width: 700px) {
+          [data-page-section] { padding: 1rem !important; }
+          [data-page-section] h2 { font-size: 1rem !important; }
+          [data-page-section] .btn-primary { width: 100%; }
+        }
+      `}</style>
       {msg ? (
         <p
           role="status"
@@ -194,7 +217,7 @@ export function PageDynamicSections({
                   {sec.title}
                 </h2>
                 <p style={{ margin: "0.25rem 0 0", fontSize: "0.78rem", color: "#64748b" }}>
-                  قسم No-Code · يُحفظ مع إعدادات الصفحة في PostgreSQL
+                  ملاحظات عامة للصفحة (مشتركة) · تُحفظ في PostgreSQL مع إعدادات الصفحة — ليست لكل سجل على حدة
                 </p>
               </div>
               {canWrite ? (
@@ -293,7 +316,18 @@ export function recordScopedCustomFields(
   const byId = new Map(secs.map((s) => [s.id, s]));
   return list.filter((f) => {
     if (!f.sectionId) return true;
-    const kind = byId.get(f.sectionId)?.kind;
-    return fieldStorage(f, kind) === "record";
+    const sec = byId.get(f.sectionId);
+    return fieldStorage(f, sec) === "record";
   });
+}
+
+export function recordScopedSections(
+  sections?: PageSectionDef[] | unknown[] | null
+): PageSectionDef[] {
+  return asSections(sections).filter(
+    (s) =>
+      s.visible !== false &&
+      (s.kind === "notes" || s.kind === "custom") &&
+      sectionScope(s) === "record"
+  );
 }

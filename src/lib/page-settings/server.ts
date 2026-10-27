@@ -254,12 +254,20 @@ function sanitizeSections(
     const kind = String(item.kind ?? "custom");
     if (!id || !title) return { ok: false, error: "كل قسم يحتاج معرفًا وعنوانًا" };
     if (!allowedKinds.has(kind)) return { ok: false, error: `نوع قسم غير مدعوم: ${kind}` };
+    const scopeRaw = String(item.scope ?? "").trim();
+    const scope =
+      scopeRaw === "record" || scopeRaw === "page"
+        ? scopeRaw
+        : kind === "notes" || kind === "custom"
+          ? "page"
+          : undefined;
     sections.push({
       id,
       title: title.slice(0, 80),
       kind,
       visible: item.visible !== false,
       order: Number.isFinite(Number(item.order)) ? Number(item.order) : sections.length,
+      scope,
     });
   }
   return { ok: true, sections };
@@ -271,7 +279,14 @@ export function defaultSectionsFor(pageKey: string): Array<Record<string, unknow
     { id: "kpis", title: "بطاقات المؤشرات", kind: "kpis", visible: true, order: 0 },
     { id: "table", title: "جدول البيانات", kind: "table", visible: true, order: 1 },
     { id: "actions", title: "شريط الإجراءات", kind: "actions", visible: true, order: 2 },
-    { id: "notes", title: "ملاحظات الصفحة", kind: "notes", visible: false, order: 3 },
+    {
+      id: "notes",
+      title: "ملاحظات عامة للصفحة",
+      kind: "notes",
+      visible: false,
+      order: 3,
+      scope: "page",
+    },
   ];
 }
 
@@ -476,11 +491,44 @@ export async function resetPageSettings(opts: {
   const scope = opts.scope ?? "global";
   const scopeId = normalizeScopeId(scope, opts.scopeId);
   const defaults = getDefaultValues(opts.pageKey);
+  // Restore design defaults but keep No-Code content:
+  // - customFields definitions (so per-record values remain addressable)
+  // - sectionData (page-level panel values)
+  // - custom/notes sections the admin added (layout presence)
+  // RecordCustomValue rows are never deleted by settings reset.
+  const previous = await resolvePageSettings({
+    pageKey: opts.pageKey,
+    userId: opts.userId,
+  });
+  const prev = previous.values as {
+    sectionData?: unknown;
+    customFields?: unknown;
+    sections?: unknown;
+  };
+  const prevSections = Array.isArray(prev.sections) ? prev.sections : [];
+  const keptCustom = prevSections.filter(
+    (s) =>
+      s &&
+      typeof s === "object" &&
+      ((s as { kind?: string }).kind === "custom" || (s as { kind?: string }).kind === "notes")
+  );
+  const baseSections = defaultSectionsFor(opts.pageKey).filter(
+    (s) => s.kind === "kpis" || s.kind === "table" || s.kind === "actions"
+  );
+  const values = {
+    ...defaults,
+    customFields: Array.isArray(prev.customFields) ? prev.customFields : [],
+    sectionData:
+      prev.sectionData && typeof prev.sectionData === "object" && !Array.isArray(prev.sectionData)
+        ? prev.sectionData
+        : {},
+    sections: [...baseSections, ...keptCustom],
+  };
   return savePageSettings({
     pageKey: opts.pageKey,
     scope,
     scopeId,
-    values: defaults,
+    values,
     userId: opts.userId,
     action: "reset",
   });

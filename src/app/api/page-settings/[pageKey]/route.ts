@@ -43,13 +43,17 @@ export async function GET(_request: Request, ctx: Ctx) {
   });
 
   if (isClient) {
+    const v = resolved.values as Record<string, unknown>;
     return NextResponse.json({
       pageKey,
       resolved: {
         pageKey,
         values: {
-          specialized: (resolved.values as { specialized?: unknown }).specialized ?? {},
-          display: (resolved.values as { display?: unknown }).display ?? {},
+          specialized: v.specialized ?? {},
+          display: v.display ?? {},
+          sections: v.sections ?? [],
+          sectionData: v.sectionData ?? {},
+          customFields: v.customFields ?? [],
         },
       },
       canManage: false,

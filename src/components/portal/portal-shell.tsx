@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { DarkModeToggle } from "@/components/color-mode";
 import { BrandLogo } from "@/components/brand-logo";
+import { PageDynamicSections } from "@/components/page-settings/page-dynamic-sections";
+import type { CustomFieldDef, PageSectionDef } from "@/lib/page-settings/custom-field-types";
+import type { SectionDataMap } from "@/components/page-settings/page-dynamic-sections";
 
 type PortalUser = { name: string; email: string; role: string };
 
@@ -31,6 +34,14 @@ type PortalFlags = {
   allowProfileEdit?: boolean;
 };
 
+type PortalPageSettings = {
+  display?: { title?: string; subtitle?: string };
+  specialized?: PortalFlags;
+  sections?: PageSectionDef[];
+  sectionData?: SectionDataMap;
+  customFields?: CustomFieldDef[];
+};
+
 export function PortalShell({
   title,
   children,
@@ -46,6 +57,7 @@ export function PortalShell({
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
   const [flags, setFlags] = useState<PortalFlags>({});
+  const [portalSettings, setPortalSettings] = useState<PortalPageSettings>({});
 
   useEffect(() => {
     if (!document.querySelector('link[data-portal-css]')) {
@@ -89,8 +101,12 @@ export function PortalShell({
           const sRes = await fetch("/api/page-settings/client-portal", { credentials: "include" });
           if (sRes.ok) {
             const sBody = await sRes.json();
-            const specialized = (sBody.resolved?.values?.specialized ?? {}) as PortalFlags;
-            if (!cancelled) setFlags(specialized);
+            const values = (sBody.resolved?.values ?? {}) as PortalPageSettings;
+            const specialized = (values.specialized ?? {}) as PortalFlags;
+            if (!cancelled) {
+              setFlags(specialized);
+              setPortalSettings(values);
+            }
           }
         } catch {
           /* defaults: all visible */
@@ -162,8 +178,15 @@ export function PortalShell({
             <i className={`fas ${open ? "fa-xmark" : "fa-bars"}`} />
           </button>
           <div>
-            <h1>{title}</h1>
+            <h1 data-portal-title="1">
+              {portalSettings.display?.title?.trim() || title}
+            </h1>
             <p>مرحباً، {user.name}</p>
+            {portalSettings.display?.subtitle?.trim() ? (
+              <p style={{ margin: "0.25rem 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                {portalSettings.display.subtitle}
+              </p>
+            ) : null}
           </div>
           <div className="portal-top-actions">
             <DarkModeToggle />
@@ -179,7 +202,17 @@ export function PortalShell({
           </div>
         ) : null}
 
-        <div className="portal-content">{children}</div>
+        <div className="portal-content">
+          <PageDynamicSections
+            pageKey="client-portal"
+            sections={portalSettings.sections}
+            customFields={portalSettings.customFields}
+            sectionData={portalSettings.sectionData}
+            canWrite={false}
+            includeBuiltins={false}
+          />
+          {children}
+        </div>
       </div>
 
       {open ? <button type="button" className="portal-backdrop" aria-label="إغلاق" onClick={() => setOpen(false)} /> : null}

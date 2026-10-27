@@ -193,6 +193,10 @@ function asSections(raw: unknown): PageSectionDef[] {
       kind: (String(x.kind ?? "custom") as PageSectionDef["kind"]),
       visible: x.visible !== false,
       order: Number(x.order ?? i),
+      scope:
+        x.scope === "record" || x.scope === "page"
+          ? (x.scope as PageSectionDef["scope"])
+          : undefined,
     }));
 }
 
@@ -394,21 +398,46 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
     ]);
   };
 
-  const addSection = () => {
+  const addSection = (scope: "page" | "record" = "page") => {
     const n = sections.filter((s) => s.kind === "custom" || s.kind === "notes").length + 1;
     // Insert after KPIs (order 0) so the new panel is visible above the data table
     const insertAt = 1;
     const shifted = sections.map((s) =>
       (s.order ?? 0) >= insertAt ? { ...s, order: (s.order ?? 0) + 1 } : s
     );
+    const id = `custom_${Date.now().toString(36)}`;
+    const title =
+      scope === "record"
+        ? n <= 1
+          ? "ملاحظات السجل"
+          : `ملاحظات السجل ${n}`
+        : n <= 1
+          ? "ملاحظات عامة للصفحة"
+          : `قسم صفحة ${n}`;
     setSections([
       ...shifted,
       {
-        id: `custom_${Date.now().toString(36)}`,
-        title: n <= 1 ? "ملاحظات" : `ملاحظات ${n}`,
+        id,
+        title,
         kind: "custom",
         visible: true,
         order: insertAt,
+        scope,
+      },
+    ]);
+    // Seed a usable field bound to the new section
+    setCustomFields([
+      ...customFields,
+      {
+        key: `cf_field_${Date.now().toString(36)}`,
+        label: scope === "record" ? "ملاحظة السجل" : "محتوى القسم",
+        type: "textarea",
+        required: false,
+        order: customFields.length,
+        visible: true,
+        options: [],
+        sectionId: id,
+        storage: scope,
       },
     ]);
   };
@@ -675,6 +704,27 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                               }}
                             />
                             <span className="psc-meta">{sec.kind} · {sec.id}</span>
+                            {(sec.kind === "custom" || sec.kind === "notes") && (
+                              <select
+                                value={sec.scope === "record" ? "record" : "page"}
+                                disabled={!canManage}
+                                title="نطاق القسم"
+                                onChange={(e) => {
+                                  const scope = e.target.value as "page" | "record";
+                                  setSections(
+                                    sections.map((s) => (s.id === sec.id ? { ...s, scope } : s))
+                                  );
+                                  setCustomFields(
+                                    customFields.map((f) =>
+                                      f.sectionId === sec.id ? { ...f, storage: scope } : f
+                                    )
+                                  );
+                                }}
+                              >
+                                <option value="page">عامة للصفحة (مشتركة)</option>
+                                <option value="record">لكل سجل (معزولة)</option>
+                              </select>
+                            )}
                             <label className="psc-check-row">
                               <input
                                 type="checkbox"
@@ -735,9 +785,18 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                         type="button"
                         className="psc-btn primary"
                         disabled={!canManage}
-                        onClick={addSection}
+                        onClick={() => addSection("page")}
                       >
-                        ＋ إضافة قسم مدعوم
+                        ＋ قسم عام للصفحة
+                      </button>
+                      <button
+                        type="button"
+                        className="psc-btn primary"
+                        disabled={!canManage}
+                        onClick={() => addSection("record")}
+                        style={{ marginInlineStart: 8 }}
+                      >
+                        ＋ قسم لكل سجل
                       </button>
                     </div>
                   </div>
