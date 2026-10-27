@@ -11,15 +11,19 @@ import {
 
 const STAFF_MANAGE = ["admin", "industrial_agent"] as const;
 
-/** Imperial axis hub pages under /app/axis/[slug] */
+/**
+ * Imperial axis hub pages under /app/axis/[slug] only.
+ * Axes that deep-link to another real page (e.g. international-laws) are covered
+ * by that page's own settings — avoid duplicate pageHref collisions.
+ */
 export const AXIS_PAGE_SETTINGS: PageSettingsDefinition[] = imperialAxes
-  .filter((a) => a.id <= 9)
+  .filter((a) => a.id <= 9 && a.href.startsWith("/app/axis/"))
   .map((axis) => ({
     pageKey: `axis-${axis.slug}`,
     title: axis.title,
     description: axis.subtitle,
     category: "operations" as const,
-    pageHref: axis.href,
+    pageHref: `/app/axis/${axis.slug}`,
     settingsHref: `/app/page-settings/axis-${axis.slug}`,
     status: "operational" as const,
     icon: axis.icon || "🧭",
