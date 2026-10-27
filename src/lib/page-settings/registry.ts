@@ -12,6 +12,12 @@ import {
 } from "./defaults";
 import { allModuleShellDefinitions } from "./from-module-config";
 import { FIXED_STAFF_OPERATIONAL } from "./fixed-staff";
+import {
+  AXIS_PAGE_SETTINGS,
+  INTERNATIONAL_LAWS_SETTINGS,
+  SPECIALTY_PAGE_SETTINGS,
+} from "./axis-and-specialty";
+import { PUBLIC_HOMEPAGE_SETTINGS } from "./public-homepage";
 
 const STAFF_MANAGE = ["admin", "industrial_agent"] as const;
 
@@ -650,27 +656,11 @@ const MODULE_ENGINE: PageSettingsDefinition[] = allModuleShellDefinitions(
 /** Real NAIOSH staff pages with nature-specific No-Code tabs (not ERP catalog). */
 const FIXED_STAFF: PageSettingsDefinition[] = FIXED_STAFF_OPERATIONAL;
 
-const SPECIALTY: PageSettingsDefinition[] = [
-  "cases",
-  "clients",
-  "sessions",
-  "library",
-  "systems",
-  "finance",
-  "archive",
-  "profile",
-  "team",
-].map((slug) =>
-  planned(
-    `specialty-${slug}`,
-    `مساحة التخصص: ${slug}`,
-    "مساحة عمل شخصية للمحامي/الموظف",
-    "other",
-    `/app/specialty/${slug}`,
-    "👤",
-    "إعدادات المساحة الشخصية في مرحلة لاحقة"
-  )
-);
+const SPECIALTY: PageSettingsDefinition[] = SPECIALTY_PAGE_SETTINGS;
+const AXIS_AND_LAWS: PageSettingsDefinition[] = [
+  ...AXIS_PAGE_SETTINGS,
+  INTERNATIONAL_LAWS_SETTINGS,
+];
 
 const ERP_PLANNED: PageSettingsDefinition[] = ERP_SIDEBAR_MODULES.flatMap((mod) => {
   const parent = planned(
@@ -712,7 +702,9 @@ export const PAGE_SETTINGS_REGISTRY: PageSettingsDefinition[] = dedupe([
   ...CORE_OPERATIONAL,
   ...MODULE_ENGINE,
   ...FIXED_STAFF,
+  ...AXIS_AND_LAWS,
   ...SPECIALTY,
+  PUBLIC_HOMEPAGE_SETTINGS,
   ...ERP_PLANNED,
 ]);
 

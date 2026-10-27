@@ -25,6 +25,11 @@ import {
   type CustomFieldDef,
   type PageSectionDef,
 } from "@/lib/page-settings/custom-field-types";
+import {
+  exportCsv,
+  exportPdf,
+  exportXlsx,
+} from "@/lib/page-settings/export-reports";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -61,6 +66,15 @@ type PageSettingsValues = {
   };
   customFields?: CustomFieldDef[];
   sections?: PageSectionDef[];
+  reports?: {
+    allowPdf?: boolean;
+    allowExcel?: boolean;
+    allowCsv?: boolean;
+    showLogo?: boolean;
+    headerText?: string;
+    footerText?: string;
+    paperOrientation?: string;
+  };
 };
 
 function readPreviewDraft(slug: string): PageSettingsValues | null {
@@ -203,6 +217,36 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const pageSize = pageSettings?.display?.pageSize ?? 10;
   const showTable = sectionVisible("table");
   const showActionsBar = sectionVisible("actions");
+
+  /** Static module-config KPIs are illustrative — never present them as live DB metrics. */
+  const kpiCards = useMemo(() => {
+    if (!config?.kpis?.length) return [];
+    if (usingDemo || loadingData) {
+      return config.kpis.map((k) => ({
+        ...k,
+        delta: "أرقام توضيحية — ليست من قاعدة البيانات",
+        deltaPos: true,
+      }));
+    }
+    const total = rows.length;
+    const active = rows.filter((r) => {
+      const s = String((r as Record<string, unknown>).status ?? "");
+      return s.includes("نشط") || s.toLowerCase() === "open" || s.toLowerCase() === "active";
+    }).length;
+    return config.kpis.map((k, i) => {
+      if (i === 0) {
+        return { ...k, value: total, delta: "حية من البيانات المعروضة", deltaPos: true };
+      }
+      if (i === 1) {
+        return { ...k, value: active, delta: "حية من البيانات المعروضة", deltaPos: true };
+      }
+      return {
+        ...k,
+        delta: "توضيحي — العدد الفعلي في الجدول",
+        deltaPos: true,
+      };
+    });
+  }, [config?.kpis, usingDemo, loadingData, rows]);
 
   const visibleColumns = useMemo(() => {
     if (!config) return [];
@@ -581,7 +625,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           </div>
         </div>
 
-        {showKpis && <StatsRow cards={config.kpis} />}
+        {showKpis && <StatsRow cards={kpiCards} />}
 
         {showTable && (
         <div className="card-white" style={{ padding: "1.5rem" }}>
@@ -666,15 +710,108 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "1.25rem" }}>
               {rows.length} سجل في {config.entityName}ات
             </p>
-            {["PDF", "Excel", "CSV"].map((fmt) => (
-              <button
-                key={fmt}
-                onClick={() => { pushToast("success", `✅ جاري تحضير ${fmt}...`); setReportOpen(false); }}
-                style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
-              >
-                تصدير {fmt}
-              </button>
-            ))}
+            {(() => {
+              const cols = visibleColumns.map((c) => ({ key: c.key, label: c.label }));
+              const reports = pageSettings?.reports;
+              const allowPdf = reports?.allowPdf !== false;
+              const allowExcel = reports?.allowExcel !== false;
+              const allowCsv = reports?.allowCsv !== false;
+              const headerText =
+                reports?.headerText?.trim() ||
+                "NAIOSH Law — منظومة نايوش القانونية 360";
+              const footerText =
+                reports?.footerText?.trim() || "سري — للاستخدام الداخلي";
+              const stamp = new Date().toISOString().slice(0, 10);
+              const baseName = `${slug}-${stamp}`;
+              const pageTitle = pageSettings?.display?.title?.trim() || config.entityName;
+              const common = {
+                title: pageTitle,
+                columns: cols,
+                rows,
+                headerText,
+                footerText,
+                showLogo: reports?.showLogo !== false,
+                paperOrientation: reports?.paperOrientation || "portrait",
+                fileBase: baseName,
+              };
+
+              const assertExportAllowed = async () => {
+                const res = await fetch("/api/exports/gate", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ pageKey: slug }),
+                });
+                if (!res.ok) {
+                  const j = await res.json().catch(() => ({}));
+                  pushToast("error", j.error || "التصدير غير مسموح حسب الصلاحيات");
+                  return false;
+                }
+                return true;
+              };
+
+              const runCsv = async () => {
+                if (!(await assertExportAllowed())) return;
+                exportCsv(common);
+                pushToast("success", "✅ تم تنزيل CSV");
+                setReportOpen(false);
+              };
+              const runExcel = async () => {
+                if (!(await assertExportAllowed())) return;
+                try {
+                  await exportXlsx(common);
+                  pushToast("success", "✅ تم تنزيل Excel (.xlsx)");
+                  setReportOpen(false);
+                } catch (e) {
+                  pushToast("error", e instanceof Error ? e.message : "فشل تصدير Excel");
+                }
+              };
+              const runPdf = async () => {
+                if (!(await assertExportAllowed())) return;
+                try {
+                  await exportPdf(common);
+                  pushToast("success", "✅ تم تنزيل PDF");
+                  setReportOpen(false);
+                } catch (e) {
+                  pushToast("error", e instanceof Error ? e.message : "فشل تصدير PDF");
+                }
+              };
+
+              return (
+                <>
+                  {allowPdf ? (
+                    <button
+                      type="button"
+                      onClick={() => void runPdf()}
+                      style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                    >
+                      تنزيل PDF
+                    </button>
+                  ) : null}
+                  {allowExcel ? (
+                    <button
+                      type="button"
+                      onClick={() => void runExcel()}
+                      style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                    >
+                      تنزيل Excel (.xlsx)
+                    </button>
+                  ) : null}
+                  {allowCsv ? (
+                    <button
+                      type="button"
+                      onClick={() => void runCsv()}
+                      style={{ display: "block", width: "100%", marginBottom: "0.5rem", padding: "0.85rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600 }}
+                    >
+                      تنزيل CSV
+                    </button>
+                  ) : null}
+                  <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.75rem", lineHeight: 1.5 }}>
+                    التصدير يطبّق الأعمدة الظاهرة والترويسة والشعار والتذييل واتجاه الورقة من إعدادات التقارير، مع فرض صلاحية التصدير من الخادم.
+                  </p>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

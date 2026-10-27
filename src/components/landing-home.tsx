@@ -54,6 +54,21 @@ export default function LandingHome() {
       orderIndex: number;
     }[]
   >([]);
+  const [homeSettings, setHomeSettings] = useState<{
+    title: string;
+    subtitle: string;
+    showHero: boolean;
+    showFeatures: boolean;
+    showModules: boolean;
+    showPromoBar: boolean;
+  }>({
+    title: "NAIOSH Law — النظام القانوني السيادي 360",
+    subtitle: "إدارة القضايا والموكلين بذكاء قانوني",
+    showHero: true,
+    showFeatures: true,
+    showModules: true,
+    showPromoBar: true,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +84,23 @@ export default function LandingHome() {
       .catch(() => {
         if (!cancelled) setDynamicSections([]);
       });
+    void fetch("/api/public/homepage-settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled || !data) return;
+        setHomeSettings({
+          title: data.display?.title || "NAIOSH Law — النظام القانوني السيادي 360",
+          subtitle: data.display?.subtitle || "إدارة القضايا والموكلين بذكاء قانوني",
+          showHero: data.specialized?.showHero !== false,
+          showFeatures: data.specialized?.showFeatures !== false,
+          showModules: data.specialized?.showModules !== false,
+          showPromoBar: data.specialized?.showPromoBar !== false,
+        });
+        if (typeof document !== "undefined" && data.display?.title) {
+          document.title = String(data.display.title);
+        }
+      })
+      .catch(() => null);
     return () => {
       cancelled = true;
     };
@@ -82,9 +114,13 @@ export default function LandingHome() {
         }}
       />
       <ErpHomepageStyles />
-      <LandingPromoBar />
+      {homeSettings.showPromoBar ? <LandingPromoBar /> : null}
       <Navbar variant="landing" />
-      <EmpireLandingHero />
+      {homeSettings.showHero ? <EmpireLandingHero /> : null}
+      <div className="sr-only" aria-hidden={false}>
+        <h1>{homeSettings.title}</h1>
+        <p>{homeSettings.subtitle}</p>
+      </div>
 
       <section className="container" style={{ padding: "2rem 1rem 0", maxWidth: 1100, margin: "0 auto" }} aria-label="الدفع وشحن الرصيد">
         <div
@@ -158,10 +194,12 @@ export default function LandingHome() {
           </>
         )}
 
+        {homeSettings.showFeatures ? (
+          <>
         <section className="section-head" id="features">
           <div>
             <h2>لماذا تختار NAIOSH Law؟</h2>
-            <p>نظام قانوني متكامل لإدارة القضايا والموكلين والجلسات والمحاسبة القانونية.</p>
+            <p>{homeSettings.subtitle}</p>
           </div>
         </section>
 
@@ -176,7 +214,11 @@ export default function LandingHome() {
             </article>
           ))}
         </section>
+          </>
+        ) : null}
 
+        {homeSettings.showModules ? (
+          <>
         <section className="section-head" id="modules-grid-head">
           <div>
             <h2>17 وحدة تشغيلية مترابطة</h2>
@@ -195,6 +237,8 @@ export default function LandingHome() {
             </Link>
           ))}
         </section>
+          </>
+        ) : null}
 
         <section className="newsletter-section" aria-label="ابدأ الآن">
           <div className="newsletter-inner">

@@ -34,10 +34,16 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/api/setup") ||
       pathname.startsWith("/api/creator-pages") ||
       // Resolved portal page-settings only (staff catalog remains blocked)
-      pathname === "/api/page-settings/client-portal";
+      pathname === "/api/page-settings/client-portal" ||
+      pathname === "/api/public/homepage-settings";
     if (!clientAllowed && session?.ok && session.role === "client") {
       return NextResponse.json({ error: "صلاحية غير كافية — بوابة العميل فقط" }, { status: 403 });
     }
+  }
+
+  // Public homepage settings are intentionally readable without auth
+  if (pathname === "/api/public/homepage-settings") {
+    return NextResponse.next();
   }
 
   if (pathname.startsWith("/portal")) {

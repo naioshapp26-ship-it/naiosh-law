@@ -294,6 +294,24 @@ export function reportsTab(): SettingTabDef {
         type: "string",
         defaultValue: "سري — للاستخدام الداخلي",
       }),
+      field({
+        key: "paperOrientation",
+        path: "reports.paperOrientation",
+        label: "اتجاه الورقة",
+        type: "select",
+        options: [
+          { value: "portrait", label: "عمودي (Portrait)" },
+          { value: "landscape", label: "أفقي (Landscape)" },
+        ],
+        defaultValue: "portrait",
+      }),
+      field({
+        key: "allowCsv",
+        path: "reports.allowCsv",
+        label: "تصدير CSV",
+        type: "boolean",
+        defaultValue: true,
+      }),
     ],
   };
 }

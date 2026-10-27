@@ -66,7 +66,7 @@ export const FIXED_STAFF_OPERATIONAL: PageSettingsDefinition[] = [
     manageRoles: [...STAFF_MANAGE],
     tabs: [
       displayTab({
-        defaultTitle: "لوحة التحكم السيادية",
+        defaultTitle: "لوحة التحكم",
         defaultSubtitle: "مؤشرات الأداء اليومية والوصول السريع",
         columnOptions: [
           { value: "kpis", label: "المؤشرات" },

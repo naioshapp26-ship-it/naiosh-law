@@ -52,67 +52,72 @@ const fadeUp = {
   }),
 };
 
-const kpisByDashboard: Record<string, { label: string; value: string; delta: string; icon: string; color: string }[]> = {
-  system360: [
-    { label: "المحاور القانونية", value: "8", delta: "هيكل سيادي موحّد", icon: "🌐", color: "#101D32" },
-    { label: "عناصر النظام", value: String(totalEmpireItems()), delta: "من ملف المواصفات", icon: "📋", color: "#1A304D" },
-    { label: "الوحدات التشغيلية", value: String(modules.length), delta: "وحدة نشطة", icon: "⚙️", color: "#B79A61" },
-    { label: "التكاملات", value: "12", delta: "3 نشطة", icon: "🔗", color: "#1A304D" },
-    { label: "التنبيهات", value: "5", delta: "2 عاجلة", icon: "🔔", color: "#DC2626" },
-    { label: "القضايا النشطة", value: "128", delta: "+7 هذا الأسبوع", icon: "⚖️", color: "#B79A61" },
-  ],
-  empire: [
-    { label: "فروع نايوش", value: "6", delta: "3 دول", icon: "🌍", color: "#101D32" },
-    { label: "الشراكات الدولية", value: "24", delta: "+3 جديدة", icon: "🤝", color: "#1A304D" },
-    { label: "العمليات العالمية", value: "18", delta: "5 نشطة", icon: "🚢", color: "#B79A61" },
-    { label: "الحوكمة", value: "9", delta: "2 معلقة", icon: "⚙️", color: "#1A304D" },
-    { label: "الإيرادات", value: "2.4M", delta: "+14%", icon: "💰", color: "#B79A61" },
-    { label: "الموكلون", value: "340", delta: "+12", icon: "👥", color: "#101D32" },
-  ],
-  superadmin: [
-    { label: "المستخدمون", value: "48", delta: "6 أدوار", icon: "👥", color: "#1A304D" },
-    { label: "الصلاحيات", value: "124", delta: "محدّثة", icon: "🛡️", color: "#101D32" },
-    { label: "سجل التدقيق", value: "1.2k", delta: "اليوم 34", icon: "📜", color: "#526071" },
-    { label: "السياسات", value: "18", delta: "سارية", icon: "📋", color: "#B79A61" },
-    { label: "التكاملات", value: "12", delta: "متصلة", icon: "🔗", color: "#1A304D" },
-    { label: "النسخ الاحتياطي", value: "✓", delta: "آخر: اليوم", icon: "💾", color: "#16A34A" },
-  ],
-  admin: [
-    { label: "القضايا النشطة", value: "128", delta: "+7", icon: "⚖️", color: "#101D32" },
-    { label: "جلسات الأسبوع", value: "26", delta: "3 غدًا", icon: "🏛️", color: "#1A304D" },
-    { label: "الموكلون", value: "83", delta: "+4", icon: "👥", color: "#B79A61" },
-    { label: "الإيرادات", value: "47k", delta: "+12%", icon: "💰", color: "#16A34A" },
-    { label: "مهام اليوم", value: "14", delta: "5 معلقة", icon: "📋", color: "#B79A61" },
-    { label: "تنبيهات", value: "5", delta: "2 عاجلة", icon: "🔔", color: "#DC2626" },
-  ],
-  user: [
-    { label: "مهامي", value: "8", delta: "3 متأخرة", icon: "📋", color: "#B79A61" },
-    { label: "جلساتي", value: "4", delta: "غدًا 2", icon: "🏛️", color: "#1A304D" },
-    { label: "مستنداتي", value: "23", delta: "5 جديدة", icon: "📄", color: "#101D32" },
-    { label: "إشعاراتي", value: "7", delta: "2 غير مقروءة", icon: "🔔", color: "#DC2626" },
-    { label: "قضاياي", value: "12", delta: "نشطة", icon: "⚖️", color: "#101D32" },
-    { label: "استشاراتي", value: "3", delta: "قادمة", icon: "💬", color: "#B79A61" },
-  ],
-};
-
-const upcomingSessions = [
-  { case: "قضية استئناف تجارية", court: "محكمة الاستئناف القاهرة", date: "الأربعاء 15 يوليو", status: "قريبة" },
-  { case: "قضية نزاع عقاري", court: "المحكمة الابتدائية الجيزة", date: "الخميس 16 يوليو", status: "مجدولة" },
-  { case: "دعوى تعويض تجاري", court: "محكمة التحكيم", date: "الأحد 19 يوليو", status: "مجدولة" },
-];
-
 export default function DashboardPage() {
   const { user, ready } = useSession(true);
   const pageSettings = usePageSettings("dashboard");
   const defaultDash = specString(pageSettings, "defaultDashboardType", "system360");
   const [dashType, setDashType] = useState("system360");
   const [customAxes, setCustomAxes] = useState<CustomLegalAxis[]>([]);
+  const [liveStats, setLiveStats] = useState({
+    cases: 0,
+    clients: 0,
+    sessions: 0,
+    finance: 0,
+    loading: true,
+  });
+  const [liveSessions, setLiveSessions] = useState<
+    Array<{ case: string; court: string; date: string; status: string }>
+  >([]);
 
   useEffect(() => {
     if (!pageSettings.loading && defaultDash) {
       setDashType(defaultDash);
     }
   }, [pageSettings.loading, defaultDash]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [cases, clients, sessions, finance] = await Promise.all([
+          fetch("/api/cases", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])),
+          fetch("/api/clients", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])),
+          fetch("/api/court-sessions", { credentials: "include" }).then((r) =>
+            r.ok ? r.json() : []
+          ),
+          fetch("/api/financial-records", { credentials: "include" }).then((r) =>
+            r.ok ? r.json() : []
+          ),
+        ]);
+        if (cancelled) return;
+        const caseRows = Array.isArray(cases) ? cases : [];
+        const clientRows = Array.isArray(clients) ? clients : [];
+        const sessionRows = Array.isArray(sessions) ? sessions : [];
+        const financeRows = Array.isArray(finance) ? finance : [];
+        setLiveStats({
+          cases: caseRows.length,
+          clients: clientRows.length,
+          sessions: sessionRows.length,
+          finance: financeRows.length,
+          loading: false,
+        });
+        setLiveSessions(
+          sessionRows.slice(0, 5).map((s: Record<string, unknown>) => ({
+            case: String(s.caseNo ?? s.case ?? s.title ?? "جلسة"),
+            court: String(s.court ?? "—"),
+            date: String(s.date ?? s.sessionDate ?? ""),
+            status: String(s.status ?? ""),
+          }))
+        );
+      } catch {
+        if (!cancelled) setLiveStats((prev) => ({ ...prev, loading: false }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([]);
   const [overrides, setOverrides] = useState<Record<string, AxisPresentationOverride>>({});
   const [addAxisOpen, setAddAxisOpen] = useState(false);
@@ -224,9 +229,51 @@ export default function DashboardPage() {
   const showModules = specBool(pageSettings, "showModules", true);
   const dashTitle = pageSettings.display?.title?.trim() || empireIntro.title;
   const dashSubtitle = pageSettings.display?.subtitle?.trim() || empireIntro.subtitle;
-  const kpis = (kpisByDashboard[dashType] ?? kpisByDashboard.system360).map((k) =>
-    k.label === "المحاور القانونية" ? { ...k, value: String(allAxes.length) } : k
-  );
+  // مؤشرات حية من PostgreSQL عبر واجهات النظام — ليست أرقامًا تجميلية
+  const kpis = [
+    {
+      label: "القضايا",
+      value: liveStats.loading ? "…" : String(liveStats.cases),
+      delta: "حية من قاعدة البيانات",
+      icon: "⚖️",
+      color: "#101D32",
+    },
+    {
+      label: "الموكلون",
+      value: liveStats.loading ? "…" : String(liveStats.clients),
+      delta: "حية من قاعدة البيانات",
+      icon: "👥",
+      color: "#B79A61",
+    },
+    {
+      label: "الجلسات",
+      value: liveStats.loading ? "…" : String(liveStats.sessions),
+      delta: "حية من قاعدة البيانات",
+      icon: "🏛️",
+      color: "#1A304D",
+    },
+    {
+      label: "السجلات المالية",
+      value: liveStats.loading ? "…" : String(liveStats.finance),
+      delta: "حية من قاعدة البيانات",
+      icon: "💰",
+      color: "#16A34A",
+    },
+    {
+      label: "المحاور القانونية",
+      value: String(allAxes.length),
+      delta: "هيكل النظام + مخصص",
+      icon: "🌐",
+      color: "#101D32",
+    },
+    {
+      label: "الوحدات التشغيلية",
+      value: String(modules.length),
+      delta: "تعريف المنظومة",
+      icon: "⚙️",
+      color: "#B79A61",
+    },
+  ];
   const activeDash = dashboardTypes.find((d) => d.id === dashType)!;
 
   return (
@@ -357,9 +404,13 @@ export default function DashboardPage() {
         </motion.div>
 
         {showKpis ? (
+        <>
+        <p style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 700, marginBottom: "0.65rem" }}>
+          مؤشرات حية من PostgreSQL (عبر واجهات النظام) — ليست أرقامًا تجريبية
+        </p>
         <AnimatePresence mode="wait">
           <motion.div
-            key={dashType}
+            key={`${dashType}-${liveStats.cases}-${liveStats.clients}`}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
@@ -389,6 +440,7 @@ export default function DashboardPage() {
             ))}
           </motion.div>
         </AnimatePresence>
+        </>
         ) : null}
 
         {showAxes ? (
@@ -485,9 +537,14 @@ export default function DashboardPage() {
         <motion.div variants={fadeUp} custom={3} style={{ display: "grid", gridTemplateColumns: showSessions && showQuickLinks ? "1fr 1fr" : "1fr", gap: "1.25rem", marginBottom: "1.75rem" }} className="two-col">
           {showSessions ? (
           <div className="card-white" style={{ padding: "1.5rem" }}>
-            <h2 style={{ fontSize: "0.95rem", fontWeight: 800, marginBottom: "1rem" }}>الجلسات القادمة</h2>
+            <h2 style={{ fontSize: "0.95rem", fontWeight: 800, marginBottom: "1rem" }}>الجلسات (من قاعدة البيانات)</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {upcomingSessions.map((s, i) => (
+              {liveSessions.length === 0 ? (
+                <p style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>
+                  لا توجد جلسات مسجّلة حاليًا في PostgreSQL.
+                </p>
+              ) : (
+                liveSessions.map((s, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -16 }}
@@ -497,9 +554,12 @@ export default function DashboardPage() {
                 >
                   <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0a0a12" }}>{s.case}</p>
                   <p style={{ fontSize: "0.72rem", color: "#64748b" }}>{s.court}</p>
-                  <p style={{ fontSize: "0.72rem", color: "#B79A61", marginTop: "0.2rem", fontWeight: 600 }}>🗓 {s.date}</p>
+                  <p style={{ fontSize: "0.72rem", color: "#B79A61", marginTop: "0.2rem", fontWeight: 600 }}>
+                    🗓 {s.date || "—"}{s.status ? ` · ${s.status}` : ""}
+                  </p>
                 </motion.div>
-              ))}
+              ))
+              )}
             </div>
           </div>
           ) : null}
