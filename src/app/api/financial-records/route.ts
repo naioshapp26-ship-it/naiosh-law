@@ -39,7 +39,9 @@ export async function POST(request: Request) {
   const body = await request.json();
 
   const count = await prisma.financialRecord.count();
-  const invoiceNo = body.invoiceNo ?? `INV-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`;
+  const invoiceNo =
+    body.invoiceNo ??
+    `INV-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}-${Date.now().toString(36)}`;
 
   const clientId = body.clientId ? String(body.clientId) : null;
   let clientName = String(body.client ?? body.clientName ?? "");
