@@ -101,7 +101,21 @@ export function validateAndNormalizeValues(
           return { ok: false, error: `الحقل «${f.label}» غير صالح` };
         }
         if (f.options && !f.options.some((o) => o.value === value)) {
-          return { ok: false, error: `قيمة غير مسموحة في «${f.label}»` };
+          // Allow workflow.initialStatus when it appears in the saved statuses list
+          const wfStatuses = Array.isArray(
+            (merged as { workflow?: { statuses?: unknown } }).workflow?.statuses
+          )
+            ? ((merged as { workflow: { statuses: string[] } }).workflow.statuses as string[])
+            : [];
+          const incomingStatuses = Array.isArray(
+            (incoming as { workflow?: { statuses?: unknown } }).workflow?.statuses
+          )
+            ? ((incoming as { workflow: { statuses: string[] } }).workflow.statuses as string[])
+            : [];
+          const allowedDynamic = new Set([...wfStatuses, ...incomingStatuses]);
+          if (!(f.path === "workflow.initialStatus" && allowedDynamic.has(value))) {
+            return { ok: false, error: `قيمة غير مسموحة في «${f.label}»` };
+          }
         }
       } else if (f.type === "multi-select" || f.type === "string-list") {
         if (!Array.isArray(value) || value.some((x) => typeof x !== "string")) {

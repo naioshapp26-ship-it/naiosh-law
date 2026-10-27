@@ -1,6 +1,6 @@
-import { GENERIC_MODULE_KEYS } from "@/lib/page-settings/page-action-auth";
+import { GENERIC_MODULE_KEYS } from "@/lib/page-settings/generic-modules";
 
-/** Maps module slugs to REST API endpoints */
+/** Maps module slugs to REST API endpoints — client-safe (no Prisma). */
 export const moduleApiMap: Record<string, string> = {
   "case-management": "/api/cases",
   "clients-management": "/api/clients",
