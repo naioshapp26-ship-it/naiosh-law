@@ -271,7 +271,7 @@ async function main() {
     const clientDeny = await clientCtx.request.fetch(`${BASE}/api/page-settings`, {
       failOnStatusCode: false,
     });
-    record("deny-anon-catalog", clientDeny.status === 401, `status=${clientDeny.status}`);
+    record("deny-anon-catalog", clientDeny.status() === 401, `status=${clientDeny.status()}`);
     await clientCtx.close();
 
     await runModuleScenario(page, context, {
