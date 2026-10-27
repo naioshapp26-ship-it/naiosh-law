@@ -1,30 +1,33 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import {
+  attachCustomValuesToRows,
+  persistCustomFieldsFromBody,
+} from "@/lib/page-settings/record-custom-api";
 
 export async function GET() {
   const { error } = await requireAuth();
   if (error) return error;
 
   const sessions = await prisma.courtSession.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(
-    sessions.map((s) => ({
-      id: s.id,
-      caseNo: s.caseNo ?? "—",
-      client: s.client ?? "—",
-      court: s.court,
-      room: s.room ?? "—",
-      date: s.date,
-      time: s.time ?? "—",
-      type: s.type,
-      status: s.status,
-      lawyer: s.lawyer ?? "—",
-    }))
-  );
+  const base = sessions.map((s) => ({
+    id: s.id,
+    caseNo: s.caseNo ?? "—",
+    client: s.client ?? "—",
+    court: s.court,
+    room: s.room ?? "—",
+    date: s.date,
+    time: s.time ?? "—",
+    type: s.type,
+    status: s.status,
+    lawyer: s.lawyer ?? "—",
+  }));
+  return NextResponse.json(await attachCustomValuesToRows("court-sessions", base));
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
   const body = await request.json();
 
@@ -53,5 +56,14 @@ export async function POST(request: Request) {
       notes: body.notes ? String(body.notes) : null,
     },
   });
+
+  await persistCustomFieldsFromBody({
+    sourceModule: "court-sessions",
+    sourceId: created.id,
+    body: body as Record<string, unknown>,
+    userId: session!.sub,
+    role: session!.role,
+  });
+
   return NextResponse.json({ id: created.id, caseId: created.caseId }, { status: 201 });
 }

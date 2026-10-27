@@ -1075,3 +1075,36 @@ model PageSettingAudit {
   @@index([pageKey, createdAt])
   @@index([changedById])
 }
+
+/// Version snapshots of page settings for safe restore (no-code undo).
+model PageSettingVersion {
+  id          String   @id @default(cuid())
+  pageKey     String
+  scope       String   @default("global")
+  scopeId     String   @default("")
+  version     Int
+  values      Json
+  label       String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([pageKey, createdAt])
+  @@index([pageKey, scope, scopeId])
+}
+
+/// Custom field values for module records (cases, clients, …) — no-code fields.
+model RecordCustomValue {
+  id           String   @id @default(cuid())
+  sourceModule String
+  sourceId     String
+  fieldKey     String
+  valueText    String?  @db.Text
+  valueJson    Json?
+  updatedById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([sourceModule, sourceId, fieldKey])
+  @@index([sourceModule, sourceId])
+  @@index([fieldKey])
+}

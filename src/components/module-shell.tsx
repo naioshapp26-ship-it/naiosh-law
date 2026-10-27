@@ -20,6 +20,11 @@ import { RecordSupplementModal } from "@/components/record-supplement-modal";
 import { saveRecordSupplement } from "@/lib/record-supplement-client";
 import type { ArchiveAttachment } from "@/lib/archive-types";
 import { pageSettingsMap } from "@/lib/page-settings/registry";
+import {
+  customFieldsToFormFields,
+  type CustomFieldDef,
+  type PageSectionDef,
+} from "@/lib/page-settings/custom-field-types";
 
 type ToastMsg = { id: number; type: "success" | "error"; text: string };
 
@@ -49,7 +54,22 @@ type PageSettingsValues = {
   fields?: {
     hiddenOptionalFields?: string[];
   };
+  customFields?: CustomFieldDef[];
+  sections?: PageSectionDef[];
 };
+
+function readPreviewDraft(slug: string): PageSettingsValues | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("settingsPreview") !== "1") return null;
+    const raw = sessionStorage.getItem(`naiosh.pageSettings.preview.${slug}`);
+    if (!raw) return null;
+    return JSON.parse(raw) as PageSettingsValues;
+  } catch {
+    return null;
+  }
+}
 
 let toastCounter = 0;
 
@@ -73,6 +93,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [pageSettings, setPageSettings] = useState<PageSettingsValues | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -126,12 +147,23 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     let cancelled = false;
     (async () => {
       try {
+        const draft = readPreviewDraft(slug);
+        if (draft) {
+          if (!cancelled) {
+            setPageSettings(draft);
+            setPreviewMode(true);
+          }
+          return;
+        }
         const res = await fetch(`/api/page-settings/${encodeURIComponent(slug)}`, {
           credentials: "include",
         });
         if (!res.ok) return;
         const body = await res.json();
-        if (!cancelled) setPageSettings((body.resolved?.values ?? null) as PageSettingsValues);
+        if (!cancelled) {
+          setPageSettings((body.resolved?.values ?? null) as PageSettingsValues);
+          setPreviewMode(false);
+        }
       } catch {
         /* keep defaults */
       }
@@ -144,6 +176,14 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const canWrite = user ? canWriteRole(user.role) : false;
   const role = user?.role ?? "";
 
+  const sectionVisible = (kind: PageSectionDef["kind"]) => {
+    const list = pageSettings?.sections;
+    if (!list || list.length === 0) return true;
+    const match = list.find((s) => s.kind === kind);
+    if (!match) return true;
+    return match.visible !== false;
+  };
+
   const displayTitle =
     pageSettings?.display?.title?.trim() ||
     moduleMap[slug]?.title ||
@@ -152,22 +192,38 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const displaySubtitle =
     pageSettings?.display?.subtitle?.trim() ||
     (usingDemo ? "بيانات تجريبية غنية" : "بيانات مباشرة من الخادم");
-  const showKpis = pageSettings?.display?.showKpis !== false;
+  const showKpis =
+    pageSettings?.display?.showKpis !== false && sectionVisible("kpis");
   const pageSize = pageSettings?.display?.pageSize ?? 10;
+  const showTable = sectionVisible("table");
+  const showActionsBar = sectionVisible("actions");
 
   const visibleColumns = useMemo(() => {
     if (!config) return [];
     const keys = pageSettings?.display?.visibleColumns;
-    if (!keys || keys.length === 0) return config.columns;
-    const set = new Set(keys);
-    const filtered = config.columns.filter((c) => set.has(c.key));
-    return filtered.length > 0 ? filtered : config.columns;
+    const customDefs = (pageSettings?.customFields ?? []).filter((f) => f.visible !== false);
+    const baseCols =
+      !keys || keys.length === 0
+        ? config.columns
+        : (() => {
+            const set = new Set(keys);
+            const filtered = config.columns.filter((c) => set.has(c.key));
+            return filtered.length > 0 ? filtered : config.columns;
+          })();
+    const customCols = customDefs.map((f) => ({
+      key: f.key,
+      label: f.label,
+      type: "text" as const,
+    }));
+    return [...baseCols, ...customCols];
   }, [config, pageSettings]);
 
   const formFields = useMemo(() => {
     if (!config) return [];
     const hidden = new Set(pageSettings?.fields?.hiddenOptionalFields ?? []);
-    return config.formFields.filter((f) => !hidden.has(f.key));
+    const base = config.formFields.filter((f) => !hidden.has(f.key));
+    const custom = customFieldsToFormFields(pageSettings?.customFields ?? []);
+    return [...base, ...custom];
   }, [config, pageSettings]);
 
   const actions = pageSettings?.actions;
@@ -445,6 +501,22 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       </div>
 
       <div className="erp-page" style={{ width: "100%", maxWidth: "100%" }}>
+        {previewMode && (
+          <div
+            style={{
+              marginBottom: "1rem",
+              padding: "0.75rem 1rem",
+              borderRadius: 10,
+              background: "linear-gradient(90deg,#101D32,#1a304d)",
+              color: "#fff",
+              border: "1px solid rgba(183,154,97,0.45)",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+            }}
+          >
+            معاينة إعدادات غير محفوظة — أغلق التبويب أو احفظ من محرر الإعدادات لتثبيت التغييرات.
+          </div>
+        )}
         <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
@@ -455,6 +527,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
                 إجمالي {rows.length} {config.entityName} — {displaySubtitle}
               </p>
             </div>
+            {showActionsBar && (
             <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
               {canOpenSettings && (
                 <Link
@@ -482,11 +555,13 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
                 </button>
               )}
             </div>
+            )}
           </div>
         </div>
 
         {showKpis && <StatsRow cards={config.kpis} />}
 
+        {showTable && (
         <div className="card-white" style={{ padding: "1.5rem" }}>
           {loadingData ? (
             <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
@@ -514,6 +589,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             />
           )}
         </div>
+        )}
       </div>
 
       <Modal

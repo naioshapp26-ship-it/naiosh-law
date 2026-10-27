@@ -1,11 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireWrite } from "@/lib/api-helpers";
+import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import {
+  attachCustomValuesToRows,
+  persistCustomFieldsFromBody,
+} from "@/lib/page-settings/record-custom-api";
 
 type Params = { params: Promise<{ id: string }> };
 
+export async function GET(_request: Request, { params }: Params) {
+  const { error } = await requireAuth();
+  if (error) return error;
+  const { id } = await params;
+  const item = await prisma.client.findUnique({ where: { id } });
+  if (!item) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+  const [withCustom] = await attachCustomValuesToRows("clients-management", [item]);
+  return NextResponse.json(withCustom);
+}
+
 export async function PATCH(request: Request, { params }: Params) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
   const { id } = await params;
   const body = await request.json();
@@ -20,6 +34,15 @@ export async function PATCH(request: Request, { params }: Params) {
       status: body.status !== undefined ? String(body.status) : undefined,
     },
   });
+
+  await persistCustomFieldsFromBody({
+    sourceModule: "clients-management",
+    sourceId: id,
+    body: body as Record<string, unknown>,
+    userId: session!.sub,
+    role: session!.role,
+  });
+
   return NextResponse.json(updated);
 }
 

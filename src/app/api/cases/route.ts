@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWrite, jsonError } from "@/lib/api-helpers";
+import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import {
+  attachCustomValuesToRows,
+  persistCustomFieldsFromBody,
+} from "@/lib/page-settings/record-custom-api";
 
 export async function GET() {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
   const cases = await prisma.case.findMany({
@@ -11,24 +15,26 @@ export async function GET() {
     include: { client: true, branch: true, specialization: true },
   });
 
-  return NextResponse.json(
-    cases.map((c) => ({
-      id: c.id,
-      caseNo: c.caseNo,
-      client: c.clientName,
-      type: c.type,
-      court: c.court,
-      status: c.status,
-      nextDate: c.nextDate ?? "—",
-      fees: c.fees ?? "0",
-      branch: c.branch?.name,
-      specialization: c.specialization?.name,
-    }))
-  );
+  const base = cases.map((c) => ({
+    id: c.id,
+    caseNo: c.caseNo,
+    client: c.clientName,
+    type: c.type,
+    court: c.court,
+    status: c.status,
+    nextDate: c.nextDate ?? "—",
+    fees: c.fees ?? "0",
+    branch: c.branch?.name,
+    specialization: c.specialization?.name,
+  }));
+
+  const withCustom = await attachCustomValuesToRows("case-management", base);
+  void session;
+  return NextResponse.json(withCustom);
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
 
   const body = await request.json();
@@ -59,6 +65,14 @@ export async function POST(request: Request) {
       fees: body.fees != null ? String(body.fees) : null,
       notes: body.notes ? String(body.notes) : null,
     },
+  });
+
+  await persistCustomFieldsFromBody({
+    sourceModule: "case-management",
+    sourceId: created.id,
+    body: body as Record<string, unknown>,
+    userId: session!.sub,
+    role: session!.role,
   });
 
   return NextResponse.json({ id: created.id, caseNo: created.caseNo, clientId: created.clientId }, { status: 201 });

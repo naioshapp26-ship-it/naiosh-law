@@ -660,13 +660,18 @@ const MODULE_PARTIAL: PageSettingsDefinition[] = modules
     status: "partial" as const,
     icon: "📌",
     manageRoles: [...STAFF_MANAGE],
-    gapReason: "تبويبات العرض/الإجراءات/الصلاحيات متاحة؛ التخصص العميق في مرحلة لاحقة",
+    gapReason:
+      "محرك ModuleShell يطبّق العنوان/الأعمدة/الأزرار/الأقسام/تعريفات الحقول المخصصة؛ التخصص العميق وربط قيم الحقول المخصصة بـAPI هذه الوحدة لم يُثبت بعد كسيناريو كامل",
     tabs: [
       displayTab({
         defaultTitle: m.title,
         defaultSubtitle: m.subtitle,
         columnOptions: [{ value: "name", label: "الاسم" }],
         defaultVisibleColumns: ["name"],
+      }),
+      fieldsTab({
+        fieldOptions: [{ value: "name", label: "الاسم" }],
+        defaultRequired: ["name"],
       }),
       actionsTab(),
       permissionsTab(),

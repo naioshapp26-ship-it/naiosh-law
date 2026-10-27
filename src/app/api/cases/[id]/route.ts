@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import {
+  attachCustomValuesToRows,
+  persistCustomFieldsFromBody,
+} from "@/lib/page-settings/record-custom-api";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,11 +15,12 @@ export async function GET(_request: Request, { params }: Params) {
 
   const item = await prisma.case.findUnique({ where: { id } });
   if (!item) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
-  return NextResponse.json(item);
+  const [withCustom] = await attachCustomValuesToRows("case-management", [item]);
+  return NextResponse.json(withCustom);
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
   const { id } = await params;
   const body = await request.json();
@@ -44,6 +49,15 @@ export async function PATCH(request: Request, { params }: Params) {
       notes: body.notes !== undefined ? String(body.notes) : undefined,
     },
   });
+
+  await persistCustomFieldsFromBody({
+    sourceModule: "case-management",
+    sourceId: id,
+    body: body as Record<string, unknown>,
+    userId: session!.sub,
+    role: session!.role,
+  });
+
   return NextResponse.json(updated);
 }
 

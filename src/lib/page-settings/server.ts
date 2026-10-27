@@ -36,7 +36,12 @@ export function collectFields(pageKey: string): SettingFieldDef[] {
 export function getDefaultValues(pageKey: string): Record<string, unknown> {
   const def = getPageDefinition(pageKey);
   if (!def) return {};
-  return buildDefaultsFromTabs(def.tabs);
+  const base = buildDefaultsFromTabs(def.tabs);
+  return {
+    ...base,
+    customFields: [],
+    sections: defaultSectionsFor(pageKey),
+  };
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -130,7 +135,101 @@ export function validateAndNormalizeValues(
     }
   }
 
+  // Preserve no-code extensions (not represented as flat SettingFieldDef)
+  if (Array.isArray(incoming.customFields)) {
+    const cleaned = sanitizeCustomFields(incoming.customFields);
+    if (!cleaned.ok) return { ok: false, error: cleaned.error };
+    merged.customFields = cleaned.fields;
+  } else if (!Array.isArray(merged.customFields)) {
+    merged.customFields = [];
+  }
+
+  if (Array.isArray(incoming.sections)) {
+    const cleaned = sanitizeSections(incoming.sections);
+    if (!cleaned.ok) return { ok: false, error: cleaned.error };
+    merged.sections = cleaned.sections;
+  } else if (!Array.isArray(merged.sections)) {
+    merged.sections = defaultSectionsFor(pageKey);
+  }
+
   return { ok: true, values: merged };
+}
+
+function sanitizeCustomFields(
+  raw: unknown
+): { ok: true; fields: Array<Record<string, unknown>> } | { ok: false; error: string } {
+  if (!Array.isArray(raw)) return { ok: false, error: "الحقول المخصصة يجب أن تكون قائمة" };
+  if (raw.length > 40) return { ok: false, error: "الحد الأقصى 40 حقلًا مخصصًا" };
+  const allowedTypes = new Set(["text", "number", "date", "select", "textarea", "checkbox"]);
+  const seen = new Set<string>();
+  const fields: Array<Record<string, unknown>> = [];
+  for (const item of raw) {
+    if (!isPlainObject(item)) return { ok: false, error: "تعريف حقل مخصص غير صالح" };
+    let key = String(item.key ?? "").trim();
+    const label = String(item.label ?? "").trim();
+    const type = String(item.type ?? "text");
+    if (!label) return { ok: false, error: "كل حقل مخصص يحتاج تسمية" };
+    if (!allowedTypes.has(type)) return { ok: false, error: `نوع حقل غير مدعوم: ${type}` };
+    if (!key) {
+      key = `cf_${Date.now().toString(36)}_${fields.length}`;
+    }
+    if (!key.startsWith("cf_")) key = `cf_${key}`;
+    if (seen.has(key)) return { ok: false, error: `مفتاح حقل مكرر: ${key}` };
+    seen.add(key);
+    const options = Array.isArray(item.options)
+      ? item.options.map((o) => String(o)).filter(Boolean).slice(0, 50)
+      : [];
+    fields.push({
+      key,
+      label: label.slice(0, 80),
+      type,
+      required: Boolean(item.required),
+      options: type === "select" ? options : undefined,
+      placeholder: item.placeholder != null ? String(item.placeholder).slice(0, 120) : undefined,
+      order: Number.isFinite(Number(item.order)) ? Number(item.order) : fields.length,
+      visible: item.visible !== false,
+    });
+  }
+  return { ok: true, fields };
+}
+
+function sanitizeSections(
+  raw: unknown
+): { ok: true; sections: Array<Record<string, unknown>> } | { ok: false; error: string } {
+  if (!Array.isArray(raw)) return { ok: false, error: "الأقسام يجب أن تكون قائمة" };
+  const allowedKinds = new Set(["kpis", "table", "actions", "notes", "custom"]);
+  const sections: Array<Record<string, unknown>> = [];
+  for (const item of raw) {
+    if (!isPlainObject(item)) return { ok: false, error: "تعريف قسم غير صالح" };
+    const id = String(item.id ?? "").trim();
+    const title = String(item.title ?? "").trim();
+    const kind = String(item.kind ?? "custom");
+    if (!id || !title) return { ok: false, error: "كل قسم يحتاج معرفًا وعنوانًا" };
+    if (!allowedKinds.has(kind)) return { ok: false, error: `نوع قسم غير مدعوم: ${kind}` };
+    sections.push({
+      id,
+      title: title.slice(0, 80),
+      kind,
+      visible: item.visible !== false,
+      order: Number.isFinite(Number(item.order)) ? Number(item.order) : sections.length,
+    });
+  }
+  return { ok: true, sections };
+}
+
+export function defaultSectionsFor(pageKey: string): Array<Record<string, unknown>> {
+  const base = [
+    { id: "kpis", title: "بطاقات المؤشرات", kind: "kpis", visible: true, order: 0 },
+    { id: "table", title: "جدول البيانات", kind: "table", visible: true, order: 1 },
+    { id: "actions", title: "شريط الإجراءات", kind: "actions", visible: true, order: 2 },
+  ];
+  if (pageKey === "case-management" || pageKey === "clients-management") {
+    return [
+      ...base,
+      { id: "notes", title: "ملاحظات الصفحة", kind: "notes", visible: false, order: 3 },
+    ];
+  }
+  return base;
 }
 
 export async function resolvePageSettings(opts: {
@@ -245,6 +344,21 @@ export async function savePageSettings(opts: {
     },
   });
 
+  // Snapshot previous values for safe restore (no-code undo)
+  if (existing) {
+    await prisma.pageSettingVersion.create({
+      data: {
+        pageKey: opts.pageKey,
+        scope: opts.scope,
+        scopeId,
+        version: existing.version,
+        values: existing.values as Prisma.InputJsonValue,
+        label: action === "reset" ? "قبل الاستعادة للافتراضي" : `نسخة v${existing.version}`,
+        createdById: opts.userId,
+      },
+    });
+  }
+
   await prisma.pageSettingAudit.create({
     data: {
       pageKey: opts.pageKey,
@@ -267,12 +381,47 @@ export async function savePageSettings(opts: {
         pageKey: opts.pageKey,
         scope: opts.scope,
         scopeId,
+        version: row.version,
       }),
       severity: "info",
     },
   });
 
   return { error: null, row };
+}
+
+export async function listPageSettingVersions(opts: {
+  pageKey: string;
+  scope?: PageSettingsScope;
+  scopeId?: string | null;
+  limit?: number;
+}) {
+  const scope = opts.scope ?? "global";
+  const scopeId = normalizeScopeId(scope, opts.scopeId);
+  return prisma.pageSettingVersion.findMany({
+    where: { pageKey: opts.pageKey, scope, scopeId },
+    orderBy: { createdAt: "desc" },
+    take: Math.min(opts.limit ?? 20, 50),
+  });
+}
+
+export async function restorePageSettingVersion(opts: {
+  pageKey: string;
+  versionId: string;
+  userId: string;
+}) {
+  const snap = await prisma.pageSettingVersion.findUnique({ where: { id: opts.versionId } });
+  if (!snap || snap.pageKey !== opts.pageKey) {
+    return { error: "النسخة غير موجودة", row: null };
+  }
+  return savePageSettings({
+    pageKey: opts.pageKey,
+    scope: snap.scope as PageSettingsScope,
+    scopeId: snap.scopeId,
+    values: (snap.values ?? {}) as Record<string, unknown>,
+    userId: opts.userId,
+    action: "restore",
+  });
 }
 
 export async function resetPageSettings(opts: {

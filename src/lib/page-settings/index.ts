@@ -2,3 +2,4 @@
 export * from "./types";
 export * from "./defaults";
 export * from "./registry";
+export * from "./custom-field-types";

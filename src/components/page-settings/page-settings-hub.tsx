@@ -44,7 +44,7 @@ function ensureCss() {
   if (document.querySelector('link[data-page-settings-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/page-settings.css?v=page-settings-20261027";
+  link.href = "/erp-app/page-settings.css?v=page-settings-20261027b";
   link.setAttribute("data-page-settings-css", "1");
   document.head.appendChild(link);
 }
@@ -119,10 +119,11 @@ export function PageSettingsHub() {
       <div className="psc-hub" dir="rtl">
         <header className="psc-hub-header">
           <div>
-            <p className="psc-eyebrow">NAIOSH Law 360</p>
+            <p className="psc-eyebrow">NAIOSH Law 360 · مركز التحكم بدون برمجة</p>
             <h1>إعدادات الصفحات</h1>
             <p className="psc-lead">
-              كل عنصر يفتح محرر إعدادات يُحفظ في PostgreSQL ويُطبَّق على الوظيفة المرتبطة.
+              قائمة بكل صفحات النظام — اضغط على اسم الصفحة لفتح إعداداتها الكاملة. التغييرات تُحفظ في
+              PostgreSQL وتُطبَّق فورًا على الصفحة الأصلية.
             </p>
           </div>
           <div className="psc-actions">
@@ -139,7 +140,7 @@ export function PageSettingsHub() {
           <div className="psc-coverage">
             <div>
               <strong>{coverage.total}</strong>
-              <span>إجمالي الصفحات</span>
+              <span>إجمالي الصفحات في السجل</span>
             </div>
             <div>
               <strong>{coverage.operational}</strong>
@@ -151,7 +152,7 @@ export function PageSettingsHub() {
             </div>
             <div>
               <strong>{coverage.planned}</strong>
-              <span>مخططة</span>
+              <span>مخططة / غير منفذة كصفحة مستقلة</span>
             </div>
           </div>
         )}
@@ -188,30 +189,34 @@ export function PageSettingsHub() {
         {loading ? (
           <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري التحميل...</p>
         ) : (
-          <div className="psc-grid">
+          <div className="psc-list" role="list">
             {pages.map((p) => {
               const colors = STATUS_COLORS[p.status];
               return (
-                <article key={p.pageKey} className="psc-card">
-                  <div className="psc-card-top">
-                    <span className="psc-icon" aria-hidden>
-                      {p.icon}
-                    </span>
-                    <div className="psc-card-title">
-                      <h2>{p.title}</h2>
-                      <span className="psc-status" style={{ background: colors.bg, color: colors.fg }}>
-                        {STATUS_LABELS[p.status]}
+                <article key={p.pageKey} className="psc-card" role="listitem">
+                  <div className="psc-card-main">
+                    <div className="psc-card-top">
+                      <span className="psc-icon" aria-hidden>
+                        {p.icon}
                       </span>
+                      <div className="psc-card-title">
+                        <h2>
+                          <Link href={p.settingsHref}>{p.title}</Link>
+                        </h2>
+                        <span className="psc-status" style={{ background: colors.bg, color: colors.fg }}>
+                          {STATUS_LABELS[p.status]}
+                        </span>
+                      </div>
                     </div>
+                    <p className="psc-desc">{p.description}</p>
+                    <p className="psc-meta">
+                      {CATEGORY_LABELS[p.category]} · {p.pageKey}
+                      {p.saved ? " · محفوظة في قاعدة البيانات" : " · قيم افتراضية"}
+                    </p>
+                    {p.gapReason && p.status !== "operational" && (
+                      <p className="psc-gap">{p.gapReason}</p>
+                    )}
                   </div>
-                  <p className="psc-desc">{p.description}</p>
-                  <p className="psc-meta">
-                    {CATEGORY_LABELS[p.category]} · {p.pageKey}
-                    {p.saved ? " · محفوظة" : " · افتراضي"}
-                  </p>
-                  {p.gapReason && p.status !== "operational" && (
-                    <p className="psc-gap">{p.gapReason}</p>
-                  )}
                   <div className="psc-card-actions">
                     <Link href={p.settingsHref} className="psc-btn primary">
                       فتح الإعدادات

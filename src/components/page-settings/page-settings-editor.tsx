@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { useSession } from "@/lib/session";
 import { getByPath, setByPath } from "@/lib/page-settings/defaults";
 import { STATUS_LABELS, type SettingFieldDef, type SettingTabDef } from "@/lib/page-settings/types";
+import type { CustomFieldDef, PageSectionDef } from "@/lib/page-settings/custom-field-types";
 
 type DefinitionPayload = {
   pageKey: string;
@@ -26,12 +27,28 @@ type AuditRow = {
   changedBy: { name: string; email: string } | null;
 };
 
+type VersionRow = {
+  id: string;
+  version: number;
+  label: string | null;
+  createdAt: string;
+};
+
+const FIELD_TYPES: Array<{ value: CustomFieldDef["type"]; label: string }> = [
+  { value: "text", label: "نص" },
+  { value: "number", label: "رقم" },
+  { value: "date", label: "تاريخ" },
+  { value: "select", label: "قائمة اختيار" },
+  { value: "textarea", label: "نص طويل" },
+  { value: "checkbox", label: "نعم/لا" },
+];
+
 function ensureCss() {
   if (typeof document === "undefined") return;
   if (document.querySelector('link[data-page-settings-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/page-settings.css?v=page-settings-20261027";
+  link.href = "/erp-app/page-settings.css?v=page-settings-20261027b";
   link.setAttribute("data-page-settings-css", "1");
   document.head.appendChild(link);
 }
@@ -145,6 +162,35 @@ function FieldControl({
   );
 }
 
+function asCustomFields(raw: unknown): CustomFieldDef[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === "object")
+    .map((x, i) => ({
+      key: String(x.key ?? `cf_${i}`),
+      label: String(x.label ?? ""),
+      type: (String(x.type ?? "text") as CustomFieldDef["type"]),
+      required: Boolean(x.required),
+      options: Array.isArray(x.options) ? x.options.map(String) : [],
+      placeholder: x.placeholder != null ? String(x.placeholder) : undefined,
+      order: Number(x.order ?? i),
+      visible: x.visible !== false,
+    }));
+}
+
+function asSections(raw: unknown): PageSectionDef[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === "object")
+    .map((x, i) => ({
+      id: String(x.id ?? `sec_${i}`),
+      title: String(x.title ?? ""),
+      kind: (String(x.kind ?? "custom") as PageSectionDef["kind"]),
+      visible: x.visible !== false,
+      order: Number(x.order ?? i),
+    }));
+}
+
 export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
   const { user, ready } = useSession(true);
   const [def, setDef] = useState<DefinitionPayload | null>(null);
@@ -157,7 +203,12 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [audits, setAudits] = useState<AuditRow[]>([]);
+  const [versions, setVersions] = useState<VersionRow[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+
+  const customFields = asCustomFields(values.customFields);
+  const sections = asSections(values.sections);
 
   useEffect(() => {
     ensureCss();
@@ -167,6 +218,15 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3200);
   }, []);
+
+  const loadVersions = useCallback(async () => {
+    const res = await fetch(`/api/page-settings/${encodeURIComponent(pageKey)}/versions`, {
+      credentials: "include",
+    });
+    if (!res.ok) return;
+    const body = await res.json();
+    setVersions(body.versions ?? []);
+  }, [pageKey]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -192,13 +252,14 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
           const aBody = await aRes.json();
           setAudits(aBody.audits ?? []);
         }
+        await loadVersions();
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطأ");
     } finally {
       setLoading(false);
     }
-  }, [pageKey]);
+  }, [pageKey, loadVersions]);
 
   useEffect(() => {
     if (ready && user) load();
@@ -211,6 +272,16 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
 
   const updateField = (field: SettingFieldDef, next: unknown) => {
     setValues((prev) => setByPath(prev, field.path, next));
+    setDirty(true);
+  };
+
+  const setCustomFields = (next: CustomFieldDef[]) => {
+    setValues((prev) => ({ ...prev, customFields: next }));
+    setDirty(true);
+  };
+
+  const setSections = (next: PageSectionDef[]) => {
+    setValues((prev) => ({ ...prev, sections: next }));
     setDirty(true);
   };
 
@@ -260,6 +331,73 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
     }
   };
 
+  const restoreVersion = async (versionId: string) => {
+    if (!canManage) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/page-settings/${encodeURIComponent(pageKey)}/versions`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ versionId }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "فشل استعادة النسخة");
+      setValues(body.resolved?.values ?? values);
+      setDirty(false);
+      showToast("success", "تمت استعادة النسخة السابقة بأمان");
+      await load();
+    } catch (e) {
+      showToast("error", e instanceof Error ? e.message : "فشل الاستعادة");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openPreview = () => {
+    if (!def?.pageHref) return;
+    try {
+      sessionStorage.setItem(
+        `naiosh.pageSettings.preview.${pageKey}`,
+        JSON.stringify(values)
+      );
+    } catch {
+      /* ignore */
+    }
+    setPreviewing(true);
+    window.open(`${def.pageHref}?settingsPreview=1`, "_blank", "noopener,noreferrer");
+  };
+
+  const addCustomField = () => {
+    const n = customFields.length + 1;
+    setCustomFields([
+      ...customFields,
+      {
+        key: `cf_field_${Date.now().toString(36)}`,
+        label: `حقل مخصص ${n}`,
+        type: "text",
+        required: false,
+        order: customFields.length,
+        visible: true,
+        options: [],
+      },
+    ]);
+  };
+
+  const addSection = () => {
+    const n = sections.length + 1;
+    setSections([
+      ...sections,
+      {
+        id: `custom_${Date.now().toString(36)}`,
+        title: `قسم إضافي ${n}`,
+        kind: "custom",
+        visible: true,
+        order: sections.length,
+      },
+    ]);
+  };
+
   if (!ready || !user) {
     return (
       <AppShell>
@@ -277,6 +415,8 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
       </AppShell>
     );
   }
+
+  const showBuilder = tabId === "fields" || tabId === "display";
 
   return (
     <AppShell>
@@ -304,8 +444,25 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                 الصفحة الأصلية
               </Link>
             )}
+            <button
+              type="button"
+              className="psc-btn gold"
+              disabled={!def?.pageHref}
+              onClick={openPreview}
+            >
+              معاينة
+            </button>
           </div>
         </header>
+
+        {previewing && (
+          <div className="psc-preview-banner">
+            <span>وضع المعاينة: المسودة في جلسة المتصفح — احفظ لتثبيتها في PostgreSQL.</span>
+            <button type="button" className="psc-btn ghost" style={{ color: "#fff", borderColor: "#b79a61" }} onClick={() => setPreviewing(false)}>
+              إخفاء
+            </button>
+          </div>
+        )}
 
         {error && <div className="psc-error">{error}</div>}
         {loading || !def ? (
@@ -344,6 +501,201 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                     {f.description ? <p className="hint">{f.description}</p> : null}
                   </div>
                 ))}
+
+                {tabId === "fields" && (
+                  <div className="psc-field">
+                    <label>الحقول المخصصة (تُحفظ في PostgreSQL مع كل سجل)</label>
+                    <p className="hint">
+                      إضافة حقل يظهر في نموذج الإضافة/التعديل للصفحة الأصلية، وتُخزَّن قيمته مع السجل.
+                      حذف الحقل من التصميم لا يحذف السجلات الفعلية.
+                    </p>
+                    <div className="psc-builder">
+                      {customFields.map((cf, idx) => (
+                        <div key={cf.key} className="psc-builder-row">
+                          <input
+                            value={cf.label}
+                            disabled={!canManage}
+                            placeholder="اسم الحقل"
+                            onChange={(e) => {
+                              const next = [...customFields];
+                              next[idx] = { ...cf, label: e.target.value };
+                              setCustomFields(next);
+                            }}
+                          />
+                          <select
+                            value={cf.type}
+                            disabled={!canManage}
+                            onChange={(e) => {
+                              const next = [...customFields];
+                              next[idx] = {
+                                ...cf,
+                                type: e.target.value as CustomFieldDef["type"],
+                              };
+                              setCustomFields(next);
+                            }}
+                          >
+                            {FIELD_TYPES.map((t) => (
+                              <option key={t.value} value={t.value}>
+                                {t.label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            value={(cf.options ?? []).join("، ")}
+                            disabled={!canManage || cf.type !== "select"}
+                            placeholder="خيارات القائمة (مفصولة بفاصلة)"
+                            onChange={(e) => {
+                              const next = [...customFields];
+                              next[idx] = {
+                                ...cf,
+                                options: e.target.value
+                                  .split(/[,،]/)
+                                  .map((s) => s.trim())
+                                  .filter(Boolean),
+                              };
+                              setCustomFields(next);
+                            }}
+                          />
+                          <label className="psc-check-row">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(cf.required)}
+                              disabled={!canManage}
+                              onChange={(e) => {
+                                const next = [...customFields];
+                                next[idx] = { ...cf, required: e.target.checked };
+                                setCustomFields(next);
+                              }}
+                            />
+                            إلزامي
+                          </label>
+                          <label className="psc-check-row">
+                            <input
+                              type="checkbox"
+                              checked={cf.visible !== false}
+                              disabled={!canManage}
+                              onChange={(e) => {
+                                const next = [...customFields];
+                                next[idx] = { ...cf, visible: e.target.checked };
+                                setCustomFields(next);
+                              }}
+                            />
+                            ظاهر
+                          </label>
+                          <button
+                            type="button"
+                            className="psc-btn danger"
+                            disabled={!canManage}
+                            onClick={() =>
+                              setCustomFields(customFields.filter((_, i) => i !== idx))
+                            }
+                          >
+                            إزالة من التصميم
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="psc-btn primary"
+                        disabled={!canManage}
+                        onClick={addCustomField}
+                      >
+                        ＋ إضافة حقل مخصص
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {tabId === "display" && (
+                  <div className="psc-field">
+                    <label>أقسام الصفحة (إظهار / إخفاء / ترتيب)</label>
+                    <p className="hint">
+                      إخفاء قسم من العرض لا يحذف بيانات القضايا أو الموكلين. حذف قسم مخصص يزيل التصميم فقط.
+                    </p>
+                    <div className="psc-builder">
+                      {sections
+                        .slice()
+                        .sort((a, b) => a.order - b.order)
+                        .map((sec, idx) => (
+                          <div key={sec.id} className="psc-section-row">
+                            <input
+                              value={sec.title}
+                              disabled={!canManage}
+                              onChange={(e) => {
+                                const next = sections.map((s) =>
+                                  s.id === sec.id ? { ...s, title: e.target.value } : s
+                                );
+                                setSections(next);
+                              }}
+                            />
+                            <span className="psc-meta">{sec.kind} · {sec.id}</span>
+                            <label className="psc-check-row">
+                              <input
+                                type="checkbox"
+                                checked={sec.visible !== false}
+                                disabled={!canManage}
+                                onChange={(e) => {
+                                  setSections(
+                                    sections.map((s) =>
+                                      s.id === sec.id ? { ...s, visible: e.target.checked } : s
+                                    )
+                                  );
+                                }}
+                              />
+                              ظاهر
+                            </label>
+                            <button
+                              type="button"
+                              className="psc-btn ghost"
+                              disabled={!canManage || idx === 0}
+                              onClick={() => {
+                                const sorted = sections.slice().sort((a, b) => a.order - b.order);
+                                if (idx === 0) return;
+                                const a = sorted[idx - 1];
+                                const b = sorted[idx];
+                                const orderA = a.order;
+                                setSections(
+                                  sections.map((s) => {
+                                    if (s.id === a.id) return { ...s, order: b.order };
+                                    if (s.id === b.id) return { ...s, order: orderA };
+                                    return s;
+                                  })
+                                );
+                              }}
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              className="psc-btn ghost"
+                              disabled={!canManage}
+                              onClick={() => {
+                                if (sec.kind !== "custom") {
+                                  setSections(
+                                    sections.map((s) =>
+                                      s.id === sec.id ? { ...s, visible: false } : s
+                                    )
+                                  );
+                                  return;
+                                }
+                                setSections(sections.filter((s) => s.id !== sec.id));
+                              }}
+                            >
+                              {sec.kind === "custom" ? "حذف من التصميم" : "إخفاء"}
+                            </button>
+                          </div>
+                        ))}
+                      <button
+                        type="button"
+                        className="psc-btn primary"
+                        disabled={!canManage}
+                        onClick={addSection}
+                      >
+                        ＋ إضافة قسم مدعوم
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="psc-footer-bar">
@@ -368,6 +720,14 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                 </button>
                 <button
                   type="button"
+                  className="psc-btn ghost"
+                  disabled={!def.pageHref}
+                  onClick={openPreview}
+                >
+                  معاينة
+                </button>
+                <button
+                  type="button"
                   className="psc-btn danger"
                   disabled={!canManage || saving}
                   onClick={resetDefaults}
@@ -379,6 +739,30 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                 )}
               </div>
             </div>
+
+            {versions.length > 0 && (
+              <div className="psc-audit">
+                <h3>نسخ الإعدادات السابقة (استعادة آمنة)</h3>
+                <div className="psc-versions">
+                  {versions.map((v) => (
+                    <div key={v.id} className="psc-version-row">
+                      <span>
+                        v{v.version} — {v.label ?? "نسخة"} —{" "}
+                        {new Date(v.createdAt).toLocaleString("ar")}
+                      </span>
+                      <button
+                        type="button"
+                        className="psc-btn ghost"
+                        disabled={!canManage || saving}
+                        onClick={() => restoreVersion(v.id)}
+                      >
+                        استعادة
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {audits.length > 0 && (
               <div className="psc-audit">
@@ -392,6 +776,13 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
                   ))}
                 </ul>
               </div>
+            )}
+
+            {showBuilder && (
+              <p className="psc-meta" style={{ marginTop: "1rem" }}>
+                ملاحظة أمان: حذف قسم من التصميم ≠ حذف سجل أعمال. ضوابط بيانات الموكلين والقواعد القانونية
+                المقفلة لا يمكن تعطيلها من هنا.
+              </p>
             )}
           </>
         )}
