@@ -146,12 +146,26 @@ async function main() {
       live = save.status === 200;
     } else {
       await page.goto(`${BASE}${p.pageHref}`, {
-        waitUntil: "domcontentloaded",
+        waitUntil: "networkidle",
         timeout: 25000,
       }).catch(() => null);
-      await page.waitForTimeout(550);
-      const text = await page.locator("body").innerText().catch(() => "");
-      live = text.includes(String(stamp));
+      // Specialty/axis hubs load settings async — wait for stamped title in h1 or body
+      const waitMs = p.pageKey.startsWith("specialty-") || p.pageKey.startsWith("axis-") ? 4000 : 2000;
+      try {
+        await page.waitForFunction(
+          (s) => {
+            const h1 = document.querySelector("h1")?.textContent || "";
+            return h1.includes(s) || (document.body?.innerText || "").includes(s);
+          },
+          String(stamp),
+          { timeout: waitMs }
+        );
+        live = true;
+      } catch {
+        const text = await page.locator("body").innerText().catch(() => "");
+        const h1 = (await page.locator("h1").first().textContent().catch(() => "")) || "";
+        live = text.includes(String(stamp)) || h1.includes(String(stamp));
+      }
       // nav sync for primary pages
       if (p.pageKey === "case-management" || p.pageKey === "dashboard") {
         await page.goto(`${BASE}/app/dashboard`, { waitUntil: "networkidle" });
