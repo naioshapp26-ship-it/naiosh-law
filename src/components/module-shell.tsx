@@ -15,8 +15,10 @@ import { extractAttachments, persistFormAttachments, stripAttachments } from "@/
 import { sendRecordToArchive, buildArchiveRef, buildArchiveTitle } from "@/lib/archive-client";
 import { extractPartyFields, stripPartyFields, type PartyFields } from "@/lib/party-fields";
 import {
+  ensurePersonContactOnColumns,
   ensurePersonContactOnFormFields,
   PERSON_BEARING_MODULE_SLUGS,
+  PERSON_CONTACT_COLUMN_KEYS,
   PERSON_CONTACT_VIEW_FIELDS,
   UNSPECIFIED_CONTACT,
 } from "@/lib/person-contact";
@@ -271,9 +273,9 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     if (!config) return [];
     const keys = pageSettings?.display?.visibleColumns;
     const customDefs = recordCustomDefs;
-    /** Permanent person-contact rule: never drop phone/country/city from person tables */
-    const CONTACT_KEYS = new Set(["phone", "country", "city", "phoneDialCode"]);
-    const baseCols =
+    /** Permanent person-contact rule: never drop required contact columns from person tables */
+    const CONTACT_KEYS = new Set<string>(PERSON_CONTACT_COLUMN_KEYS);
+    const rawCols =
       !keys || keys.length === 0
         ? config.columns
         : (() => {
@@ -281,10 +283,20 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             for (const c of config.columns) {
               if (CONTACT_KEYS.has(c.key)) set.add(c.key);
             }
+            for (const k of CONTACT_KEYS) set.add(k);
             // Preserve config column order (mandatory RTL order for cases)
             const filtered = config.columns.filter((c) => set.has(c.key));
             return filtered.length > 0 ? filtered : config.columns;
           })();
+    const baseCols = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
+      ? ensurePersonContactOnColumns(rawCols, {
+          force: config.slug === "clients-management" || config.slug === "administration",
+          nameKeys:
+            config.slug === "clients-management" || config.slug === "administration"
+              ? ["name", "client", "requester"]
+              : ["client", "clientName", "requester", "name"],
+        })
+      : rawCols;
     const customCols = customDefs.map((f) => ({
       key: f.key,
       label: f.label,

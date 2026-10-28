@@ -21,6 +21,15 @@ import { extractAttachments, persistFormAttachments, stripAttachments } from "@/
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import Link from "next/link";
+import {
+  PersonContactDataCells,
+  PersonContactHeaderCells,
+  PersonContactViewBlock,
+  contactPayloadFromForm,
+  withPersonContactFormFields,
+  type PersonContactRow,
+} from "@/components/person-contact-ui";
+import { personContactFormFields } from "@/lib/person-contact";
 
 type Tab =
   | "invoices"
@@ -40,7 +49,7 @@ type Invoice = {
   paid: string;
   issueDate: string;
   status: string;
-};
+} & PersonContactRow;
 
 type FeeRule = {
   id: string;
@@ -63,7 +72,7 @@ type BailItem = {
   status: string;
   depositDate: string;
   refundDate: string;
-};
+} & PersonContactRow;
 
 type PersonalItem = {
   id: string;
@@ -72,7 +81,13 @@ type PersonalItem = {
   guarantor: string;
   relationship: string;
   status: string;
-};
+  guarantorPhone?: string;
+  guarantorCountry?: string;
+  guarantorCity?: string;
+  guarantorPhoneDialCode?: string;
+  guarantorPhoneSecondary?: string;
+  guarantorPhoneSecondaryDialCode?: string;
+} & PersonContactRow;
 
 type NotificationItem = {
   id: string;
@@ -91,7 +106,7 @@ type PaymentItem = {
   amount: string;
   method: string;
   paidAt: string;
-};
+} & PersonContactRow;
 
 type Spec = { id: string; name: string };
 
@@ -120,7 +135,7 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
   "بوابة دفع": "payment_gateway",
 };
 
-const invoiceFields: FormField[] = [
+const invoiceFields: FormField[] = withPersonContactFormFields([
   { key: "client", label: "الموكل", type: "text", required: true },
   {
     key: "type",
@@ -138,7 +153,7 @@ const invoiceFields: FormField[] = [
     options: ["غير مسدد", "جزئي", "مسدد"],
   },
   { key: "notes", label: "ملاحظات", type: "textarea" },
-];
+]);
 
 const feeRuleFields: FormField[] = [
   { key: "name", label: "اسم القاعدة", type: "text", required: true },
@@ -152,9 +167,9 @@ const feeRuleFields: FormField[] = [
   { key: "description", label: "الوصف", type: "textarea" },
 ];
 
-const bailFields: FormField[] = [
+const bailFields: FormField[] = withPersonContactFormFields([
   { key: "caseRef", label: "مرجع القضية", type: "text" },
-  { key: "client", label: "الموكل", type: "text" },
+  { key: "client", label: "الموكل", type: "text", required: true },
   { key: "amount", label: "المبلغ", type: "number" },
   { key: "court", label: "المحكمة", type: "text" },
   { key: "depositDate", label: "تاريخ الإيداع", type: "date" },
@@ -165,21 +180,61 @@ const bailFields: FormField[] = [
     options: ["نشط", "مسترد", "موقوف"],
   },
   { key: "notes", label: "ملاحظات", type: "textarea" },
-];
+]);
 
-const personalFields: FormField[] = [
-  { key: "caseRef", label: "مرجع القضية", type: "text" },
-  { key: "client", label: "الموكل", type: "text" },
-  { key: "guarantor", label: "الضامن", type: "text" },
-  { key: "relationship", label: "العلاقة", type: "text" },
-  {
-    key: "status",
-    label: "الحالة",
-    type: "select",
-    options: ["ساري", "منتهي"],
-  },
-  { key: "notes", label: "ملاحظات", type: "textarea" },
-];
+const GUARANTOR_CONTACT_FIELDS: FormField[] = personContactFormFields({
+  required: false,
+  includeSecondary: true,
+}).map((f) => ({
+  ...f,
+  key:
+    f.key === "phoneDialCode"
+      ? "guarantorPhoneDialCode"
+      : f.key === "phone"
+        ? "guarantorPhone"
+        : f.key === "country"
+          ? "guarantorCountry"
+          : f.key === "city"
+            ? "guarantorCity"
+            : f.key === "phoneSecondary"
+              ? "guarantorPhoneSecondary"
+              : f.key === "phoneSecondaryDialCode"
+                ? "guarantorPhoneSecondaryDialCode"
+                : `guarantor_${f.key}`,
+  label:
+    f.key === "phoneDialCode"
+      ? "مفتاح جوال الضامن"
+      : f.key === "phone"
+        ? "جوال الضامن"
+        : f.key === "country"
+          ? "دولة الضامن"
+          : f.key === "city"
+            ? "مدينة الضامن"
+            : f.key === "phoneSecondaryDialCode"
+              ? "مفتاح جوال الضامن الإضافي"
+              : f.key === "phoneSecondary"
+                ? "جوال الضامن الإضافي"
+                : f.label,
+  dependsOn: f.key === "city" ? "guarantorCountry" : f.dependsOn,
+}));
+
+const personalFields: FormField[] = withPersonContactFormFields(
+  [
+    { key: "caseRef", label: "مرجع القضية", type: "text" },
+    { key: "client", label: "الموكل", type: "text", required: true },
+    { key: "guarantor", label: "الضامن", type: "text", required: true },
+    ...GUARANTOR_CONTACT_FIELDS,
+    { key: "relationship", label: "العلاقة", type: "text" },
+    {
+      key: "status",
+      label: "الحالة",
+      type: "select",
+      options: ["ساري", "منتهي"],
+    },
+    { key: "notes", label: "ملاحظات", type: "textarea" },
+  ],
+  { nameKeys: ["client"] }
+);
 
 const notificationFields: FormField[] = [
   { key: "title", label: "العنوان", type: "text", required: true },
@@ -396,6 +451,7 @@ export default function LegalFinancePage() {
               : "/api/payments";
 
   const buildPayload = (data: Record<string, unknown>) => {
+    const contact = contactPayloadFromForm(data);
     if (tab === "invoices") {
       return {
         client: data.client,
@@ -405,6 +461,7 @@ export default function LegalFinancePage() {
         issueDate: data.issueDate || undefined,
         status: data.status || "غير مسدد",
         notes: data.notes || undefined,
+        ...contact,
       };
     }
     if (tab === "fee-rules") {
@@ -429,6 +486,7 @@ export default function LegalFinancePage() {
         depositDate: data.depositDate,
         status: data.status || "نشط",
         notes: data.notes || undefined,
+        ...contact,
       };
     }
     if (tab === "personal") {
@@ -439,6 +497,13 @@ export default function LegalFinancePage() {
         relationship: data.relationship || undefined,
         status: data.status || "ساري",
         notes: data.notes || undefined,
+        ...contact,
+        guarantorPhone: data.guarantorPhone,
+        guarantorPhoneDialCode: data.guarantorPhoneDialCode,
+        guarantorPhoneSecondary: data.guarantorPhoneSecondary,
+        guarantorPhoneSecondaryDialCode: data.guarantorPhoneSecondaryDialCode,
+        guarantorCountry: data.guarantorCountry,
+        guarantorCity: data.guarantorCity,
       };
     }
     if (tab === "notifications") {
@@ -676,12 +741,18 @@ ${stamp}` : stamp;
           <>
             {tab === "invoices" && (
               <div className="card-white" style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
                   <thead>
                     <tr>
-                      {["رقم الفاتورة", "الموكل", "النوع", "المبلغ", "المسدد", "التاريخ", "الحالة", "الإجراءات"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
-                      ))}
+                      <th style={thStyle}>رقم الفاتورة</th>
+                      <th style={thStyle}>الموكل</th>
+                      <PersonContactHeaderCells style={thStyle} />
+                      <th style={thStyle}>النوع</th>
+                      <th style={thStyle}>المبلغ</th>
+                      <th style={thStyle}>المسدد</th>
+                      <th style={thStyle}>التاريخ</th>
+                      <th style={thStyle}>الحالة</th>
+                      <th style={thStyle}>الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -689,6 +760,11 @@ ${stamp}` : stamp;
                       <tr key={inv.id}>
                         <td style={tdStyle}>{inv.invoiceNo}</td>
                         <td style={tdStyle}>{inv.client}</td>
+                        <PersonContactDataCells
+                          row={inv}
+                          style={tdStyle}
+                          mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                        />
                         <td style={tdStyle}>{inv.type}</td>
                         <td style={tdStyle}>{formatCurrency(inv.amount)}</td>
                         <td style={tdStyle}>{formatCurrency(inv.paid)}</td>
@@ -820,12 +896,18 @@ ${stamp}` : stamp;
 
             {tab === "bail" && (
               <div className="card-white" style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
                   <thead>
                     <tr>
-                      {["القضية", "الموكل", "المبلغ", "المحكمة", "تاريخ الإيداع", "الاسترداد", "الحالة", "الإجراءات"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
-                      ))}
+                      <th style={thStyle}>القضية</th>
+                      <th style={thStyle}>الموكل</th>
+                      <PersonContactHeaderCells style={thStyle} />
+                      <th style={thStyle}>المبلغ</th>
+                      <th style={thStyle}>المحكمة</th>
+                      <th style={thStyle}>تاريخ الإيداع</th>
+                      <th style={thStyle}>الاسترداد</th>
+                      <th style={thStyle}>الحالة</th>
+                      <th style={thStyle}>الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -833,6 +915,11 @@ ${stamp}` : stamp;
                       <tr key={b.id}>
                         <td style={tdStyle}>{b.caseRef}</td>
                         <td style={tdStyle}>{b.client}</td>
+                        <PersonContactDataCells
+                          row={b}
+                          style={tdStyle}
+                          mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                        />
                         <td style={tdStyle}>{formatCurrency(b.amount)}</td>
                         <td style={tdStyle}>{b.court}</td>
                         <td style={tdStyle}>{b.depositDate}</td>
@@ -857,12 +944,17 @@ ${stamp}` : stamp;
 
             {tab === "personal" && (
               <div className="card-white" style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1400 }}>
                   <thead>
                     <tr>
-                      {["القضية", "الموكل", "الضامن", "العلاقة", "الحالة", "الإجراءات"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
-                      ))}
+                      <th style={thStyle}>القضية</th>
+                      <th style={thStyle}>الموكل</th>
+                      <PersonContactHeaderCells style={thStyle} />
+                      <th style={thStyle}>الضامن</th>
+                      <PersonContactHeaderCells style={thStyle} />
+                      <th style={thStyle}>العلاقة</th>
+                      <th style={thStyle}>الحالة</th>
+                      <th style={thStyle}>الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -870,7 +962,24 @@ ${stamp}` : stamp;
                       <tr key={g.id}>
                         <td style={tdStyle}>{g.caseRef}</td>
                         <td style={tdStyle}>{g.client}</td>
+                        <PersonContactDataCells
+                          row={g}
+                          style={tdStyle}
+                          mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                        />
                         <td style={tdStyle}>{g.guarantor}</td>
+                        <PersonContactDataCells
+                          row={{
+                            phone: g.guarantorPhone,
+                            phoneDialCode: g.guarantorPhoneDialCode,
+                            phoneSecondary: g.guarantorPhoneSecondary,
+                            phoneSecondaryDialCode: g.guarantorPhoneSecondaryDialCode,
+                            country: g.guarantorCountry,
+                            city: g.guarantorCity,
+                          }}
+                          style={tdStyle}
+                          mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                        />
                         <td style={tdStyle}>{g.relationship}</td>
                         <td style={tdStyle}>{g.status}</td>
                         <td style={tdStyle}>
@@ -928,12 +1037,16 @@ ${stamp}` : stamp;
 
             {tab === "payments" && (
               <div className="card-white" style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
                   <thead>
                     <tr>
-                      {["الفاتورة", "الموكل", "المبلغ", "طريقة الدفع", "التاريخ", "الإجراءات"].map((h) => (
-                        <th key={h} style={thStyle}>{h}</th>
-                      ))}
+                      <th style={thStyle}>الفاتورة</th>
+                      <th style={thStyle}>الموكل</th>
+                      <PersonContactHeaderCells style={thStyle} />
+                      <th style={thStyle}>المبلغ</th>
+                      <th style={thStyle}>طريقة الدفع</th>
+                      <th style={thStyle}>التاريخ</th>
+                      <th style={thStyle}>الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -941,6 +1054,11 @@ ${stamp}` : stamp;
                       <tr key={p.id}>
                         <td style={tdStyle}>{p.invoiceNo}</td>
                         <td style={tdStyle}>{p.client}</td>
+                        <PersonContactDataCells
+                          row={p}
+                          style={tdStyle}
+                          mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                        />
                         <td style={tdStyle}>{formatCurrency(p.amount)}</td>
                         <td style={tdStyle}>{p.method}</td>
                         <td style={tdStyle}>{p.paidAt}</td>
@@ -1011,13 +1129,60 @@ ${stamp}` : stamp;
               <h3 style={{ fontWeight: 900, fontSize: "1.05rem" }}>تفاصيل السجل</h3>
               <button type="button" onClick={() => setViewTarget(null)} style={{ border: "1px solid #e2e8f0", background: "#f8f9fb", borderRadius: 8, width: 32, height: 32, cursor: "pointer" }}>✕</button>
             </div>
-            <div style={{ display: "grid", gap: "0.65rem" }}>
-              {Object.entries(viewTarget).filter(([k]) => k !== "id").map(([key, val]) => (
-                <div key={key} style={{ background: "#f8f9fb", borderRadius: 10, padding: "0.75rem 0.9rem" }}>
-                  <p style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 700, marginBottom: 4 }}>{key}</p>
-                  <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#0a0a12" }}>{String(val ?? "—")}</p>
-                </div>
-              ))}
+            <PersonContactViewBlock
+              title="بيانات اتصال الموكل"
+              row={{
+                name: String(viewTarget.client ?? viewTarget.name ?? ""),
+                phone: viewTarget.phone as string,
+                phoneDialCode: viewTarget.phoneDialCode as string,
+                phoneSecondary: viewTarget.phoneSecondary as string,
+                phoneSecondaryDialCode: viewTarget.phoneSecondaryDialCode as string,
+                country: viewTarget.country as string,
+                city: viewTarget.city as string,
+              }}
+            />
+            {viewTarget.guarantor != null && String(viewTarget.guarantor).trim() !== "" && (
+              <PersonContactViewBlock
+                title="بيانات اتصال الضامن"
+                row={{
+                  name: String(viewTarget.guarantor ?? ""),
+                  phone: viewTarget.guarantorPhone as string,
+                  phoneDialCode: viewTarget.guarantorPhoneDialCode as string,
+                  phoneSecondary: viewTarget.guarantorPhoneSecondary as string,
+                  phoneSecondaryDialCode: viewTarget.guarantorPhoneSecondaryDialCode as string,
+                  country: viewTarget.guarantorCountry as string,
+                  city: viewTarget.guarantorCity as string,
+                }}
+              />
+            )}
+            <div style={{ display: "grid", gap: "0.65rem", marginTop: "1rem" }}>
+              {Object.entries(viewTarget)
+                .filter(
+                  ([k]) =>
+                    ![
+                      "id",
+                      "clientId",
+                      "phone",
+                      "phoneDialCode",
+                      "phoneSecondary",
+                      "phoneSecondaryDialCode",
+                      "country",
+                      "city",
+                      "contactIncomplete",
+                      "guarantorPhone",
+                      "guarantorPhoneDialCode",
+                      "guarantorPhoneSecondary",
+                      "guarantorPhoneSecondaryDialCode",
+                      "guarantorCountry",
+                      "guarantorCity",
+                    ].includes(k)
+                )
+                .map(([key, val]) => (
+                  <div key={key} style={{ background: "#f8f9fb", borderRadius: 10, padding: "0.75rem 0.9rem" }}>
+                    <p style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 700, marginBottom: 4 }}>{key}</p>
+                    <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#0a0a12" }}>{String(val ?? "—")}</p>
+                  </div>
+                ))}
             </div>
             {canWrite && (
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.25rem", justifyContent: "flex-end" }}>

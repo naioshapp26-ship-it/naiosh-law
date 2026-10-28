@@ -25,6 +25,12 @@ import {
 } from "@/components/page-settings/settings-applied-chrome";
 import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import type { FormField } from "@/data/module-configs";
+import { COUNTRY_DIAL_CODES, COUNTRY_NAMES } from "@/lib/person-contact";
+import {
+  PersonContactDataCells,
+  PersonContactHeaderCells,
+  PersonContactViewBlock,
+} from "@/components/person-contact-ui";
 import {
   internationalLawAxes,
   axisBySlug,
@@ -79,43 +85,55 @@ export type LawEntry = {
   firstPartyPhone: string;
   firstPartyCountry?: string;
   firstPartyCity?: string;
+  firstPartyPhoneSecondary?: string;
+  firstPartyPhoneSecondaryDialCode?: string;
   secondParty: string;
   secondPartyDialCode?: string;
   secondPartyPhone: string;
   secondPartyCountry?: string;
   secondPartyCity?: string;
+  secondPartyPhoneSecondary?: string;
+  secondPartyPhoneSecondaryDialCode?: string;
   phone?: string;
   phoneDialCode?: string;
+  phoneSecondary?: string;
+  phoneSecondaryDialCode?: string;
   clientCountry?: string;
   city?: string;
 };
+
+const DIAL_OPTS = COUNTRY_DIAL_CODES.map((c) => `${c.dialCode} (${c.country})`);
 
 const entryFields: FormField[] = [
   { key: "title", label: "عنوان السجل", type: "text", required: true },
   { key: "topicSlug", label: "الموضوع", type: "select", required: true, options: [] },
   { key: "jurisdiction", label: "الاختصاص", type: "text" },
-  { key: "country", label: "الدولة", type: "text" },
+  { key: "country", label: "دولة الاختصاص", type: "text" },
   { key: "category", label: "التصنيف", type: "text" },
   { key: "status", label: "الحالة", type: "select", options: ["نشط", "قيد المراجعة", "مكتمل", "مؤرشف"] },
-  { key: "client", label: "الموكل / الجهة", type: "text" },
-  { key: "phoneDialCode", label: "مفتاح الدولة", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "client", label: "الموكل", type: "text", required: true },
+  { key: "phoneDialCode", label: "مفتاح الدولة", type: "select", required: true, options: DIAL_OPTS },
   { key: "phone", label: "رقم الجوال", type: "tel", required: true, placeholder: "5XXXXXXXX" },
-  { key: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي", type: "select", required: false, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
-  { key: "phoneSecondary", label: "رقم جوال إضافي", type: "tel", required: false, placeholder: "اختياري — 5XXXXXXXX" },
-  { key: "clientCountry", label: "دولة الموكل", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
+  { key: "clientCountry", label: "دولة الموكل", type: "select", required: true, options: [...COUNTRY_NAMES] },
   { key: "city", label: "المدينة", type: "text", required: true, placeholder: "المدينة", dependsOn: "clientCountry" },
+  { key: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي", type: "select", required: false, options: DIAL_OPTS },
+  { key: "phoneSecondary", label: "رقم جوال إضافي", type: "tel", required: false, placeholder: "اختياري — 5XXXXXXXX" },
   { key: "effectiveDate", label: "تاريخ السريان", type: "text" },
   { key: "source", label: "المصدر", type: "text" },
   { key: "firstParty", label: "طرف أول", type: "text", required: true, placeholder: "اسم الطرف الأول" },
-  { key: "firstPartyDialCode", label: "مفتاح جوال الطرف الأول", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "firstPartyDialCode", label: "مفتاح جوال الطرف الأول", type: "select", required: true, options: DIAL_OPTS },
   { key: "firstPartyPhone", label: "رقم جوال الطرف الأول", type: "tel", required: true, placeholder: "5XXXXXXXX" },
-  { key: "firstPartyCountry", label: "دولة الطرف الأول", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
+  { key: "firstPartyCountry", label: "دولة الطرف الأول", type: "select", required: true, options: [...COUNTRY_NAMES] },
   { key: "firstPartyCity", label: "مدينة الطرف الأول", type: "text", required: true, dependsOn: "firstPartyCountry" },
+  { key: "firstPartyPhoneSecondaryDialCode", label: "مفتاح جوال إضافي — الطرف الأول", type: "select", required: false, options: DIAL_OPTS },
+  { key: "firstPartyPhoneSecondary", label: "جوال إضافي — الطرف الأول", type: "tel", required: false },
   { key: "secondParty", label: "طرف ثاني", type: "text", required: true, placeholder: "اسم الطرف الثاني" },
-  { key: "secondPartyDialCode", label: "مفتاح جوال الطرف الثاني", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "secondPartyDialCode", label: "مفتاح جوال الطرف الثاني", type: "select", required: true, options: DIAL_OPTS },
   { key: "secondPartyPhone", label: "رقم جوال الطرف الثاني", type: "tel", required: true, placeholder: "5XXXXXXXX" },
-  { key: "secondPartyCountry", label: "دولة الطرف الثاني", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
+  { key: "secondPartyCountry", label: "دولة الطرف الثاني", type: "select", required: true, options: [...COUNTRY_NAMES] },
   { key: "secondPartyCity", label: "مدينة الطرف الثاني", type: "text", required: true, dependsOn: "secondPartyCountry" },
+  { key: "secondPartyPhoneSecondaryDialCode", label: "مفتاح جوال إضافي — الطرف الثاني", type: "select", required: false, options: DIAL_OPTS },
+  { key: "secondPartyPhoneSecondary", label: "جوال إضافي — الطرف الثاني", type: "tel", required: false },
   { key: "description", label: "الوصف", type: "textarea" },
   { key: "notes", label: "ملاحظات", type: "textarea" },
 ];
@@ -718,9 +736,19 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         firstParty: parties.firstParty,
+        firstPartyDialCode: parties.firstPartyDialCode,
         firstPartyPhone: parties.firstPartyPhone,
+        firstPartyCountry: parties.firstPartyCountry,
+        firstPartyCity: parties.firstPartyCity,
+        firstPartyPhoneSecondary: parties.firstPartyPhoneSecondary,
+        firstPartyPhoneSecondaryDialCode: parties.firstPartyPhoneSecondaryDialCode,
         secondParty: parties.secondParty,
+        secondPartyDialCode: parties.secondPartyDialCode,
         secondPartyPhone: parties.secondPartyPhone,
+        secondPartyCountry: parties.secondPartyCountry,
+        secondPartyCity: parties.secondPartyCity,
+        secondPartyPhoneSecondary: parties.secondPartyPhoneSecondary,
+        secondPartyPhoneSecondaryDialCode: parties.secondPartyPhoneSecondaryDialCode,
       }),
     });
     const { upsertRecordParties } = await import("@/lib/record-parties-client");
@@ -995,18 +1023,26 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
         </div>
       ) : (
         <div className="card-white" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1600 }}>
             <thead>
               <tr>
-                {["المرجع", "العنوان", "الموضوع", "طرف أول", "طرف ثاني", "الحالة", "الموكل", "إجراءات"].map((h) => (
-                  <th key={h} style={th}>{h}</th>
-                ))}
+                <th style={th}>المرجع</th>
+                <th style={th}>العنوان</th>
+                <th style={th}>الموضوع</th>
+                <th style={th}>الموكل</th>
+                <PersonContactHeaderCells style={th} />
+                <th style={th}>طرف أول</th>
+                <PersonContactHeaderCells style={th} />
+                <th style={th}>طرف ثاني</th>
+                <PersonContactHeaderCells style={th} />
+                <th style={th}>الحالة</th>
+                <th style={th}>إجراءات</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ ...td, textAlign: "center", color: "#94a3b8", padding: "2rem" }}>
+                  <td colSpan={24} style={{ ...td, textAlign: "center", color: "#94a3b8", padding: "2rem" }}>
                     لا توجد سجلات لعرضها
                   </td>
                 </tr>
@@ -1016,14 +1052,45 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                   <td style={{ ...td, fontWeight: 700, color: axis.color }}>{e.refNo}</td>
                   <td style={{ ...td, fontWeight: 700 }}>{e.title}</td>
                   <td style={td}>{e.topicName}</td>
-                  <td style={td}>
-                    <div style={{ fontWeight: 700 }}>{e.firstParty || "—"}</div>
-                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{e.firstPartyPhone || ""}</div>
-                  </td>
-                  <td style={td}>
-                    <div style={{ fontWeight: 700 }}>{e.secondParty || "—"}</div>
-                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{e.secondPartyPhone || ""}</div>
-                  </td>
+                  <td style={td}>{e.client}</td>
+                  <PersonContactDataCells
+                    row={{
+                      phone: e.phone,
+                      phoneDialCode: e.phoneDialCode,
+                      phoneSecondary: e.phoneSecondary,
+                      phoneSecondaryDialCode: e.phoneSecondaryDialCode,
+                      country: e.clientCountry,
+                      city: e.city,
+                    }}
+                    style={td}
+                    mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                  />
+                  <td style={td}>{e.firstParty || "—"}</td>
+                  <PersonContactDataCells
+                    row={{
+                      phone: e.firstPartyPhone,
+                      phoneDialCode: e.firstPartyDialCode,
+                      phoneSecondary: e.firstPartyPhoneSecondary,
+                      phoneSecondaryDialCode: e.firstPartyPhoneSecondaryDialCode,
+                      country: e.firstPartyCountry,
+                      city: e.firstPartyCity,
+                    }}
+                    style={td}
+                    mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                  />
+                  <td style={td}>{e.secondParty || "—"}</td>
+                  <PersonContactDataCells
+                    row={{
+                      phone: e.secondPartyPhone,
+                      phoneDialCode: e.secondPartyDialCode,
+                      phoneSecondary: e.secondPartyPhoneSecondary,
+                      phoneSecondaryDialCode: e.secondPartyPhoneSecondaryDialCode,
+                      country: e.secondPartyCountry,
+                      city: e.secondPartyCity,
+                    }}
+                    style={td}
+                    mutedStyle={{ color: "#94a3b8", fontStyle: "italic" }}
+                  />
                   <td style={td}>
                     <span
                       style={{
@@ -1038,7 +1105,6 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                       {e.status}
                     </span>
                   </td>
-                  <td style={td}>{e.client}</td>
                   <td style={td}>
                     <RowActions
                       actions={standardRowActions({
@@ -1051,7 +1117,8 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                     />
                   </td>
                 </tr>
-              )))}
+              ))
+              )}
             </tbody>
           </table>
         </div>
@@ -1073,15 +1140,31 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                 category: editTarget.category === "—" ? "" : editTarget.category,
                 status: editTarget.status,
                 client: editTarget.client === "—" ? "" : editTarget.client,
+                phoneDialCode: editTarget.phoneDialCode ?? "",
+                phone: editTarget.phone ?? "",
+                phoneSecondaryDialCode: editTarget.phoneSecondaryDialCode ?? "",
+                phoneSecondary: editTarget.phoneSecondary ?? "",
+                clientCountry: editTarget.clientCountry ?? "",
+                city: editTarget.city ?? "",
                 effectiveDate: editTarget.effectiveDate === "—" ? "" : editTarget.effectiveDate,
                 source: editTarget.source === "—" ? "" : editTarget.source,
                 description: editTarget.description,
                 notes: editTarget.notes,
                 attachments: editTarget.attachments ?? [],
                 firstParty: editTarget.firstParty ?? "",
+                firstPartyDialCode: editTarget.firstPartyDialCode ?? "",
                 firstPartyPhone: editTarget.firstPartyPhone ?? "",
+                firstPartyCountry: editTarget.firstPartyCountry ?? "",
+                firstPartyCity: editTarget.firstPartyCity ?? "",
+                firstPartyPhoneSecondaryDialCode: editTarget.firstPartyPhoneSecondaryDialCode ?? "",
+                firstPartyPhoneSecondary: editTarget.firstPartyPhoneSecondary ?? "",
                 secondParty: editTarget.secondParty ?? "",
+                secondPartyDialCode: editTarget.secondPartyDialCode ?? "",
                 secondPartyPhone: editTarget.secondPartyPhone ?? "",
+                secondPartyCountry: editTarget.secondPartyCountry ?? "",
+                secondPartyCity: editTarget.secondPartyCity ?? "",
+                secondPartyPhoneSecondaryDialCode: editTarget.secondPartyPhoneSecondaryDialCode ?? "",
+                secondPartyPhoneSecondary: editTarget.secondPartyPhoneSecondary ?? "",
               }
             : { status: "نشط", topicName: activeTopic?.name ?? axis.topics[0]?.name ?? "" }
         }
@@ -1123,14 +1206,9 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
               ["المحور", axis.title],
               ["الموضوع", viewTarget.topicName],
               ["الاختصاص", viewTarget.jurisdiction],
-              ["الدولة", viewTarget.country],
+              ["دولة الاختصاص", viewTarget.country],
               ["التصنيف", viewTarget.category],
               ["الحالة", viewTarget.status],
-              ["الموكل", viewTarget.client],
-              ["طرف أول", viewTarget.firstParty || "—"],
-              ["جوال الطرف الأول", viewTarget.firstPartyPhone || "—"],
-              ["طرف ثاني", viewTarget.secondParty || "—"],
-              ["جوال الطرف الثاني", viewTarget.secondPartyPhone || "—"],
               ["تاريخ السريان", viewTarget.effectiveDate],
               ["المصدر", viewTarget.source],
             ].map(([label, val]) => (
@@ -1139,6 +1217,42 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
                 <span style={{ color: "#0a0a12", fontSize: "0.85rem" }}>{val}</span>
               </div>
             ))}
+            <PersonContactViewBlock
+              title="بيانات اتصال الموكل"
+              row={{
+                name: viewTarget.client === "—" ? "" : viewTarget.client,
+                phone: viewTarget.phone,
+                phoneDialCode: viewTarget.phoneDialCode,
+                phoneSecondary: viewTarget.phoneSecondary,
+                phoneSecondaryDialCode: viewTarget.phoneSecondaryDialCode,
+                country: viewTarget.clientCountry,
+                city: viewTarget.city,
+              }}
+            />
+            <PersonContactViewBlock
+              title="بيانات اتصال الطرف الأول"
+              row={{
+                name: viewTarget.firstParty,
+                phone: viewTarget.firstPartyPhone,
+                phoneDialCode: viewTarget.firstPartyDialCode,
+                phoneSecondary: viewTarget.firstPartyPhoneSecondary,
+                phoneSecondaryDialCode: viewTarget.firstPartyPhoneSecondaryDialCode,
+                country: viewTarget.firstPartyCountry,
+                city: viewTarget.firstPartyCity,
+              }}
+            />
+            <PersonContactViewBlock
+              title="بيانات اتصال الطرف الثاني"
+              row={{
+                name: viewTarget.secondParty,
+                phone: viewTarget.secondPartyPhone,
+                phoneDialCode: viewTarget.secondPartyDialCode,
+                phoneSecondary: viewTarget.secondPartyPhoneSecondary,
+                phoneSecondaryDialCode: viewTarget.secondPartyPhoneSecondaryDialCode,
+                country: viewTarget.secondPartyCountry,
+                city: viewTarget.secondPartyCity,
+              }}
+            />
             {viewTarget.description && (
               <div style={{ marginTop: "1rem", padding: "1rem", background: "#f8f9fb", borderRadius: "12px" }}>
                 <p style={{ fontWeight: 700, fontSize: "0.8rem", color: "#64748b", marginBottom: "0.35rem" }}>الوصف</p>

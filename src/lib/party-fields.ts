@@ -7,11 +7,15 @@ export const PARTY_FIELD_KEYS = [
   "firstPartyPhone",
   "firstPartyCountry",
   "firstPartyCity",
+  "firstPartyPhoneSecondaryDialCode",
+  "firstPartyPhoneSecondary",
   "secondParty",
   "secondPartyDialCode",
   "secondPartyPhone",
   "secondPartyCountry",
   "secondPartyCity",
+  "secondPartyPhoneSecondaryDialCode",
+  "secondPartyPhoneSecondary",
 ] as const;
 
 export type PartyFields = {
@@ -20,77 +24,73 @@ export type PartyFields = {
   firstPartyPhone: string;
   firstPartyCountry: string;
   firstPartyCity: string;
+  firstPartyPhoneSecondaryDialCode: string;
+  firstPartyPhoneSecondary: string;
   secondParty: string;
   secondPartyDialCode: string;
   secondPartyPhone: string;
   secondPartyCountry: string;
   secondPartyCity: string;
+  secondPartyPhoneSecondaryDialCode: string;
+  secondPartyPhoneSecondary: string;
 };
 
 const DIAL_OPTIONS = COUNTRY_DIAL_CODES.map((c) => `${c.dialCode} (${c.country})`);
 
+function partyContactBlock(prefix: "first" | "second", label: string): FormField[] {
+  const p = prefix === "first" ? "firstParty" : "secondParty";
+  return [
+    { key: p, label, type: "text", required: false, placeholder: `اسم ${label}` },
+    {
+      key: `${p}DialCode`,
+      label: `مفتاح جوال ${label}`,
+      type: "select",
+      required: false,
+      options: DIAL_OPTIONS,
+    },
+    {
+      key: `${p}Phone`,
+      label: `رقم جوال ${label}`,
+      type: "tel",
+      required: false,
+      placeholder: "5XXXXXXXX",
+    },
+    {
+      key: `${p}Country`,
+      label: `دولة ${label}`,
+      type: "select",
+      required: false,
+      options: COUNTRY_NAMES,
+    },
+    {
+      key: `${p}City`,
+      label: `مدينة ${label}`,
+      type: "text",
+      required: false,
+      placeholder: "المدينة",
+      dependsOn: `${p}Country`,
+    },
+    {
+      key: `${p}PhoneSecondaryDialCode`,
+      label: `مفتاح الجوال الإضافي — ${label}`,
+      type: "select",
+      required: false,
+      options: DIAL_OPTIONS,
+    },
+    {
+      key: `${p}PhoneSecondary`,
+      label: `رقم جوال إضافي — ${label}`,
+      type: "tel",
+      required: false,
+      placeholder: "اختياري — 5XXXXXXXX",
+    },
+  ];
+}
+
 /** Optional on the main form — parties can also be completed via سجل الأطراف / الملحق */
 export const PARTY_FORM_FIELDS: FormField[] = [
-  { key: "firstParty", label: "طرف أول", type: "text", required: false, placeholder: "اسم الطرف الأول" },
-  {
-    key: "firstPartyDialCode",
-    label: "مفتاح جوال الطرف الأول",
-    type: "select",
-    required: false,
-    options: DIAL_OPTIONS,
-  },
-  {
-    key: "firstPartyPhone",
-    label: "رقم جوال الطرف الأول",
-    type: "tel",
-    required: false,
-    placeholder: "5XXXXXXXX",
-  },
-  {
-    key: "firstPartyCountry",
-    label: "دولة الطرف الأول",
-    type: "select",
-    required: false,
-    options: COUNTRY_NAMES,
-  },
-  {
-    key: "firstPartyCity",
-    label: "مدينة الطرف الأول",
-    type: "text",
-    required: false,
-    placeholder: "المدينة",
-    dependsOn: "firstPartyCountry",
-  },
-  { key: "secondParty", label: "طرف ثاني", type: "text", required: false, placeholder: "اسم الطرف الثاني" },
-  {
-    key: "secondPartyDialCode",
-    label: "مفتاح جوال الطرف الثاني",
-    type: "select",
-    required: false,
-    options: DIAL_OPTIONS,
-  },
-  {
-    key: "secondPartyPhone",
-    label: "رقم جوال الطرف الثاني",
-    type: "tel",
-    required: false,
-    placeholder: "5XXXXXXXX",
-  },
-  {
-    key: "secondPartyCountry",
-    label: "دولة الطرف الثاني",
-    type: "select",
-    required: false,
-    options: COUNTRY_NAMES,
-  },
-  {
-    key: "secondPartyCity",
-    label: "مدينة الطرف الثاني",
-    type: "text",
-    required: false,
-    placeholder: "المدينة",
-    dependsOn: "secondPartyCountry",
-  },
+  ...partyContactBlock("first", "الطرف الأول"),
+  ...partyContactBlock("second", "الطرف الثاني"),
 ];
 
 export function emptyPartyFields(): PartyFields {
@@ -100,11 +100,15 @@ export function emptyPartyFields(): PartyFields {
     firstPartyPhone: "",
     firstPartyCountry: "",
     firstPartyCity: "",
+    firstPartyPhoneSecondaryDialCode: "",
+    firstPartyPhoneSecondary: "",
     secondParty: "",
     secondPartyDialCode: "",
     secondPartyPhone: "",
     secondPartyCountry: "",
     secondPartyCity: "",
+    secondPartyPhoneSecondaryDialCode: "",
+    secondPartyPhoneSecondary: "",
   };
 }
 
@@ -115,11 +119,19 @@ export function extractPartyFields(data: Record<string, unknown>): PartyFields {
     firstPartyPhone: String(data.firstPartyPhone ?? "").trim(),
     firstPartyCountry: String(data.firstPartyCountry ?? "").trim(),
     firstPartyCity: String(data.firstPartyCity ?? "").trim(),
+    firstPartyPhoneSecondaryDialCode: parseDialCodeOption(
+      String(data.firstPartyPhoneSecondaryDialCode ?? "")
+    ),
+    firstPartyPhoneSecondary: String(data.firstPartyPhoneSecondary ?? "").trim(),
     secondParty: String(data.secondParty ?? "").trim(),
     secondPartyDialCode: parseDialCodeOption(String(data.secondPartyDialCode ?? "")),
     secondPartyPhone: String(data.secondPartyPhone ?? "").trim(),
     secondPartyCountry: String(data.secondPartyCountry ?? "").trim(),
     secondPartyCity: String(data.secondPartyCity ?? "").trim(),
+    secondPartyPhoneSecondaryDialCode: parseDialCodeOption(
+      String(data.secondPartyPhoneSecondaryDialCode ?? "")
+    ),
+    secondPartyPhoneSecondary: String(data.secondPartyPhoneSecondary ?? "").trim(),
   };
 }
 
@@ -135,10 +147,12 @@ export function hasPartyValues(parties: PartyFields) {
       parties.firstPartyPhone ||
       parties.firstPartyCountry ||
       parties.firstPartyCity ||
+      parties.firstPartyPhoneSecondary ||
       parties.secondParty ||
       parties.secondPartyPhone ||
       parties.secondPartyCountry ||
-      parties.secondPartyCity
+      parties.secondPartyCity ||
+      parties.secondPartyPhoneSecondary
   );
 }
 

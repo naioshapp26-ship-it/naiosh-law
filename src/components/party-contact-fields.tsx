@@ -26,108 +26,107 @@ export function PartyContactFields({ value, onChange }: Props) {
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }} className="party-grid">
-      <div>
-        <label className="input-label">
-          طرف أول <span style={{ color: "#101D32" }}>*</span>
-        </label>
-        <input
-          className="input-field"
-          required
-          value={value.firstParty}
-          onChange={(e) => set("firstParty", e.target.value)}
-          placeholder="اسم الطرف الأول"
-        />
-      </div>
-      <div>
-        <label className="input-label">
-          مفتاح جوال الطرف الأول <span style={{ color: "#101D32" }}>*</span>
-        </label>
-        <select
-          className="input-field"
-          required
-          value={value.firstPartyDialCode}
-          onChange={(e) => set("firstPartyDialCode", e.target.value)}
-        >
-          <option value="">اختر...</option>
-          {dialOptions.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="input-label">
-          رقم جوال الطرف الأول <span style={{ color: "#101D32" }}>*</span>
-        </label>
-        <input
-          className="input-field"
-          type="tel"
-          required
-          value={value.firstPartyPhone}
-          onChange={(e) => set("firstPartyPhone", e.target.value)}
-          placeholder="5XXXXXXXX"
-        />
-      </div>
-      <div>
-        <label className="input-label">
-          دولة الطرف الأول <span style={{ color: "#101D32" }}>*</span>
-        </label>
-        <select
-          className="input-field"
-          required
-          value={value.firstPartyCountry}
-          onChange={(e) => set("firstPartyCountry", e.target.value)}
-        >
-          <option value="">اختر...</option>
-          {COUNTRY_NAMES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div style={{ gridColumn: "1 / -1" }}>
-        <label className="input-label">
-          مدينة الطرف الأول <span style={{ color: "#101D32" }}>*</span>
-        </label>
-        <input
-          className="input-field"
-          list="first-party-cities"
-          required
-          value={value.firstPartyCity}
-          onChange={(e) => set("firstPartyCity", e.target.value)}
-          placeholder="المدينة (يُسمح بإدخال غير مدرج)"
-        />
-        <datalist id="first-party-cities">
-          {citiesForCountry(value.firstPartyCountry).map((c) => (
-            <option key={c} value={c} />
-          ))}
-        </datalist>
-      </div>
+      <PartyBlock
+        title="طرف أول"
+        name={value.firstParty}
+        dial={value.firstPartyDialCode}
+        phone={value.firstPartyPhone}
+        country={value.firstPartyCountry}
+        city={value.firstPartyCity}
+        secDial={value.firstPartyPhoneSecondaryDialCode}
+        secPhone={value.firstPartyPhoneSecondary}
+        cityListId="first-party-cities"
+        onName={(v) => set("firstParty", v)}
+        onDial={(v) => set("firstPartyDialCode", v)}
+        onPhone={(v) => set("firstPartyPhone", v)}
+        onCountry={(v) => set("firstPartyCountry", v)}
+        onCity={(v) => set("firstPartyCity", v)}
+        onSecDial={(v) => set("firstPartyPhoneSecondaryDialCode", v)}
+        onSecPhone={(v) => set("firstPartyPhoneSecondary", v)}
+      />
+      <PartyBlock
+        title="طرف ثاني"
+        name={value.secondParty}
+        dial={value.secondPartyDialCode}
+        phone={value.secondPartyPhone}
+        country={value.secondPartyCountry}
+        city={value.secondPartyCity}
+        secDial={value.secondPartyPhoneSecondaryDialCode}
+        secPhone={value.secondPartyPhoneSecondary}
+        cityListId="second-party-cities"
+        onName={(v) => set("secondParty", v)}
+        onDial={(v) => set("secondPartyDialCode", v)}
+        onPhone={(v) => set("secondPartyPhone", v)}
+        onCountry={(v) => set("secondPartyCountry", v)}
+        onCity={(v) => set("secondPartyCity", v)}
+        onSecDial={(v) => set("secondPartyPhoneSecondaryDialCode", v)}
+        onSecPhone={(v) => set("secondPartyPhoneSecondary", v)}
+      />
+      <style>{`@media (max-width: 600px) { .party-grid { grid-template-columns: 1fr !important; } .party-block { grid-column: 1 / -1 !important; } }`}</style>
+    </div>
+  );
+}
 
+function PartyBlock({
+  title,
+  name,
+  dial,
+  phone,
+  country,
+  city,
+  secDial,
+  secPhone,
+  cityListId,
+  onName,
+  onDial,
+  onPhone,
+  onCountry,
+  onCity,
+  onSecDial,
+  onSecPhone,
+}: {
+  title: string;
+  name: string;
+  dial: string;
+  phone: string;
+  country: string;
+  city: string;
+  secDial: string;
+  secPhone: string;
+  cityListId: string;
+  onName: (v: string) => void;
+  onDial: (v: string) => void;
+  onPhone: (v: string) => void;
+  onCountry: (v: string) => void;
+  onCity: (v: string) => void;
+  onSecDial: (v: string) => void;
+  onSecPhone: (v: string) => void;
+}) {
+  return (
+    <div
+      className="party-block"
+      style={{
+        gridColumn: "1 / -1",
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "0.85rem",
+        padding: "0.85rem",
+        background: "#f8f9fb",
+        borderRadius: 12,
+      }}
+    >
+      <p style={{ gridColumn: "1 / -1", fontWeight: 800, color: "#101D32", margin: 0 }}>{title}</p>
       <div>
         <label className="input-label">
-          طرف ثاني <span style={{ color: "#101D32" }}>*</span>
+          الاسم <span style={{ color: "#101D32" }}>*</span>
         </label>
-        <input
-          className="input-field"
-          required
-          value={value.secondParty}
-          onChange={(e) => set("secondParty", e.target.value)}
-          placeholder="اسم الطرف الثاني"
-        />
+        <input className="input-field" required value={name} onChange={(e) => onName(e.target.value)} placeholder={`اسم ${title}`} />
       </div>
       <div>
         <label className="input-label">
-          مفتاح جوال الطرف الثاني <span style={{ color: "#101D32" }}>*</span>
+          مفتاح الدولة <span style={{ color: "#101D32" }}>*</span>
         </label>
-        <select
-          className="input-field"
-          required
-          value={value.secondPartyDialCode}
-          onChange={(e) => set("secondPartyDialCode", e.target.value)}
-        >
+        <select className="input-field" required value={dial} onChange={(e) => onDial(e.target.value)}>
           <option value="">اختر...</option>
           {dialOptions.map((o) => (
             <option key={o} value={o}>
@@ -138,27 +137,22 @@ export function PartyContactFields({ value, onChange }: Props) {
       </div>
       <div>
         <label className="input-label">
-          رقم جوال الطرف الثاني <span style={{ color: "#101D32" }}>*</span>
+          رقم الجوال <span style={{ color: "#101D32" }}>*</span>
         </label>
         <input
           className="input-field"
           type="tel"
           required
-          value={value.secondPartyPhone}
-          onChange={(e) => set("secondPartyPhone", e.target.value)}
+          value={phone}
+          onChange={(e) => onPhone(e.target.value)}
           placeholder="5XXXXXXXX"
         />
       </div>
       <div>
         <label className="input-label">
-          دولة الطرف الثاني <span style={{ color: "#101D32" }}>*</span>
+          الدولة <span style={{ color: "#101D32" }}>*</span>
         </label>
-        <select
-          className="input-field"
-          required
-          value={value.secondPartyCountry}
-          onChange={(e) => set("secondPartyCountry", e.target.value)}
-        >
+        <select className="input-field" required value={country} onChange={(e) => onCountry(e.target.value)}>
           <option value="">اختر...</option>
           {COUNTRY_NAMES.map((c) => (
             <option key={c} value={c}>
@@ -167,25 +161,45 @@ export function PartyContactFields({ value, onChange }: Props) {
           ))}
         </select>
       </div>
-      <div style={{ gridColumn: "1 / -1" }}>
+      <div>
         <label className="input-label">
-          مدينة الطرف الثاني <span style={{ color: "#101D32" }}>*</span>
+          المدينة <span style={{ color: "#101D32" }}>*</span>
         </label>
         <input
           className="input-field"
-          list="second-party-cities"
+          list={cityListId}
           required
-          value={value.secondPartyCity}
-          onChange={(e) => set("secondPartyCity", e.target.value)}
+          value={city}
+          onChange={(e) => onCity(e.target.value)}
           placeholder="المدينة (يُسمح بإدخال غير مدرج)"
         />
-        <datalist id="second-party-cities">
-          {citiesForCountry(value.secondPartyCountry).map((c) => (
+        <datalist id={cityListId}>
+          {citiesForCountry(country).map((c) => (
             <option key={c} value={c} />
           ))}
         </datalist>
       </div>
-      <style>{`@media (max-width: 600px) { .party-grid { grid-template-columns: 1fr !important; } }`}</style>
+      <div>
+        <label className="input-label">مفتاح الجوال الإضافي</label>
+        <select className="input-field" value={secDial} onChange={(e) => onSecDial(e.target.value)}>
+          <option value="">اختياري...</option>
+          {dialOptions.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="input-label">رقم جوال إضافي</label>
+        <input
+          className="input-field"
+          type="tel"
+          value={secPhone}
+          onChange={(e) => onSecPhone(e.target.value)}
+          placeholder="اختياري — 5XXXXXXXX"
+        />
+      </div>
     </div>
   );
 }

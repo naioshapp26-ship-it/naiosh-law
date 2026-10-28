@@ -5,12 +5,20 @@ import { FormEvent, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { DarkModeToggle } from "@/components/color-mode";
 import { BRAND } from "@/lib/brand";
+import { COUNTRY_DIAL_CODES, COUNTRY_NAMES, citiesForCountry } from "@/lib/person-contact";
+
+const DIAL_OPTS = COUNTRY_DIAL_CODES.map((c) => `${c.dialCode} (${c.country})`);
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phoneDialCode, setPhoneDialCode] = useState("+20 (مصر)");
   const [phone, setPhone] = useState("");
+  const [phoneSecondaryDialCode, setPhoneSecondaryDialCode] = useState("");
+  const [phoneSecondary, setPhoneSecondary] = useState("");
+  const [country, setCountry] = useState("مصر");
+  const [city, setCity] = useState("");
   const [type, setType] = useState("فرد");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -26,7 +34,18 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ name, email, password, phone, type }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          phone,
+          phoneDialCode,
+          phoneSecondary,
+          phoneSecondaryDialCode,
+          country,
+          city,
+          type,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -69,8 +88,62 @@ export default function RegisterPage() {
             </select>
           </label>
           <label>
-            رقم الهاتف
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05xxxxxxxx" />
+            مفتاح الدولة
+            <select value={phoneDialCode} onChange={(e) => setPhoneDialCode(e.target.value)} required>
+              {DIAL_OPTS.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            رقم الجوال
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="5XXXXXXXX" />
+          </label>
+          <label>
+            الدولة
+            <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+              {COUNTRY_NAMES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            المدينة
+            <input
+              list="reg-cities"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              required
+              placeholder="المدينة"
+            />
+            <datalist id="reg-cities">
+              {citiesForCountry(country).map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          </label>
+          <label>
+            مفتاح الجوال الإضافي
+            <select value={phoneSecondaryDialCode} onChange={(e) => setPhoneSecondaryDialCode(e.target.value)}>
+              <option value="">اختياري...</option>
+              {DIAL_OPTS.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            رقم جوال إضافي
+            <input
+              value={phoneSecondary}
+              onChange={(e) => setPhoneSecondary(e.target.value)}
+              placeholder="اختياري"
+            />
           </label>
           <label>
             البريد الإلكتروني
@@ -101,20 +174,23 @@ export default function RegisterPage() {
       </div>
       <style>{`
         .reg-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:#F5F1E8;font-family:var(--font);position:relative}
-        .reg-card{width:100%;max-width:28rem;background:#fff;border-radius:1rem;box-shadow:0 20px 50px -20px rgba(15,23,42,.25);overflow:hidden;border:1px solid #f1f5f9;position:relative}
+        .reg-card{width:100%;max-width:32rem;background:#fff;border-radius:1rem;box-shadow:0 20px 50px -20px rgba(15,23,42,.25);overflow:hidden;border:1px solid #f1f5f9;position:relative}
         .reg-back{position:absolute;top:.75rem;left:.75rem;z-index:2;background:rgba(255,255,255,.95);border:1px solid #e5e7eb;border-radius:.5rem;padding:.4rem .65rem;font-size:.75rem;font-weight:700;color:#4b5563;text-decoration:none}
         .reg-header{background:#101D32;padding:2rem;text-align:center;color:#fff}
         .reg-brand{font-size:1.5rem;font-weight:900;margin-top:.4rem}
         .reg-header p{margin:.35rem 0 0;opacity:.85;font-size:.875rem}
-        .reg-body{padding:1.5rem;display:grid;gap:0.9rem}
+        .reg-body{padding:1.5rem;display:grid;gap:0.9rem;grid-template-columns:1fr 1fr}
         .reg-body label{display:grid;gap:.4rem;font-size:.875rem;font-weight:700;color:#374151}
+        .reg-body label:nth-child(1),.reg-body label:nth-child(n+9){grid-column:1 / -1}
         .reg-body input,.reg-body select{border:1px solid #d1d5db;border-radius:.75rem;padding:.85rem;background:#f9fafb;font-family:inherit}
-        .reg-body button{width:100%;border:0;border-radius:.75rem;padding:.85rem;background:#101D32;color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
+        .reg-body button{grid-column:1 / -1;width:100%;border:0;border-radius:.75rem;padding:.85rem;background:#101D32;color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
         .reg-body button:disabled{opacity:.7}
+        .reg-msg,.reg-err,.reg-foot{grid-column:1 / -1}
         .reg-msg{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#166534;border-radius:.75rem;padding:.75rem;font-size:.85rem;font-weight:600}
         .reg-err{background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.25);color:#991b1b;border-radius:.75rem;padding:.75rem;font-size:.85rem;font-weight:600}
         .reg-foot{text-align:center;color:#6b7280;font-size:.8rem}
         .reg-foot a{color:#101D32;font-weight:800;text-decoration:none}
+        @media (max-width:560px){.reg-body{grid-template-columns:1fr}.reg-body label{grid-column:1 / -1 !important}}
         body.dark-mode .reg-page{background:#0b1220}
         body.dark-mode .reg-card{background:#121a2a;border-color:rgba(255,255,255,.08)}
         body.dark-mode .reg-body label{color:#F5F1E8}

@@ -387,6 +387,11 @@ model Professional {
   type      ProfessionalType @default(lawyer)
   licenseNo String?
   phone     String?
+  phoneDialCode String?
+  phoneSecondary String?
+  phoneSecondaryDialCode String?
+  country   String?
+  city      String?
   email     String?
   rating    Float            @default(0)
   status    String           @default("نشط")
@@ -450,6 +455,11 @@ model CourtOfficial {
   court      String?
   chamber    String?
   phone      String?
+  phoneDialCode String?
+  phoneSecondary String?
+  phoneSecondaryDialCode String?
+  country    String?
+  city       String?
   status     String          @default("نشط")
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
@@ -899,6 +909,13 @@ model LegalClassificationEntry {
   category     String?
   status       String   @default("نشط")
   clientName   String?
+  clientId     String?
+  clientPhone  String?
+  clientPhoneDialCode String?
+  clientPhoneSecondary String?
+  clientPhoneSecondaryDialCode String?
+  clientCountry String?
+  clientCity   String?
   effectiveDate String?
   source       String?
   description  String?
@@ -906,8 +923,18 @@ model LegalClassificationEntry {
   attachments  String?  @db.Text
   firstParty       String?
   firstPartyPhone  String?
+  firstPartyDialCode String?
+  firstPartyCountry  String?
+  firstPartyCity     String?
+  firstPartyPhoneSecondary String?
+  firstPartyPhoneSecondaryDialCode String?
   secondParty      String?
   secondPartyPhone String?
+  secondPartyDialCode String?
+  secondPartyCountry  String?
+  secondPartyCity     String?
+  secondPartyPhoneSecondary String?
+  secondPartyPhoneSecondaryDialCode String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1061,11 +1088,15 @@ model RecordParty {
   firstPartyDialCode String?
   firstPartyCountry  String?
   firstPartyCity     String?
+  firstPartyPhoneSecondary String?
+  firstPartyPhoneSecondaryDialCode String?
   secondParty      String?
   secondPartyPhone String?
   secondPartyDialCode String?
   secondPartyCountry  String?
   secondPartyCity     String?
+  secondPartyPhoneSecondary String?
+  secondPartyPhoneSecondaryDialCode String?
   /// Optional link to central Client for first/second party when they are registered
   firstPartyClientId  String?
   secondPartyClientId String?

@@ -1,20 +1,51 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWrite } from "@/lib/api-helpers";
+import { ensureClientWithContact } from "@/lib/person-contact-server";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const { error } = await requireWrite();
+  const { error, session } = await requireWrite();
   if (error) return error;
   const { id } = await params;
   const body = await request.json();
+
+  const existing = await prisma.bailGuarantee.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+
+  let clientName =
+    body.client !== undefined ? String(body.client) : existing.clientName;
+
+  if (
+    body.client !== undefined ||
+    body.phone !== undefined ||
+    body.country !== undefined ||
+    body.city !== undefined ||
+    body.phoneDialCode !== undefined
+  ) {
+    const ensured = await ensureClientWithContact({
+      name: clientName,
+      clientId: body.clientId ? String(body.clientId) : null,
+      body,
+      role: session!.role,
+      changedById: session!.sub,
+      changedByName: session!.name ?? session!.email,
+      sourceModule: "bail-guarantees",
+      sourceId: id,
+      requireComplete: Boolean(body.phone || body.country || body.city),
+    });
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.error }, { status: ensured.status });
+    }
+    clientName = ensured.clientName;
+  }
 
   const updated = await prisma.bailGuarantee.update({
     where: { id },
     data: {
       caseRef: body.caseRef !== undefined ? String(body.caseRef) : undefined,
-      clientName: body.client !== undefined ? String(body.client) : undefined,
+      clientName,
       amount: body.amount !== undefined ? Number(body.amount) : undefined,
       court: body.court !== undefined ? String(body.court) : undefined,
       status: body.status !== undefined ? String(body.status) : undefined,

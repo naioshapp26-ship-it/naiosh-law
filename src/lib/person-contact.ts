@@ -408,14 +408,53 @@ export const PERSON_CONTACT_VIEW_FIELDS: { key: string; label: string }[] = [
   { key: "city", label: "المدينة" },
 ];
 
-/** Case-management mandatory column order (RTL visual: right→left) */
-export const CASE_PERSON_CONTACT_COLUMNS: Column[] = [
+/** Mandatory contact columns after person-name (RTL: dial → phone → geo → secondary). */
+export const PERSON_CONTACT_TABLE_COLUMNS: Column[] = [
+  { key: "phoneDialCode", label: "مفتاح الدولة" },
   { key: "phone", label: "رقم الجوال" },
   { key: "country", label: "الدولة" },
   { key: "city", label: "المدينة" },
+  { key: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي" },
+  { key: "phoneSecondary", label: "رقم جوال إضافي" },
 ];
 
-export const PERSON_CONTACT_COLUMN_KEYS = ["phone", "country", "city"] as const;
+/** @deprecated use PERSON_CONTACT_TABLE_COLUMNS — kept for older imports */
+export const CASE_PERSON_CONTACT_COLUMNS: Column[] = PERSON_CONTACT_TABLE_COLUMNS;
+
+export const PERSON_CONTACT_COLUMN_KEYS = [
+  "phoneDialCode",
+  "phone",
+  "country",
+  "city",
+  "phoneSecondaryDialCode",
+  "phoneSecondary",
+] as const;
+
+/**
+ * Ensure person-bearing tables expose the full contact column set after the name column.
+ * Reorders/inserts missing keys; never drops non-contact columns.
+ */
+export function ensurePersonContactOnColumns(
+  columns: Column[],
+  opts?: { nameKeys?: readonly string[]; force?: boolean }
+): Column[] {
+  const nameKeys = opts?.nameKeys ?? PERSON_NAME_FIELD_KEYS;
+  const nameIdx = columns.findIndex((c) => (nameKeys as readonly string[]).includes(c.key));
+  if (nameIdx < 0 && !opts?.force) return columns;
+
+  const contactKeySet = new Set<string>(PERSON_CONTACT_COLUMN_KEYS);
+  const withoutContact = columns.filter((c) => !contactKeySet.has(c.key));
+  const insertAt =
+    nameIdx >= 0
+      ? withoutContact.findIndex((c) => (nameKeys as readonly string[]).includes(c.key)) + 1
+      : 0;
+
+  return [
+    ...withoutContact.slice(0, Math.max(insertAt, 0)),
+    ...PERSON_CONTACT_TABLE_COLUMNS,
+    ...withoutContact.slice(Math.max(insertAt, 0)),
+  ];
+}
 
 export const PERSON_CONTACT_FIELD_KEYS = [
   "phoneDialCode",
@@ -505,6 +544,8 @@ export function attachContactToRow<T extends Record<string, unknown>>(
     country: display.country,
     city: display.city,
     phoneDialCode: opts.canView ? display.phoneDialCode ?? "" : "",
+    phoneSecondary: opts.canView ? contact?.phoneSecondary ?? "" : "",
+    phoneSecondaryDialCode: opts.canView ? contact?.phoneSecondaryDialCode ?? "" : "",
     contactIncomplete: display.incomplete,
   };
 }

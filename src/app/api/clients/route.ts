@@ -51,6 +51,8 @@ export async function GET() {
       type: c.type,
       phone: display.phone,
       phoneDialCode: canView ? display.phoneDialCode ?? "" : "",
+      phoneSecondary: canView ? c.phoneSecondary ?? "" : "",
+      phoneSecondaryDialCode: canView ? c.phoneSecondaryDialCode ?? "" : "",
       country: display.country,
       city: display.city,
       email: c.email ?? "—",

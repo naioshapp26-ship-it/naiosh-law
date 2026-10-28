@@ -344,6 +344,9 @@ export function mapRowWithClientContact<T extends Record<string, unknown>>(
     country: display.country,
     city: display.city,
     phoneDialCode: canView ? display.phoneDialCode ?? "" : "",
+    // Raw secondary values for edit forms — without these, save wipes secondary to null
+    phoneSecondary: canView ? client?.phoneSecondary ?? "" : "",
+    phoneSecondaryDialCode: canView ? client?.phoneSecondaryDialCode ?? "" : "",
     contactIncomplete: display.incomplete,
   };
 }

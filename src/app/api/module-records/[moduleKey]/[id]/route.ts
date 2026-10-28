@@ -7,8 +7,30 @@ import {
   isGenericModuleKey,
 } from "@/lib/page-settings/page-action-auth";
 import type { Prisma } from "@/generated/prisma/client";
+import { ensureClientWithContact } from "@/lib/person-contact-server";
 
 type Ctx = { params: Promise<{ moduleKey: string; id: string }> };
+
+function personNameFromData(data: Record<string, unknown>): string {
+  for (const key of ["client", "clientName", "name", "requester"]) {
+    const v = data[key];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
+
+function hasPersonFields(data: Record<string, unknown>): boolean {
+  return Boolean(
+    data.client ||
+      data.clientName ||
+      data.requester ||
+      data.phone ||
+      data.country ||
+      data.city ||
+      data.phoneDialCode ||
+      data.phoneSecondary
+  );
+}
 
 export async function PATCH(request: Request, ctx: Ctx) {
   const { moduleKey, id } = await ctx.params;
@@ -33,8 +55,46 @@ export async function PATCH(request: Request, ctx: Ctx) {
   const prev = (existing.data ?? {}) as Record<string, unknown>;
   const { id: _id, ...rest } = body;
   void _id;
-  const nextData = { ...prev, ...rest };
+  let nextData: Record<string, unknown> = { ...prev, ...rest };
   const status = body.status != null ? String(body.status) : existing.status;
+
+  // Keep central Client contact in sync when person/contact fields change
+  if (hasPersonFields(nextData)) {
+    const name = personNameFromData(nextData) || personNameFromData(prev);
+    const existingClientId =
+      typeof nextData.clientId === "string"
+        ? nextData.clientId
+        : typeof prev.clientId === "string"
+          ? prev.clientId
+          : null;
+    if (name || existingClientId) {
+      const ensured = await ensureClientWithContact({
+        name: name || "طرف خارجي",
+        clientId: existingClientId,
+        body: nextData,
+        role: session!.role,
+        changedById: session!.sub,
+        changedByName: session!.name ?? session!.email,
+        sourceModule: moduleKey,
+        sourceId: id,
+        requireComplete: Boolean(nextData.phone || nextData.country || nextData.city),
+      });
+      if (!ensured.ok) {
+        return NextResponse.json({ error: ensured.error }, { status: ensured.status });
+      }
+      nextData = {
+        ...nextData,
+        clientId: ensured.clientId,
+        client: ensured.clientName,
+        phone: ensured.contact.phone ?? "",
+        phoneDialCode: ensured.contact.phoneDialCode ?? "",
+        phoneSecondary: ensured.contact.phoneSecondary ?? "",
+        phoneSecondaryDialCode: ensured.contact.phoneSecondaryDialCode ?? "",
+        country: ensured.contact.country ?? "",
+        city: ensured.contact.city ?? "",
+      };
+    }
+  }
 
   const updated = await prisma.moduleRecord.update({
     where: { id },
@@ -53,7 +113,14 @@ export async function PATCH(request: Request, ctx: Ctx) {
     role: session!.role,
   });
 
-  return NextResponse.json({ id: updated.id, status: updated.status });
+  return NextResponse.json({
+    id: updated.id,
+    status: updated.status,
+    clientId: nextData.clientId ?? null,
+    phone: nextData.phone ?? null,
+    country: nextData.country ?? null,
+    city: nextData.city ?? null,
+  });
 }
 
 export async function DELETE(_request: Request, ctx: Ctx) {
