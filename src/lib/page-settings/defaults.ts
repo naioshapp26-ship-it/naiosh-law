@@ -81,12 +81,41 @@ export function displayTab(opts: {
   };
 }
 
+/** Person-contact keys that settings must never hide or un-require (central rule). */
+export const PERSON_CONTACT_LOCKED_SETTING_KEYS = ["phone", "country", "city"] as const;
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))];
+}
+
+/**
+ * Build locked + default required lists for person-bearing pages.
+ * Always unions phone / country / city into locked required when those fields exist.
+ */
+export function withPersonContactLockedRequired(opts: {
+  fieldOptions: Array<{ value: string; label: string }>;
+  defaultRequired: string[];
+  lockedRequired?: string[];
+}): { defaultRequired: string[]; lockedRequired: string[] } {
+  const available = new Set(opts.fieldOptions.map((o) => o.value));
+  const contactLocked = PERSON_CONTACT_LOCKED_SETTING_KEYS.filter((k) => available.has(k));
+  const lockedRequired = uniqueStrings([...(opts.lockedRequired ?? []), ...contactLocked]);
+  const defaultRequired = uniqueStrings([...(opts.defaultRequired ?? []), ...lockedRequired]);
+  return { defaultRequired, lockedRequired };
+}
+
 export function fieldsTab(opts: {
   fieldOptions: Array<{ value: string; label: string }>;
   defaultRequired: string[];
   defaultHidden?: string[];
   lockedRequired?: string[];
 }): SettingTabDef {
+  const { defaultRequired, lockedRequired } = withPersonContactLockedRequired({
+    fieldOptions: opts.fieldOptions,
+    defaultRequired: opts.defaultRequired,
+    lockedRequired: opts.lockedRequired,
+  });
+  const lockedSet = new Set(lockedRequired);
   return {
     id: "fields",
     label: "الحقول والنماذج",
@@ -94,21 +123,20 @@ export function fieldsTab(opts: {
       field({
         key: "requiredFields",
         path: "fields.requiredFields",
-        label: "الحقول الإلزامية",
+        label: "الحقول الإلزامية — مقفل قانونيًا",
         type: "multi-select",
         options: opts.fieldOptions,
-        defaultValue: opts.defaultRequired,
-        locked: Boolean(opts.lockedRequired?.length),
+        defaultValue: defaultRequired,
+        /** Per-chip lock: contact + page identity fields stay on; other required chips remain editable */
+        lockedValues: lockedRequired,
       }),
       field({
         key: "hiddenOptionalFields",
         path: "fields.hiddenOptionalFields",
         label: "إخفاء حقول اختيارية",
         type: "multi-select",
-        options: opts.fieldOptions.filter(
-          (o) => !(opts.lockedRequired ?? opts.defaultRequired).includes(o.value)
-        ),
-        defaultValue: opts.defaultHidden ?? [],
+        options: opts.fieldOptions.filter((o) => !lockedSet.has(o.value)),
+        defaultValue: (opts.defaultHidden ?? []).filter((v) => !lockedSet.has(v)),
       }),
       field({
         key: "defaultStatus",

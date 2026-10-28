@@ -36,9 +36,9 @@ type Coverage = {
 function ensureCss() {
   if (typeof document === "undefined") return;
   const existing = document.querySelector('link[data-page-settings-css]') as HTMLLinkElement | null;
-  const href = "/erp-app/page-settings.css?v=page-settings-erp-ref-20261027c";
+  const href = "/erp-app/page-settings.css?v=page-settings-locked-contact-20261028a";
   if (existing) {
-    if (existing.href.includes("page-settings-erp-ref-20261027c")) return;
+    if (existing.href.includes("page-settings-locked-contact-20261028a")) return;
     existing.href = href;
     return;
   }

@@ -71,6 +71,7 @@ type PageSettingsValues = {
     canManageSettingsRoles?: string[];
   };
   fields?: {
+    requiredFields?: string[];
     hiddenOptionalFields?: string[];
     defaultStatus?: string;
   };
@@ -339,8 +340,16 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               : ["client", "clientName", "requester", "name"],
         })
       : base;
+    const settingsRequired = new Set(pageSettings?.fields?.requiredFields ?? []);
+    // Central lock: phone / dial / country / city stay required on person forms
+    for (const k of ["phone", "phoneDialCode", "country", "city"] as const) {
+      settingsRequired.add(k);
+    }
+    const withRequired = withContact.map((f) =>
+      settingsRequired.has(f.key) ? { ...f, required: true } : f
+    );
     const custom = customFieldsToFormFields(recordCustomDefs);
-    return [...withContact, ...custom];
+    return [...withRequired, ...custom];
   }, [config, pageSettings, recordCustomDefs]);
 
   const orderedSections = useMemo(() => {

@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma, UserRole } from "@/generated/prisma/client";
 import { getPageDefinition } from "./registry";
-import { buildDefaultsFromTabs, deepMerge } from "./defaults";
+import {
+  buildDefaultsFromTabs,
+  deepMerge,
+  PERSON_CONTACT_LOCKED_SETTING_KEYS,
+} from "./defaults";
 import type {
   PageSettingsScope,
   ResolvedPageSettings,
@@ -122,12 +126,24 @@ export function validateAndNormalizeValues(
         if (!Array.isArray(value) || value.some((x) => typeof x !== "string")) {
           return { ok: false, error: `الحقل «${f.label}» يجب أن يكون قائمة نصوص` };
         }
+        let list = value as string[];
         if (f.type === "multi-select" && f.options) {
           const allowed = new Set(f.options.map((o) => o.value));
-          if (value.some((x) => !allowed.has(x as string))) {
-            return { ok: false, error: `قيم غير مسموحة في «${f.label}»` };
-          }
+          // Strip unknown / retired options (legacy settings) instead of rejecting saves
+          list = list.filter((x) => allowed.has(x));
         }
+        // Per-chip legal locks: always keep lockedValues selected
+        if (f.lockedValues?.length) {
+          const lockSet = new Set(f.lockedValues);
+          list = [...new Set([...list, ...f.lockedValues.filter((v) => {
+            if (!f.options?.length) return true;
+            return f.options.some((o) => o.value === v);
+          })])];
+          // Prefer stable order: locked first (as defined), then the rest
+          const rest = list.filter((x) => !lockSet.has(x));
+          list = [...f.lockedValues.filter((v) => list.includes(v)), ...rest];
+        }
+        cur[key] = list;
       }
     }
   }
@@ -147,6 +163,41 @@ export function validateAndNormalizeValues(
         cur = cur[parts[i]] as Record<string, unknown>;
       }
       cur[parts[parts.length - 1]] = f.defaultValue;
+    }
+  }
+
+  // Central person-contact rule: never hide phone/country/city via settings
+  {
+    const chipLocks = new Set<string>(PERSON_CONTACT_LOCKED_SETTING_KEYS);
+    for (const tab of def.tabs) {
+      for (const f of tab.fields) {
+        for (const v of f.lockedValues ?? []) chipLocks.add(v);
+      }
+    }
+    const fieldsObj = isPlainObject(merged.fields)
+      ? (merged.fields as Record<string, unknown>)
+      : null;
+    if (fieldsObj) {
+      if (Array.isArray(fieldsObj.requiredFields)) {
+        const req = (fieldsObj.requiredFields as string[]).filter(
+          (x) => typeof x === "string"
+        );
+        const requiredFieldDef = collectFields(pageKey).find(
+          (f) => f.path === "fields.requiredFields"
+        );
+        const allowedReq = new Set(
+          (requiredFieldDef?.options ?? []).map((o) => o.value)
+        );
+        const mustKeep = [...chipLocks].filter(
+          (k) => allowedReq.size === 0 || allowedReq.has(k)
+        );
+        fieldsObj.requiredFields = [...new Set([...req, ...mustKeep])];
+      }
+      if (Array.isArray(fieldsObj.hiddenOptionalFields)) {
+        fieldsObj.hiddenOptionalFields = (
+          fieldsObj.hiddenOptionalFields as string[]
+        ).filter((x) => typeof x === "string" && !chipLocks.has(x));
+      }
     }
   }
 

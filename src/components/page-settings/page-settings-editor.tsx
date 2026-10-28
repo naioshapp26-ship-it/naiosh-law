@@ -48,7 +48,7 @@ function ensureCss() {
   if (document.querySelector('link[data-page-settings-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/page-settings.css?v=page-settings-erp-ref-20261027c";
+  link.href = "/erp-app/page-settings.css?v=page-settings-locked-contact-20261028a";
   link.setAttribute("data-page-settings-css", "1");
   document.head.appendChild(link);
 }
@@ -108,20 +108,26 @@ function FieldControl({
   }
 
   if (field.type === "multi-select") {
+    const lockedValues = new Set(field.lockedValues ?? []);
     const selected = Array.isArray(value) ? (value as string[]) : [];
+    const effective = [...new Set([...selected, ...lockedValues])];
     return (
       <div className="psc-multi">
         {(field.options ?? []).map((o) => {
-          const on = selected.includes(o.value);
+          const isLockedChip = lockedValues.has(o.value);
+          const on = effective.includes(o.value);
           return (
             <button
               key={o.value}
               type="button"
-              className={`psc-chip${on ? " on" : ""}`}
-              disabled={disabled || field.locked}
+              className={`psc-chip${on ? " on" : ""}${isLockedChip ? " locked-chip" : ""}`}
+              disabled={disabled || field.locked || isLockedChip}
+              aria-disabled={isLockedChip || undefined}
+              title={isLockedChip ? "مقفل قانونيًا — لا يمكن إخفاؤه أو إلغاء إلزامه" : undefined}
               onClick={() => {
-                if (on) onChange(selected.filter((x) => x !== o.value));
-                else onChange([...selected, o.value]);
+                if (isLockedChip) return;
+                if (on) onChange(effective.filter((x) => x !== o.value || lockedValues.has(x)));
+                else onChange([...effective, o.value]);
               }}
             >
               {o.label}
