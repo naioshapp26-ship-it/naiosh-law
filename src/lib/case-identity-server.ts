@@ -4,8 +4,46 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import type { CaseLink, CaseResolveResult } from "@/lib/case-identity";
 import { NO_LINKED_CASE } from "@/lib/case-identity";
+import type { AuthPayload } from "@/lib/auth";
+
+/**
+ * Scope Case queries by session role.
+ * Clients only see cases linked to their Client record — never the full firm docket.
+ */
+export async function caseAccessWhere(
+  session: Pick<AuthPayload, "sub" | "role" | "email">
+): Promise<Prisma.CaseWhereInput | undefined> {
+  if (session.role !== "client") return undefined;
+  const client = await prisma.client.findFirst({
+    where: {
+      OR: [
+        { userId: session.sub },
+        ...(session.email ? [{ email: session.email }] : []),
+      ],
+    },
+    select: { id: true },
+  });
+  if (!client) return { id: "__no_access__" };
+  return { clientId: client.id };
+}
+
+export async function assertCaseAccessible(
+  session: Pick<AuthPayload, "sub" | "role" | "email">,
+  caseId: string
+): Promise<CaseLink | null> {
+  const linked = await resolveCaseById(caseId);
+  if (!linked) return null;
+  if (session.role !== "client") return linked;
+  const where = await caseAccessWhere(session);
+  const allowed = await prisma.case.findFirst({
+    where: { AND: [{ id: caseId }, where ?? {}] },
+    select: { id: true, caseNo: true },
+  });
+  return allowed;
+}
 
 /** Resolve free-text caseRef against canonical Case.caseNo — never guess. */
 export async function resolveCaseRef(

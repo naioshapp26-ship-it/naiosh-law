@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
-import { getSessionFromCookies } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
+import { displayResolvedCase, NO_LINKED_CASE } from "@/lib/case-identity";
+import { resolveCaseById, resolveCaseRef } from "@/lib/case-identity-server";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -16,18 +17,26 @@ export async function GET() {
     include: { requester: true, receiver: true },
   });
 
-  return NextResponse.json(
-    items.map((n) => ({
+  const out = [];
+  for (const n of items) {
+    const resolved = await resolveCaseRef(n.caseRef);
+    const caseDisplay = displayResolvedCase(resolved);
+    out.push({
       id: n.id,
       type: n.type,
       status: n.status,
-      caseRef: n.caseRef ?? "—",
+      caseRef: n.caseRef ?? "",
+      caseNo: caseDisplay.caseNo,
+      caseId: caseDisplay.caseId ?? "",
+      caseLinks: caseDisplay.caseLinks,
+      caseLinkStatus: caseDisplay.caseLinkStatus,
       message: n.message ?? "",
       from: n.requester.name,
       to: n.receiver.name,
       date: formatDate(n.createdAt, { month: "numeric", day: "numeric", year: "numeric" }),
-    }))
-  );
+    });
+  }
+  return NextResponse.json(out);
 }
 
 export async function POST(request: Request) {
@@ -57,12 +66,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "لا يمكن إرسال طلب لنفسك" }, { status: 400 });
   }
 
+  let caseRef: string | null = null;
+  if (body.caseId) {
+    const linked = await resolveCaseById(String(body.caseId));
+    if (!linked) {
+      return NextResponse.json({ error: "القضية غير موجودة في السجل المركزي" }, { status: 400 });
+    }
+    caseRef = linked.caseNo;
+  } else if (body.caseNo || body.caseRef) {
+    const raw = String(body.caseNo ?? body.caseRef).trim();
+    if (raw && raw !== NO_LINKED_CASE) {
+      const resolved = await resolveCaseRef(raw);
+      if (resolved.status !== "linked") {
+        return NextResponse.json(
+          {
+            error:
+              "لا يُسمح بربط رقم قضية غير موجود — اختر من السجل الحقيقي أو اترك الحقل فارغًا",
+          },
+          { status: 400 }
+        );
+      }
+      caseRef = resolved.case.caseNo;
+    }
+  }
+
   const created = await prisma.professionalNetwork.create({
     data: {
       requesterId: session!.sub,
       receiverId,
       type: body.type ?? "collaboration",
-      caseRef: body.caseRef ? String(body.caseRef) : null,
+      caseRef,
       message: body.message ? String(body.message) : null,
     },
   });

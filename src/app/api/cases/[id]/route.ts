@@ -12,6 +12,7 @@ import {
   findClientContactById,
 } from "@/lib/person-contact-server";
 import { canViewPersonContact } from "@/lib/person-contact";
+import { assertCaseAccessible } from "@/lib/case-identity-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,6 +20,11 @@ export async function GET(_request: Request, { params }: Params) {
   const { error, session } = await requireAuth();
   if (error) return error;
   const { id } = await params;
+
+  const allowed = await assertCaseAccessible(session!, id);
+  if (!allowed) {
+    return NextResponse.json({ error: "غير مصرح أو غير موجود" }, { status: 404 });
+  }
 
   const item = await prisma.case.findUnique({
     where: { id },

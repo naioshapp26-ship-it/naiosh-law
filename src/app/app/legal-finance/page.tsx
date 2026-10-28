@@ -49,6 +49,10 @@ type Invoice = {
   paid: string;
   issueDate: string;
   status: string;
+  caseNo?: string;
+  caseId?: string;
+  caseRef?: string;
+  caseLinkStatus?: string;
 } & PersonContactRow;
 
 type FeeRule = {
@@ -136,6 +140,7 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 };
 
 const invoiceFields: FormField[] = withPersonContactFormFields([
+  { key: "caseNo", label: "رقم القضية", type: "case-select", required: true },
   { key: "client", label: "الموكل", type: "text", required: true },
   {
     key: "type",
@@ -750,6 +755,7 @@ ${stamp}` : stamp;
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
                   <thead>
                     <tr>
+                      <th style={thStyle}>رقم القضية</th>
                       <th style={thStyle}>رقم الفاتورة</th>
                       <th style={thStyle}>الموكل</th>
                       <PersonContactHeaderCells style={thStyle} />
@@ -764,6 +770,25 @@ ${stamp}` : stamp;
                   <tbody>
                     {invoices.map((inv) => (
                       <tr key={inv.id}>
+                        <td
+                          style={{
+                            ...tdStyle,
+                            fontWeight: 700,
+                            color:
+                              inv.caseLinkStatus === "review" ||
+                              String(inv.caseNo ?? "").startsWith("يحتاج مراجعة")
+                                ? "#92400e"
+                                : inv.caseNo && inv.caseNo !== "لا توجد قضية مرتبطة"
+                                  ? "#101D32"
+                                  : "#94a3b8",
+                            fontStyle:
+                              !inv.caseNo || inv.caseNo === "لا توجد قضية مرتبطة"
+                                ? "italic"
+                                : "normal",
+                          }}
+                        >
+                          {inv.caseNo || inv.caseRef || "لا توجد قضية مرتبطة"}
+                        </td>
                         <td style={tdStyle}>{inv.invoiceNo}</td>
                         <td style={tdStyle}>{inv.client}</td>
                         <PersonContactDataCells

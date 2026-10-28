@@ -13,6 +13,7 @@ import {
   type ClientContactRow,
 } from "@/lib/person-contact-server";
 import { canViewPersonContact } from "@/lib/person-contact";
+import { caseAccessWhere } from "@/lib/case-identity-server";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -20,8 +21,10 @@ export async function GET() {
 
   const role = session!.role;
   const canView = canViewPersonContact(role);
+  const accessWhere = await caseAccessWhere(session!);
 
   const cases = await prisma.case.findMany({
+    where: accessWhere,
     orderBy: { createdAt: "desc" },
     include: {
       client: {

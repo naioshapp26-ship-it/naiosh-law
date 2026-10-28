@@ -1,60 +1,47 @@
 # جرد رقم القضية الإلزامي — NAIOSH LAW
 
-فرع: `cursor/mandatory-case-no-systemwide-551a` · PR #188
+فرع التدقيق الشامل: `cursor/case-link-full-audit-551a` (متابعة بعد #188 / #189)  
+التقرير الكامل: `docs/case-number-full-audit-report.md`
 
 ## القاعدة
 
-- المصدر الوحيد: `Case.caseNo` في PostgreSQL.
+- المصدر الوحيد: `Case.caseNo` في PostgreSQL عبر `caseId` أو تطابق تام لـ `caseNo`.
 - ترتيب RTL: رقم القضية ← الموكل ← الاتصال ← الباقي.
-- غير قابل للإخفاء عبر إعدادات الصفحات (`lockedValues` على `visibleColumns` + فرض في `module-shell` + إعادة فرض عند حفظ API).
-- بلا أرقام وهمية. الموكل بلا قضية: «لا توجد قضية مرتبطة».
-- مرجع نصي قديم بلا تطابق: «يحتاج مراجعة الربط» / حالة `caseLinkStatus=review` دون ربط تلقائي خاطئ.
+- غير قابل للإخفاء عبر إعدادات الصفحات.
+- بلا أرقام وهمية عند الإنشاء/التعديل للوحدات الإلزامية.
+- الموكل بلا قضية: «لا توجد قضية مرتبطة».
+- مرجع نصي قديم بلا تطابق: «يحتاج مراجعة الربط» — دون ربط تلقائي خاطئ.
+- العميل لا يصل لواجهات/APIs الموظفين؛ قضاياه عبر `/portal` فقط.
 
-## المواضع — جداول ونماذج وإعدادات
+## المواضع
 
-| الصفحة / التبويب | مسار | جدول caseNo أولًا | نموذج إضافة/عرض/تعديل | مصدر | قفل إعدادات |
+| الصفحة / التبويب | مسار | جدول caseNo أولًا | نموذج إضافة/عرض/تعديل | مصدر | قفل |
 |---|---|---|---|---|---|
-| إدارة القضايا | `/app/modules/case-management` | نعم + روابط | إضافة: حقل caseNo؛ تعديل: قراءة فقط؛ عرض: ظاهر | `Case` | نعم |
-| إدارة الموكلين | `/app/modules/clients-management` | نعم + روابط متعددة | حقل **رقم القضية / القضايا المرتبطة** (`case-multi-select`) في إضافة/تعديل/عرض؛ اختياري؛ بحث وربط قضايا حقيقية فقط؛ CTA لإنشاء قضية ثم الربط | `Case[]` عبر `clientId` + مزامنة `caseIds` في POST/PATCH | عمود مقفل |
-| إدارة الجلسات | `/app/modules/court-sessions` | نعم | case-select إلزامي → `caseId` | `CourtSession.caseId` + `Case` | نعم |
-| مركز المتابعة | `/app/modules/follow-up-center` | نعم | case-select إلزامي | `ModuleRecord.data` | نعم |
-| الخدمات القانونية | `/app/modules/legal-services` | نعم | case-select إلزامي | ModuleRecord | نعم |
-| الاستشارات | `/app/modules/legal-consultations` | نعم | case-select اختياري | ModuleRecord | عمود مقفل |
+| إدارة القضايا | `/app/modules/case-management` | نعم + روابط | إضافة caseNo؛ تعديل قراءة فقط | `Case` | نعم |
+| إدارة الموكلين | `/app/modules/clients-management` | نعم + روابط متعددة | case-multi-select اختياري | `Case[]` عبر `clientId` | نعم |
+| الجلسات | `/app/modules/court-sessions` | نعم | case-select إلزامي + بحث | `CourtSession.caseId` | نعم |
+| المتابعة | `/app/modules/follow-up-center` | نعم | case-select إلزامي | ModuleRecord | نعم |
+| الخدمات | `/app/modules/legal-services` | نعم | case-select إلزامي | ModuleRecord | نعم |
+| الاستشارات | `/app/modules/legal-consultations` | نعم | case-select اختياري | ModuleRecord | نعم |
 | الشكاوى | `/app/modules/complaints-management` | نعم | case-select إلزامي | ModuleRecord | نعم |
-| الطلبات الداخلية | `/app/modules/internal-requests` | نعم | case-select اختياري | ModuleRecord | عمود مقفل |
-| المحاسبة القانونية | `/app/modules/legal-accounting` | نعم | case-select إلزامي | `FinancialRecord.caseRef` = `Case.caseNo` عند الربط | نعم |
-| المالية — كفالات | `/app/legal-finance` تبويب bail | عمود رقم القضية | case-select | `BailGuarantee.caseRef` محلول | عرض محلول |
-| المالية — ضمانات | تبويب personal | عمود رقم القضية | case-select | `PersonalGuarantee.caseRef` | عرض محلول |
-| المالية — تبليغات | تبويب notifications | عمود رقم القضية | case-select | `OfficialNotification.caseRef` | عرض محلول |
-| التصدير CSV/Excel/PDF | زر تقارير في ModuleShell | أعمدة = `visibleColumns` المفروضة (تشمل caseNo) | — | صفوف API | caseNo لا يُسقط |
-| بوابة العميل | `/portal/cases` وغيرها | موجود مسبقًا | caseId حيث ينطبق | Case | خارج نطاق الموظفين |
+| الطلبات | `/app/modules/internal-requests` | نعم | case-select اختياري | ModuleRecord | نعم |
+| المحاسبة | `/app/modules/legal-accounting` | نعم | case-select إلزامي | FinancialRecord.caseRef | نعم |
+| المالية — فواتير | `/app/legal-finance` invoices | نعم | case-select إلزامي | FinancialRecord | عمود مفروض في الواجهة |
+| المالية — كفالات/ضمانات/تبليغات | نفس الصفحة | نعم | case-select إلزامي | caseRef محلول | نعم |
+| الشبكة المهنية | `/app/professional-network` | رقم القضية في قائمة الطلبات | case-select اختياري | caseRef محلول | — |
+| التصدير | ModuleShell | ضمن visibleColumns المفروضة | — | API | caseNo لا يُسقط |
+| بوابة العميل | `/portal/cases` | قضاياه | — | Case حيث clientId | عزل middleware |
 
-## استثناءات / فجوات معروفة
+## استثناءات معلنة
 
 | السطح | الحالة |
 |---|---|
-| الشبكة المهنية `/app/professional-network` | ما زال حقل نصي `caseRef` — **لم يُرحَّل بالكامل** في هذا PR |
-| مركز التقارير (قائمة تعريفات التقارير) | تقارير وصفية عن ملفات التقارير وليست سجلات قضايا؛ التصدير الفعلي للقضايا يتم من صفحات الوحدات |
-| فواتير تبويب invoices في legal-finance | لم يُفرض caseNo على كل صف فاتورة في ذلك التبويب المخصص (المحاسبة ModuleShell مغطاة) |
-| جلسات بـ caseNo نصي بلا `caseId` ولا تطابق Case | تُعرض للمراجعة (`review`) — **بدون** ربط تلقائي |
+| جلسات قديمة بنص `#F-*` / `#PC-*` بلا Case | تُعرض للمراجعة اليدوية — لا ربط تلقائي |
+| سجلات Case بأسماء TEST/#LINK في بيئة التطوير | آثار اختبارات — لا حذف تلقائي؛ فحص المصدر أولًا |
+| تدقيق بيانات الإنتاج | قراءة فقط عبر `audit-case-full-readonly.mts` على replica — منفصل عن قبول الكود |
 
-## آليات القفل التقنية
+## اختبارات
 
-1. `displayTab({ lockedVisibleColumns: ["caseNo"] })` في registry / from-module-config  
-2. `normalizeAndValidate` في `server.ts` يعيد دمج `lockedValues` في `visibleColumns` ويمنع إخفاءها في `hiddenOptionalFields`  
-3. `module-shell` يفرض `CASE_NO_KEY` عند تصفية الأعمدة ويحقن case-select في النماذج ذات العلاقة  
-4. روابط الموكلين: `/app/modules/case-management?caseId=<id>` تفتح عرض القضية المطابقة
-
-## حالات الاختبار
-
-1. موكل بقضية واحدة / متعددة / بلا قضايا  
-2. فتح كل رابط قضية من خلية الموكل → القضية الصحيحة  
-3. نماذج إضافة/عرض/تعديل لكل مجموعة صفحات  
-4. محاولة إخفاء caseNo عبر PUT إعدادات الصفحة → يُعاد فرضه  
-5. التصدير يستخدم أعمدة ظاهرة تتضمن caseNo  
-6. جرد سجلات «يحتاج مراجعة الربط» بلا ربط عشوائي  
-7. دورة ربط الموكل↔القضية (`scripts/acceptance-client-case-link.mts`): إضافة بـ0/1/2 قضايا، تعديل الربط، إنشاء قضية لموكل موجود (ربط عكسي)، رفض `caseIds` وهمي، بحث case-select في الجلسات/المحاسبة/المتابعة  
-
-## فرع متابعة بعد #188
-
-فرع: `cursor/client-case-link-picker-551a` — يغلق فجوة نموذج الموكل (عمود بدون حقل إدخال). 
+- `scripts/acceptance-case-full-audit.mts` — جرد واجهات + سيناريوهات + عزل + قفل إعدادات  
+- `scripts/audit-case-full-readonly.mts` — جرد روابط DB قراءة فقط  
+- `scripts/acceptance-client-case-link.mts` — دورة ربط الموكل (PR #189)  
