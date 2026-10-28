@@ -184,7 +184,7 @@ export function demoPortalBundle() {
   const cases: PortalCase[] = [
     {
       id: "demo-case-1",
-      caseNo: "DEMO-2026/01",
+      caseNo: "[تجريبي] غير مرتبط بـ Case",
       type: "تجاري",
       title: "قضية تجريبية — نزاع تعاقدي (بيانات وهمية)",
       court: "المحكمة التجارية — تجريبي",
@@ -201,7 +201,7 @@ export function demoPortalBundle() {
     },
     {
       id: "demo-case-2",
-      caseNo: "DEMO-2026/02",
+      caseNo: "[تجريبي] غير مرتبط بـ Case",
       type: "عمالي",
       title: "قضية تجريبية مغلقة — مطالبة عمالية (وهمية)",
       court: "المحكمة العمالية — تجريبي",
@@ -221,7 +221,7 @@ export function demoPortalBundle() {
   const sessions: PortalSession[] = [
     {
       id: "demo-session-1",
-      caseNo: "DEMO-2026/01",
+      caseNo: "[تجريبي] غير مرتبط بـ Case",
       court: "المحكمة التجارية — تجريبي",
       room: "قاعة 3 (تجريبي)",
       date: "2026-11-12",
@@ -233,7 +233,7 @@ export function demoPortalBundle() {
     },
     {
       id: "demo-session-2",
-      caseNo: "DEMO-2026/02",
+      caseNo: "[تجريبي] غير مرتبط بـ Case",
       court: "المحكمة العمالية — تجريبي",
       room: null,
       date: "2026-07-15",
@@ -310,7 +310,7 @@ export function demoPortalBundle() {
       issueDate: "2026-10-01",
       dueDate: "2026-10-30",
       status: "غير مسدد (تجريبي — غير قابل للتحصيل)",
-      caseRef: "DEMO-2026/01",
+      caseRef: "[تجريبي] غير مرتبط بـ Case",
       notes: "فاتورة وهمية للعرض فقط — لا بوابة دفع.",
       isDemo: true,
       collectible: false,

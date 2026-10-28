@@ -1035,7 +1035,7 @@ ${stamp}` : stamp;
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["النوع", "العنوان", "الجهة", "رقم القضية", "الموعد", "الحالة", "الإجراءات"].map((h) => (
+                      {["رقم القضية", "النوع", "العنوان", "الجهة", "الموعد", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -1043,10 +1043,24 @@ ${stamp}` : stamp;
                   <tbody>
                     {notifications.map((n) => (
                       <tr key={n.id}>
+                        <td
+                          style={{
+                            ...tdStyle,
+                            fontWeight: 700,
+                            color:
+                              String((n as { caseNo?: string }).caseNo ?? "").startsWith("يحتاج مراجعة")
+                                ? "#92400e"
+                                : (n as { caseNo?: string }).caseNo &&
+                                    (n as { caseNo?: string }).caseNo !== "لا توجد قضية مرتبطة"
+                                  ? "#101D32"
+                                  : "#94a3b8",
+                          }}
+                        >
+                          {(n as { caseNo?: string }).caseNo || n.caseRef || "لا توجد قضية مرتبطة"}
+                        </td>
                         <td style={tdStyle}>{n.type}</td>
                         <td style={tdStyle}>{n.title}</td>
                         <td style={tdStyle}>{n.entity}</td>
-                        <td style={tdStyle}>{(n as { caseNo?: string }).caseNo || n.caseRef || "لا توجد قضية مرتبطة"}</td>
                         <td style={tdStyle}>{n.dueDate}</td>
                         <td style={tdStyle}>{n.status}</td>
                         <td style={tdStyle}>

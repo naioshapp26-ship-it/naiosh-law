@@ -90,6 +90,63 @@ export async function casesForClientIds(
   return map;
 }
 
+/**
+ * Resolve a required case link from request body for create/PATCH.
+ * Prefer caseId; else exact caseNo/caseRef match. Never invent.
+ */
+export async function resolveRequiredCaseFromBody(
+  body: Record<string, unknown>,
+  opts?: { required?: boolean; fields?: ("caseId" | "caseNo" | "caseRef")[] }
+): Promise<
+  | { ok: true; case: CaseLink | null; touched: boolean }
+  | { ok: false; error: string; status: number }
+> {
+  const required = opts?.required ?? true;
+  const hasCaseId = Object.prototype.hasOwnProperty.call(body, "caseId");
+  const hasCaseNo = Object.prototype.hasOwnProperty.call(body, "caseNo");
+  const hasCaseRef = Object.prototype.hasOwnProperty.call(body, "caseRef");
+  const touched = hasCaseId || hasCaseNo || hasCaseRef;
+  if (!touched) {
+    return required
+      ? {
+          ok: false,
+          error: "رقم القضية إلزامي — اختر قضية من السجل المركزي",
+          status: 400,
+        }
+      : { ok: true, case: null, touched: false };
+  }
+
+  if (body.caseId) {
+    const linked = await resolveCaseById(String(body.caseId));
+    if (!linked) {
+      return { ok: false, error: "القضية غير موجودة في السجل المركزي", status: 400 };
+    }
+    return { ok: true, case: linked, touched: true };
+  }
+
+  const raw = String(body.caseNo ?? body.caseRef ?? "").trim();
+  if (!raw || raw === NO_LINKED_CASE) {
+    return required
+      ? {
+          ok: false,
+          error: "رقم القضية إلزامي — اختر قضية من السجل المركزي",
+          status: 400,
+        }
+      : { ok: true, case: null, touched: true };
+  }
+
+  const resolved = await resolveCaseRef(raw);
+  if (resolved.status !== "linked") {
+    return {
+      ok: false,
+      error:
+        "لا يُسمح بربط رقم قضية غير موجود — اختر من السجل الحقيقي أو أنشئ قضية جديدة",
+      status: 400,
+    };
+  }
+  return { ok: true, case: resolved.case, touched: true };
+}
+
 /** Parse caseIds from request body — only real IDs accepted later by sync. */
 export function parseCaseIdsFromBody(body: Record<string, unknown>): string[] | undefined {
   if (!("caseIds" in body) && !("caseLinks" in body) && !("caseId" in body)) {
