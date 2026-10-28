@@ -59,18 +59,25 @@ export async function GET() {
       contact = nameCache.get(s.client) ?? null;
     }
     const linkedCaseId = s.caseId ?? s.case?.id ?? null;
-    const linkedCaseNo = s.case?.caseNo ?? s.caseNo ?? null;
+    const linkedCaseNo = s.case?.caseNo ?? null;
+    const rawCaseNo = s.caseNo ?? null;
+    const linked =
+      linkedCaseId && linkedCaseNo
+        ? { status: "linked" as const, caseNo: linkedCaseNo, caseId: linkedCaseId }
+        : rawCaseNo
+          ? { status: "review" as const, caseNo: `يحتاج مراجعة الربط: ${rawCaseNo}`, caseId: "" }
+          : { status: "none" as const, caseNo: "لا توجد قضية مرتبطة", caseId: "" };
     base.push(
       mapRowWithClientContact(
         {
           id: s.id,
-          caseId: linkedCaseId ?? "",
-          caseNo: linkedCaseNo ?? "لا توجد قضية مرتبطة",
+          caseId: linked.caseId,
+          caseNo: linked.caseNo,
           caseLinks:
-            linkedCaseId && linkedCaseNo
-              ? [{ id: linkedCaseId, caseNo: linkedCaseNo }]
+            linked.status === "linked"
+              ? [{ id: linked.caseId, caseNo: linkedCaseNo! }]
               : [],
-          caseLinkStatus: linkedCaseId && linkedCaseNo ? "linked" : linkedCaseNo ? "review" : "none",
+          caseLinkStatus: linked.status,
           client: s.client ?? "—",
           court: s.court,
           room: s.room ?? "—",

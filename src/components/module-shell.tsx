@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { StatsRow } from "@/components/ui/stats-row";
@@ -137,6 +137,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const [pageSettings, setPageSettings] = useState<PageSettingsValues | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [notesRecordId, setNotesRecordId] = useState<string | null>(null);
+  const deepLinkedCaseRef = useRef<string | null>(null);
 
   const pushToast = useCallback((type: "success" | "error", text: string) => {
     const id = ++toastCounter;
@@ -181,6 +182,22 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       setLoadingData(false);
     }
   }, [apiEndpoint, config, pushToast]);
+
+  /** Deep-link from client case links: /app/modules/case-management?caseId=… */
+  useEffect(() => {
+    if (slug !== "case-management" || loadingData || rows.length === 0) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const caseId = params.get("caseId")?.trim();
+    if (!caseId || deepLinkedCaseRef.current === caseId) return;
+    const hit = rows.find((r) => String(r.id) === caseId || String(r.caseId ?? "") === caseId);
+    if (!hit) {
+      pushToast("error", "القضية المطلوبة غير موجودة في السجل الحالي");
+      return;
+    }
+    deepLinkedCaseRef.current = caseId;
+    setViewTarget(hit);
+  }, [slug, loadingData, rows, pushToast]);
 
   useEffect(() => {
     loadRows();

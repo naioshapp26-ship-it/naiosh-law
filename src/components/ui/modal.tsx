@@ -545,12 +545,12 @@ export function Modal({
                             }
                           }}
                           required={f.required}
-                          readOnly={Boolean(f.readOnly && (f.key !== "caseNo" || form.id))}
+                          readOnly={Boolean(f.readOnly)}
                           className="input-field"
                           placeholder={f.placeholder}
                           autoComplete={isName ? "off" : undefined}
                           style={
-                            f.readOnly && form.id && f.key === "caseNo"
+                            f.readOnly
                               ? { background: "#f8fafc", color: "#334155", fontWeight: 700 }
                               : undefined
                           }

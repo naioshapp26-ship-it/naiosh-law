@@ -1,34 +1,55 @@
 # جرد رقم القضية الإلزامي — NAIOSH LAW
 
-تاريخ الفرع: `cursor/mandatory-case-no-systemwide-551a`
+فرع: `cursor/mandatory-case-no-systemwide-551a` · PR #188
 
 ## القاعدة
 
 - المصدر الوحيد: `Case.caseNo` في PostgreSQL.
 - ترتيب RTL: رقم القضية ← الموكل ← الاتصال ← الباقي.
-- غير قابل للإخفاء عبر إعدادات الصفحات (`lockedValues` على `visibleColumns` + فرض في `module-shell`).
+- غير قابل للإخفاء عبر إعدادات الصفحات (`lockedValues` على `visibleColumns` + فرض في `module-shell` + إعادة فرض عند حفظ API).
 - بلا أرقام وهمية. الموكل بلا قضية: «لا توجد قضية مرتبطة».
-- مرجع نصي قديم بلا تطابق: «يحتاج مراجعة الربط: …» دون ربط تلقائي خاطئ.
+- مرجع نصي قديم بلا تطابق: «يحتاج مراجعة الربط» / حالة `caseLinkStatus=review` دون ربط تلقائي خاطئ.
 
-## المواضع
+## المواضع — جداول ونماذج وإعدادات
 
-| الصفحة / السطح | جدول | نموذج | مصدر البيانات | قفل الإعدادات |
-|---|---|---|---|---|
-| إدارة القضايا | caseNo أول عمود + روابط | caseNo ظاهر (قراءة فقط عند التعديل) | `Case.caseNo` | نعم |
-| إدارة الموكلين | caseNo قبل الاسم؛ متعدد = روابط | لا يُطلب عند إنشاء موكل | `Case[]` عبر `clientId` | عمود مقفل؛ ليس حقل إنشاء |
-| الجلسات | caseNo أول عمود | case-select إلزامي → `caseId` | `CourtSession.caseId` + `Case` | نعم |
-| المتابعة / خدمات / شكاوى | caseNo أول عمود | case-select (إلزامي حيث ينطبق) | `ModuleRecord.data.caseId/caseNo` | نعم عبر from-module-config |
-| استشارات / طلبات داخلية | caseNo أول عمود | case-select اختياري | ModuleRecord | عمود مقفل |
-| المحاسبة القانونية | caseNo أول عمود | case-select إلزامي | `FinancialRecord.caseRef` = `Case.caseNo` عند الربط | نعم |
-| المالية القانونية (كفالات/ضمانات/تبليغات) | عمود رقم القضية | case-select | `caseRef` يُحل ضد `Case` | عرض محلول |
-| التصدير/الطباعة | يتبع `visibleColumns` المفروضة | — | نفس صفوف API | caseNo لا يُسقط |
-| بوابة العميل | موجود مسبقًا | caseId حيث ينطبق | Case | خارج نطاق الموظفين |
+| الصفحة / التبويب | مسار | جدول caseNo أولًا | نموذج إضافة/عرض/تعديل | مصدر | قفل إعدادات |
+|---|---|---|---|---|---|
+| إدارة القضايا | `/app/modules/case-management` | نعم + روابط | إضافة: حقل caseNo؛ تعديل: قراءة فقط؛ عرض: ظاهر | `Case` | نعم |
+| إدارة الموكلين | `/app/modules/clients-management` | نعم + روابط متعددة | إضافة موكل **بدون** إلزام قضية؛ عرض يظهر caseNo | `Case[]` عبر `clientId` | عمود مقفل |
+| إدارة الجلسات | `/app/modules/court-sessions` | نعم | case-select إلزامي → `caseId` | `CourtSession.caseId` + `Case` | نعم |
+| مركز المتابعة | `/app/modules/follow-up-center` | نعم | case-select إلزامي | `ModuleRecord.data` | نعم |
+| الخدمات القانونية | `/app/modules/legal-services` | نعم | case-select إلزامي | ModuleRecord | نعم |
+| الاستشارات | `/app/modules/legal-consultations` | نعم | case-select اختياري | ModuleRecord | عمود مقفل |
+| الشكاوى | `/app/modules/complaints-management` | نعم | case-select إلزامي | ModuleRecord | نعم |
+| الطلبات الداخلية | `/app/modules/internal-requests` | نعم | case-select اختياري | ModuleRecord | عمود مقفل |
+| المحاسبة القانونية | `/app/modules/legal-accounting` | نعم | case-select إلزامي | `FinancialRecord.caseRef` = `Case.caseNo` عند الربط | نعم |
+| المالية — كفالات | `/app/legal-finance` تبويب bail | عمود رقم القضية | case-select | `BailGuarantee.caseRef` محلول | عرض محلول |
+| المالية — ضمانات | تبويب personal | عمود رقم القضية | case-select | `PersonalGuarantee.caseRef` | عرض محلول |
+| المالية — تبليغات | تبويب notifications | عمود رقم القضية | case-select | `OfficialNotification.caseRef` | عرض محلول |
+| التصدير CSV/Excel/PDF | زر تقارير في ModuleShell | أعمدة = `visibleColumns` المفروضة (تشمل caseNo) | — | صفوف API | caseNo لا يُسقط |
+| بوابة العميل | `/portal/cases` وغيرها | موجود مسبقًا | caseId حيث ينطبق | Case | خارج نطاق الموظفين |
 
-## حالات الاختبار المطلوبة
+## استثناءات / فجوات معروفة
 
-1. موكل بقضية واحدة → رابط واحد قابل للفتح.
-2. موكل بعدة قضايا → عدة روابط في نفس الخلية.
-3. موكل بلا قضايا → «لا توجد قضية مرتبطة»؛ إنشاء موكل دون قضية مسموح.
-4. جلسة/فاتورة → اختيار قضية مركزية فقط.
-5. `caseRef` قديم بلا تطابق → نص مراجعة، بلا ربط عشوائي.
-6. محاولة إخفاء caseNo من إعدادات الصفحة → يُعاد فرضه عند الحفظ وفي الواجهة.
+| السطح | الحالة |
+|---|---|
+| الشبكة المهنية `/app/professional-network` | ما زال حقل نصي `caseRef` — **لم يُرحَّل بالكامل** في هذا PR |
+| مركز التقارير (قائمة تعريفات التقارير) | تقارير وصفية عن ملفات التقارير وليست سجلات قضايا؛ التصدير الفعلي للقضايا يتم من صفحات الوحدات |
+| فواتير تبويب invoices في legal-finance | لم يُفرض caseNo على كل صف فاتورة في ذلك التبويب المخصص (المحاسبة ModuleShell مغطاة) |
+| جلسات بـ caseNo نصي بلا `caseId` ولا تطابق Case | تُعرض للمراجعة (`review`) — **بدون** ربط تلقائي |
+
+## آليات القفل التقنية
+
+1. `displayTab({ lockedVisibleColumns: ["caseNo"] })` في registry / from-module-config  
+2. `normalizeAndValidate` في `server.ts` يعيد دمج `lockedValues` في `visibleColumns` ويمنع إخفاءها في `hiddenOptionalFields`  
+3. `module-shell` يفرض `CASE_NO_KEY` عند تصفية الأعمدة ويحقن case-select في النماذج ذات العلاقة  
+4. روابط الموكلين: `/app/modules/case-management?caseId=<id>` تفتح عرض القضية المطابقة
+
+## حالات الاختبار
+
+1. موكل بقضية واحدة / متعددة / بلا قضايا  
+2. فتح كل رابط قضية من خلية الموكل → القضية الصحيحة  
+3. نماذج إضافة/عرض/تعديل لكل مجموعة صفحات  
+4. محاولة إخفاء caseNo عبر PUT إعدادات الصفحة → يُعاد فرضه  
+5. التصدير يستخدم أعمدة ظاهرة تتضمن caseNo  
+6. جرد سجلات «يحتاج مراجعة الربط» بلا ربط عشوائي  
