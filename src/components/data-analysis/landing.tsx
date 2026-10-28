@@ -1,22 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-function ensureCss() {
-  if (typeof document === "undefined") return;
-  if (document.querySelector('link[data-da-law-css]')) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "/erp-app/data-analysis-law.css?v=law-da-20261028a";
-  link.setAttribute("data-da-law-css", "1");
-  document.head.appendChild(link);
-}
+type SessionInfo = {
+  name: string | null;
+  role: string | null;
+};
+
+const WORKSPACE_HREF = "/data-analysis/workspace";
+const LOGIN_HREF = `/login?next=${encodeURIComponent(WORKSPACE_HREF)}`;
 
 export function DataAnalysisLanding() {
+  const [session, setSession] = useState<SessionInfo>({ name: null, role: null });
+
   useEffect(() => {
-    ensureCss();
+    let cancelled = false;
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(async (res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setSession({
+          name: data?.user?.name ? String(data.user.name) : null,
+          role: data?.user?.role ? String(data.user.role) : null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setSession({ name: null, role: null });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const isStaff =
+    Boolean(session.role) && session.role !== "client";
+  const startHref = isStaff ? WORKSPACE_HREF : LOGIN_HREF;
+  const startLabel = isStaff ? "ابدأ التحليل" : "تسجيل الدخول وابدأ التحليل";
 
   return (
     <div className="da-law" dir="rtl">
@@ -30,23 +50,24 @@ export function DataAnalysisLanding() {
             </h1>
             <p className="da-law-hero__tag">ذكاء يحوّل بياناتك القانونية إلى قرارات</p>
             <p className="da-law-hero__lead">
-              حلّل القضايا والجلسات والموكلين والمحاسبة القانونية داخل منظومة نايوش
-              القانونية — أو ارفع ملف CSV/Excel مصرّحًا به — مع احترام صلاحياتك وعزل
-              بيانات العملاء. دون نقاط ترحيب أو تسعير من أنظمة أخرى.
+              اكتشف قوة بياناتك القانونية مع أدوات التحليل والتقارير داخل منظومة نايوش
+              القانونية — قضايا، جلسات، موكلون، ومحاسبة — أو ارفع ملف CSV/Excel مصرّحًا به.
+              الصفحة التعريفية عامة؛ التحليل الفعلي يتطلب تسجيل دخول وصلاحيات مناسبة.
             </p>
             <div className="da-law-hero__note" role="status">
               <span aria-hidden="true">⚖️</span>
               <span>
-                يعمل داخل جلسة NAIOSH LAW الحالية. لا يُطلب تسجيل دخول جديد، ولا تُنقل
-                بياناتك إلى HUB 360 أو نظام النقاط الخارجي.
+                {isStaff
+                  ? `أنت مسجّل كـ «${session.name || "مستخدم"}» — التحليل يستخدم جلسة NAIOSH LAW الحالية دون دخول جديد أو انتقال إلى HUB 360.`
+                  : "يمكنك تصفّح هذه الصفحة دون تسجيل دخول. لتشغيل التحليل على بياناتك القانونية سجّل الدخول بحساب المنظومة القانونية."}
               </span>
             </div>
             <div className="da-law-hero__actions">
-              <Link href="/app/data-analysis/workspace" className="da-law-btn primary">
-                ابدأ التحليل
+              <Link href={startHref} className="da-law-btn primary">
+                {startLabel}
               </Link>
-              <Link href="/app/dashboard" className="da-law-btn secondary">
-                العودة للوحة التحكم
+              <Link href="/" className="da-law-btn secondary">
+                العودة للرئيسية
               </Link>
             </div>
           </div>
@@ -90,7 +111,7 @@ export function DataAnalysisLanding() {
             </div>
             <div className="da-law-visual__foot">
               <span>تصور توضيحي — داخل هوية NAIOSH LAW</span>
-              <b>مساحة العمل</b>
+              <b>من الموقع العام</b>
             </div>
           </div>
         </div>
@@ -99,9 +120,9 @@ export function DataAnalysisLanding() {
       <section className="da-law-section" aria-labelledby="da-what">
         <h2 id="da-what">ما هو النظام؟</h2>
         <p className="lead">
-          محرك تحليل جدولي مكيّف للمنظومة القانونية: يستمد بياناته من السجلات
-          المصرّح بها لك، أو من ملف ترفعه بنفسك، ويحسب مؤشرات وأنواع تحليل متعددة
-          داخل المتصفح — مع نسخة تدقيق للملف على خادم LAW فقط.
+          <strong>نايوش لتحليل البيانات</strong> داخل NAIOSH LAW تطبيق تحليلي مكيّف للقانون.
+          هذه الصفحة العامة تعرّفك به وتربطك بمساحة التحليل عبر جلسة المنظومة القانونية —
+          دون جمع كلمات مرور هنا ودون التحويل إلى HUB 360.
         </p>
         <div className="da-law-grid-3">
           <article className="da-law-card">
@@ -125,8 +146,8 @@ export function DataAnalysisLanding() {
       <section className="da-law-section" aria-labelledby="da-offer">
         <h2 id="da-offer">ماذا يقدّم؟</h2>
         <p className="lead">
-          إمكانيات مستمدة من المحرك التحليلي الأصلي، مكيّفة للقانون — بدون عروض
-          تجريبية أو نقاط أو تسعير من HUB.
+          إمكانيات مستمدة من المحرك التحليلي الأصلي، مكيّفة للقانون — بدون عروض تجريبية أو
+          نقاط أو تسعير من HUB.
         </p>
         <div className="da-law-grid-3">
           <article className="da-law-card">
@@ -136,8 +157,8 @@ export function DataAnalysisLanding() {
           </article>
           <article className="da-law-card">
             <div className="ico">2</div>
-            <h3>صلاحيات LAW</h3>
-            <p>جلسة الدخول الحالية كافية. دور العميل يرى سجلاته فقط.</p>
+            <h3>جلسة LAW الحالية</h3>
+            <p>بعد تسجيل الدخول لا يُطلب حساب جديد — التحليل يستخدم صلاحياتك في المنظومة القانونية.</p>
           </article>
           <article className="da-law-card">
             <div className="ico">3</div>
@@ -146,8 +167,8 @@ export function DataAnalysisLanding() {
           </article>
         </div>
         <div style={{ marginTop: "1rem" }}>
-          <Link href="/app/data-analysis/workspace" className="da-law-btn primary">
-            الدخول إلى أدوات التحليل
+          <Link href={startHref} className="da-law-btn primary">
+            {isStaff ? "الدخول إلى أدوات التحليل" : "سجّل الدخول لبدء التحليل"}
           </Link>
         </div>
       </section>

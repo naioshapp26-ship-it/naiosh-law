@@ -17,6 +17,16 @@
   font-family: "Cairo", "Noto Kufi Arabic", sans-serif;
 }
 
+.da-law-public-main {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.nav-data-analysis-link.active,
+.nav-links a.nav-data-analysis-link.active {
+  color: #b79a61;
+}
+
 .da-law-hero {
   position: relative;
   overflow: hidden;

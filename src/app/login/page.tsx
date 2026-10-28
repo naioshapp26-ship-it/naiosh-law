@@ -11,6 +11,14 @@ import { BRAND } from "@/lib/brand";
 
 type ExistingUser = { name: string; email: string; role: string };
 
+/** Same-origin relative path only — blocks open redirects */
+function safeNextPath(raw: string | null): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("://")) return null;
+  if (raw.startsWith("/portal") || raw.startsWith("/api")) return null;
+  return raw;
+}
+
 function LoginInner() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@naioshlaw.com");
@@ -22,6 +30,7 @@ function LoginInner() {
   const [remember, setRemember] = useState(true);
   const [existingUser, setExistingUser] = useState<ExistingUser | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const nextPath = safeNextPath(searchParams.get("next"));
 
   useEffect(() => {
     const reason = searchParams.get("reason");
@@ -114,7 +123,11 @@ function LoginInner() {
       }
 
       const role = String(data.user?.role ?? "");
-      window.location.assign(role === "client" ? "/portal" : "/app/dashboard");
+      if (role === "client") {
+        window.location.assign("/portal");
+        return;
+      }
+      window.location.assign(nextPath || "/app/dashboard");
     } catch {
       setError("تعذر الاتصال بالخادم — حاول مرة أخرى");
       setLoading(false);

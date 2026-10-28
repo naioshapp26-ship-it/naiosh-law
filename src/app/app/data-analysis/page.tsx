@@ -1,12 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { AppShell } from "@/components/app-shell";
-import { DataAnalysisLanding } from "@/components/data-analysis/landing";
-
-export default function DataAnalysisPage() {
-  return (
-    <AppShell>
-      <DataAnalysisLanding />
-    </AppShell>
-  );
+/** Legacy admin path → public site entry */
+export default function LegacyAppDataAnalysisRedirect() {
+  redirect("/data-analysis");
 }

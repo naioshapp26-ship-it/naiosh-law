@@ -1,12 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { AppShell } from "@/components/app-shell";
-import { DataAnalysisWorkspace } from "@/components/data-analysis/workspace";
-
-export default function DataAnalysisWorkspacePage() {
-  return (
-    <AppShell>
-      <DataAnalysisWorkspace />
-    </AppShell>
-  );
+/** Legacy admin workspace path → public workspace (still session-gated) */
+export default function LegacyAppDataAnalysisWorkspaceRedirect() {
+  redirect("/data-analysis/workspace");
 }

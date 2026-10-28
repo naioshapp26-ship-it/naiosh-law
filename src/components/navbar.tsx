@@ -16,6 +16,12 @@ const LANDING_LINKS = [
   { href: "/", label: "الرئيسية" },
   { href: "/#modules", label: "منتجاتنا" },
   { href: "/services", label: "خدماتنا" },
+  {
+    href: "/data-analysis",
+    label: "نايوش لتحليل البيانات",
+    icon: "fa-chart-line",
+    className: "nav-data-analysis-link",
+  },
   { href: "/branches", label: "الفروع" },
   { href: "/platforms", label: "المنصات" },
   { href: "/incubators", label: "الحاضنات" },
@@ -62,6 +68,9 @@ export function Navbar({ variant = "dark" }: Props) {
     if (label === "الإعلانات") return pathname === "/ads" || pathname.startsWith("/ads/");
     if (label === "ملكية نايوش") {
       return pathname === NAIOSH_OWNERSHIP_PAGE_HREF || pathname.startsWith(`${NAIOSH_OWNERSHIP_PAGE_HREF}/`);
+    }
+    if (label === "نايوش لتحليل البيانات") {
+      return pathname === "/data-analysis" || pathname.startsWith("/data-analysis/");
     }
     if (label === "الرئيسية") return pathname === "/";
     return false;

@@ -213,8 +213,8 @@ export function DataAnalysisWorkspace() {
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Link href="/app/data-analysis" className="da-law-btn ghost">
-              الصفحة الرئيسية
+            <Link href="/data-analysis" className="da-law-btn ghost">
+              الصفحة التعريفية
             </Link>
             <button
               type="button"
