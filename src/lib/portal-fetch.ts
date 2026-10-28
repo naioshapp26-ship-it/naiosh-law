@@ -16,14 +16,17 @@ export class PortalAuthError extends Error {
 
 let redirectingToLogin = false;
 
-export function forcePortalLogin(message?: string) {
+export function forcePortalLogin(message?: string, opts?: { revoked?: boolean }) {
   if (typeof window === "undefined") return;
   if (redirectingToLogin) return;
   redirectingToLogin = true;
-  const q = message ? `?reason=${encodeURIComponent(message)}` : "";
-  // Fire-and-forget logout to clear httpOnly cookie, then hard navigate
+  // Only show "session expired" when a cookie was actually revoked — not on cold visit
+  const revoked =
+    opts?.revoked === true ||
+    (typeof message === "string" && /انتهت صلاحية|جلسة/.test(message) && !/غير مصرح/.test(message));
+  const q = revoked ? `?reason=${encodeURIComponent(message || "session")}` : "";
   void fetch("/api/auth/logout", { method: "POST", credentials: "include" }).finally(() => {
-    window.location.assign(`/login${q || "?reason=session"}`);
+    window.location.assign(`/login${q}`);
   });
 }
 

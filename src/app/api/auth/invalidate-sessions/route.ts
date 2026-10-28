@@ -19,7 +19,8 @@ export async function POST() {
   const user = await prisma.user.findUnique({ where: { id: session.sub } });
   if (!user) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
 
-  const changedAt = new Date();
+  // Stamp slightly in the past so the re-issued JWT remains valid on this device
+  const changedAt = new Date(Date.now() - 2000);
   await prisma.user.update({
     where: { id: user.id },
     data: { passwordChangedAt: changedAt },

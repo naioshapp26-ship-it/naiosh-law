@@ -29,7 +29,9 @@ export async function POST(request: Request) {
     }
 
     const hash = await bcrypt.hash(newPassword, 10);
-    const changedAt = new Date();
+    // Keep stamp slightly behind JWT second-precision so the next login is accepted
+    const changedAt = new Date(Date.now() - 2000);
+    const usedAt = new Date();
     await prisma.$transaction([
       prisma.user.update({
         where: { id: row.userId },
@@ -37,11 +39,11 @@ export async function POST(request: Request) {
       }),
       prisma.passwordResetToken.update({
         where: { id: row.id },
-        data: { usedAt: changedAt },
+        data: { usedAt },
       }),
       prisma.passwordResetToken.updateMany({
         where: { userId: row.userId, usedAt: null, id: { not: row.id } },
-        data: { usedAt: changedAt },
+        data: { usedAt },
       }),
     ]);
 

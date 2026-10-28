@@ -92,24 +92,27 @@ export function PortalShell({
         const meRes = await fetch("/api/auth/me", { credentials: "include" });
         if (cancelled) return;
         if (!meRes.ok) {
-          let errMsg = "انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجددًا";
+          let errMsg = "يلزم تسجيل الدخول";
+          let code = "UNAUTHENTICATED";
           try {
             const body = await meRes.json();
             if (body?.error) errMsg = String(body.error);
+            if (body?.code) code = String(body.code);
           } catch {
             /* ignore */
           }
-          setAuthError(errMsg);
+          const revoked = code === "SESSION_REVOKED" || /انتهت صلاحية/.test(errMsg);
+          setAuthError(revoked ? errMsg : "يلزم تسجيل الدخول للمتابعة");
           setReady(true);
-          forcePortalLogin(errMsg);
+          forcePortalLogin(revoked ? errMsg : undefined, { revoked });
           return;
         }
         const meBody = (await meRes.json()) as { user?: PortalUser };
         const u = meBody.user;
         if (!u) {
-          setAuthError("انتهت صلاحية الجلسة");
+          setAuthError("يلزم تسجيل الدخول");
           setReady(true);
-          forcePortalLogin();
+          forcePortalLogin(undefined, { revoked: false });
           return;
         }
         setUser(u);
@@ -170,9 +173,27 @@ export function PortalShell({
 
   if (authError || !user || user.role !== "client") {
     return (
-      <div className="portal-loading" dir="rtl" style={{ display: "grid", gap: "0.75rem", placeItems: "center" }}>
-        <p style={{ margin: 0, fontWeight: 700 }}>{authError || "جارٍ التوجيه لتسجيل الدخول…"}</p>
-        <a className="portal-btn primary" href="/login">
+      <div
+        className="portal-loading"
+        dir="rtl"
+        style={{ display: "grid", gap: "0.85rem", placeItems: "center", padding: "2rem", textAlign: "center" }}
+      >
+        <p style={{ margin: 0, fontWeight: 700, color: "#101D32" }}>
+          {authError || "جارٍ التوجيه لتسجيل الدخول…"}
+        </p>
+        <a
+          className="portal-btn primary"
+          href="/login"
+          style={{
+            display: "inline-block",
+            background: "#101D32",
+            color: "#F5F1E8",
+            padding: "0.7rem 1.25rem",
+            borderRadius: "0.65rem",
+            fontWeight: 800,
+            textDecoration: "none",
+          }}
+        >
           تسجيل الدخول
         </a>
       </div>

@@ -46,7 +46,8 @@ export async function POST(request: Request) {
     }
 
     const hash = await bcrypt.hash(newPassword, 10);
-    const changedAt = new Date();
+    // Stamp slightly in the past so the fresh JWT (second-precision iat) stays valid
+    const changedAt = new Date(Date.now() - 2000);
     await prisma.user.update({
       where: { id: user.id },
       data: { password: hash, passwordChangedAt: changedAt },
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     // Invalidate prior reset tokens
     await prisma.passwordResetToken.updateMany({
       where: { userId: user.id, usedAt: null },
-      data: { usedAt: changedAt },
+      data: { usedAt: new Date() },
     });
 
     // Issue fresh session cookie for this browser; other sessions fail assertSessionNotRevoked

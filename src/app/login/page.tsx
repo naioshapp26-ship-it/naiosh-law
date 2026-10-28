@@ -31,6 +31,14 @@ function LoginInner() {
           ? "انتهت صلاحية جلستك أو تم إنهاؤها — سجّل الدخول مجددًا للمتابعة."
           : reason
       );
+      // Drop reason from the URL so a successful login doesn't keep showing the banner forever
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("reason");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      } catch {
+        /* ignore */
+      }
     }
   }, [searchParams]);
 
@@ -68,8 +76,12 @@ function LoginInner() {
     event.preventDefault();
     setLoading(true);
     setError("");
+    setSessionNotice("");
 
     try {
+      // Clear any stale/revoked cookie before issuing a fresh one
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => null);
+
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 20000);
 
@@ -85,6 +97,18 @@ function LoginInner() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "فشل تسجيل الدخول");
+        setLoading(false);
+        return;
+      }
+
+      // Confirm the new session is accepted before navigating (avoids expire↔login loop)
+      const me = await fetch("/api/auth/me", { credentials: "include" });
+      if (!me.ok) {
+        const meBody = await me.json().catch(() => ({}));
+        setError(
+          (meBody as { error?: string }).error ||
+            "تم تسجيل الدخول لكن الجلسة رُفضت — حدّث الصفحة أو تواصل مع الإدارة"
+        );
         setLoading(false);
         return;
       }
@@ -108,7 +132,9 @@ function LoginInner() {
   const startDemoClient = async () => {
     setLoading(true);
     setError("");
+    setSessionNotice("");
     try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => null);
       const res = await fetch("/api/auth/demo-client", {
         method: "POST",
         credentials: "include",
@@ -116,6 +142,12 @@ function LoginInner() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "تعذر فتح تجربة العميل");
+        setLoading(false);
+        return;
+      }
+      const me = await fetch("/api/auth/me", { credentials: "include" });
+      if (!me.ok) {
+        setError("تعذر تثبيت جلسة العميل التجريبي — حاول مرة أخرى");
         setLoading(false);
         return;
       }
