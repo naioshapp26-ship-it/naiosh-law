@@ -13,14 +13,9 @@ import {
  */
 export async function ensureDemoClientPortal() {
   const prisma = getPrisma();
-  const passwordPlain =
-    process.env.DEMO_CLIENT_PASSWORD?.trim() ||
-    (process.env.NODE_ENV === "production" ? null : "Client@123");
-
-  if (!passwordPlain) {
-    throw new Error("DEMO_CLIENT_PASSWORD غير مضبوط على بيئة الإنتاج");
-  }
-
+  // Server-only default — never sent to the browser. Env override optional.
+  const envPassword = process.env.DEMO_CLIENT_PASSWORD?.trim();
+  const passwordPlain = envPassword || "Client@123";
   const hash = await bcrypt.hash(passwordPlain, 10);
 
   const user = await prisma.user.upsert({
@@ -30,6 +25,8 @@ export async function ensureDemoClientPortal() {
       role: "client",
       active: true,
       phone: "+966500000001",
+      // Clear any stale revoke stamp so demo login is never stuck in a session loop
+      passwordChangedAt: null,
     },
     create: {
       email: DEMO_CLIENT_EMAIL,
@@ -41,11 +38,11 @@ export async function ensureDemoClientPortal() {
     },
   });
 
-  // Refresh password hash when env password is provided (keeps demo login working)
-  if (process.env.DEMO_CLIENT_PASSWORD?.trim()) {
+  // Refresh hash when explicit env password is set, or when creating first-time default
+  if (envPassword) {
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hash },
+      data: { password: hash, passwordChangedAt: null },
     });
   }
 

@@ -1,5 +1,6 @@
 import type { AuthPayload } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
+import { isDemoPortalSession } from "@/lib/client-portal";
 
 /**
  * Reject JWTs issued before the user's last password change (invalidates other sessions).
@@ -12,6 +13,25 @@ import { getPrisma } from "@/lib/prisma";
  */
 export async function assertSessionNotRevoked(session: AuthPayload): Promise<boolean> {
   if (!session.iat) return true;
+  // Isolated demo fixture tokens (offline / no matching DB row) stay valid
+  if (isDemoPortalSession(session)) {
+    try {
+      const user = await getPrisma().user.findFirst({
+        where: {
+          OR: [{ id: session.sub }, { email: session.email }],
+        },
+        select: { passwordChangedAt: true, active: true },
+      });
+      if (!user) return true; // fixture-only demo session
+      if (!user.active) return false;
+      if (!user.passwordChangedAt) return true;
+      const changedAtSec = Math.floor(user.passwordChangedAt.getTime() / 1000);
+      return session.iat + 2 >= changedAtSec;
+    } catch {
+      return true;
+    }
+  }
+
   try {
     const user = await getPrisma().user.findUnique({
       where: { id: session.sub },

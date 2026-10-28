@@ -35,14 +35,13 @@ export async function POST() {
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    // Offline / no-DB preview: issue fixture session
+    // Offline / no-DB preview: issue fixture session (accepted by assertSessionNotRevoked for demo)
     if (
       message.includes("DATABASE_URL") ||
       message.includes("Invalid URL") ||
       message.includes("connect") ||
       message.includes("ECONNREFUSED") ||
       message.includes("password authentication") ||
-      message.includes("DEMO_CLIENT_PASSWORD") ||
       message.includes("Can't reach database") ||
       message.includes("P1001") ||
       message.includes("P1017")

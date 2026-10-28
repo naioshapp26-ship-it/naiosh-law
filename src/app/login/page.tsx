@@ -145,11 +145,22 @@ function LoginInner() {
         setLoading(false);
         return;
       }
+      // Give the browser a tick to store Set-Cookie, then confirm session
+      await new Promise((r) => setTimeout(r, 50));
       const me = await fetch("/api/auth/me", { credentials: "include" });
       if (!me.ok) {
-        setError("تعذر تثبيت جلسة العميل التجريبي — حاول مرة أخرى");
-        setLoading(false);
-        return;
+        // One retry — rare race with cookie jar after logout
+        await new Promise((r) => setTimeout(r, 150));
+        const me2 = await fetch("/api/auth/me", { credentials: "include" });
+        if (!me2.ok) {
+          const body = await me2.json().catch(() => ({}));
+          setError(
+            (body as { error?: string }).error ||
+              "تعذر تثبيت جلسة العميل التجريبي — حاول مرة أخرى"
+          );
+          setLoading(false);
+          return;
+        }
       }
       window.location.assign(data.redirect || "/portal");
     } catch {
