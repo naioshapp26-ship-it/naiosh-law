@@ -14,6 +14,12 @@ import { getModuleApiEndpoint } from "@/lib/module-api";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { sendRecordToArchive, buildArchiveRef, buildArchiveTitle } from "@/lib/archive-client";
 import { extractPartyFields, stripPartyFields, type PartyFields } from "@/lib/party-fields";
+import {
+  ensurePersonContactOnFormFields,
+  PERSON_BEARING_MODULE_SLUGS,
+  PERSON_CONTACT_VIEW_FIELDS,
+  UNSPECIFIED_CONTACT,
+} from "@/lib/person-contact";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
@@ -291,7 +297,16 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     if (!config) return [];
     const hidden = new Set(pageSettings?.fields?.hiddenOptionalFields ?? []);
     // Permanent person-contact rule: contact fields stay available on person forms
-    for (const k of ["phone", "phoneDialCode", "country", "city"]) hidden.delete(k);
+    for (const k of [
+      "phone",
+      "phoneDialCode",
+      "country",
+      "city",
+      "phoneSecondary",
+      "phoneSecondaryDialCode",
+    ]) {
+      hidden.delete(k);
+    }
     const workflowStatuses = pageSettings?.workflow?.statuses;
     const base = config.formFields
       .filter((f) => !hidden.has(f.key))
@@ -301,8 +316,19 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         }
         return f;
       });
+    // Inject missing contact fields only on person-bearing modules
+    const withContact = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
+      ? ensurePersonContactOnFormFields(base, {
+          required: true,
+          force: config.slug === "clients-management" || config.slug === "administration",
+          nameKeys:
+            config.slug === "clients-management" || config.slug === "administration"
+              ? ["name", "client", "requester"]
+              : ["client", "clientName", "requester", "name"],
+        })
+      : base;
     const custom = customFieldsToFormFields(recordCustomDefs);
-    return [...base, ...custom];
+    return [...withContact, ...custom];
   }, [config, pageSettings, recordCustomDefs]);
 
   const orderedSections = useMemo(() => {
@@ -536,31 +562,79 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
 
   const renderViewModal = () => {
     if (!viewTarget) return null;
+    const shown = new Set(config.columns.map((c) => c.key));
+    const contactExtras = PERSON_CONTACT_VIEW_FIELDS.filter((f) => !shown.has(f.key));
+    const displayVal = (key: string) => {
+      const raw = viewTarget[key];
+      const s = raw == null || String(raw).trim() === "" || String(raw) === "—"
+        ? UNSPECIFIED_CONTACT
+        : String(raw);
+      return s;
+    };
+    const incomplete = Boolean(viewTarget.contactIncomplete) ||
+      PERSON_CONTACT_VIEW_FIELDS.some((f) => {
+        if (f.key.includes("Secondary")) return false;
+        const v = displayVal(f.key);
+        return v === UNSPECIFIED_CONTACT;
+      });
     return (
       <div
         style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
         onClick={() => setViewTarget(null)}
       >
         <div
-          style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
+          style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 640, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
               onClick={() => setViewTarget(null)}
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          {incomplete && (
+            <div
+              style={{
+                marginBottom: "1rem",
+                padding: "0.75rem 1rem",
+                borderRadius: 12,
+                background: "#fffbeb",
+                border: "1px solid #fde68a",
+                color: "#92400e",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+              }}
+            >
+              بيانات الاتصال غير مكتملة ({UNSPECIFIED_CONTACT}). يمكنك استكمالها من التعديل — التعديل يُحدّث السجل المركزي للشخص ويُسجَّل في سجل التدقيق.
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }} className="view-detail-grid">
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0a0a12" }}>{String(viewTarget[col.key] ?? "—")}</p>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", letterSpacing: "0.04em" }}>{col.label}</p>
+                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: displayVal(col.key) === UNSPECIFIED_CONTACT ? "#94a3b8" : "#0a0a12", fontStyle: displayVal(col.key) === UNSPECIFIED_CONTACT ? "italic" : "normal" }}>
+                  {displayVal(col.key)}
+                </p>
+              </div>
+            ))}
+            {contactExtras.map((f) => (
+              <div key={f.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", letterSpacing: "0.04em" }}>{f.label}</p>
+                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: displayVal(f.key) === UNSPECIFIED_CONTACT ? "#94a3b8" : "#0a0a12", fontStyle: displayVal(f.key) === UNSPECIFIED_CONTACT ? "italic" : "normal" }}>
+                  {displayVal(f.key)}
+                </p>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            {canWrite && incomplete && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem", background: "#b45309" }}
+              >استكمال بيانات الاتصال</button>
+            )}
             {canWrite && (
               <button
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
@@ -573,6 +647,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
           </div>
+          <style>{`@media (max-width: 600px) { .view-detail-grid { grid-template-columns: 1fr !important; } }`}</style>
         </div>
       </div>
     );
@@ -748,6 +823,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         onSave={handleSave}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}
         saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
+        enableParties={config.slug === "case-management"}
       />
 
       {renderViewModal()}

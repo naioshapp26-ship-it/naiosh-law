@@ -269,20 +269,33 @@ export function validateCountryCity(
   return { ok: true };
 }
 
-/** Standard contact form fields (after person name field) */
+/** Keys that identify a person/party name field on forms */
+export const PERSON_NAME_FIELD_KEYS = [
+  "client",
+  "clientName",
+  "name",
+  "requester",
+  "firstParty",
+  "secondParty",
+] as const;
+
+const DIAL_OPTIONS = COUNTRY_DIAL_CODES.map((c) => `${c.dialCode} (${c.country})`);
+
+/** Standard contact form fields (after person name field) — permanent design rule */
 export function personContactFormFields(opts?: {
   required?: boolean;
   prefix?: string;
+  includeSecondary?: boolean;
 }): FormField[] {
   const required = opts?.required !== false;
   const p = opts?.prefix ?? "";
-  return [
+  const fields: FormField[] = [
     {
       key: `${p}phoneDialCode`,
       label: "مفتاح الدولة",
       type: "select",
       required,
-      options: COUNTRY_DIAL_CODES.map((c) => `${c.dialCode} (${c.country})`),
+      options: DIAL_OPTIONS,
     },
     {
       key: `${p}phone`,
@@ -307,7 +320,93 @@ export function personContactFormFields(opts?: {
       dependsOn: `${p}country`,
     },
   ];
+  if (opts?.includeSecondary !== false) {
+    fields.push(
+      {
+        key: `${p}phoneSecondaryDialCode`,
+        label: "مفتاح الجوال الإضافي",
+        type: "select",
+        required: false,
+        options: DIAL_OPTIONS,
+      },
+      {
+        key: `${p}phoneSecondary`,
+        label: "رقم جوال إضافي",
+        type: "tel",
+        required: false,
+        placeholder: "اختياري — 5XXXXXXXX",
+      }
+    );
+  }
+  return fields;
 }
+
+/** Modules whose forms name a real person/party (not a template/report title). */
+export const PERSON_BEARING_MODULE_SLUGS = new Set([
+  "case-management",
+  "clients-management",
+  "court-sessions",
+  "follow-up-center",
+  "legal-accounting",
+  "legal-services",
+  "legal-consultations",
+  "complaints-management",
+  "internal-requests",
+  "administration",
+]);
+
+/**
+ * Ensure a form that names a person also exposes contact fields.
+ * Inserts after the first person-name field; never removes existing fields.
+ */
+export function ensurePersonContactOnFormFields(
+  fields: FormField[],
+  opts?: { required?: boolean; force?: boolean; nameKeys?: readonly string[] }
+): FormField[] {
+  const nameKeys = opts?.nameKeys ?? PERSON_NAME_FIELD_KEYS;
+  const nameIdx = fields.findIndex((f) => (nameKeys as readonly string[]).includes(f.key));
+  if (nameIdx < 0 && !opts?.force) return fields;
+
+  const hasPhone = fields.some((f) => f.key === "phone");
+  const hasDial = fields.some((f) => f.key === "phoneDialCode");
+  const hasCountry = fields.some((f) => f.key === "country");
+  const hasCity = fields.some((f) => f.key === "city");
+  const hasSec = fields.some((f) => f.key === "phoneSecondary");
+  const hasSecDial = fields.some((f) => f.key === "phoneSecondaryDialCode");
+
+  const needed = personContactFormFields({
+    required: opts?.required !== false,
+    includeSecondary: true,
+  }).filter((f) => {
+    if (f.key === "phone" && hasPhone) return false;
+    if (f.key === "phoneDialCode" && hasDial) return false;
+    if (f.key === "country" && hasCountry) return false;
+    if (f.key === "city" && hasCity) return false;
+    if (f.key === "phoneSecondary" && hasSec) return false;
+    if (f.key === "phoneSecondaryDialCode" && hasSecDial) return false;
+    return true;
+  });
+
+  if (needed.length === 0) return fields;
+
+  // Insert after the last primary contact field when present; otherwise right after the name.
+  const contactOrder = ["phoneDialCode", "phone", "country", "city"];
+  let at = nameIdx >= 0 ? nameIdx + 1 : 0;
+  for (let i = 0; i < fields.length; i++) {
+    if (contactOrder.includes(fields[i]!.key)) at = i + 1;
+  }
+  return [...fields.slice(0, at), ...needed, ...fields.slice(at)];
+}
+
+/** Labels for view/detail panels — always show contact block */
+export const PERSON_CONTACT_VIEW_FIELDS: { key: string; label: string }[] = [
+  { key: "phoneDialCode", label: "مفتاح الدولة" },
+  { key: "phone", label: "رقم الجوال" },
+  { key: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي" },
+  { key: "phoneSecondary", label: "رقم جوال إضافي" },
+  { key: "country", label: "الدولة" },
+  { key: "city", label: "المدينة" },
+];
 
 /** Case-management mandatory column order (RTL visual: right→left) */
 export const CASE_PERSON_CONTACT_COLUMNS: Column[] = [

@@ -100,6 +100,8 @@ const entryFields: FormField[] = [
   { key: "client", label: "الموكل / الجهة", type: "text" },
   { key: "phoneDialCode", label: "مفتاح الدولة", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
   { key: "phone", label: "رقم الجوال", type: "tel", required: true, placeholder: "5XXXXXXXX" },
+  { key: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي", type: "select", required: false, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "phoneSecondary", label: "رقم جوال إضافي", type: "tel", required: false, placeholder: "اختياري — 5XXXXXXXX" },
   { key: "clientCountry", label: "دولة الموكل", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
   { key: "city", label: "المدينة", type: "text", required: true, placeholder: "المدينة", dependsOn: "clientCountry" },
   { key: "effectiveDate", label: "تاريخ السريان", type: "text" },

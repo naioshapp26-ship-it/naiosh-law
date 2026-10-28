@@ -311,6 +311,8 @@ const FINANCE_COLUMNS = [
 export const PERSON_CONTACT_SETTING_FIELDS = [
   { value: "phone", label: "رقم الجوال" },
   { value: "phoneDialCode", label: "مفتاح الدولة" },
+  { value: "phoneSecondary", label: "رقم جوال إضافي" },
+  { value: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي" },
   { value: "country", label: "الدولة" },
   { value: "city", label: "المدينة" },
 ];
@@ -337,7 +339,9 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
       fieldsTab({
         fieldOptions: [
           ...CASE_COLUMNS,
-          { value: "phoneDialCode", label: "مفتاح الدولة" },
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !CASE_COLUMNS.some((c) => c.value === f.value)
+          ),
         ],
         defaultRequired: ["caseNo", "client", "phone", "country", "city", "type", "status"],
         lockedRequired: ["caseNo", "client", "phone", "country", "city", "status"],
@@ -376,7 +380,9 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
       fieldsTab({
         fieldOptions: [
           ...CLIENT_COLUMNS,
-          { value: "phoneDialCode", label: "مفتاح الدولة" },
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !CLIENT_COLUMNS.some((c) => c.value === f.value)
+          ),
         ],
         defaultRequired: ["name", "phone", "country", "city", "type", "status"],
         lockedRequired: ["name", "phone", "country", "city", "status"],
@@ -498,11 +504,16 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultVisibleColumns: FINANCE_COLUMNS.map((c) => c.value),
       }),
       fieldsTab({
-        fieldOptions: FINANCE_COLUMNS,
-        defaultRequired: ["ref", "amount", "status"],
-        lockedRequired: ["ref", "amount", "status"],
+        fieldOptions: [
+          ...FINANCE_COLUMNS,
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !FINANCE_COLUMNS.some((c) => c.value === f.value)
+          ),
+        ],
+        defaultRequired: ["ref", "client", "phone", "country", "city", "amount", "status"],
+        lockedRequired: ["ref", "client", "phone", "country", "city", "amount", "status"],
       }),
-      actionsTab({ allowDelete: false }),
+      actionsTab({ allowDelete: false, allowCreate: true }),
       permissionsTab(),
       workflowTab(["مسدد", "جزئي", "غير مسدد", "مؤجل"], "غير مسدد"),
       reportsTab(),
