@@ -15,7 +15,7 @@
 | الصفحة / التبويب | مسار | جدول caseNo أولًا | نموذج إضافة/عرض/تعديل | مصدر | قفل إعدادات |
 |---|---|---|---|---|---|
 | إدارة القضايا | `/app/modules/case-management` | نعم + روابط | إضافة: حقل caseNo؛ تعديل: قراءة فقط؛ عرض: ظاهر | `Case` | نعم |
-| إدارة الموكلين | `/app/modules/clients-management` | نعم + روابط متعددة | إضافة موكل **بدون** إلزام قضية؛ عرض يظهر caseNo | `Case[]` عبر `clientId` | عمود مقفل |
+| إدارة الموكلين | `/app/modules/clients-management` | نعم + روابط متعددة | حقل **رقم القضية / القضايا المرتبطة** (`case-multi-select`) في إضافة/تعديل/عرض؛ اختياري؛ بحث وربط قضايا حقيقية فقط؛ CTA لإنشاء قضية ثم الربط | `Case[]` عبر `clientId` + مزامنة `caseIds` في POST/PATCH | عمود مقفل |
 | إدارة الجلسات | `/app/modules/court-sessions` | نعم | case-select إلزامي → `caseId` | `CourtSession.caseId` + `Case` | نعم |
 | مركز المتابعة | `/app/modules/follow-up-center` | نعم | case-select إلزامي | `ModuleRecord.data` | نعم |
 | الخدمات القانونية | `/app/modules/legal-services` | نعم | case-select إلزامي | ModuleRecord | نعم |
@@ -53,3 +53,8 @@
 4. محاولة إخفاء caseNo عبر PUT إعدادات الصفحة → يُعاد فرضه  
 5. التصدير يستخدم أعمدة ظاهرة تتضمن caseNo  
 6. جرد سجلات «يحتاج مراجعة الربط» بلا ربط عشوائي  
+7. دورة ربط الموكل↔القضية (`scripts/acceptance-client-case-link.mts`): إضافة بـ0/1/2 قضايا، تعديل الربط، إنشاء قضية لموكل موجود (ربط عكسي)، رفض `caseIds` وهمي، بحث case-select في الجلسات/المحاسبة/المتابعة  
+
+## فرع متابعة بعد #188
+
+فرع: `cursor/client-case-link-picker-551a` — يغلق فجوة نموذج الموكل (عمود بدون حقل إدخال). 

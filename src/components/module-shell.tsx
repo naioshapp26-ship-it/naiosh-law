@@ -28,6 +28,7 @@ import {
   CASE_PICKER_REQUIRED_SLUGS,
   ensureCaseNoOnColumns,
   ensureCaseNoOnFormFields,
+  ensureClientCaseLinksOnFormFields,
 } from "@/lib/case-identity";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
@@ -199,6 +200,18 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     setViewTarget(hit);
   }, [slug, loadingData, rows, pushToast]);
 
+  /** Deep-link: /app/modules/case-management?add=1&clientId=&clientName= */
+  useEffect(() => {
+    if (slug !== "case-management" || loadingData) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("add") !== "1") return;
+    if (deepLinkedCaseRef.current === "__add__") return;
+    deepLinkedCaseRef.current = "__add__";
+    setEditTarget(null);
+    setModalOpen(true);
+  }, [slug, loadingData]);
+
   useEffect(() => {
     loadRows();
   }, [loadRows]);
@@ -350,10 +363,11 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     ]) {
       hidden.delete(k);
     }
-    // Permanent case-number rule: never hide caseNo on case-bearing forms
+    // Permanent case-number rule: never hide caseNo / caseIds on case-bearing forms
     if (CASE_BEARING_MODULE_SLUGS.has(config.slug)) {
       hidden.delete(CASE_NO_KEY);
       hidden.delete("caseId");
+      hidden.delete("caseIds");
     }
     const workflowStatuses = pageSettings?.workflow?.statuses;
     const base = config.formFields
@@ -375,10 +389,11 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               : ["client", "clientName", "requester", "name"],
         })
       : base;
-    // Clients: case numbers are table-display only (client may exist without a case)
-    if (
+    // Clients: optional multi case-link picker (save without case allowed)
+    if (config.slug === "clients-management") {
+      withContact = ensureClientCaseLinksOnFormFields(withContact);
+    } else if (
       CASE_BEARING_MODULE_SLUGS.has(config.slug) &&
-      config.slug !== "clients-management" &&
       config.slug !== "case-management"
     ) {
       withContact = ensureCaseNoOnFormFields(withContact, {
@@ -425,8 +440,19 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       pageSettings?.fields?.defaultStatus?.trim() ||
       pageSettings?.workflow?.initialStatus?.trim() ||
       "";
-    return initialStatus ? { status: initialStatus } : undefined;
-  }, [pageSettings]);
+    const base: Record<string, unknown> = initialStatus ? { status: initialStatus } : {};
+    if (typeof window !== "undefined" && config?.slug === "case-management") {
+      const params = new URLSearchParams(window.location.search);
+      const clientId = params.get("clientId")?.trim();
+      const clientName = params.get("clientName")?.trim();
+      if (clientId) base.clientId = clientId;
+      if (clientName) {
+        base.client = clientName;
+        base.clientName = clientName;
+      }
+    }
+    return Object.keys(base).length ? base : undefined;
+  }, [pageSettings, config?.slug]);
 
   const actions = pageSettings?.actions;
   const perms = pageSettings?.permissions;
@@ -486,6 +512,15 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     const attachments = extractAttachments(data);
     const parties = extractPartyFields(data);
     const payload = stripPartyFields(stripAttachments(data));
+    // Persist only real case IDs for client multi-link (never free-text caseNo)
+    if (config.slug === "clients-management") {
+      const ids = Array.isArray(payload.caseIds)
+        ? (payload.caseIds as unknown[]).map(String).filter(Boolean)
+        : [];
+      payload.caseIds = ids;
+      delete payload.caseNo;
+      delete payload.caseLinks;
+    }
 
     if (apiEndpoint && canWrite && !usingDemo) {
       try {
@@ -497,7 +532,10 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          if (!res.ok) throw new Error();
+          if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(String((errBody as { error?: string }).error ?? "فشل الحفظ"));
+          }
           pushToast("success", `✅ تم تعديل ${config.entityName} بنجاح`);
         } else {
           const res = await fetch(apiEndpoint, {
@@ -506,7 +544,10 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          if (!res.ok) throw new Error();
+          if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(String((errBody as { error?: string }).error ?? "فشل الحفظ"));
+          }
           const created = await res.json();
           recordId = String(created.id ?? "");
           pushToast("success", `✅ تمت إضافة ${config.entityName} جديد بنجاح`);
@@ -529,8 +570,12 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           });
         }
         await loadRows();
-      } catch {
-        pushToast("error", "فشل حفظ البيانات — تم الحفظ محلياً");
+      } catch (err) {
+        const msg = err instanceof Error && err.message ? err.message : "فشل حفظ البيانات — تم الحفظ محلياً";
+        pushToast("error", msg);
+        if (config.slug === "clients-management" && /قضية|غير موجود|ربط/.test(msg)) {
+          return;
+        }
         if (editTarget) {
           setRows((prev) => prev.map((r) => (r === editTarget ? { ...r, ...data } : r)));
         } else {
@@ -640,14 +685,16 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     if (!viewTarget) return null;
     const shown = new Set(config.columns.map((c) => c.key));
     const contactExtras = PERSON_CONTACT_VIEW_FIELDS.filter((f) => !shown.has(f.key));
+    const viewCaseLinks = Array.isArray(viewTarget.caseLinks)
+      ? (viewTarget.caseLinks as Array<{ id?: string; caseNo?: string }>).filter(
+          (l) => l.caseNo
+        )
+      : [];
     const displayVal = (key: string) => {
       if (key === CASE_NO_KEY) {
-        const links = Array.isArray(viewTarget.caseLinks)
-          ? (viewTarget.caseLinks as Array<{ caseNo?: string }>)
-              .map((l) => l.caseNo)
-              .filter(Boolean)
-          : [];
-        if (links.length) return links.join(" · ");
+        if (viewCaseLinks.length) {
+          return viewCaseLinks.map((l) => l.caseNo).join(" · ");
+        }
       }
       const raw = viewTarget[key];
       const s = raw == null || String(raw).trim() === "" || String(raw) === "—"
@@ -699,9 +746,28 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", letterSpacing: "0.04em" }}>{col.label}</p>
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: displayVal(col.key) === UNSPECIFIED_CONTACT ? "#94a3b8" : "#0a0a12", fontStyle: displayVal(col.key) === UNSPECIFIED_CONTACT ? "italic" : "normal" }}>
-                  {displayVal(col.key)}
-                </p>
+                {col.key === CASE_NO_KEY && viewCaseLinks.length > 0 ? (
+                  <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0a0a12", display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                    {viewCaseLinks.map((l, idx) =>
+                      l.id ? (
+                        <Link
+                          key={l.id}
+                          href={`/app/modules/case-management?caseId=${encodeURIComponent(String(l.id))}`}
+                          style={{ color: "#101D32", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}
+                        >
+                          {l.caseNo}
+                          {idx < viewCaseLinks.length - 1 ? " ·" : ""}
+                        </Link>
+                      ) : (
+                        <span key={`${l.caseNo}-${idx}`}>{l.caseNo}</span>
+                      )
+                    )}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: "0.9rem", fontWeight: 600, color: displayVal(col.key) === UNSPECIFIED_CONTACT || displayVal(col.key) === "لا توجد قضية مرتبطة" ? "#94a3b8" : "#0a0a12", fontStyle: displayVal(col.key) === UNSPECIFIED_CONTACT || displayVal(col.key) === "لا توجد قضية مرتبطة" ? "italic" : "normal" }}>
+                    {displayVal(col.key)}
+                  </p>
+                )}
               </div>
             ))}
             {contactExtras.map((f) => (

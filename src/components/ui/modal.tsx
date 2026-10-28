@@ -12,6 +12,8 @@ import {
   PERSON_NAME_FIELD_KEYS,
   PERSON_CONTACT_FIELD_KEYS,
 } from "@/lib/person-contact";
+import { CaseMultiSelect, CaseSingleSelect } from "@/components/ui/case-link-picker";
+import { formatCaseLinksLabel, NO_LINKED_CASE } from "@/lib/case-identity";
 
 type ClientLookup = {
   id: string;
@@ -82,7 +84,13 @@ export function Modal({
   const hasExplicitFilesField = fields.some((f) => f.type === "files");
   const hasExplicitPartyFields = PARTY_FIELD_KEYS.some((key) => fields.some((f) => f.key === key));
   const hasContactFields = fields.some((f) => CONTACT_KEYS.has(f.key));
-  const hasCaseSelect = fields.some((f) => f.type === "case-select" || f.key === "caseNo");
+  const hasCaseSelect = fields.some(
+    (f) =>
+      f.type === "case-select" ||
+      f.type === "case-multi-select" ||
+      f.key === "caseNo" ||
+      f.key === "caseIds"
+  );
   const personNameKey = fields.find((f) => NAME_KEYS.has(f.key))?.key ?? null;
 
   const effectiveFields = useMemo(() => {
@@ -179,6 +187,32 @@ export function Modal({
       if (defaults.country === "غير مسجل" || defaults.country === "—") defaults.country = "";
       if (defaults.city === "غير مسجل" || defaults.city === "—") defaults.city = "";
       if (initial?.clientId) defaults.clientId = initial.clientId;
+      // Multi case links: prefer explicit caseIds, else derive from caseLinks
+      if (fields.some((f) => f.type === "case-multi-select" || f.key === "caseIds")) {
+        const fromIds = Array.isArray(initial?.caseIds)
+          ? (initial!.caseIds as unknown[])
+              .map((v) => (typeof v === "string" ? v : (v as { id?: string })?.id ?? ""))
+              .filter(Boolean)
+          : [];
+        const fromLinks = Array.isArray(initial?.caseLinks)
+          ? (initial!.caseLinks as Array<{ id?: string }>)
+              .map((l) => String(l.id ?? ""))
+              .filter(Boolean)
+          : [];
+        defaults.caseIds = fromIds.length ? fromIds : fromLinks;
+        if (
+          !defaults.caseNo ||
+          String(defaults.caseNo) === NO_LINKED_CASE ||
+          String(defaults.caseNo).trim() === ""
+        ) {
+          const labels = Array.isArray(initial?.caseLinks)
+            ? (initial!.caseLinks as Array<{ id?: string; caseNo?: string }>)
+                .filter((l) => l.id && l.caseNo)
+                .map((l) => ({ id: String(l.id), caseNo: String(l.caseNo) }))
+            : [];
+          defaults.caseNo = formatCaseLinksLabel(labels);
+        }
+      }
       setForm(defaults);
       setAutofilledFrom(null);
       setCentralEditNotice(Boolean(initial?.clientId || initial?.phone || initial?.country));
@@ -423,7 +457,10 @@ export function Modal({
                 <div
                   key={f.key}
                   style={
-                    f.type === "textarea" || f.type === "files"
+                    f.type === "textarea" ||
+                    f.type === "files" ||
+                    f.type === "case-select" ||
+                    f.type === "case-multi-select"
                       ? { gridColumn: "1 / -1" }
                       : isName
                         ? { gridColumn: "1 / -1" }
@@ -437,6 +474,55 @@ export function Modal({
                       onChange={(files) => set(f.key, files)}
                       mode={filesMode}
                     />
+                  ) : f.type === "case-multi-select" ? (
+                    <CaseMultiSelect
+                      id={inputId}
+                      label={fieldLabel}
+                      required={f.required}
+                      readOnly={f.readOnly}
+                      options={caseOptions}
+                      value={
+                        Array.isArray(form.caseIds)
+                          ? (form.caseIds as unknown[]).map(String)
+                          : []
+                      }
+                      clientId={
+                        form.id
+                          ? String(form.id)
+                          : form.clientId
+                            ? String(form.clientId)
+                            : undefined
+                      }
+                      clientName={String(form.name ?? form.client ?? "")}
+                      onChange={(ids, selected) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          caseIds: ids,
+                          caseLinks: selected,
+                          caseNo: formatCaseLinksLabel(selected),
+                        }));
+                      }}
+                    />
+                  ) : f.type === "case-select" ? (
+                    <CaseSingleSelect
+                      id={inputId}
+                      label={fieldLabel}
+                      required={f.required}
+                      readOnly={f.readOnly || Boolean(form.id && f.readOnly)}
+                      options={caseOptions}
+                      value={String(form.caseId ?? "")}
+                      allowEmpty={!f.required}
+                      onChange={(id, hit) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          caseId: id || "",
+                          caseNo: hit?.caseNo ?? "",
+                          ...(hit?.client && !String(prev.client ?? "").trim()
+                            ? { client: hit.client }
+                            : {}),
+                        }));
+                      }}
+                    />
                   ) : (
                     <>
                       <label className="input-label" htmlFor={inputId}>
@@ -446,38 +532,7 @@ export function Modal({
                           <span style={{ color: "#94a3b8", fontWeight: 600 }}> (اختياري)</span>
                         )}
                       </label>
-                      {f.type === "case-select" ? (
-                        <select
-                          id={inputId}
-                          value={String(form.caseId ?? "")}
-                          onChange={(e) => {
-                            const id = e.target.value;
-                            const hit = caseOptions.find((c) => c.id === id);
-                            setForm((prev) => ({
-                              ...prev,
-                              caseId: id || "",
-                              caseNo: hit?.caseNo ?? "",
-                              ...(hit?.client && !String(prev.client ?? "").trim()
-                                ? { client: hit.client }
-                                : {}),
-                            }));
-                          }}
-                          required={f.required}
-                          disabled={f.readOnly || Boolean(form.id && f.readOnly)}
-                          className="input-field"
-                          style={{ cursor: "pointer" }}
-                        >
-                          <option value="">
-                            {f.required ? "اختر قضية من السجل المركزي..." : "بدون قضية مرتبطة"}
-                          </option>
-                          {caseOptions.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.caseNo}
-                              {c.client ? ` — ${c.client}` : ""}
-                            </option>
-                          ))}
-                        </select>
-                      ) : f.type === "select" ? (
+                      {f.type === "select" ? (
                         <select
                           id={inputId}
                           value={String(form[f.key] ?? "")}
