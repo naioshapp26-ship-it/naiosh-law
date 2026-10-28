@@ -160,6 +160,7 @@ export const PRIMARY_NAV = [
   { href: "/app/modules/clients-management", label: "إدارة الموكلين", icon: "👥" },
   { href: "/app/modules/court-sessions", label: "إدارة الجلسات", icon: "📅" },
   { href: "/app/legal-finance", label: "المالية القانونية (لوحة)", icon: "💰" },
+  { href: "/app/data-analysis", label: "نايوش لتحليل البيانات", icon: "📈" },
   { href: "/app/legal-library", label: "المكتبة القانونية", icon: "📖" },
   { href: "/app/archive", label: "الأرشيف والمستندات", icon: "📦" },
   { href: "/app/modules/reports-center", label: "مركز التقارير", icon: "📊" },
