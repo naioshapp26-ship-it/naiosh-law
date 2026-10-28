@@ -187,6 +187,24 @@ export function Modal({
       if (defaults.country === "غير مسجل" || defaults.country === "—") defaults.country = "";
       if (defaults.city === "غير مسجل" || defaults.city === "—") defaults.city = "";
       if (initial?.clientId) defaults.clientId = initial.clientId;
+      // Single case-select: hydrate caseId from initial so edit shows the linked case
+      if (fields.some((f) => f.type === "case-select" || f.key === "caseNo")) {
+        const fromId = initial?.caseId ? String(initial.caseId) : "";
+        const fromLinks = Array.isArray(initial?.caseLinks)
+          ? String((initial!.caseLinks as Array<{ id?: string }>)[0]?.id ?? "")
+          : "";
+        const caseId = fromId || fromLinks;
+        if (caseId) defaults.caseId = caseId;
+        const fromNo = blankPlaceholder(initial?.caseNo);
+        if (fromNo && !String(fromNo).startsWith("يحتاج مراجعة")) {
+          defaults.caseNo = fromNo;
+        } else if (caseId && Array.isArray(initial?.caseLinks)) {
+          const hit = (initial!.caseLinks as Array<{ id?: string; caseNo?: string }>).find(
+            (l) => String(l.id) === caseId
+          );
+          if (hit?.caseNo) defaults.caseNo = hit.caseNo;
+        }
+      }
       // Multi case links: prefer explicit caseIds, else derive from caseLinks
       if (fields.some((f) => f.type === "case-multi-select" || f.key === "caseIds")) {
         const fromIds = Array.isArray(initial?.caseIds)

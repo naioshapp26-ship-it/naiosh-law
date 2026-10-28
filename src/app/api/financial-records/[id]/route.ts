@@ -6,6 +6,11 @@ import {
   ensureClientWithContact,
   mapRowWithClientContact,
 } from "@/lib/person-contact-server";
+import { displayResolvedCase } from "@/lib/case-identity";
+import {
+  resolveCaseRef,
+  resolveRequiredCaseFromBody,
+} from "@/lib/case-identity-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -53,6 +58,21 @@ export async function PATCH(request: Request, { params }: Params) {
     clientName = ensured.clientName;
   }
 
+  let caseRef = existing.caseRef;
+  if (
+    body.caseId !== undefined ||
+    body.caseNo !== undefined ||
+    body.caseRef !== undefined
+  ) {
+    const resolved = await resolveRequiredCaseFromBody(body as Record<string, unknown>, {
+      required: true,
+    });
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: resolved.status });
+    }
+    caseRef = resolved.case!.caseNo;
+  }
+
   const updated = await prisma.financialRecord.update({
     where: { id },
     data: {
@@ -65,6 +85,7 @@ export async function PATCH(request: Request, { params }: Params) {
       dueDate: body.dueDate !== undefined ? String(body.dueDate) : undefined,
       status: body.status !== undefined ? String(body.status) : undefined,
       notes: body.notes !== undefined ? String(body.notes) : undefined,
+      caseRef,
     },
     include: {
       client: {
@@ -94,6 +115,8 @@ export async function PATCH(request: Request, { params }: Params) {
     role: session!.role,
   });
 
+  const caseDisplay = displayResolvedCase(await resolveCaseRef(updated.caseRef));
+
   return NextResponse.json(
     mapRowWithClientContact(
       {
@@ -105,6 +128,11 @@ export async function PATCH(request: Request, { params }: Params) {
         paid: String(updated.paid),
         issueDate: updated.issueDate,
         status: updated.status,
+        caseRef: updated.caseRef ?? "",
+        caseNo: caseDisplay.caseNo,
+        caseId: caseDisplay.caseId ?? "",
+        caseLinks: caseDisplay.caseLinks,
+        caseLinkStatus: caseDisplay.caseLinkStatus,
       },
       updated.client,
       session!.role

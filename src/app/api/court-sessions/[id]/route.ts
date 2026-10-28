@@ -7,6 +7,7 @@ import {
   mapRowWithClientContact,
   findClientContactById,
 } from "@/lib/person-contact-server";
+import { resolveRequiredCaseFromBody } from "@/lib/case-identity-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -50,10 +51,28 @@ export async function PATCH(request: Request, { params }: Params) {
     contactClientId = ensured.clientId;
   }
 
+  let caseId = existing.caseId;
+  let caseNo = existing.caseNo;
+  if (
+    body.caseId !== undefined ||
+    body.caseNo !== undefined ||
+    body.caseRef !== undefined
+  ) {
+    const resolved = await resolveRequiredCaseFromBody(body as Record<string, unknown>, {
+      required: true,
+    });
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: resolved.status });
+    }
+    caseId = resolved.case!.id;
+    caseNo = resolved.case!.caseNo;
+  }
+
   const updated = await prisma.courtSession.update({
     where: { id },
     data: {
-      caseNo: body.caseNo !== undefined ? String(body.caseNo) : undefined,
+      caseId,
+      caseNo,
       client: body.client !== undefined || hasContact ? clientName : undefined,
       court: body.court !== undefined ? String(body.court) : undefined,
       room: body.room !== undefined ? String(body.room) : undefined,
@@ -79,7 +98,12 @@ export async function PATCH(request: Request, { params }: Params) {
     mapRowWithClientContact(
       {
         id: updated.id,
+        caseId: updated.caseId ?? "",
         caseNo: updated.caseNo ?? "—",
+        caseLinks: updated.caseId && updated.caseNo
+          ? [{ id: updated.caseId, caseNo: updated.caseNo }]
+          : [],
+        caseLinkStatus: updated.caseId ? "linked" : "none",
         client: updated.client ?? "—",
         court: updated.court,
         room: updated.room ?? "—",

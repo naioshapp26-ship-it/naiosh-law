@@ -20,7 +20,11 @@ import {
   formatPhoneDisplay,
   UNSPECIFIED_CONTACT,
 } from "@/lib/person-contact";
-import { displayResolvedCase, NO_LINKED_CASE } from "@/lib/case-identity";
+import {
+  CASE_PICKER_REQUIRED_SLUGS,
+  displayResolvedCase,
+  NO_LINKED_CASE,
+} from "@/lib/case-identity";
 import { resolveCaseById, resolveCaseRef } from "@/lib/case-identity-server";
 
 type Ctx = { params: Promise<{ moduleKey: string }> };
@@ -185,6 +189,7 @@ export async function POST(request: Request, ctx: Ctx) {
 
   let dataPayload: Record<string, unknown> = { ...rest };
 
+  const requireRealCase = CASE_PICKER_REQUIRED_SLUGS.has(moduleKey);
   // Canonical case link: prefer caseId, else exact caseNo match — never invent
   if (body.caseId) {
     const linked = await resolveCaseById(String(body.caseId));
@@ -199,10 +204,24 @@ export async function POST(request: Request, ctx: Ctx) {
       dataPayload.caseId = resolved.case.id;
       dataPayload.caseNo = resolved.case.caseNo;
     } else if (String(body.caseNo).trim()) {
-      // Keep raw for review — do not auto-link a wrong case
+      if (requireRealCase) {
+        return NextResponse.json(
+          {
+            error:
+              "لا يُسمح بربط رقم قضية غير موجود — اختر من السجل الحقيقي أو أنشئ قضية جديدة",
+          },
+          { status: 400 }
+        );
+      }
+      // Optional modules: keep raw for review — do not auto-link a wrong case
       dataPayload.caseNo = String(body.caseNo).trim();
       delete dataPayload.caseId;
     }
+  } else if (requireRealCase) {
+    return NextResponse.json(
+      { error: "رقم القضية إلزامي — اختر قضية من السجل المركزي" },
+      { status: 400 }
+    );
   }
 
   if (hasPersonFields(body)) {

@@ -157,7 +157,9 @@ export async function loadLegalDataset(
     return { headers, rows, csv: rowsToCsv(headers, rows) };
   }
 
-  // finance
+  // finance — emit resolved Case.caseNo when caseRef matches; else empty / review label
+  const { resolveCaseRef } = await import("@/lib/case-identity-server");
+  const { displayResolvedCase } = await import("@/lib/case-identity");
   const records = await prisma.financialRecord.findMany({
     where: scope.all ? undefined : { clientId: scope.clientId! },
     orderBy: { createdAt: "desc" },
@@ -165,6 +167,8 @@ export async function loadLegalDataset(
     include: { client: { select: { name: true } } },
   });
   const headers = [
+    "caseNo",
+    "caseLinkStatus",
     "invoiceNo",
     "client",
     "type",
@@ -172,17 +176,21 @@ export async function loadLegalDataset(
     "paid",
     "status",
     "issueDate",
-    "caseRef",
   ];
-  const rows = records.map((r) => ({
-    invoiceNo: r.invoiceNo,
-    client: r.client?.name ?? r.clientName,
-    type: r.type,
-    amount: r.amount,
-    paid: r.paid,
-    status: r.status,
-    issueDate: r.issueDate,
-    caseRef: r.caseRef ?? "",
-  }));
+  const rows = [];
+  for (const r of records) {
+    const disp = displayResolvedCase(await resolveCaseRef(r.caseRef));
+    rows.push({
+      caseNo: disp.caseNo,
+      caseLinkStatus: disp.caseLinkStatus,
+      invoiceNo: r.invoiceNo,
+      client: r.client?.name ?? r.clientName,
+      type: r.type,
+      amount: r.amount,
+      paid: r.paid,
+      status: r.status,
+      issueDate: r.issueDate,
+    });
+  }
   return { headers, rows, csv: rowsToCsv(headers, rows) };
 }

@@ -47,6 +47,9 @@ type NetworkItem = {
   from: string;
   to: string;
   caseRef: string;
+  caseNo?: string;
+  caseId?: string;
+  caseLinkStatus?: string;
   date: string;
 };
 
@@ -139,7 +142,13 @@ export default function ProfessionalNetworkPage() {
       required: true,
       options: ["تعاون", "إحالة قضية", "طلب رأي"],
     },
-    { key: "caseRef", label: "مرجع القضية", type: "text" },
+    {
+      key: "caseNo",
+      label: "رقم القضية",
+      type: "case-select",
+      required: false,
+      placeholder: "ابحث واختر قضية حقيقية أو اتركها فارغة",
+    },
     { key: "message", label: "الرسالة", type: "textarea" },
   ];
 
@@ -197,7 +206,9 @@ export default function ProfessionalNetworkPage() {
       body: JSON.stringify({
         professionalId: receiver.id,
         type: NETWORK_TYPE_MAP[String(clean.type)] ?? "collaboration",
-        caseRef: clean.caseRef,
+        caseId: clean.caseId,
+        caseNo: clean.caseNo,
+        caseRef: clean.caseNo ?? clean.caseRef,
         message: clean.message,
       }),
     });
@@ -375,12 +386,18 @@ export default function ProfessionalNetworkPage() {
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
+                    gap: "1rem",
                     padding: "0.85rem 0",
                     borderBottom: "1px solid #f1f5f9",
                     fontSize: "0.85rem",
+                    flexWrap: "wrap",
                   }}
                 >
                   <span>
+                    <strong style={{ color: "#101D32" }}>
+                      {(n as { caseNo?: string }).caseNo || n.caseRef || "لا توجد قضية مرتبطة"}
+                    </strong>
+                    {" · "}
                     <strong>{n.from}</strong> → <strong>{n.to}</strong> ({n.type})
                   </span>
                   <span style={{ color: "#64748b" }}>

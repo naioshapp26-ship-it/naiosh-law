@@ -8,6 +8,8 @@ import {
 } from "@/lib/page-settings/page-action-auth";
 import type { Prisma } from "@/generated/prisma/client";
 import { ensureClientWithContact } from "@/lib/person-contact-server";
+import { CASE_PICKER_REQUIRED_SLUGS } from "@/lib/case-identity";
+import { resolveCaseById, resolveCaseRef } from "@/lib/case-identity-server";
 
 type Ctx = { params: Promise<{ moduleKey: string; id: string }> };
 
@@ -57,6 +59,41 @@ export async function PATCH(request: Request, ctx: Ctx) {
   void _id;
   let nextData: Record<string, unknown> = { ...prev, ...rest };
   const status = body.status != null ? String(body.status) : existing.status;
+
+  const requireRealCase = CASE_PICKER_REQUIRED_SLUGS.has(moduleKey);
+  if (body.caseId !== undefined || body.caseNo !== undefined) {
+    if (body.caseId) {
+      const linked = await resolveCaseById(String(body.caseId));
+      if (!linked) {
+        return NextResponse.json({ error: "القضية غير موجودة في السجل المركزي" }, { status: 400 });
+      }
+      nextData.caseId = linked.id;
+      nextData.caseNo = linked.caseNo;
+    } else if (body.caseNo) {
+      const resolved = await resolveCaseRef(String(body.caseNo));
+      if (resolved.status === "linked") {
+        nextData.caseId = resolved.case.id;
+        nextData.caseNo = resolved.case.caseNo;
+      } else if (String(body.caseNo).trim()) {
+        if (requireRealCase) {
+          return NextResponse.json(
+            {
+              error:
+                "لا يُسمح بربط رقم قضية غير موجود — اختر من السجل الحقيقي أو أنشئ قضية جديدة",
+            },
+            { status: 400 }
+          );
+        }
+        nextData.caseNo = String(body.caseNo).trim();
+        delete nextData.caseId;
+      }
+    } else if (requireRealCase) {
+      return NextResponse.json(
+        { error: "رقم القضية إلزامي — اختر قضية من السجل المركزي" },
+        { status: 400 }
+      );
+    }
+  }
 
   // Keep central Client contact in sync when person/contact fields change
   if (hasPersonFields(nextData)) {

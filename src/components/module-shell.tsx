@@ -159,6 +159,18 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       return;
     }
     setLoadingData(true);
+    const sanitizeDemoCaseNos = (rows: Record<string, unknown>[]) =>
+      rows.map((r) => {
+        const next = { ...r };
+        // Never present static module-config placeholders as real Case.caseNo
+        if ("caseNo" in next || "caseLinks" in next) {
+          next.caseNo = "لا توجد قضية مرتبطة";
+          next.caseLinks = [];
+          next.caseLinkStatus = "none";
+          next.caseId = "";
+        }
+        return next;
+      });
     try {
       const res = await fetch(apiEndpoint, { credentials: "include" });
       if (res.ok) {
@@ -168,15 +180,15 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
           setRows(data);
           setUsingDemo(false);
         } else {
-          setRows(config.data);
+          setRows(sanitizeDemoCaseNos(config.data));
           setUsingDemo(true);
         }
       } else {
-        setRows(config.data);
+        setRows(sanitizeDemoCaseNos(config.data));
         setUsingDemo(true);
       }
     } catch {
-      setRows(config.data);
+      setRows(sanitizeDemoCaseNos(config.data));
       setUsingDemo(true);
       pushToast("error", "تعذر تحميل البيانات — عرض البيانات التجريبية");
     } finally {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWrite } from "@/lib/api-helpers";
 import { ensureClientWithContact } from "@/lib/person-contact-server";
+import { resolveRequiredCaseFromBody } from "@/lib/case-identity-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -41,10 +42,25 @@ export async function PATCH(request: Request, { params }: Params) {
     clientName = ensured.clientName;
   }
 
+  let caseRef = existing.caseRef;
+  if (
+    body.caseId !== undefined ||
+    body.caseNo !== undefined ||
+    body.caseRef !== undefined
+  ) {
+    const resolved = await resolveRequiredCaseFromBody(body as Record<string, unknown>, {
+      required: true,
+    });
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: resolved.status });
+    }
+    caseRef = resolved.case!.caseNo;
+  }
+
   const updated = await prisma.bailGuarantee.update({
     where: { id },
     data: {
-      caseRef: body.caseRef !== undefined ? String(body.caseRef) : undefined,
+      caseRef,
       clientName,
       amount: body.amount !== undefined ? Number(body.amount) : undefined,
       court: body.court !== undefined ? String(body.court) : undefined,

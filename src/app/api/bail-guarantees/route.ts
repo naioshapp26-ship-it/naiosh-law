@@ -83,12 +83,21 @@ export async function POST(request: Request) {
     caseRef = linked.caseNo;
   } else if (body.caseNo || body.caseRef) {
     const resolved = await resolveCaseRef(String(body.caseNo ?? body.caseRef));
-    if (resolved.status === "linked") {
-      caseRef = resolved.case.caseNo;
-    } else {
-      // Preserve unmatched legacy text for review — do not invent a Case link
-      caseRef = String(body.caseNo ?? body.caseRef).trim();
+    if (resolved.status !== "linked") {
+      return NextResponse.json(
+        {
+          error:
+            "لا يُسمح بربط رقم قضية غير موجود — اختر من السجل الحقيقي أو أنشئ قضية جديدة",
+        },
+        { status: 400 }
+      );
     }
+    caseRef = resolved.case.caseNo;
+  } else {
+    return NextResponse.json(
+      { error: "رقم القضية إلزامي — اختر قضية من السجل المركزي" },
+      { status: 400 }
+    );
   }
 
   const created = await prisma.bailGuarantee.create({
