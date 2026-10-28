@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Allow Playwright / agents hitting the app via 127.0.0.1 in local/dev
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",

@@ -8,7 +8,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { PageDynamicSections } from "@/components/page-settings/page-dynamic-sections";
 import type { CustomFieldDef, PageSectionDef } from "@/lib/page-settings/custom-field-types";
 import type { SectionDataMap } from "@/components/page-settings/page-dynamic-sections";
-import { forcePortalLogin, portalJson } from "@/lib/portal-fetch";
+import { forcePortalLogin } from "@/lib/portal-fetch";
 
 type PortalUser = { name: string; email: string; role: string };
 
@@ -80,39 +80,52 @@ export function PortalShell({
 
   useEffect(() => {
     let cancelled = false;
-    const ac = new AbortController();
-    const timeout = window.setTimeout(() => ac.abort(), 12000);
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) {
+        setAuthError((prev) => prev || "انتهت مهلة تحميل الجلسة");
+        setReady(true);
+      }
+    }, 8000);
 
     (async () => {
       try {
-        const me = await portalJson<{ user?: PortalUser }>("/api/auth/me");
+        const meRes = await fetch("/api/auth/me", { credentials: "include" });
         if (cancelled) return;
-        if (!me.ok || !me.data?.user) {
-          const errMsg = !me.ok ? me.error : "انتهت صلاحية الجلسة";
+        if (!meRes.ok) {
+          let errMsg = "انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجددًا";
+          try {
+            const body = await meRes.json();
+            if (body?.error) errMsg = String(body.error);
+          } catch {
+            /* ignore */
+          }
           setAuthError(errMsg);
           setReady(true);
           forcePortalLogin(errMsg);
           return;
         }
-        const u = me.data.user;
+        const meBody = (await meRes.json()) as { user?: PortalUser };
+        const u = meBody.user;
+        if (!u) {
+          setAuthError("انتهت صلاحية الجلسة");
+          setReady(true);
+          forcePortalLogin();
+          return;
+        }
         setUser(u);
         if (u.role !== "client") {
           setReady(true);
           router.replace("/app/dashboard");
           return;
         }
-        // Auth succeeded — unblock shell immediately (never wait forever on settings)
         setReady(true);
 
         try {
-          const sRes = await portalJson<{ resolved?: { values?: PortalPageSettings } }>(
-            "/api/page-settings/client-portal"
-          );
-          if (cancelled) return;
-          if (sRes.ok) {
-            const values = (sRes.data.resolved?.values ?? {}) as PortalPageSettings;
-            const specialized = (values.specialized ?? {}) as PortalFlags;
-            setFlags(specialized);
+          const sRes = await fetch("/api/page-settings/client-portal", { credentials: "include" });
+          if (!cancelled && sRes.ok) {
+            const sBody = await sRes.json();
+            const values = (sBody.resolved?.values ?? {}) as PortalPageSettings;
+            setFlags((values.specialized ?? {}) as PortalFlags);
             setPortalSettings(values);
           }
         } catch {
@@ -125,13 +138,13 @@ export function PortalShell({
           forcePortalLogin("تعذر التحقق من الجلسة");
         }
       } finally {
-        window.clearTimeout(timeout);
+        window.clearTimeout(failSafe);
       }
     })();
+
     return () => {
       cancelled = true;
-      window.clearTimeout(timeout);
-      ac.abort();
+      window.clearTimeout(failSafe);
     };
   }, [router]);
 

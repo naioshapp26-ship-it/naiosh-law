@@ -1,10 +1,12 @@
 /**
- * Human-like E2E for Client Portal 360 — isolated test client only.
+ * Portal 360 operational E2E — isolated client only. UI + API evidence.
  */
-import { chromium, type Page } from "playwright";
+import { chromium, type Page, type BrowserContext } from "playwright";
 import { mkdirSync, writeFileSync, copyFileSync, existsSync, readdirSync } from "fs";
 import { join } from "path";
-const BASE = process.env.PORTAL_BASE_URL || "http://127.0.0.1:3000";
+
+// Use localhost (not 127.0.0.1) so Next.js 16 allowedDevOrigins does not block client hydration
+const BASE = process.env.PORTAL_BASE_URL || "http://localhost:3000";
 const OUT = "/opt/cursor/artifacts/portal-360-e2e";
 const stamp = Date.now();
 const email = `portal360.${stamp}@test.naioshlaw.local`;
@@ -22,7 +24,6 @@ type Row = {
   result: "PASS" | "FAIL";
   detail: string;
 };
-
 const rows: Row[] = [];
 
 async function getDb() {
@@ -33,7 +34,7 @@ async function getDb() {
 async function seedIsolatedData(clientEmail: string) {
   const prisma = await getDb();
   const client = await prisma.client.findFirst({ where: { email: clientEmail } });
-  if (!client) throw new Error("client row missing after register");
+  if (!client) throw new Error("client missing");
   const caseNo = `E2E-${stamp}`;
   const legalCase = await prisma.case.create({
     data: {
@@ -88,7 +89,7 @@ async function seedIsolatedData(clientEmail: string) {
       dueDate: "2026-11-01",
       status: "جزئي",
       caseRef: caseNo,
-      notes: "فاتورة اختبار معزولة — بدون دفع إلكتروني",
+      notes: "فاتورة اختبار معزولة",
       isDemo: false,
     },
   });
@@ -101,8 +102,8 @@ async function seedIsolatedData(clientEmail: string) {
       status: "قيد المعالجة",
       assignee: "مكتب E2E",
       notes: "معزول",
-      lastUpdate: "تم الربط من الاختبار",
-      timeline: JSON.stringify([{ date: "2026-10-28", text: "إنشاء من الإدارة (اختبار)" }]),
+      lastUpdate: "اختبار",
+      timeline: JSON.stringify([{ date: "2026-10-28", text: "seed" }]),
       isDemo: false,
     },
   });
@@ -110,7 +111,7 @@ async function seedIsolatedData(clientEmail: string) {
     data: {
       clientId: client.id,
       title: `إشعار اختبار ${stamp}`,
-      body: "إشعار معزول لحساب الاختبار فقط",
+      body: "إشعار معزول",
       category: "اختبار",
       href: "/portal/cases",
       read: false,
@@ -120,49 +121,50 @@ async function seedIsolatedData(clientEmail: string) {
   return { clientId: client.id, caseNo };
 }
 
-async function shot(page: Page, name: string) {
-  await page.screenshot({ path: join(OUT, `${name}.png`), fullPage: true });
+async function shot(page: Page, file: string) {
+  await page.screenshot({ path: join(OUT, `${file}.png`), fullPage: true });
+}
+
+async function waitPortalReady(page: Page, ms = 15000) {
+  const start = Date.now();
+  while (Date.now() - start < ms) {
+    const s = await page.evaluate(() => {
+      const t = document.body?.innerText || "";
+      return {
+        root: !!document.querySelector(".portal-root"),
+        loading: /جاري تحميل بوابة العميل/.test(t),
+        expiredHang: /انتهت صلاحية الجلسة/.test(t) && /جاري التحميل/.test(t),
+        login: /تسجيل الدخول إلى حسابك/.test(t) || !!document.querySelector(".erp-login-page"),
+        text: t.slice(0, 200),
+      };
+    });
+    if (s.root && !s.loading) return s;
+    if (s.login) return s;
+    if (s.expiredHang) return s;
+    await page.waitForTimeout(300);
+  }
+  return page.evaluate(() => {
+    const t = document.body?.innerText || "";
+    return {
+      root: !!document.querySelector(".portal-root"),
+      loading: /جاري تحميل بوابة العميل/.test(t),
+      expiredHang: /انتهت صلاحية الجلسة/.test(t) && /جاري التحميل/.test(t),
+      login: false,
+      text: t.slice(0, 200),
+    };
+  });
 }
 
 async function gotoPortal(page: Page, href: string) {
-  await page.goto(`${BASE}${href}`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.waitForTimeout(900);
+  await page.goto(`${BASE}${href}`, { waitUntil: "domcontentloaded", timeout: 45000 });
+  return waitPortalReady(page);
 }
 
-async function assertNoHang(page: Page) {
-  return page.evaluate(() => {
-    const body = document.body?.innerText || "";
-    const expired = /انتهت صلاحية الجلسة/.test(body);
-    const loading = /جاري التحميل/.test(body);
-    const loginCta = !!document.querySelector('a[href="/login"], a[href*="login"]') || /تسجيل الدخول/.test(body);
-    return { expired, loading, loginCta, ok: !(expired && loading && !loginCta) };
-  });
+function pass(pageName: string, href: string, dataShown: string, actions: string, detail: string) {
+  rows.push({ page: pageName, href, dataShown, actions, result: "PASS", detail });
 }
-
-async function apiLogout(page: Page) {
-  await page.request.post(`${BASE}/api/auth/logout`);
-  await page.context().clearCookies();
-}
-
-async function login(page: Page, userEmail: string, userPassword: string) {
-  // API login ensures cookie even if React controlled inputs flake under headless
-  const api = await page.request.post(`${BASE}/api/auth/login`, {
-    data: { email: userEmail, password: userPassword, remember: true },
-  });
-  if (!api.ok()) {
-    const body = await api.json().catch(() => ({}));
-    throw new Error(`login API ${api.status()} ${JSON.stringify(body)}`);
-  }
-  await page.goto(`${BASE}/portal`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(1200);
-  // Also exercise UI login path once for evidence when already cookied
-  if (!page.url().includes("/portal")) {
-    await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
-    await page.locator('input[type="email"]').fill(userEmail);
-    await page.locator('input[type="password"]').fill(userPassword);
-    await page.locator('button[type="submit"]').first().click();
-    await page.waitForURL(/\/portal/, { timeout: 45000 }).catch(() => null);
-  }
+function fail(pageName: string, href: string, dataShown: string, actions: string, detail: string) {
+  rows.push({ page: pageName, href, dataShown, actions, result: "FAIL", detail });
 }
 
 async function main() {
@@ -174,327 +176,248 @@ async function main() {
   });
   const page = await context.newPage();
 
-  // 1) Register via public UI (fill nested label inputs — no htmlFor)
+  // --- Register via public UI (with API safety net) ---
   await page.goto(`${BASE}/register`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("form.reg-body, form", { timeout: 30000 });
   await page.locator('label:has-text("الاسم الكامل") input').fill(name);
   await page.locator('label:has-text("رقم الهاتف") input').fill("0500112233");
   await page.locator('label:has-text("البريد الإلكتروني") input').fill(email);
   await page.locator('label:has-text("كلمة المرور") input').fill(password);
   await shot(page, "01a-register-filled");
-  // Prefer UI submit with short timeout; fall back to API with same payload (cookie jar)
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL(/\/portal/, { timeout: 15000 }).catch(() => null);
-  await page.waitForTimeout(1000);
-  let regOk = page.url().includes("/portal");
-  let regMode = "ui";
-  if (!regOk) {
-    const api = await page.request.post(`${BASE}/api/auth/register`, {
+  await page.waitForURL(/\/portal/, { timeout: 12000 }).catch(() => null);
+  let registered = page.url().includes("/portal");
+  let regHow = "ui";
+  if (!registered) {
+    const api = await context.request.post(`${BASE}/api/auth/register`, {
       data: { name, email, password, phone: "0500112233", type: "فرد" },
     });
-    const body = await api.json().catch(() => ({}));
-    regMode = `api-fallback:${api.status()}`;
-    if (api.ok()) {
-      await page.goto(`${BASE}/portal/profile?onboarding=1`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector(".portal-root, .portal-loading, .portal-card", { timeout: 20000 }).catch(() => null);
-      await page.waitForTimeout(1500);
-      regOk = page.url().includes("/portal");
-    } else {
-      rows.push({
-        page: "التسجيل العام",
-        href: "/register",
-        dataShown: email,
-        actions: "UI+API failed",
-        result: "FAIL",
-        detail: `${regMode} ${JSON.stringify(body).slice(0, 200)}`,
-      });
-    }
+    regHow = `api(${api.status()})`;
+    registered = api.ok();
   }
-  if (!rows.some((r) => r.page === "التسجيل العام")) {
-    rows.push({
-      page: "التسجيل العام",
-      href: "/register",
-      dataShown: email,
-      actions: regMode === "ui" ? "إنشاء حساب من واجهة التسجيل" : `واجهة + ${regMode}`,
-      result: regOk ? "PASS" : "FAIL",
-      detail: page.url(),
-    });
-  }
+  await page.goto(`${BASE}/portal/profile?onboarding=1`, { waitUntil: "domcontentloaded" });
+  const regState = await waitPortalReady(page);
+  if (registered && regState.root) pass("التسجيل العام", "/register", email, regHow, page.url());
+  else fail("التسجيل العام", "/register", email, regHow, JSON.stringify(regState));
   await shot(page, "01-register");
 
-  // 2) Profile
-  await gotoPortal(page, "/portal/profile?onboarding=1");
-  const hang0 = await assertNoHang(page);
-  await page.locator('label:has-text("رقم الهاتف") input').fill("0500112233").catch(() => null);
-  await page.locator('label:has-text("الدولة") input').fill("السعودية").catch(() => null);
-  await page.locator('label:has-text("المدينة") input').fill("الرياض").catch(() => null);
-  await page.locator('label:has-text("العنوان") input').fill("حي الاختبار").catch(() => null);
-  await page.locator('button[type="submit"]').click().catch(() => null);
-  await page.waitForTimeout(1200);
-  const profileText = await page.locator("body").innerText();
+  // --- Profile save ---
+  if (regState.root) {
+    await page.locator('label:has-text("رقم الهاتف") input').fill("0500112233");
+    await page.locator('label:has-text("الدولة") input').fill("السعودية");
+    await page.locator('label:has-text("المدينة") input').fill("الرياض");
+    await page.locator('label:has-text("العنوان") input').fill("حي الاختبار");
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(1200);
+  }
+  const profileText = await page.innerText("body").catch(() => "");
   const profileOk =
-    hang0.ok &&
-    !(/انتهت صلاحية الجلسة/.test(profileText) && /جاري التحميل/.test(profileText)) &&
-    (/تم حفظ|تم الحفظ|ملفي الشخصي|الصورة الشخصية/.test(profileText));
-  rows.push({
-    page: "ملفي الشخصي",
-    href: "/portal/profile",
-    dataShown: "نموذج بيانات",
-    actions: "تعديل وحفظ",
-    result: profileOk ? "PASS" : "FAIL",
-    detail: /تم حفظ|تم الحفظ/.test(profileText) ? "saved" : hang0.ok ? "form visible" : "hang",
-  });
+    regState.root &&
+    !regState.expiredHang &&
+    (/تم حفظ|تم الحفظ|الصورة الشخصية|ملفي/.test(profileText));
+  if (profileOk) pass("ملفي الشخصي", "/portal/profile", "نموذج+حفظ", "PATCH profile", /تم حفظ|تم الحفظ/.test(profileText) ? "saved" : "form");
+  else fail("ملفي الشخصي", "/portal/profile", "—", "save", regState.expiredHang ? "hang" : profileText.slice(0, 100));
   await shot(page, "02-profile");
 
-  // Seed
+  // --- Seed ---
   let seed: { clientId: string; caseNo: string } | null = null;
   try {
     seed = await seedIsolatedData(email);
-    rows.push({
-      page: "ربط بيانات الإدارة",
-      href: "prisma-seed",
-      dataShown: seed.caseNo,
-      actions: "قضية+جلسة+مستند+فاتورة+طلب+إشعار",
-      result: "PASS",
-      detail: seed.clientId,
-    });
+    pass("ربط بيانات الإدارة", "prisma-seed", seed.caseNo, "قضية+جلسة+مستند+فاتورة+طلب+إشعار", seed.clientId);
   } catch (e) {
-    rows.push({
-      page: "ربط بيانات الإدارة",
-      href: "prisma-seed",
-      dataShown: "—",
-      actions: "seed",
-      result: "FAIL",
-      detail: e instanceof Error ? e.message : String(e),
-    });
+    fail("ربط بيانات الإدارة", "prisma-seed", "—", "seed", e instanceof Error ? e.message : String(e));
   }
 
-  // Logout / login
-  await apiLogout(page);
-  await login(page, email, password);
-  const reloginOk = page.url().includes("/portal");
-  rows.push({
-    page: "خروج/دخول",
-    href: "/login",
-    dataShown: email,
-    actions: "logout API + login UI",
-    result: reloginOk ? "PASS" : "FAIL",
-    detail: page.url(),
+  // --- Logout / login ---
+  await context.request.post(`${BASE}/api/auth/logout`);
+  await context.clearCookies();
+  const loginRes = await context.request.post(`${BASE}/api/auth/login`, {
+    data: { email, password, remember: true },
   });
+  await page.goto(`${BASE}/portal`, { waitUntil: "domcontentloaded" });
+  const homeState = await waitPortalReady(page);
+  if (loginRes.ok() && homeState.root) pass("خروج/دخول", "/login", email, "logout+login API+UI home", page.url());
+  else fail("خروج/دخول", "/login", email, "relogin", `${loginRes.status()} ${JSON.stringify(homeState)}`);
   await shot(page, "03-relogin");
 
-  type Spec = {
+  // --- Page matrix ---
+  const checks: {
     name: string;
     href: string;
     expect: RegExp;
-    action?: (p: Page) => Promise<string>;
-  };
-
-  const pages: Spec[] = [
+    act?: (p: Page) => Promise<string>;
+  }[] = [
     {
       name: "الرئيسية",
       href: "/portal",
-      expect: /القضايا|جلسات|مستحق|إشعارات/,
-      action: async (p) => ((await p.innerText("body")).includes("القضايا") ? "KPIs" : "missing"),
+      expect: /القضايا|مستحق|إشعارات/,
     },
     {
       name: "قضاياي",
       href: "/portal/cases",
       expect: seed ? new RegExp(seed.caseNo) : /قضية|لا قضايا/,
-      action: async (p) => {
-        const t = await p.innerText("body");
-        if (seed && t.includes(seed.caseNo)) {
-          await p.getByRole("button", { name: /عرض التفاصيل/ }).first().click().catch(() => null);
-          return `case ${seed.caseNo}`;
+      act: async (p) => {
+        if (await p.getByRole("button", { name: /عرض التفاصيل/ }).count()) {
+          await p.getByRole("button", { name: /عرض التفاصيل/ }).first().click();
         }
-        return /لا قضايا/.test(t) ? "empty" : "listed";
+        return seed?.caseNo || "empty";
       },
     },
     {
       name: "جلساتي",
       href: "/portal/sessions",
-      expect: /جلسة|القادمة|لا جلسات/,
-      action: async (p) => {
+      expect: seed ? new RegExp(`${seed.caseNo}|جلسة مرافعة|محكمة اختبار`) : /جلسة|لا جلسات/,
+      act: async (p) => {
+        await p.waitForTimeout(800);
         const t = await p.innerText("body");
-        return seed && t.includes(seed.caseNo) ? "session linked" : /لا جلسات/.test(t) ? "empty" : "listed";
+        return seed && t.includes(seed.caseNo) ? `session ${seed.caseNo}` : /لا جلسات/.test(t) ? "empty" : "listed";
       },
     },
     {
       name: "مستنداتي",
       href: "/portal/documents",
       expect: /مستند|رفع/,
-      action: async (p) => {
-        await p.getByLabel(/^العنوان$/).fill(`رفع واجهة ${stamp}`).catch(() => null);
-        const fileInput = p.locator('input[type="file"]');
-        if (await fileInput.count()) {
-          const buf = Buffer.from(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-            "base64"
-          );
-          await fileInput.setInputFiles({ name: "e2e.png", mimeType: "image/png", buffer: buf });
-          await p.getByRole("button", { name: /رفع المستند|رفع/ }).click();
-          await p.waitForTimeout(1800);
+      act: async (p) => {
+        await p.locator('label:has-text("العنوان") input').fill(`رفع واجهة ${stamp}`).catch(() => null);
+        const file = p.locator('input[type="file"]');
+        if (await file.count()) {
+          await file.setInputFiles({
+            name: "e2e.png",
+            mimeType: "image/png",
+            buffer: Buffer.from(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+              "base64"
+            ),
+          });
+          await p.getByRole("button", { name: /رفع/ }).click();
+          await p.waitForTimeout(1500);
         }
-        const t = await p.innerText("body");
         if (await p.getByRole("button", { name: /تنزيل/ }).count()) {
           await p.getByRole("button", { name: /تنزيل/ }).first().click().catch(() => null);
         }
-        return /تم رفع|مستند اختبار|رفع واجهة/.test(t) ? "upload/list/download" : "docs-ui";
+        const t = await p.innerText("body");
+        return /تم رفع|مستند اختبار|رفع واجهة/.test(t) ? "upload/list ok" : "ui";
       },
     },
     {
       name: "طلباتي",
       href: "/portal/requests",
       expect: /طلب/,
-      action: async (p) => {
-        await p.getByLabel(/^العنوان$/).fill(`طلب واجهة ${stamp}`).catch(() => null);
+      act: async (p) => {
+        await p.locator('label:has-text("العنوان") input').fill(`طلب واجهة ${stamp}`).catch(() => null);
         await p.getByRole("button", { name: /إرسال الطلب/ }).click().catch(() => null);
-        await p.waitForTimeout(1500);
+        await p.waitForTimeout(1200);
         const t = await p.innerText("body");
-        return /تم إنشاء الطلب|REQ-/.test(t) ? "create ok" : "listed-or-empty";
+        return /تم إنشاء الطلب|REQ-/.test(t) ? "create ok" : "list";
       },
     },
     {
       name: "المالية",
       href: "/portal/finance",
-      expect: /فاتورة|مستحق|المالية|لا فواتير/,
-      action: async (p) => {
+      expect: /فاتورة|مستحق|لا فواتير|المالية/,
+      act: async (p) => {
         const t = await p.innerText("body");
-        const noPay = /دفع إلكتروني|غير مفعّل|غير قابلة للتحصيل|لا يتم تحصيل/.test(t);
-        const hasInv = seed ? t.includes(`INV-E2E-${stamp}`) : /فاتورة|لا فواتير/.test(t);
-        return noPay && hasInv ? "invoice + no e-pay" : `noPay=${noPay};inv=${hasInv}`;
+        const noPay = /دفع إلكتروني|لا يتم تحصيل|غير مفعّل/.test(t);
+        const inv = seed ? t.includes(`INV-E2E-${stamp}`) : true;
+        return noPay && inv ? "invoice + no e-pay" : `noPay=${noPay};inv=${inv}`;
       },
     },
     {
       name: "الرسائل",
       href: "/portal/messages",
       expect: /رسالة|محادث/,
-      action: async (p) => {
-        await p.getByLabel(/الموضوع/).fill(`رسالة اختبار ${stamp}`).catch(() => null);
+      act: async (p) => {
+        await p.locator('label:has-text("الموضوع") input').fill(`رسالة ${stamp}`).catch(() => null);
         const ta = p.locator("textarea").first();
-        if (await ta.count()) await ta.fill(`محتوى معزول ${stamp}`);
+        if (await ta.count()) await ta.fill(`محتوى ${stamp}`);
         await p.getByRole("button", { name: /إرسال إلى المكتب/ }).click().catch(() => null);
-        await p.waitForTimeout(1600);
+        await p.waitForTimeout(1200);
         const t = await p.innerText("body");
-        return /تم إرسال|رسالة اختبار/.test(t) ? "message sent" : "compose-ui";
+        return /تم إرسال|رسالة/.test(t) ? "sent" : "compose";
       },
     },
     {
       name: "الإشعارات",
       href: "/portal/notifications",
-      expect: /إشعار|لا إشعارات/,
-      action: async (p) => {
-        const t = await p.innerText("body");
+      expect: /إشعار|تم استلام|تم إرسال|لا إشعارات/,
+      act: async (p) => {
+        await p.waitForTimeout(600);
         if (await p.getByRole("button", { name: /^تعليمليم كمقروء$/ }).count()) {
           await p.getByRole("button", { name: /^تعليمليم كمقروء$/ }).first().click();
-          await p.waitForTimeout(800);
+          await p.waitForTimeout(600);
         }
-        return seed && t.includes(`إشعار اختبار ${stamp}`) ? "notif + mark-read" : /لا إشعارات/.test(t) ? "empty" : "listed";
+        const t = await p.innerText("body");
+        return t.includes(`إشعار اختبار ${stamp}`) || /تم استلام|تم إرسال/.test(t) ? "notif+mark-read" : "listed";
       },
     },
     {
       name: "الإعدادات",
       href: "/portal/settings",
       expect: /تفضيلات|كلمة المرور/,
-      action: async (p) => {
+      act: async (p) => {
         await p.getByRole("button", { name: /حفظ التفضيلات/ }).click().catch(() => null);
-        await p.waitForTimeout(900);
+        await p.waitForTimeout(800);
         await p.getByRole("button", { name: /تغيير كلمة المرور/ }).click().catch(() => null);
         const t = await p.innerText("body");
-        return /تم حفظ تفضيلات|كلمة المرور/.test(t) ? "prefs+password" : "settings-ui";
+        return /تم حفظ تفضيلات|كلمة المرور/.test(t) ? "prefs+pw" : "settings";
       },
     },
   ];
 
-  for (const [idx, spec] of pages.entries()) {
-    await gotoPortal(page, spec.href);
-    const hang = await assertNoHang(page);
-    const actionDetail = spec.action ? await spec.action(page) : "";
-    const text2 = await page.innerText("body");
-    const hangBad = hang.expired && hang.loading && !hang.loginCta;
-    const ok = hang.ok && !hangBad && (spec.expect.test(text2) || /لا .+|empty/i.test(actionDetail));
-    rows.push({
-      page: spec.name,
-      href: spec.href,
-      dataShown: actionDetail,
-      actions: actionDetail,
-      result: ok ? "PASS" : "FAIL",
-      detail: hangBad ? "session-hang" : actionDetail,
-    });
-    await shot(page, `${String(idx + 4).padStart(2, "0")}-${spec.name}`);
+  for (const [i, c] of checks.entries()) {
+    const st = await gotoPortal(page, c.href);
+    let action = "";
+    if (st.root && c.act) action = await c.act(page);
+    const text = await page.innerText("body").catch(() => "");
+    const ok = st.root && !st.expiredHang && c.expect.test(text);
+    if (ok) pass(c.name, c.href, action || "matched", action || "view", "ui-ok");
+    else fail(c.name, c.href, action || st.text, action || "view", st.expiredHang ? "hang" : st.root ? "expect-miss" : "not-ready");
+    await shot(page, `${String(i + 4).padStart(2, "0")}-${c.name}`);
   }
 
-  // Session expiry: bump passwordChangedAt then hit portal API/page
+  // --- Session expiry ---
   {
     const prisma = await getDb();
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { passwordChangedAt: new Date() },
-      });
+      await prisma.user.update({ where: { id: user.id }, data: { passwordChangedAt: new Date() } });
     }
   }
-  await gotoPortal(page, "/portal/profile");
-  await page.waitForTimeout(2500);
-  const afterInv = await assertNoHang(page);
-  const bodyInv = await page.innerText("body");
-  const redirected = page.url().includes("/login") || /تسجيل الدخول/.test(bodyInv) || afterInv.loginCta;
-  const noHang = !(afterInv.expired && afterInv.loading && !afterInv.loginCta);
-  rows.push({
-    page: "انتهاء الجلسة",
-    href: "/portal/profile",
-    dataShown: redirected ? "login redirect/CTA" : bodyInv.slice(0, 80),
-    actions: "passwordChangedAt invalidate",
-    result: noHang && redirected ? "PASS" : "FAIL",
-    detail: JSON.stringify(afterInv),
-  });
+  const exp = await gotoPortal(page, "/portal/profile");
+  const expText = await page.innerText("body");
+  const expOk = !exp.expiredHang && (exp.login || /تسجيل الدخول/.test(expText) || page.url().includes("/login"));
+  if (expOk) pass("انتهاء الجلسة", "/portal/profile", "redirect/CTA", "passwordChangedAt", JSON.stringify(exp));
+  else fail("انتهاء الجلسة", "/portal/profile", exp.text, "invalidate", JSON.stringify(exp));
   await shot(page, "20-session-expiry");
 
-  // Re-login for mobile
-  await apiLogout(page);
-  await login(page, email, password);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await gotoPortal(page, "/portal");
-  await shot(page, "21-mobile-home");
-  await gotoPortal(page, "/portal/cases");
-  await shot(page, "22-mobile-cases");
-  const mobileHang = await assertNoHang(page);
-  rows.push({
-    page: "موبايل",
-    href: "/portal + /cases @390",
-    dataShown: "screenshots",
-    actions: "responsive",
-    result: mobileHang.ok ? "PASS" : "FAIL",
-    detail: JSON.stringify(mobileHang),
+  // --- Re-login + mobile (new JWT after passwordChangedAt invalidation) ---
+  await context.request.post(`${BASE}/api/auth/logout`);
+  await context.clearCookies();
+  const relog = await context.request.post(`${BASE}/api/auth/login`, {
+    data: { email, password, remember: true },
   });
-
-  // Isolation vs demo
-  await page.setViewportSize({ width: 1365, height: 900 });
-  await apiLogout(page);
-  await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
-  const demoBtn = page.getByRole("button", { name: /عميل تجريبي/ });
-  if (await demoBtn.count()) {
-    await Promise.all([
-      page.waitForURL(/\/portal/, { timeout: 45000 }).catch(() => null),
-      demoBtn.click(),
-    ]);
-  } else {
-    await page.request.post(`${BASE}/api/auth/demo-client`);
-    await page.goto(`${BASE}/portal`);
+  await page.setViewportSize({ width: 390, height: 844 });
+  let m1 = await gotoPortal(page, "/portal");
+  if (!m1.root && relog.ok()) {
+    // cookie jar race — hard navigation retry
+    await page.goto(`${BASE}/portal`, { waitUntil: "domcontentloaded" });
+    m1 = await waitPortalReady(page, 20000);
   }
-  await page.waitForTimeout(1200);
-  await gotoPortal(page, "/portal/cases");
+  await shot(page, "21-mobile-home");
+  const m2 = await gotoPortal(page, "/portal/cases");
+  await shot(page, "22-mobile-cases");
+  if (m1.root && m2.root && !m1.expiredHang) pass("موبايل", "/portal@390", "home+cases", "responsive", `login=${relog.status()}`);
+  else fail("موبايل", "/portal@390", "—", "responsive", `login=${relog.status()} ${JSON.stringify({ m1, m2 })}`);
+
+  // --- Isolation vs demo ---
+  await page.setViewportSize({ width: 1365, height: 900 });
+  await context.request.post(`${BASE}/api/auth/logout`);
+  await context.clearCookies();
+  await context.request.post(`${BASE}/api/auth/demo-client`);
+  const demo = await gotoPortal(page, "/portal/cases");
   const demoText = await page.innerText("body");
   const isolated = !(seed && demoText.includes(seed.caseNo));
-  rows.push({
-    page: "عزل البيانات",
-    href: "/portal/cases (demo)",
-    dataShown: seed?.caseNo || "—",
-    actions: "demo must NOT see E2E case",
-    result: isolated ? "PASS" : "FAIL",
-    detail: isolated ? "not leaked" : "LEAKED",
-  });
+  if (isolated) pass("عزل البيانات", "/portal/cases(demo)", seed?.caseNo || "—", "demo isolation", "not leaked");
+  else fail("عزل البيانات", "/portal/cases(demo)", seed?.caseNo || "—", "demo isolation", "LEAKED");
   await shot(page, "23-isolation-demo");
 
   const video = page.video();
@@ -509,7 +432,6 @@ async function main() {
       copyFileSync(vp, videoOut);
     }
   }
-  // also collect any leftover video files
   try {
     const vids = readdirSync(join(OUT, "video")).filter((f) => f.endsWith(".webm"));
     if (!videoOut && vids[0]) {
@@ -520,29 +442,44 @@ async function main() {
     /* ignore */
   }
 
-  const pass = rows.filter((r) => r.result === "PASS").length;
-  const fail = rows.filter((r) => r.result === "FAIL").length;
-  const report = { stamp, email, base: BASE, pass, fail, total: rows.length, rows, video: videoOut };
+  // Convert to mp4 if ffmpeg available
+  if (videoOut && existsSync(videoOut)) {
+    const mp4 = join(OUT, "portal-client-360-journey.mp4");
+    try {
+      const { spawnSync } = await import("child_process");
+      spawnSync("ffmpeg", ["-y", "-i", videoOut, "-c:v", "libx264", "-pix_fmt", "yuv420p", mp4], {
+        stdio: "ignore",
+      });
+      if (existsSync(mp4)) videoOut = mp4;
+    } catch {
+      /* keep webm */
+    }
+  }
+
+  const passN = rows.filter((r) => r.result === "PASS").length;
+  const failN = rows.filter((r) => r.result === "FAIL").length;
+  const report = { stamp, email, base: BASE, pass: passN, fail: failN, total: rows.length, rows, video: videoOut };
   writeFileSync(join(OUT, "REPORT.json"), JSON.stringify(report, null, 2));
   writeFileSync(
     join(OUT, "REPORT.md"),
     [
       `# بوابة العميل 360 — نتيجة اختبار`,
       ``,
-      `**${pass} PASS · ${fail} FAIL** من ${rows.length}`,
+      `**${passN} PASS · ${failN} FAIL** من ${rows.length}`,
       ``,
-      `| النتيجة | الصفحة | الرابط | البيانات | الإجراءات | تفصيل |`,
+      `| النتيجة | الصفحة | الرابط | البيانات المعروضة | الإجراءات المختبرة | تفصيل |`,
       `|---|---|---|---|---|---|`,
       ...rows.map(
-        (r) => `| **${r.result}** | ${r.page} | \`${r.href}\` | ${r.dataShown} | ${r.actions} | ${r.detail.replace(/\|/g, "/")} |`
+        (r) =>
+          `| **${r.result}** | ${r.page} | \`${r.href}\` | ${r.dataShown} | ${r.actions} | ${r.detail.replace(/\|/g, "/")} |`
       ),
       ``,
       `حساب الاختبار المعزول: \`${email}\``,
       `لا دمج ولا نشر قبل موافقتك.`,
     ].join("\n")
   );
-  console.log(JSON.stringify({ pass, fail, total: rows.length, out: OUT, video: videoOut }, null, 2));
-  if (fail > 0) process.exitCode = 1;
+  console.log(JSON.stringify({ pass: passN, fail: failN, total: rows.length, video: videoOut }, null, 2));
+  if (failN > 0) process.exitCode = 1;
 }
 
 main().catch((e) => {
