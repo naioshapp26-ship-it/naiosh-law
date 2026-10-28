@@ -13,7 +13,7 @@ import { useSession, canWriteRole } from "@/lib/session";
 import { getModuleApiEndpoint } from "@/lib/module-api";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { sendRecordToArchive, buildArchiveRef, buildArchiveTitle } from "@/lib/archive-client";
-import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
+import { extractPartyFields, stripPartyFields, type PartyFields } from "@/lib/party-fields";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
@@ -439,14 +439,12 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     setEditTarget(null);
   };
 
-  const handleSupplementSave = async (data: {
-    notes: string;
-    attachments: ArchiveAttachment[];
-    firstParty: string;
-    firstPartyPhone: string;
-    secondParty: string;
-    secondPartyPhone: string;
-  }) => {
+  const handleSupplementSave = async (
+    data: {
+      notes: string;
+      attachments: ArchiveAttachment[];
+    } & PartyFields
+  ) => {
     if (!supplementTarget?.id) return;
     const result = await saveRecordSupplement({
       sourceModule: slug,
@@ -460,16 +458,14 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       pushToast("error", result.message);
       return;
     }
+    const { notes: _n, attachments: _a, ...parties } = data;
+    void _n;
+    void _a;
     await upsertRecordParties({
       sourceModule: slug,
       sourceId: String(supplementTarget.id),
       sourceRef: buildArchiveRef(supplementTarget),
-      parties: {
-        firstParty: data.firstParty,
-        firstPartyPhone: data.firstPartyPhone,
-        secondParty: data.secondParty,
-        secondPartyPhone: data.secondPartyPhone,
-      },
+      parties,
     });
     pushToast("success", result.message);
     setSupplementTarget(null);

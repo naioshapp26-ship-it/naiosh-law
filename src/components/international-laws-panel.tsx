@@ -75,9 +75,19 @@ export type LawEntry = {
   notes: string;
   attachments: FileAttachment[];
   firstParty: string;
+  firstPartyDialCode?: string;
   firstPartyPhone: string;
+  firstPartyCountry?: string;
+  firstPartyCity?: string;
   secondParty: string;
+  secondPartyDialCode?: string;
   secondPartyPhone: string;
+  secondPartyCountry?: string;
+  secondPartyCity?: string;
+  phone?: string;
+  phoneDialCode?: string;
+  clientCountry?: string;
+  city?: string;
 };
 
 const entryFields: FormField[] = [
@@ -88,12 +98,22 @@ const entryFields: FormField[] = [
   { key: "category", label: "التصنيف", type: "text" },
   { key: "status", label: "الحالة", type: "select", options: ["نشط", "قيد المراجعة", "مكتمل", "مؤرشف"] },
   { key: "client", label: "الموكل / الجهة", type: "text" },
+  { key: "phoneDialCode", label: "مفتاح الدولة", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "phone", label: "رقم الجوال", type: "tel", required: true, placeholder: "5XXXXXXXX" },
+  { key: "clientCountry", label: "دولة الموكل", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
+  { key: "city", label: "المدينة", type: "text", required: true, placeholder: "المدينة", dependsOn: "clientCountry" },
   { key: "effectiveDate", label: "تاريخ السريان", type: "text" },
   { key: "source", label: "المصدر", type: "text" },
   { key: "firstParty", label: "طرف أول", type: "text", required: true, placeholder: "اسم الطرف الأول" },
-  { key: "firstPartyPhone", label: "رقم جوال الطرف الأول", type: "tel", required: true, placeholder: "05xxxxxxxx" },
+  { key: "firstPartyDialCode", label: "مفتاح جوال الطرف الأول", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "firstPartyPhone", label: "رقم جوال الطرف الأول", type: "tel", required: true, placeholder: "5XXXXXXXX" },
+  { key: "firstPartyCountry", label: "دولة الطرف الأول", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
+  { key: "firstPartyCity", label: "مدينة الطرف الأول", type: "text", required: true, dependsOn: "firstPartyCountry" },
   { key: "secondParty", label: "طرف ثاني", type: "text", required: true, placeholder: "اسم الطرف الثاني" },
-  { key: "secondPartyPhone", label: "رقم جوال الطرف الثاني", type: "tel", required: true, placeholder: "05xxxxxxxx" },
+  { key: "secondPartyDialCode", label: "مفتاح جوال الطرف الثاني", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+962 (الأردن)"] },
+  { key: "secondPartyPhone", label: "رقم جوال الطرف الثاني", type: "tel", required: true, placeholder: "5XXXXXXXX" },
+  { key: "secondPartyCountry", label: "دولة الطرف الثاني", type: "select", required: true, options: ["مصر","السعودية","الإمارات","الكويت","قطر","الأردن","أخرى"] },
+  { key: "secondPartyCity", label: "مدينة الطرف الثاني", type: "text", required: true, dependsOn: "secondPartyCountry" },
   { key: "description", label: "الوصف", type: "textarea" },
   { key: "notes", label: "ملاحظات", type: "textarea" },
 ];
@@ -667,14 +687,12 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
     await load();
   };
 
-  const handleSupplementSave = async (data: {
-    notes: string;
-    attachments: FileAttachment[];
-    firstParty: string;
-    firstPartyPhone: string;
-    secondParty: string;
-    secondPartyPhone: string;
-  }) => {
+  const handleSupplementSave = async (
+    data: {
+      notes: string;
+      attachments: FileAttachment[];
+    } & import("@/lib/party-fields").PartyFields
+  ) => {
     if (!supplementTarget) return;
     const result = await saveRecordSupplement({
       sourceModule: "legal-classification",
@@ -688,17 +706,27 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
       show("error", result.message);
       return;
     }
+    const { notes: _n, attachments: _a, ...parties } = data;
+    void _n;
+    void _a;
     // Also update main record party fields when adding from row action
     await fetch(`/api/legal-classification/${supplementTarget.id}`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        firstParty: data.firstParty,
-        firstPartyPhone: data.firstPartyPhone,
-        secondParty: data.secondParty,
-        secondPartyPhone: data.secondPartyPhone,
+        firstParty: parties.firstParty,
+        firstPartyPhone: parties.firstPartyPhone,
+        secondParty: parties.secondParty,
+        secondPartyPhone: parties.secondPartyPhone,
       }),
+    });
+    const { upsertRecordParties } = await import("@/lib/record-parties-client");
+    await upsertRecordParties({
+      sourceModule: "legal-classification",
+      sourceId: supplementTarget.id,
+      sourceRef: supplementTarget.refNo,
+      parties,
     });
     show("success", result.message);
     setSupplementTarget(null);

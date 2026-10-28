@@ -7,22 +7,76 @@ import {
   persistCustomFieldsFromBody,
 } from "@/lib/page-settings/record-custom-api";
 import { assertPageAction } from "@/lib/page-settings/page-action-auth";
+import {
+  ensureClientWithContact,
+  mapRowWithClientContact,
+  findClientContactById,
+  findClientContactByName,
+  type ClientContactRow,
+} from "@/lib/person-contact-server";
+import { canViewPersonContact } from "@/lib/person-contact";
 
 export async function GET() {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
-  const records = await prisma.financialRecord.findMany({ orderBy: { createdAt: "desc" } });
-  const base = records.map((r) => ({
-    id: r.id,
-    invoiceNo: r.invoiceNo,
-    client: r.clientName,
-    type: r.type,
-    amount: String(r.amount),
-    paid: String(r.paid),
-    issueDate: r.issueDate,
-    status: r.status,
-  }));
+  const role = session!.role;
+  const canView = canViewPersonContact(role);
+  if (role === "client") {
+    return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
+  }
+
+  const records = await prisma.financialRecord.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          phoneDialCode: true,
+          phoneSecondary: true,
+          phoneSecondaryDialCode: true,
+          primaryPhoneSlot: true,
+          country: true,
+          city: true,
+          countrySecondary: true,
+          citySecondary: true,
+          primaryAddressSlot: true,
+        },
+      },
+    },
+  });
+
+  const nameCache = new Map<string, ClientContactRow | null>();
+  const base = [];
+  for (const r of records) {
+    let contact = r.client as ClientContactRow | null;
+    if (!contact && r.clientName) {
+      if (!nameCache.has(r.clientName)) {
+        nameCache.set(r.clientName, await findClientContactByName(r.clientName));
+      }
+      contact = nameCache.get(r.clientName) ?? null;
+    }
+    base.push(
+      mapRowWithClientContact(
+        {
+          id: r.id,
+          invoiceNo: r.invoiceNo,
+          ref: r.invoiceNo,
+          client: r.clientName,
+          type: r.type,
+          amount: String(r.amount),
+          paid: String(r.paid),
+          issueDate: r.issueDate,
+          date: r.issueDate,
+          status: r.status,
+        },
+        contact,
+        canView ? role : null
+      )
+    );
+  }
   return NextResponse.json(await attachCustomValuesToRows("legal-accounting", base));
 }
 
@@ -43,19 +97,25 @@ export async function POST(request: Request) {
     body.invoiceNo ??
     `INV-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}-${Date.now().toString(36)}`;
 
-  const clientId = body.clientId ? String(body.clientId) : null;
-  let clientName = String(body.client ?? body.clientName ?? "");
-  if (clientId) {
-    const linked = await prisma.client.findUnique({ where: { id: clientId } });
-    if (!linked) return NextResponse.json({ error: "العميل غير موجود" }, { status: 404 });
-    if (!clientName) clientName = linked.name;
+  const ensured = await ensureClientWithContact({
+    name: String(body.client ?? body.clientName ?? ""),
+    clientId: body.clientId ? String(body.clientId) : null,
+    body: body as Record<string, unknown>,
+    role: session!.role,
+    changedById: session!.sub,
+    changedByName: session!.name ?? session!.email,
+    sourceModule: "legal-accounting",
+    requireComplete: true,
+  });
+  if (!ensured.ok) {
+    return NextResponse.json({ error: ensured.error }, { status: ensured.status });
   }
 
   const created = await prisma.financialRecord.create({
     data: {
       invoiceNo,
-      clientId,
-      clientName,
+      clientId: ensured.clientId,
+      clientName: ensured.clientName,
       type: String(body.type ?? "رسوم قضية"),
       amount: Number(body.amount ?? 0),
       paid: Number(body.paid ?? 0),
@@ -77,5 +137,15 @@ export async function POST(request: Request) {
     role: session!.role,
   });
 
-  return NextResponse.json({ id: created.id, clientId: created.clientId }, { status: 201 });
+  void findClientContactById;
+  return NextResponse.json(
+    {
+      id: created.id,
+      clientId: created.clientId,
+      phone: ensured.contact.phone,
+      country: ensured.contact.country,
+      city: ensured.contact.city,
+    },
+    { status: 201 }
+  );
 }

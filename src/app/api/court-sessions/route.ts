@@ -6,24 +6,77 @@ import {
   persistCustomFieldsFromBody,
 } from "@/lib/page-settings/record-custom-api";
 import { assertPageAction } from "@/lib/page-settings/page-action-auth";
+import {
+  ensureClientWithContact,
+  mapRowWithClientContact,
+  findClientContactById,
+  findClientContactByName,
+  type ClientContactRow,
+} from "@/lib/person-contact-server";
+import { canViewPersonContact } from "@/lib/person-contact";
 
 export async function GET() {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
-  const sessions = await prisma.courtSession.findMany({ orderBy: { createdAt: "desc" } });
-  const base = sessions.map((s) => ({
-    id: s.id,
-    caseNo: s.caseNo ?? "—",
-    client: s.client ?? "—",
-    court: s.court,
-    room: s.room ?? "—",
-    date: s.date,
-    time: s.time ?? "—",
-    type: s.type,
-    status: s.status,
-    lawyer: s.lawyer ?? "—",
-  }));
+  const role = session!.role;
+  const canView = canViewPersonContact(role);
+
+  const sessions = await prisma.courtSession.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      case: {
+        include: {
+          client: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              phoneDialCode: true,
+              phoneSecondary: true,
+              phoneSecondaryDialCode: true,
+              primaryPhoneSlot: true,
+              country: true,
+              city: true,
+              countrySecondary: true,
+              citySecondary: true,
+              primaryAddressSlot: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const nameCache = new Map<string, ClientContactRow | null>();
+  const base = [];
+  for (const s of sessions) {
+    let contact = (s.case?.client as ClientContactRow | null | undefined) ?? null;
+    if (!contact && s.client) {
+      if (!nameCache.has(s.client)) {
+        nameCache.set(s.client, await findClientContactByName(s.client));
+      }
+      contact = nameCache.get(s.client) ?? null;
+    }
+    base.push(
+      mapRowWithClientContact(
+        {
+          id: s.id,
+          caseNo: s.caseNo ?? "—",
+          client: s.client ?? "—",
+          court: s.court,
+          room: s.room ?? "—",
+          date: s.date,
+          time: s.time ?? "—",
+          type: s.type,
+          status: s.status,
+          lawyer: s.lawyer ?? "—",
+        },
+        contact,
+        canView ? role : null
+      )
+    );
+  }
   return NextResponse.json(await attachCustomValuesToRows("court-sessions", base));
 }
 
@@ -42,18 +95,38 @@ export async function POST(request: Request) {
   const caseId = body.caseId ? String(body.caseId) : null;
   let caseNo = body.caseNo ? String(body.caseNo) : null;
   let client = body.client ? String(body.client) : null;
+  let linkedClientId: string | null = null;
+
   if (caseId) {
-    const linkedCase = await prisma.case.findUnique({ where: { id: caseId } });
+    const linkedCase = await prisma.case.findUnique({
+      where: { id: caseId },
+      include: { client: true },
+    });
     if (!linkedCase) return NextResponse.json({ error: "القضية غير موجودة" }, { status: 404 });
     caseNo = caseNo ?? linkedCase.caseNo;
     client = client ?? linkedCase.clientName;
+    linkedClientId = linkedCase.clientId;
+  }
+
+  const ensured = await ensureClientWithContact({
+    name: client ?? "",
+    clientId: body.clientId ? String(body.clientId) : linkedClientId,
+    body: body as Record<string, unknown>,
+    role: session!.role,
+    changedById: session!.sub,
+    changedByName: session!.name ?? session!.email,
+    sourceModule: "court-sessions",
+    requireComplete: true,
+  });
+  if (!ensured.ok) {
+    return NextResponse.json({ error: ensured.error }, { status: ensured.status });
   }
 
   const created = await prisma.courtSession.create({
     data: {
       caseId,
       caseNo,
-      client,
+      client: ensured.clientName,
       court: String(body.court ?? ""),
       room: body.room ? String(body.room) : null,
       date: String(body.date ?? ""),
@@ -73,5 +146,16 @@ export async function POST(request: Request) {
     role: session!.role,
   });
 
-  return NextResponse.json({ id: created.id, caseId: created.caseId }, { status: 201 });
+  void findClientContactById;
+  return NextResponse.json(
+    {
+      id: created.id,
+      caseId: created.caseId,
+      clientId: ensured.clientId,
+      phone: ensured.contact.phone,
+      country: ensured.contact.country,
+      city: ensured.contact.city,
+    },
+    { status: 201 }
+  );
 }

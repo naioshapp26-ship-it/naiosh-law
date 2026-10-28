@@ -6,6 +6,7 @@ import { FileUploadField } from "@/components/ui/file-upload-field";
 import { parseAttachments, type FileAttachment } from "@/lib/file-upload";
 import { PARTY_FORM_FIELDS, PARTY_FIELD_KEYS } from "@/lib/party-fields";
 import { assertFieldLabel, sanitizeFormFields } from "@/lib/form-field-labels";
+import { citiesForCountry, dialCodeForCountry } from "@/lib/person-contact";
 
 type Props = {
   open: boolean;
@@ -78,7 +79,33 @@ export function Modal({
 
   if (!open) return null;
 
-  const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
+  const set = (key: string, value: unknown) => {
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      // Cascade: country → suggest dial code + city datalist options
+      if (key === "country" || key.endsWith("Country") || key === "firstPartyCountry" || key === "secondPartyCountry") {
+        const country = String(value ?? "");
+        if (key === "country" && !prev.phoneDialCode) {
+          const dial = dialCodeForCountry(country);
+          const dialOpt = `${dial} (${country})`;
+          next.phoneDialCode = dialOpt;
+        }
+        if (key === "firstPartyCountry" && !prev.firstPartyDialCode) {
+          next.firstPartyDialCode = `${dialCodeForCountry(country)} (${country})`;
+        }
+        if (key === "secondPartyCountry" && !prev.secondPartyDialCode) {
+          next.secondPartyDialCode = `${dialCodeForCountry(country)} (${country})`;
+        }
+      }
+      return next;
+    });
+  };
+
+  const citySuggestionsFor = (field: FormField): string[] => {
+    if (!field.dependsOn) return [];
+    const parentVal = String(form[field.dependsOn] ?? "");
+    return citiesForCountry(parentVal);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -208,6 +235,25 @@ export function Modal({
                         style={{ resize: "vertical", minHeight: 80 }}
                         placeholder={f.placeholder}
                       />
+                    ) : f.dependsOn ? (
+                      <>
+                        <input
+                          id={inputId}
+                          type="text"
+                          list={`datalist-${f.key}`}
+                          value={String(form[f.key] ?? "")}
+                          onChange={(e) => set(f.key, e.target.value)}
+                          required={f.required}
+                          className="input-field"
+                          placeholder={f.placeholder ?? "اختر أو اكتب مدينة"}
+                          autoComplete="off"
+                        />
+                        <datalist id={`datalist-${f.key}`}>
+                          {citySuggestionsFor(f).map((city) => (
+                            <option key={city} value={city} />
+                          ))}
+                        </datalist>
+                      </>
                     ) : (
                       <input
                         id={inputId}

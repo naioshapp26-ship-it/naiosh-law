@@ -37,6 +37,7 @@ export async function PATCH(request: Request) {
     const fields = [
       "name",
       "phone",
+      "phoneDialCode",
       "type",
       "country",
       "city",
@@ -47,6 +48,12 @@ export async function PATCH(request: Request) {
       "authorizedPhone",
       "avatarUrl",
       "notificationPrefs",
+      "phoneSecondary",
+      "phoneSecondaryDialCode",
+      "primaryPhoneSlot",
+      "countrySecondary",
+      "citySecondary",
+      "primaryAddressSlot",
     ] as const;
 
     for (const key of fields) {

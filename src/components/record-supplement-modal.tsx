@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import type { FileAttachment } from "@/lib/file-upload";
 import { emptyPartyFields, type PartyFields } from "@/lib/party-fields";
+import { PartyContactFields } from "@/components/party-contact-fields";
 
 type Props = {
   open: boolean;
@@ -12,11 +13,7 @@ type Props = {
   onSave: (data: {
     notes: string;
     attachments: FileAttachment[];
-    firstParty: string;
-    firstPartyPhone: string;
-    secondParty: string;
-    secondPartyPhone: string;
-  }) => void | Promise<void>;
+  } & PartyFields) => void | Promise<void>;
   onClose: () => void;
 };
 
@@ -93,50 +90,7 @@ export function RecordSupplementModal({ open, recordRef, recordTitle, onSave, on
 
         <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gap: "1rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }} className="party-grid">
-              <div>
-                <label className="input-label">طرف أول <span style={{ color: "#101D32" }}>*</span></label>
-                <input
-                  className="input-field"
-                  required
-                  value={parties.firstParty}
-                  onChange={(e) => setParties((p) => ({ ...p, firstParty: e.target.value }))}
-                  placeholder="اسم الطرف الأول"
-                />
-              </div>
-              <div>
-                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#101D32" }}>*</span></label>
-                <input
-                  className="input-field"
-                  type="tel"
-                  required
-                  value={parties.firstPartyPhone}
-                  onChange={(e) => setParties((p) => ({ ...p, firstPartyPhone: e.target.value }))}
-                  placeholder="05xxxxxxxx"
-                />
-              </div>
-              <div>
-                <label className="input-label">طرف ثاني <span style={{ color: "#101D32" }}>*</span></label>
-                <input
-                  className="input-field"
-                  required
-                  value={parties.secondParty}
-                  onChange={(e) => setParties((p) => ({ ...p, secondParty: e.target.value }))}
-                  placeholder="اسم الطرف الثاني"
-                />
-              </div>
-              <div>
-                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#101D32" }}>*</span></label>
-                <input
-                  className="input-field"
-                  type="tel"
-                  required
-                  value={parties.secondPartyPhone}
-                  onChange={(e) => setParties((p) => ({ ...p, secondPartyPhone: e.target.value }))}
-                  placeholder="05xxxxxxxx"
-                />
-              </div>
-            </div>
+            <PartyContactFields value={parties} onChange={setParties} />
 
             <div>
               <label className="input-label">معلومات / ملاحظات إضافية</label>

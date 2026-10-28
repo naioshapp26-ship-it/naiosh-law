@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWrite } from "@/lib/api-helpers";
 import { persistCustomFieldsFromBody } from "@/lib/page-settings/record-custom-api";
+import {
+  ensureClientWithContact,
+  mapRowWithClientContact,
+} from "@/lib/person-contact-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,10 +15,49 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
 
+  const existing = await prisma.financialRecord.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+
+  let clientId = existing.clientId;
+  let clientName = existing.clientName;
+  const hasContact =
+    body.phone !== undefined ||
+    body.country !== undefined ||
+    body.city !== undefined ||
+    body.client !== undefined ||
+    body.clientId !== undefined;
+
+  if (hasContact) {
+    const ensured = await ensureClientWithContact({
+      name: body.client !== undefined ? String(body.client) : existing.clientName,
+      clientId:
+        body.clientId !== undefined
+          ? body.clientId
+            ? String(body.clientId)
+            : null
+          : existing.clientId,
+      body: body as Record<string, unknown>,
+      role: session!.role,
+      changedById: session!.sub,
+      changedByName: session!.name ?? session!.email,
+      sourceModule: "legal-accounting",
+      sourceId: id,
+      requireComplete: Boolean(
+        body.phone !== undefined || body.country !== undefined || body.city !== undefined
+      ),
+    });
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.error }, { status: ensured.status });
+    }
+    clientId = ensured.clientId;
+    clientName = ensured.clientName;
+  }
+
   const updated = await prisma.financialRecord.update({
     where: { id },
     data: {
-      clientName: body.client !== undefined ? String(body.client) : undefined,
+      clientId,
+      clientName: body.client !== undefined || hasContact ? clientName : undefined,
       type: body.type !== undefined ? String(body.type) : undefined,
       amount: body.amount !== undefined ? Number(body.amount) : undefined,
       paid: body.paid !== undefined ? Number(body.paid) : undefined,
@@ -22,6 +65,24 @@ export async function PATCH(request: Request, { params }: Params) {
       dueDate: body.dueDate !== undefined ? String(body.dueDate) : undefined,
       status: body.status !== undefined ? String(body.status) : undefined,
       notes: body.notes !== undefined ? String(body.notes) : undefined,
+    },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          phoneDialCode: true,
+          phoneSecondary: true,
+          phoneSecondaryDialCode: true,
+          primaryPhoneSlot: true,
+          country: true,
+          city: true,
+          countrySecondary: true,
+          citySecondary: true,
+          primaryAddressSlot: true,
+        },
+      },
     },
   });
 
@@ -33,7 +94,22 @@ export async function PATCH(request: Request, { params }: Params) {
     role: session!.role,
   });
 
-  return NextResponse.json(updated);
+  return NextResponse.json(
+    mapRowWithClientContact(
+      {
+        id: updated.id,
+        invoiceNo: updated.invoiceNo,
+        client: updated.clientName,
+        type: updated.type,
+        amount: String(updated.amount),
+        paid: String(updated.paid),
+        issueDate: updated.issueDate,
+        status: updated.status,
+      },
+      updated.client,
+      session!.role
+    )
+  );
 }
 
 export async function DELETE(_request: Request, { params }: Params) {

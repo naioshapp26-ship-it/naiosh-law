@@ -101,18 +101,43 @@ export function ArchivePanel() {
     tags: string;
     notes: string;
     attachments: ArchiveRecordDto["attachments"];
-    firstParty: string;
-    firstPartyPhone: string;
-    secondParty: string;
-    secondPartyPhone: string;
-  }) => {
+  } & import("@/lib/party-fields").PartyFields) => {
     try {
+      const {
+        firstParty,
+        firstPartyPhone,
+        firstPartyDialCode,
+        firstPartyCountry,
+        firstPartyCity,
+        secondParty,
+        secondPartyPhone,
+        secondPartyDialCode,
+        secondPartyCountry,
+        secondPartyCity,
+        ...rest
+      } = data;
+      const parties = {
+        firstParty,
+        firstPartyPhone,
+        firstPartyDialCode,
+        firstPartyCountry,
+        firstPartyCity,
+        secondParty,
+        secondPartyPhone,
+        secondPartyDialCode,
+        secondPartyCountry,
+        secondPartyCity,
+      };
       const payload = {
-        ...data,
+        ...rest,
         notes: [
           data.notes,
-          data.firstParty ? `طرف أول: ${data.firstParty} (${data.firstPartyPhone})` : "",
-          data.secondParty ? `طرف ثاني: ${data.secondParty} (${data.secondPartyPhone})` : "",
+          firstParty
+            ? `طرف أول: ${firstParty} (${firstPartyDialCode} ${firstPartyPhone}) — ${firstPartyCountry}/${firstPartyCity}`
+            : "",
+          secondParty
+            ? `طرف ثاني: ${secondParty} (${secondPartyDialCode} ${secondPartyPhone}) — ${secondPartyCountry}/${secondPartyCity}`
+            : "",
         ]
           .filter(Boolean)
           .join("\n"),
@@ -130,12 +155,7 @@ export function ArchivePanel() {
           sourceModule: "archive",
           sourceId: editTarget.id,
           sourceRef: editTarget.refNo,
-          parties: {
-            firstParty: data.firstParty,
-            firstPartyPhone: data.firstPartyPhone,
-            secondParty: data.secondParty,
-            secondPartyPhone: data.secondPartyPhone,
-          },
+          parties,
         });
       } else {
         const res = await fetch("/api/archive", {
@@ -155,12 +175,7 @@ export function ArchivePanel() {
             sourceModule: "archive",
             sourceId: String(created.id),
             sourceRef: created.refNo,
-            parties: {
-              firstParty: data.firstParty,
-              firstPartyPhone: data.firstPartyPhone,
-              secondParty: data.secondParty,
-              secondPartyPhone: data.secondPartyPhone,
-            },
+            parties,
           });
         }
         show("success", "✅ تمت إضافة السجل للأرشيف");

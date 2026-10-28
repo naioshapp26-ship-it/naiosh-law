@@ -6,17 +6,62 @@ import {
   persistCustomFieldsFromBody,
 } from "@/lib/page-settings/record-custom-api";
 import { assertPageAction } from "@/lib/page-settings/page-action-auth";
+import {
+  ensureClientWithContact,
+  mapRowWithClientContact,
+  findClientContactById,
+} from "@/lib/person-contact-server";
+import { canViewPersonContact } from "@/lib/person-contact";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
   const { id } = await params;
 
-  const item = await prisma.case.findUnique({ where: { id } });
+  const item = await prisma.case.findUnique({
+    where: { id },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          phoneDialCode: true,
+          phoneSecondary: true,
+          phoneSecondaryDialCode: true,
+          primaryPhoneSlot: true,
+          country: true,
+          city: true,
+          countrySecondary: true,
+          citySecondary: true,
+          primaryAddressSlot: true,
+        },
+      },
+    },
+  });
   if (!item) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
-  const [withCustom] = await attachCustomValuesToRows("case-management", [item]);
+
+  const role = session!.role;
+  const canView = canViewPersonContact(role);
+  const mapped = mapRowWithClientContact(
+    {
+      id: item.id,
+      caseNo: item.caseNo,
+      client: item.clientName,
+      type: item.type,
+      court: item.court,
+      status: item.status,
+      nextDate: item.nextDate ?? "—",
+      fees: item.fees ?? "0",
+      notes: item.notes,
+    },
+    item.client,
+    canView ? role : null
+  );
+
+  const [withCustom] = await attachCustomValuesToRows("case-management", [mapped]);
   return NextResponse.json(withCustom);
 }
 
@@ -35,15 +80,51 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
 
-  let clientName = body.client !== undefined ? String(body.client) : undefined;
-  let clientId: string | null | undefined = undefined;
-  if (body.clientId !== undefined) {
-    clientId = body.clientId ? String(body.clientId) : null;
-    if (clientId) {
-      const linked = await prisma.client.findUnique({ where: { id: clientId } });
-      if (!linked) return NextResponse.json({ error: "العميل غير موجود" }, { status: 404 });
-      if (clientName === undefined) clientName = linked.name;
+  const existing = await prisma.case.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+
+  const clientNameInput =
+    body.client !== undefined
+      ? String(body.client)
+      : body.clientName !== undefined
+        ? String(body.clientName)
+        : existing.clientName;
+
+  const hasContactPatch =
+    body.phone !== undefined ||
+    body.phoneDialCode !== undefined ||
+    body.country !== undefined ||
+    body.city !== undefined ||
+    body.clientId !== undefined ||
+    body.client !== undefined;
+
+  let clientId = existing.clientId;
+  let clientName = clientNameInput;
+
+  if (hasContactPatch || body.clientId !== undefined || body.client !== undefined) {
+    const ensured = await ensureClientWithContact({
+      name: clientNameInput,
+      clientId:
+        body.clientId !== undefined
+          ? body.clientId
+            ? String(body.clientId)
+            : null
+          : existing.clientId,
+      body: body as Record<string, unknown>,
+      role: session!.role,
+      changedById: session!.sub,
+      changedByName: session!.name ?? session!.email,
+      sourceModule: "case-management",
+      sourceId: id,
+      requireComplete: Boolean(
+        body.phone !== undefined || body.country !== undefined || body.city !== undefined
+      ),
+    });
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.error }, { status: ensured.status });
     }
+    clientId = ensured.clientId;
+    clientName = ensured.clientName;
   }
 
   const updated = await prisma.case.update({
@@ -68,7 +149,23 @@ export async function PATCH(request: Request, { params }: Params) {
     role: session!.role,
   });
 
-  return NextResponse.json(updated);
+  const contact = clientId ? await findClientContactById(clientId) : null;
+  const mapped = mapRowWithClientContact(
+    {
+      id: updated.id,
+      caseNo: updated.caseNo,
+      client: updated.clientName,
+      type: updated.type,
+      court: updated.court,
+      status: updated.status,
+      nextDate: updated.nextDate ?? "—",
+      fees: updated.fees ?? "0",
+    },
+    contact,
+    session!.role
+  );
+
+  return NextResponse.json(mapped);
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
