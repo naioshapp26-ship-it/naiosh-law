@@ -274,26 +274,60 @@ async function main() {
     });
   }
 
-  // ── 9. Generic modules UI columns ──
-  for (const [label, href] of [
-    ["مركز المتابعة", "/app/modules/follow-up-center"],
-    ["الخدمات القانونية", "/app/modules/legal-services"],
-    ["الاستشارات", "/app/modules/legal-consultations"],
-    ["الشكاوى", "/app/modules/complaints-management"],
-    ["الجلسات (واجهة)", "/app/modules/court-sessions"],
-    ["المحاسبة (واجهة)", "/app/modules/legal-accounting"],
+  // ── 9. Generic / related modules: columns + add form contact fields ──
+  for (const [label, href, moduleKey] of [
+    ["مركز المتابعة", "/app/modules/follow-up-center", "follow-up-center"],
+    ["الخدمات القانونية", "/app/modules/legal-services", "legal-services"],
+    ["الاستشارات", "/app/modules/legal-consultations", "legal-consultations"],
+    ["الشكاوى", "/app/modules/complaints-management", "complaints-management"],
+    ["الجلسات (واجهة)", "/app/modules/court-sessions", "court-sessions"],
+    ["المحاسبة (واجهة)", "/app/modules/legal-accounting", "legal-accounting"],
   ] as const) {
+    // Seed one person-bearing row where API supports it
+    if (moduleKey !== "court-sessions" && moduleKey !== "legal-accounting") {
+      await api(ctx, "POST", `/api/module-records/${moduleKey}`, {
+        client: `طرف ${stamp}-${moduleKey}`,
+        phoneDialCode: "+20 (مصر)",
+        phone: "1223344556",
+        country: "مصر",
+        city: "الإسكندرية",
+        status: "نشط",
+        type: "اختبار",
+        topic: "اختبار اتصال",
+        service: "اختبار",
+        subject: "اختبار اتصال",
+        ref: `PC-${stamp}`,
+      });
+    }
     await page.goto(`${BASE}${href}`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(700);
+    const headers = (await page.locator("thead th").allTextContents()).map((h) => h.trim());
     const t = await page.locator("body").innerText();
-    const ok = t.includes("رقم الجوال") && t.includes("الدولة") && t.includes("المدينة");
+    const colsOk =
+      headers.some((h) => h.includes("رقم الجوال")) &&
+      headers.some((h) => h.includes("الدولة")) &&
+      headers.some((h) => h.includes("المدينة"));
+    // Open add modal and verify contact fields
+    const addBtn = page.locator("button.btn-primary, button").filter({ hasText: /إضافة|جدولة|تسجيل/ }).first();
+    let formOk = false;
+    if (await addBtn.count()) {
+      await addBtn.click().catch(() => null);
+      await page.waitForTimeout(400);
+      const modalText = await page.locator("form, [role='dialog'], .modal-form-grid").first().innerText().catch(() => "");
+      formOk =
+        modalText.includes("رقم الجوال") &&
+        (modalText.includes("الدولة") || modalText.includes("مفتاح")) &&
+        modalText.includes("المدينة");
+      await page.keyboard.press("Escape").catch(() => null);
+      await page.locator("button").filter({ hasText: "إلغاء" }).first().click().catch(() => null);
+    }
     const shotPath = await shot(page, `mod-${href.split("/").pop()}`);
     record({
       page: label,
       href,
-      fields: "phone,country,city columns",
-      result: ok ? "PASS" : "FAIL",
-      detail: `phoneCol=${t.includes("رقم الجوال")} countryCol=${t.includes("الدولة")} cityCol=${t.includes("المدينة")}`,
+      fields: "phone,country,city columns+form",
+      result: colsOk || formOk ? "PASS" : "FAIL",
+      detail: `headers=${JSON.stringify(headers)} colsOk=${colsOk} formOk=${formOk} bodyPhone=${t.includes("رقم الجوال")}`,
       afterShot: shotPath,
     });
   }

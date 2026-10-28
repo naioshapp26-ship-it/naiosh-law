@@ -668,28 +668,33 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               <div key={sec.id} className="card-white" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
                 {loadingData ? (
                   <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
-                ) : rows.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "3rem" }}>
-                    <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>
-                    <p style={{ color: "#64748b", marginBottom: "1rem" }}>لا توجد بيانات بعد</p>
-                    {allowCreate && (
-                      <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
-                        ＋ {config.addLabel}
-                      </button>
-                    )}
-                  </div>
                 ) : (
-                  <DataTable
-                    columns={visibleColumns}
-                    data={rows}
-                    pageSize={pageSize}
-                    onView={actions?.allowView === false ? undefined : setViewTarget}
-                    onEdit={allowEdit ? openEdit : undefined}
-                    onSupplement={allowEdit && !usingDemo ? setSupplementTarget : undefined}
-                    onArchive={allowArchive && !usingDemo ? setArchiveTarget : undefined}
-                    onDelete={allowDelete ? setDeleteTarget : undefined}
-                    searchPlaceholder={`بحث في ${config.entityName}ات...`}
-                  />
+                  <>
+                    {/* Always render column headers (incl. person-contact) even when empty */}
+                    <DataTable
+                      columns={visibleColumns}
+                      data={rows}
+                      pageSize={pageSize}
+                      onView={actions?.allowView === false || rows.length === 0 ? undefined : setViewTarget}
+                      onEdit={allowEdit && rows.length > 0 ? openEdit : undefined}
+                      onSupplement={allowEdit && !usingDemo && rows.length > 0 ? setSupplementTarget : undefined}
+                      onArchive={allowArchive && !usingDemo && rows.length > 0 ? setArchiveTarget : undefined}
+                      onDelete={allowDelete && rows.length > 0 ? setDeleteTarget : undefined}
+                      searchPlaceholder={`بحث في ${config.entityName}ات...`}
+                    />
+                    {rows.length === 0 && (
+                      <div style={{ textAlign: "center", padding: "1.5rem 1rem 0.5rem" }}>
+                        <p style={{ color: "#64748b", marginBottom: "0.75rem", fontSize: "0.9rem" }}>
+                          لا توجد بيانات بعد — الأعمدة جاهزة (بما فيها رقم الجوال والدولة والمدينة عند وجود شخص)
+                        </p>
+                        {allowCreate && (
+                          <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
+                            ＋ {config.addLabel}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             );
