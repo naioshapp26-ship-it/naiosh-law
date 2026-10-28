@@ -80,42 +80,58 @@ export function PortalShell({
 
   useEffect(() => {
     let cancelled = false;
+    const ac = new AbortController();
+    const timeout = window.setTimeout(() => ac.abort(), 12000);
+
     (async () => {
-      const me = await portalJson<{ user?: PortalUser }>("/api/auth/me");
-      if (cancelled) return;
-      if (!me.ok || !me.data?.user) {
-        const errMsg = !me.ok ? me.error : "انتهت صلاحية الجلسة";
-        setAuthError(errMsg);
-        setReady(true);
-        forcePortalLogin(errMsg);
-        return;
-      }
-      const u = me.data.user;
-      setUser(u);
-      if (u.role !== "client") {
-        setReady(true);
-        router.replace("/app/dashboard");
-        return;
-      }
       try {
-        const sRes = await portalJson<{ resolved?: { values?: PortalPageSettings } }>(
-          "/api/page-settings/client-portal"
-        );
-        if (sRes.ok) {
-          const values = (sRes.data.resolved?.values ?? {}) as PortalPageSettings;
-          const specialized = (values.specialized ?? {}) as PortalFlags;
-          if (!cancelled) {
+        const me = await portalJson<{ user?: PortalUser }>("/api/auth/me");
+        if (cancelled) return;
+        if (!me.ok || !me.data?.user) {
+          const errMsg = !me.ok ? me.error : "انتهت صلاحية الجلسة";
+          setAuthError(errMsg);
+          setReady(true);
+          forcePortalLogin(errMsg);
+          return;
+        }
+        const u = me.data.user;
+        setUser(u);
+        if (u.role !== "client") {
+          setReady(true);
+          router.replace("/app/dashboard");
+          return;
+        }
+        // Auth succeeded — unblock shell immediately (never wait forever on settings)
+        setReady(true);
+
+        try {
+          const sRes = await portalJson<{ resolved?: { values?: PortalPageSettings } }>(
+            "/api/page-settings/client-portal"
+          );
+          if (cancelled) return;
+          if (sRes.ok) {
+            const values = (sRes.data.resolved?.values ?? {}) as PortalPageSettings;
+            const specialized = (values.specialized ?? {}) as PortalFlags;
             setFlags(specialized);
             setPortalSettings(values);
           }
+        } catch {
+          /* defaults: all nav visible */
         }
       } catch {
-        /* defaults: all visible */
+        if (!cancelled) {
+          setAuthError("تعذر التحقق من الجلسة");
+          setReady(true);
+          forcePortalLogin("تعذر التحقق من الجلسة");
+        }
+      } finally {
+        window.clearTimeout(timeout);
       }
-      if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
+      ac.abort();
     };
   }, [router]);
 

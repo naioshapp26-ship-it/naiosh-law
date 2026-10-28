@@ -28,13 +28,32 @@ export function forcePortalLogin(message?: string) {
 }
 
 export async function portalFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const res = await fetch(input, {
-    ...init,
-    credentials: "include",
-    headers: {
-      ...(init?.headers || {}),
-    },
-  });
+  const controller = new AbortController();
+  const external = init?.signal;
+  const onAbort = () => controller.abort();
+  if (external) {
+    if (external.aborted) controller.abort();
+    else external.addEventListener("abort", onAbort, { once: true });
+  }
+  const timer = setTimeout(() => controller.abort(), 20000);
+  let res: Response;
+  try {
+    res = await fetch(input, {
+      ...init,
+      credentials: "include",
+      signal: controller.signal,
+      headers: {
+        ...(init?.headers || {}),
+      },
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    if (external) external.removeEventListener("abort", onAbort);
+    throw e;
+  }
+  clearTimeout(timer);
+  if (external) external.removeEventListener("abort", onAbort);
+
   if (res.status === 401) {
     let message = "انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجددًا";
     try {
