@@ -505,6 +505,8 @@ export function attachContactToRow<T extends Record<string, unknown>>(
     country: display.country,
     city: display.city,
     phoneDialCode: opts.canView ? display.phoneDialCode ?? "" : "",
+    phoneSecondary: opts.canView ? contact?.phoneSecondary ?? "" : "",
+    phoneSecondaryDialCode: opts.canView ? contact?.phoneSecondaryDialCode ?? "" : "",
     contactIncomplete: display.incomplete,
   };
 }
