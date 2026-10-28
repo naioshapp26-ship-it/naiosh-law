@@ -20,6 +20,8 @@ import {
   formatPhoneDisplay,
   UNSPECIFIED_CONTACT,
 } from "@/lib/person-contact";
+import { displayResolvedCase, NO_LINKED_CASE } from "@/lib/case-identity";
+import { resolveCaseById, resolveCaseRef } from "@/lib/case-identity-server";
 
 type Ctx = { params: Promise<{ moduleKey: string }> };
 
@@ -76,6 +78,41 @@ export async function GET(_request: Request, ctx: Ctx) {
     const flat = flattenRow(r.id, data, r.status);
     const name = personNameFromData(data);
     const clientId = typeof data.clientId === "string" ? data.clientId : null;
+
+    let caseEnrich: Record<string, unknown> = {};
+    if (typeof data.caseId === "string" && data.caseId) {
+      const linked = await resolveCaseById(data.caseId);
+      if (linked) {
+        caseEnrich = {
+          caseId: linked.id,
+          caseNo: linked.caseNo,
+          caseLinks: [linked],
+          caseLinkStatus: "linked",
+        };
+      } else {
+        caseEnrich = {
+          caseNo: `${displayResolvedCase({ status: "review", raw: String(data.caseNo ?? data.caseId) }).caseNo}`,
+          caseLinks: [],
+          caseLinkStatus: "review",
+        };
+      }
+    } else if (typeof data.caseNo === "string" && data.caseNo.trim()) {
+      const resolved = await resolveCaseRef(data.caseNo);
+      const disp = displayResolvedCase(resolved);
+      caseEnrich = {
+        caseNo: disp.caseNo,
+        caseId: disp.caseId ?? "",
+        caseLinks: disp.caseLinks,
+        caseLinkStatus: disp.caseLinkStatus,
+      };
+    } else {
+      caseEnrich = {
+        caseNo: NO_LINKED_CASE,
+        caseLinks: [],
+        caseLinkStatus: "none",
+      };
+    }
+
     if (name || clientId) {
       const contact = clientId
         ? await prisma.client.findUnique({
@@ -97,13 +134,17 @@ export async function GET(_request: Request, ctx: Ctx) {
           })
         : await findClientContactByName(name);
       if (contact) {
-        base.push(mapRowWithClientContact(flat, contact, canView ? role : null));
+        base.push({
+          ...mapRowWithClientContact(flat, contact, canView ? role : null),
+          ...caseEnrich,
+        });
         continue;
       }
     }
     // Prefer stored display fields; never invent values
     base.push({
       ...flat,
+      ...caseEnrich,
       phone:
         typeof data.phone === "string" && data.phone
           ? formatPhoneDisplay(
@@ -143,6 +184,26 @@ export async function POST(request: Request, ctx: Ctx) {
   void _id;
 
   let dataPayload: Record<string, unknown> = { ...rest };
+
+  // Canonical case link: prefer caseId, else exact caseNo match — never invent
+  if (body.caseId) {
+    const linked = await resolveCaseById(String(body.caseId));
+    if (!linked) {
+      return NextResponse.json({ error: "القضية غير موجودة في السجل المركزي" }, { status: 400 });
+    }
+    dataPayload.caseId = linked.id;
+    dataPayload.caseNo = linked.caseNo;
+  } else if (body.caseNo) {
+    const resolved = await resolveCaseRef(String(body.caseNo));
+    if (resolved.status === "linked") {
+      dataPayload.caseId = resolved.case.id;
+      dataPayload.caseNo = resolved.case.caseNo;
+    } else if (String(body.caseNo).trim()) {
+      // Keep raw for review — do not auto-link a wrong case
+      dataPayload.caseNo = String(body.caseNo).trim();
+      delete dataPayload.caseId;
+    }
+  }
 
   if (hasPersonFields(body)) {
     const name = personNameFromData(body);

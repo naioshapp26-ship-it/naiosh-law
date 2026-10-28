@@ -60,6 +60,9 @@ export async function GET() {
       {
         id: c.id,
         caseNo: c.caseNo,
+        caseId: c.id,
+        caseLinks: [{ id: c.id, caseNo: c.caseNo }],
+        caseLinkStatus: "linked",
         client: c.clientName,
         type: c.type,
         court: c.court,

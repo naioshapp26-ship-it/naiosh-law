@@ -272,7 +272,8 @@ const CASE_COLUMNS = [
 ];
 
 const CLIENT_COLUMNS = [
-  { value: "name", label: "الاسم" },
+  { value: "caseNo", label: "رقم القضية" },
+  { value: "name", label: "اسم الموكل" },
   { value: "type", label: "النوع" },
   { value: "phone", label: "رقم الجوال" },
   { value: "country", label: "الدولة" },
@@ -283,7 +284,7 @@ const CLIENT_COLUMNS = [
 ];
 
 const SESSION_COLUMNS = [
-  { value: "caseNo", label: "القضية" },
+  { value: "caseNo", label: "رقم القضية" },
   { value: "client", label: "الموكل" },
   { value: "phone", label: "رقم الجوال" },
   { value: "court", label: "المحكمة" },
@@ -296,6 +297,7 @@ const SESSION_COLUMNS = [
 ];
 
 const FINANCE_COLUMNS = [
+  { value: "caseNo", label: "رقم القضية" },
   { value: "ref", label: "المرجع" },
   { value: "client", label: "الموكل" },
   { value: "phone", label: "رقم الجوال" },
@@ -335,6 +337,7 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultSubtitle: "إدارة الملف القانوني بالكامل",
         columnOptions: CASE_COLUMNS,
         defaultVisibleColumns: CASE_COLUMNS.map((c) => c.value),
+        lockedVisibleColumns: ["caseNo"],
       }),
       fieldsTab({
         fieldOptions: [
@@ -376,10 +379,11 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultSubtitle: "بيانات العملاء والعقود والوثائق",
         columnOptions: CLIENT_COLUMNS,
         defaultVisibleColumns: CLIENT_COLUMNS.map((c) => c.value),
+        lockedVisibleColumns: ["caseNo"],
       }),
       fieldsTab({
         fieldOptions: [
-          ...CLIENT_COLUMNS,
+          ...CLIENT_COLUMNS.filter((c) => c.value !== "caseNo"),
           ...PERSON_CONTACT_SETTING_FIELDS.filter(
             (f) => !CLIENT_COLUMNS.some((c) => c.value === f.value)
           ),
@@ -443,6 +447,7 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultSubtitle: "الجلسات والتقويم والتذكيرات",
         columnOptions: SESSION_COLUMNS,
         defaultVisibleColumns: SESSION_COLUMNS.map((c) => c.value),
+        lockedVisibleColumns: ["caseNo"],
       }),
       fieldsTab({
         fieldOptions: [
@@ -507,6 +512,7 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultSubtitle: "رسوم وفواتير ومدفوعات وتقارير",
         columnOptions: FINANCE_COLUMNS,
         defaultVisibleColumns: FINANCE_COLUMNS.map((c) => c.value),
+        lockedVisibleColumns: ["caseNo"],
       }),
       fieldsTab({
         fieldOptions: [
@@ -515,8 +521,8 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
             (f) => !FINANCE_COLUMNS.some((c) => c.value === f.value)
           ),
         ],
-        defaultRequired: ["ref", "client", "phone", "country", "city", "amount", "status"],
-        lockedRequired: ["ref", "client", "phone", "country", "city", "amount", "status"],
+        defaultRequired: ["caseNo", "ref", "client", "phone", "country", "city", "amount", "status"],
+        lockedRequired: ["caseNo", "ref", "client", "phone", "country", "city", "amount", "status"],
       }),
       actionsTab({ allowDelete: false, allowCreate: true }),
       permissionsTab(),

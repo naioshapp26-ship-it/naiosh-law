@@ -10,6 +10,11 @@ import {
   reportsTab,
   workflowTab,
 } from "./defaults";
+import {
+  CASE_BEARING_MODULE_SLUGS,
+  CASE_NO_KEY,
+  CASE_PICKER_REQUIRED_SLUGS,
+} from "@/lib/case-identity";
 
 const STAFF_MANAGE = ["admin", "industrial_agent"] as const;
 
@@ -61,10 +66,17 @@ export function definitionFromModuleConfig(
 ): PageSettingsDefinition {
   const meta = modules.find((m) => m.slug === config.slug);
   const hasApi = Boolean(getModuleApiEndpoint(config.slug));
+  const caseBearing = CASE_BEARING_MODULE_SLUGS.has(config.slug);
   const cols = columnOptions(config);
   const fields = fieldOptions(config);
   const required = defaultRequired(config);
+  if (caseBearing && CASE_PICKER_REQUIRED_SLUGS.has(config.slug) && !required.includes(CASE_NO_KEY)) {
+    required.unshift(CASE_NO_KEY);
+  }
   const statuses = guessStatuses(config);
+  const lockedVisible = caseBearing ? [CASE_NO_KEY] : [];
+  const lockedRequired =
+    caseBearing && CASE_PICKER_REQUIRED_SLUGS.has(config.slug) ? [CASE_NO_KEY] : [];
 
   // administration uses RolesPermissionsPage (title/subtitle wired via usePageSettings)
   const operational =
@@ -91,10 +103,12 @@ export function definitionFromModuleConfig(
         defaultSubtitle: meta?.subtitle ?? "",
         columnOptions: cols,
         defaultVisibleColumns: cols.map((c) => c.value),
+        lockedVisibleColumns: lockedVisible,
       }),
       fieldsTab({
         fieldOptions: fields.length ? fields : [{ value: "name", label: "الاسم" }],
         defaultRequired: required.length ? required : fields.slice(0, 1).map((f) => f.value),
+        lockedRequired,
       }),
       actionsTab(),
       permissionsTab(),

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { StatusBadge } from "./status-badge";
 import { RowActions, standardRowActions } from "./row-actions";
 import type { Column } from "@/data/module-configs";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { CASE_LINK_REVIEW, NO_LINKED_CASE } from "@/lib/case-identity";
 
 type Props = {
   columns: Column[];
@@ -36,8 +38,13 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
 
   const filtered = data.filter((row) => {
     if (!search) return true;
-    return columns.some((c) =>
-      String(row[c.key] ?? "").toLowerCase().includes(search.toLowerCase())
+    const q = search.toLowerCase();
+    const links = Array.isArray(row.caseLinks)
+      ? (row.caseLinks as Array<{ caseNo?: string }>).map((l) => String(l.caseNo ?? "")).join(" ")
+      : "";
+    return (
+      columns.some((c) => String(row[c.key] ?? "").toLowerCase().includes(q)) ||
+      links.toLowerCase().includes(q)
     );
   });
 
@@ -74,6 +81,84 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
           {formatNumber(val)}
         </span>
       );
+    }
+    if (col.type === "case-links" || col.key === "caseNo") {
+      const linksRaw = row.caseLinks;
+      const links = Array.isArray(linksRaw)
+        ? (linksRaw as Array<{ id?: string; caseNo?: string }>).filter((l) => l?.caseNo)
+        : [];
+      const status = String(row.caseLinkStatus ?? "");
+      if (links.length > 0) {
+        return (
+          <span style={{ display: "inline-flex", flexWrap: "wrap", gap: "0.35rem", alignItems: "center" }}>
+            {links.map((l, i) => (
+              <span key={`${l.id ?? l.caseNo}-${i}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                {i > 0 && <span style={{ color: "#94a3b8" }}>·</span>}
+                {l.id ? (
+                  <Link
+                    href={`/app/modules/case-management?caseId=${encodeURIComponent(l.id)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      color: "#101D32",
+                      fontWeight: 700,
+                      textDecoration: "underline",
+                      textUnderlineOffset: 3,
+                      fontFamily: "var(--font-cairo)",
+                      fontSize: "0.85rem",
+                    }}
+                    title="فتح القضية"
+                  >
+                    {l.caseNo}
+                  </Link>
+                ) : (
+                  <span className="dt-cell-primary" style={{ fontWeight: 700 }}>
+                    {l.caseNo}
+                  </span>
+                )}
+              </span>
+            ))}
+          </span>
+        );
+      }
+      const text = String(val ?? NO_LINKED_CASE);
+      if (status === "review" || text.startsWith(CASE_LINK_REVIEW)) {
+        return (
+          <span
+            className="dt-cell-secondary"
+            style={{ color: "#92400e", fontWeight: 700, background: "#fffbeb", padding: "0.15rem 0.45rem", borderRadius: 6 }}
+            title="مرجع نصي قديم بلا تطابق مؤكد في سجل القضايا"
+          >
+            {text}
+          </span>
+        );
+      }
+      if (text === NO_LINKED_CASE || text === "—" || text === "") {
+        return (
+          <span className="dt-cell-secondary" style={{ color: "#94a3b8", fontStyle: "italic" }}>
+            {NO_LINKED_CASE}
+          </span>
+        );
+      }
+      const singleId = row.caseId ? String(row.caseId) : "";
+      if (singleId) {
+        return (
+          <Link
+            href={`/app/modules/case-management?caseId=${encodeURIComponent(singleId)}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              color: "#101D32",
+              fontWeight: 700,
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+              fontFamily: "var(--font-cairo)",
+              fontSize: "0.85rem",
+            }}
+          >
+            {text}
+          </Link>
+        );
+      }
+      return <span className="dt-cell-primary" style={{ fontWeight: 700 }}>{text}</span>;
     }
     const text = String(val ?? "—");
     const isContactCol = col.key === "phone" || col.key === "country" || col.key === "city";

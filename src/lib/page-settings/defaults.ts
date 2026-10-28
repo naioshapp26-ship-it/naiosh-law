@@ -16,7 +16,10 @@ export function displayTab(opts: {
   columnOptions: Array<{ value: string; label: string }>;
   defaultVisibleColumns: string[];
   defaultPageSize?: number;
+  /** Column keys that settings must never hide (e.g. caseNo) */
+  lockedVisibleColumns?: string[];
 }): SettingTabDef {
+  const lockedVisible = opts.lockedVisibleColumns ?? [];
   return {
     id: "display",
     label: "العرض والتصميم",
@@ -57,7 +60,8 @@ export function displayTab(opts: {
         label: "الأعمدة الظاهرة",
         type: "multi-select",
         options: opts.columnOptions,
-        defaultValue: opts.defaultVisibleColumns,
+        defaultValue: [...new Set([...lockedVisible, ...opts.defaultVisibleColumns])],
+        lockedValues: lockedVisible.length ? lockedVisible : undefined,
       }),
       field({
         key: "tableDensity",

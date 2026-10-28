@@ -4,18 +4,20 @@ import type { KpiCard } from "@/components/ui/stats-row";
 export type FormField = {
   key: string;
   label: string;
-  type: "text" | "select" | "date" | "number" | "textarea" | "email" | "tel" | "files";
+  type: "text" | "select" | "date" | "number" | "textarea" | "email" | "tel" | "files" | "case-select";
   options?: string[];
   required?: boolean;
   placeholder?: string;
   /** When set (e.g. city → country), options/hints cascade from the parent field */
   dependsOn?: string;
+  /** Display-only (e.g. caseNo on case edit) */
+  readOnly?: boolean;
 };
 
 export type Column = {
   key: string;
   label: string;
-  type?: "text" | "badge" | "currency" | "number";
+  type?: "text" | "badge" | "currency" | "number" | "case-links";
   sortable?: boolean;
   badgeMap?: Record<string, { label: string; color: BadgeColor }>;
 };
@@ -80,7 +82,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "إجمالي الرسوم",   value: "284k",delta: "+23% عن الشهر",   deltaPos: true,  icon: "💰", accent: "#f59e0b" },
     ],
     columns: [
-      { key: "caseNo",    label: "رقم القضية" },
+      { key: "caseNo",    label: "رقم القضية", type: "case-links" },
       { key: "client",    label: "الموكل" },
       { key: "phone",     label: "رقم الجوال" },
       { key: "type",      label: "النوع" },
@@ -109,6 +111,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { caseNo: "#2024-0125", client: "أميرة عمر الحسيني",      phone: "غير مسجل", type: "أحوال شخصية",      court: "محكمة الأسرة الجيزة",            country: "غير مسجل", city: "غير مسجل", status: "نشطة",  nextDate: "8 أغسطس 2026",  fees: "7500"   },
     ],
     formFields: [
+      { key: "caseNo",   label: "رقم القضية",  type: "text",   required: true, placeholder: "يُولَّد تلقائيًا إن تُرك فارغًا عند الإنشاء" },
       { key: "client",   label: "اسم الموكل",  type: "text",   required: true },
       { key: "phoneDialCode", label: "مفتاح الدولة", type: "select", required: true, options: ["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)","+961 (لبنان)","+964 (العراق)","+212 (المغرب)","+216 (تونس)","+213 (الجزائر)","+218 (ليبيا)","+249 (السودان)","+90 (تركيا)","+44 (المملكة المتحدة)","+1 (الولايات المتحدة)","+33 (فرنسا)","+49 (ألمانيا)"] },
       { key: "phone",    label: "رقم الجوال",  type: "tel",    required: true, placeholder: "5XXXXXXXX" },
@@ -140,7 +143,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "إجمالي الوكالات", value: "156", delta: "+8 هذا الشهر",   deltaPos: true, icon: "🤝", accent: "#f59e0b" },
     ],
     columns: [
-      { key: "id",      label: "#" },
+      { key: "caseNo",  label: "رقم القضية", type: "case-links" },
       { key: "name",    label: "اسم الموكل" },
       { key: "type",    label: "النوع" },
       { key: "phone",   label: "رقم الجوال" },
@@ -151,21 +154,21 @@ export const moduleConfigs: ModuleConfig[] = [
       { key: "since",   label: "منذ" },
     ],
     data: [
-      { id:1,  name:"أحمد محمد الصاوي",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:3,  status:"نشط",  since:"يناير 2023"  },
-      { id:2,  name:"شركة النيل للتجارة",      type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:7,  status:"نشط",  since:"مارس 2022"   },
-      { id:3,  name:"سارة إبراهيم المصري",     type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:2,  status:"نشط",  since:"يونيو 2023"  },
-      { id:4,  name:"مجموعة الدلتا الصناعية",  type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:5,  status:"نشط",  since:"سبتمبر 2021" },
-      { id:5,  name:"خالد عبد الرحمن عمر",    type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:1,  status:"نشط",  since:"أبريل 2024"  },
-      { id:6,  name:"هدى سامي الشافعي",        type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:4,  status:"نشط",  since:"نوفمبر 2022" },
-      { id:7,  name:"شركة الأهرام للإنشاءات", type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:9,  status:"نشط",  since:"يناير 2020"  },
-      { id:8,  name:"يوسف مصطفى حمدان",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:2,  status:"معلق", since:"فبراير 2024" },
-      { id:9,  name:"دينا كريم العزيزي",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:3,  status:"نشط",  since:"مايو 2023"   },
-      { id:10, name:"مؤسسة الشرق للتصدير",    type:"مؤسسة", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:6,  status:"نشط",  since:"أكتوبر 2021" },
-      { id:11, name:"محمد طارق السيد",         type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:1,  status:"نشط",  since:"يوليو 2024"  },
-      { id:12, name:"رانيا أحمد فرحات",        type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:2,  status:"نشط",  since:"مارس 2023"   },
-      { id:13, name:"شركة المعادي للاستثمار",  type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:12, status:"نشط",  since:"مايو 2019"   },
-      { id:14, name:"أميرة عمر الحسيني",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:1,  status:"نشط",  since:"يناير 2025"  },
-      { id:15, name:"علي حسن الجوهري",         type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:3,  status:"معلق", since:"سبتمبر 2023" },
+      { id:1,  caseNo:"لا توجد قضية مرتبطة", name:"أحمد محمد الصاوي",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:3,  status:"نشط",  since:"يناير 2023"  },
+      { id:2,  caseNo:"لا توجد قضية مرتبطة", name:"شركة النيل للتجارة",      type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:7,  status:"نشط",  since:"مارس 2022"   },
+      { id:3,  caseNo:"لا توجد قضية مرتبطة", name:"سارة إبراهيم المصري",     type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:2,  status:"نشط",  since:"يونيو 2023"  },
+      { id:4,  caseNo:"لا توجد قضية مرتبطة", name:"مجموعة الدلتا الصناعية",  type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:5,  status:"نشط",  since:"سبتمبر 2021" },
+      { id:5,  caseNo:"لا توجد قضية مرتبطة", name:"خالد عبد الرحمن عمر",    type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:1,  status:"نشط",  since:"أبريل 2024"  },
+      { id:6,  caseNo:"لا توجد قضية مرتبطة", name:"هدى سامي الشافعي",        type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:4,  status:"نشط",  since:"نوفمبر 2022" },
+      { id:7,  caseNo:"لا توجد قضية مرتبطة", name:"شركة الأهرام للإنشاءات", type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:9,  status:"نشط",  since:"يناير 2020"  },
+      { id:8,  caseNo:"لا توجد قضية مرتبطة", name:"يوسف مصطفى حمدان",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:2,  status:"معلق", since:"فبراير 2024" },
+      { id:9,  caseNo:"لا توجد قضية مرتبطة", name:"دينا كريم العزيزي",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:3,  status:"نشط",  since:"مايو 2023"   },
+      { id:10, caseNo:"لا توجد قضية مرتبطة", name:"مؤسسة الشرق للتصدير",    type:"مؤسسة", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:6,  status:"نشط",  since:"أكتوبر 2021" },
+      { id:11, caseNo:"لا توجد قضية مرتبطة", name:"محمد طارق السيد",         type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:1,  status:"نشط",  since:"يوليو 2024"  },
+      { id:12, caseNo:"لا توجد قضية مرتبطة", name:"رانيا أحمد فرحات",        type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:2,  status:"نشط",  since:"مارس 2023"   },
+      { id:13, caseNo:"لا توجد قضية مرتبطة", name:"شركة المعادي للاستثمار",  type:"شركة",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:12, status:"نشط",  since:"مايو 2019"   },
+      { id:14, caseNo:"لا توجد قضية مرتبطة", name:"أميرة عمر الحسيني",       type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:1,  status:"نشط",  since:"يناير 2025"  },
+      { id:15, caseNo:"لا توجد قضية مرتبطة", name:"علي حسن الجوهري",         type:"فرد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", cases:3,  status:"معلق", since:"سبتمبر 2023" },
     ],
     formFields: [
       { key:"name",    label:"الاسم الكامل",       type:"text",   required:true },
@@ -193,7 +196,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "قضايا محددة",      value: "89",  delta: "68 نشطة",             deltaPos: true,  icon: "⚖️", accent: "#101D32" },
     ],
     columns: [
-      { key: "caseNo",   label: "رقم القضية" },
+      { key: "caseNo",   label: "رقم القضية", type: "case-links" },
       { key: "client",   label: "الموكل" },
       { key: "phone",    label: "رقم الجوال" },
       { key: "court",    label: "المحكمة" },
@@ -219,7 +222,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { caseNo:"#2023-0890", client:"شركة المعادي للاستثمار",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", court:"محكمة الاستئناف القاهرة",     room:"الغرفة 9",   date:"12 يوليو 2026",  time:"10:00 ص", status:"منعقدة" },
     ],
     formFields: [
-      { key:"caseNo",  label:"رقم القضية",        type:"text",   required:true },
+      { key:"caseNo",  label:"رقم القضية",        type:"case-select", required:true },
       { key:"client",  label:"اسم الموكل",         type:"text",   required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
       { key:"phone",   label:"رقم الجوال",         type:"tel",    required:true, placeholder:"5XXXXXXXX" },
@@ -246,6 +249,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "مكتملة هذا الشهر",value: "37",  delta: "+15% عن الشهر",   deltaPos: true,  icon: "✅", accent: "#22c55e" },
     ],
     columns: [
+      { key:"caseNo",   label:"رقم القضية", type:"case-links" },
       { key:"ref",      label:"المرجع" },
       { key:"type",     label:"النوع" },
       { key:"client",   label:"الموكل" },
@@ -257,20 +261,21 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",   label:"الحالة",    type:"badge", badgeMap: { مكتمل:{label:"مكتمل",color:"green"}, جارٍ:{label:"جارٍ",color:"blue"}, معلق:{label:"معلق",color:"yellow"}, متأخر:{label:"متأخر",color:"red"} } },
     ],
     data: [
-      { ref:"FU-001", type:"متابعة حكم",     client:"أحمد محمد الصاوي",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"15 يوليو 2026", priority:"عاجل",  status:"جارٍ"  },
-      { ref:"FU-002", type:"متابعة سداد",    client:"شركة النيل للتجارة",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"20 يوليو 2026", priority:"عالٍ",  status:"معلق"  },
-      { ref:"FU-003", type:"متابعة إجراء",   client:"مجموعة الدلتا الصناعية",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"18 يوليو 2026", priority:"عاجل",  status:"جارٍ"  },
-      { ref:"FU-004", type:"متابعة أتعاب",   client:"شركة الأهرام للإنشاءات", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"25 يوليو 2026", priority:"متوسط", status:"معلق"  },
-      { ref:"FU-005", type:"متابعة سداد",    client:"يوسف مصطفى حمدان",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"10 يوليو 2026", priority:"عاجل",  status:"متأخر" },
-      { ref:"FU-006", type:"متابعة حكم",     client:"دينا كريم العزيزي",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"30 يوليو 2026", priority:"متوسط", status:"جارٍ"  },
-      { ref:"FU-007", type:"متابعة إجراء",   client:"شركة المعادي للاستثمار",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"5 أغسطس 2026",  priority:"منخفض", status:"معلق"  },
-      { ref:"FU-008", type:"متابعة أتعاب",   client:"سارة إبراهيم المصري",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"22 يوليو 2026", priority:"عالٍ",  status:"مكتمل" },
-      { ref:"FU-009", type:"متابعة سداد",    client:"خالد عبد الرحمن عمر",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"28 يوليو 2026", priority:"عالٍ",  status:"جارٍ"  },
-      { ref:"FU-010", type:"متابعة حكم",     client:"رانيا أحمد فرحات",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"1 أغسطس 2026",  priority:"متوسط", status:"مكتمل" },
-      { ref:"FU-011", type:"متابعة إجراء",   client:"محمد طارق السيد",         phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"3 أغسطس 2026",  priority:"منخفض", status:"معلق"  },
-      { ref:"FU-012", type:"متابعة أتعاب",   client:"مؤسسة الشرق للتصدير",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"8 أغسطس 2026",  priority:"عاجل",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-001", type:"متابعة حكم",     client:"أحمد محمد الصاوي",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"15 يوليو 2026", priority:"عاجل",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-002", type:"متابعة سداد",    client:"شركة النيل للتجارة",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"20 يوليو 2026", priority:"عالٍ",  status:"معلق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-003", type:"متابعة إجراء",   client:"مجموعة الدلتا الصناعية",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"18 يوليو 2026", priority:"عاجل",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-004", type:"متابعة أتعاب",   client:"شركة الأهرام للإنشاءات", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"25 يوليو 2026", priority:"متوسط", status:"معلق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-005", type:"متابعة سداد",    client:"يوسف مصطفى حمدان",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"10 يوليو 2026", priority:"عاجل",  status:"متأخر" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-006", type:"متابعة حكم",     client:"دينا كريم العزيزي",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"30 يوليو 2026", priority:"متوسط", status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-007", type:"متابعة إجراء",   client:"شركة المعادي للاستثمار",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"5 أغسطس 2026",  priority:"منخفض", status:"معلق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-008", type:"متابعة أتعاب",   client:"سارة إبراهيم المصري",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"22 يوليو 2026", priority:"عالٍ",  status:"مكتمل" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-009", type:"متابعة سداد",    client:"خالد عبد الرحمن عمر",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"28 يوليو 2026", priority:"عالٍ",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-010", type:"متابعة حكم",     client:"رانيا أحمد فرحات",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"1 أغسطس 2026",  priority:"متوسط", status:"مكتمل" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-011", type:"متابعة إجراء",   client:"محمد طارق السيد",         phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"3 أغسطس 2026",  priority:"منخفض", status:"معلق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"FU-012", type:"متابعة أتعاب",   client:"مؤسسة الشرق للتصدير",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", due:"8 أغسطس 2026",  priority:"عاجل",  status:"جارٍ"  },
     ],
     formFields: [
+      { key:"caseNo", label:"رقم القضية", type:"case-select", required:true },
       { key:"type",   label:"نوع المتابعة",   type:"select",   options:["متابعة حكم","متابعة إجراء","متابعة سداد","متابعة أتعاب"] },
       { key:"client", label:"الموكل",          type:"text",     required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
@@ -296,6 +301,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "فواتير غير مسددة",    value: "28",    delta: "8 متأخرة",         deltaPos: false, icon: "📄", accent: "#101D32"  },
     ],
     columns: [
+      { key:"caseNo",    label:"رقم القضية", type:"case-links" },
       { key:"invoiceNo", label:"رقم الفاتورة" },
       { key:"client",    label:"الموكل" },
       { key:"phone",     label:"رقم الجوال" },
@@ -308,20 +314,21 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",    label:"الحالة",   type:"badge", badgeMap: payStatusMap },
     ],
     data: [
-      { invoiceNo:"INV-2024-001", client:"شركة النيل للتجارة",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"45000",  paid:"45000",  issueDate:"1 يونيو 2024",  status:"مسدد"       },
-      { invoiceNo:"INV-2024-002", client:"أحمد محمد الصاوي",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"12000",  paid:"6000",   issueDate:"5 يونيو 2024",  status:"جزئي"       },
-      { invoiceNo:"INV-2024-003", client:"شركة الأهرام للإنشاءات", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"95000",  paid:"0",      issueDate:"10 يونيو 2024", status:"غير مسدد"   },
-      { invoiceNo:"INV-2024-004", client:"مجموعة الدلتا الصناعية", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم تحكيم",       amount:"38000",  paid:"38000",  issueDate:"15 يونيو 2024", status:"مسدد"       },
-      { invoiceNo:"INV-2024-005", client:"دينا كريم العزيزي",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"32000",  paid:"16000",  issueDate:"20 يونيو 2024", status:"جزئي"       },
-      { invoiceNo:"INV-2024-006", client:"مؤسسة الشرق للتصدير",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"18000",  paid:"18000",  issueDate:"25 يونيو 2024", status:"مسدد"       },
-      { invoiceNo:"INV-2024-007", client:"محمد طارق السيد",         phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"68000",  paid:"0",      issueDate:"1 يوليو 2024",  status:"غير مسدد"   },
-      { invoiceNo:"INV-2024-008", client:"شركة المعادي للاستثمار",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم سنوية",       amount:"120000", paid:"60000",  issueDate:"5 يوليو 2024",  status:"جزئي"       },
-      { invoiceNo:"INV-2024-009", client:"سارة إبراهيم المصري",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"9500",   paid:"9500",   issueDate:"8 يوليو 2024",  status:"مسدد"       },
-      { invoiceNo:"INV-2024-010", client:"رانيا أحمد فرحات",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"5500",   paid:"5500",   issueDate:"10 يوليو 2024", status:"مسدد"       },
-      { invoiceNo:"INV-2024-011", client:"خالد عبد الرحمن عمر",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"55000",  paid:"0",      issueDate:"12 يوليو 2024", status:"غير مسدد"   },
-      { invoiceNo:"INV-2024-012", client:"أميرة عمر الحسيني",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"4500",   paid:"4500",   issueDate:"15 يوليو 2024", status:"مسدد"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-001", client:"شركة النيل للتجارة",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"45000",  paid:"45000",  issueDate:"1 يونيو 2024",  status:"مسدد"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-002", client:"أحمد محمد الصاوي",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"12000",  paid:"6000",   issueDate:"5 يونيو 2024",  status:"جزئي"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-003", client:"شركة الأهرام للإنشاءات", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"95000",  paid:"0",      issueDate:"10 يونيو 2024", status:"غير مسدد"   },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-004", client:"مجموعة الدلتا الصناعية", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم تحكيم",       amount:"38000",  paid:"38000",  issueDate:"15 يونيو 2024", status:"مسدد"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-005", client:"دينا كريم العزيزي",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"32000",  paid:"16000",  issueDate:"20 يونيو 2024", status:"جزئي"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-006", client:"مؤسسة الشرق للتصدير",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"18000",  paid:"18000",  issueDate:"25 يونيو 2024", status:"مسدد"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-007", client:"محمد طارق السيد",         phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"68000",  paid:"0",      issueDate:"1 يوليو 2024",  status:"غير مسدد"   },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-008", client:"شركة المعادي للاستثمار",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم سنوية",       amount:"120000", paid:"60000",  issueDate:"5 يوليو 2024",  status:"جزئي"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-009", client:"سارة إبراهيم المصري",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"9500",   paid:"9500",   issueDate:"8 يوليو 2024",  status:"مسدد"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-010", client:"رانيا أحمد فرحات",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"5500",   paid:"5500",   issueDate:"10 يوليو 2024", status:"مسدد"       },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-011", client:"خالد عبد الرحمن عمر",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم قضية",        amount:"55000",  paid:"0",      issueDate:"12 يوليو 2024", status:"غير مسدد"   },
+      { caseNo:"لا توجد قضية مرتبطة", invoiceNo:"INV-2024-012", client:"أميرة عمر الحسيني",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", type:"رسوم استشارة",     amount:"4500",   paid:"4500",   issueDate:"15 يوليو 2024", status:"مسدد"       },
     ],
     formFields: [
+      { key:"caseNo",    label:"رقم القضية",       type:"case-select", required:true },
       { key:"client",    label:"الموكل",           type:"text",   required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
       { key:"phone",     label:"رقم الجوال",       type:"tel",    required:true, placeholder:"5XXXXXXXX" },
@@ -349,6 +356,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "متوسط وقت التنفيذ",value: "3.2", delta: "أيام",           deltaPos: true,  icon: "⏱️", accent: "#f59e0b" },
     ],
     columns: [
+      { key:"caseNo",    label:"رقم القضية", type:"case-links" },
       { key:"ref",       label:"المرجع" },
       { key:"service",   label:"الخدمة" },
       { key:"client",    label:"الموكل" },
@@ -361,16 +369,17 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",    label:"الحالة",   type:"badge", badgeMap: { منجز:{label:"منجز",color:"green"}, جارٍ:{label:"جارٍ",color:"blue"}, معلق:{label:"معلق",color:"yellow"}, ملغى:{label:"ملغى",color:"red"} } },
     ],
     data: [
-      { ref:"SRV-001", service:"صياغة عقد بيع",          client:"شركة النيل",            phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. سامي علي",     requested:"2 يوليو 2026",  priority:"عالٍ",  status:"منجز"  },
-      { ref:"SRV-002", service:"مراجعة عقد إيجار",       client:"أحمد الصاوي",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. منى محمد",     requested:"3 يوليو 2026",  priority:"متوسط", status:"جارٍ"  },
-      { ref:"SRV-003", service:"إعداد توكيل رسمي",       client:"دينا العزيزي",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. كريم أحمد",    requested:"4 يوليو 2026",  priority:"عاجل",  status:"منجز"  },
-      { ref:"SRV-004", service:"استشارة قانونية مكتوبة", client:"شركة الأهرام",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. هدى إبراهيم",  requested:"5 يوليو 2026",  priority:"عالٍ",  status:"جارٍ"  },
-      { ref:"SRV-005", service:"صياغة مذكرة دفاعية",    client:"خالد عبد الرحمن",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. يوسف طارق",    requested:"6 يوليو 2026",  priority:"عاجل",  status:"جارٍ"  },
-      { ref:"SRV-006", service:"مراجعة عقد شراكة",      client:"مجموعة الدلتا",          phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. سامي علي",     requested:"6 يوليو 2026",  priority:"متوسط", status:"معلق"  },
-      { ref:"SRV-007", service:"إعداد عقد عمل",          client:"شركة المعادي",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. رانيا فرحات",  requested:"7 يوليو 2026",  priority:"منخفض", status:"معلق"  },
-      { ref:"SRV-008", service:"بحث قانوني",              client:"مؤسسة الشرق",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. طارق عمر",     requested:"7 يوليو 2026",  priority:"متوسط", status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-001", service:"صياغة عقد بيع",          client:"شركة النيل",            phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. سامي علي",     requested:"2 يوليو 2026",  priority:"عالٍ",  status:"منجز"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-002", service:"مراجعة عقد إيجار",       client:"أحمد الصاوي",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. منى محمد",     requested:"3 يوليو 2026",  priority:"متوسط", status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-003", service:"إعداد توكيل رسمي",       client:"دينا العزيزي",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. كريم أحمد",    requested:"4 يوليو 2026",  priority:"عاجل",  status:"منجز"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-004", service:"استشارة قانونية مكتوبة", client:"شركة الأهرام",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. هدى إبراهيم",  requested:"5 يوليو 2026",  priority:"عالٍ",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-005", service:"صياغة مذكرة دفاعية",    client:"خالد عبد الرحمن",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. يوسف طارق",    requested:"6 يوليو 2026",  priority:"عاجل",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-006", service:"مراجعة عقد شراكة",      client:"مجموعة الدلتا",          phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. سامي علي",     requested:"6 يوليو 2026",  priority:"متوسط", status:"معلق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-007", service:"إعداد عقد عمل",          client:"شركة المعادي",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. رانيا فرحات",  requested:"7 يوليو 2026",  priority:"منخفض", status:"معلق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"SRV-008", service:"بحث قانوني",              client:"مؤسسة الشرق",           phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", assignedTo:"م. طارق عمر",     requested:"7 يوليو 2026",  priority:"متوسط", status:"جارٍ"  },
     ],
     formFields: [
+      { key:"caseNo",    label:"رقم القضية",   type:"case-select", required:true },
       { key:"service",   label:"نوع الخدمة",    type:"select", options:["صياغة عقد","مراجعة عقد","إعداد توكيل","استشارة مكتوبة","صياغة مذكرة","بحث قانوني","ترجمة قانونية","تسجيل حقوق ملكية"] },
       { key:"client",    label:"الموكل",         type:"text",   required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
@@ -397,6 +406,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "عملاء جدد",          value: "11",  delta: "من الاستشارات",         deltaPos: true, icon: "👤", accent: "#8b5cf6" },
     ],
     columns: [
+      { key:"caseNo",     label:"رقم القضية", type:"case-links" },
       { key:"ref",        label:"المرجع" },
       { key:"client",     label:"العميل" },
       { key:"phone",      label:"رقم الجوال" },
@@ -409,16 +419,17 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",     label:"الحالة", type:"badge", badgeMap: { مكتملة:{label:"مكتملة",color:"green"}, مجدولة:{label:"مجدولة",color:"blue"}, ملغاة:{label:"ملغاة",color:"red"} } },
     ],
     data: [
-      { ref:"CON-001", client:"أحمد الصاوي",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"نزاع عقاري",           lawyer:"م. سامي علي",    date:"1 يوليو 2026",  duration:"45 دقيقة", status:"مكتملة" },
-      { ref:"CON-002", client:"شركة النيل",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"عقود التوريد",         lawyer:"م. منى محمد",    date:"2 يوليو 2026",  duration:"60 دقيقة", status:"مكتملة" },
-      { ref:"CON-003", client:"دينا العزيزي",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"حقوق الملكية الفكرية", lawyer:"م. كريم أحمد",   date:"3 يوليو 2026",  duration:"30 دقيقة", status:"مكتملة" },
-      { ref:"CON-004", client:"خالد عمر",          phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"قانون العمل",          lawyer:"م. هدى إبراهيم", date:"5 يوليو 2026",  duration:"50 دقيقة", status:"مكتملة" },
-      { ref:"CON-005", client:"رانيا فرحات",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"الإفلاس التجاري",      lawyer:"م. يوسف طارق",   date:"8 يوليو 2026",  duration:"90 دقيقة", status:"مكتملة" },
-      { ref:"CON-006", client:"محمد طارق",         phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"نزاع عائلي",           lawyer:"م. سامي علي",    date:"10 يوليو 2026", duration:"45 دقيقة", status:"مجدولة" },
-      { ref:"CON-007", client:"شركة المعادي",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"عقود الشراكة",         lawyer:"م. منى محمد",    date:"12 يوليو 2026", duration:"60 دقيقة", status:"مجدولة" },
-      { ref:"CON-008", client:"أميرة الحسيني",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"أحوال شخصية",          lawyer:"م. كريم أحمد",   date:"15 يوليو 2026", duration:"30 دقيقة", status:"مجدولة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-001", client:"أحمد الصاوي",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"نزاع عقاري",           lawyer:"م. سامي علي",    date:"1 يوليو 2026",  duration:"45 دقيقة", status:"مكتملة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-002", client:"شركة النيل",        phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"عقود التوريد",         lawyer:"م. منى محمد",    date:"2 يوليو 2026",  duration:"60 دقيقة", status:"مكتملة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-003", client:"دينا العزيزي",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"حقوق الملكية الفكرية", lawyer:"م. كريم أحمد",   date:"3 يوليو 2026",  duration:"30 دقيقة", status:"مكتملة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-004", client:"خالد عمر",          phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"قانون العمل",          lawyer:"م. هدى إبراهيم", date:"5 يوليو 2026",  duration:"50 دقيقة", status:"مكتملة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-005", client:"رانيا فرحات",       phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"الإفلاس التجاري",      lawyer:"م. يوسف طارق",   date:"8 يوليو 2026",  duration:"90 دقيقة", status:"مكتملة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-006", client:"محمد طارق",         phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"نزاع عائلي",           lawyer:"م. سامي علي",    date:"10 يوليو 2026", duration:"45 دقيقة", status:"مجدولة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-007", client:"شركة المعادي",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"عقود الشراكة",         lawyer:"م. منى محمد",    date:"12 يوليو 2026", duration:"60 دقيقة", status:"مجدولة" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CON-008", client:"أميرة الحسيني",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", topic:"أحوال شخصية",          lawyer:"م. كريم أحمد",   date:"15 يوليو 2026", duration:"30 دقيقة", status:"مجدولة" },
     ],
     formFields: [
+      { key:"caseNo",   label:"رقم القضية",          type:"case-select", required:false },
       { key:"client",   label:"اسم العميل",          type:"text",   required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
       { key:"phone",    label:"رقم الجوال",          type:"tel",    required:true, placeholder:"5XXXXXXXX" },
@@ -445,6 +456,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "طلبات متأخرة",   value: "4",   delta: "تتجاوز المدة",     deltaPos: false, icon: "⏰", accent: "#f59e0b" },
     ],
     columns: [
+      { key:"caseNo",    label:"رقم القضية", type:"case-links" },
       { key:"ref",       label:"المرجع" },
       { key:"title",     label:"الطلب" },
       { key:"requester", label:"مقدم الطلب" },
@@ -457,16 +469,17 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",    label:"الحالة",   type:"badge", badgeMap: { منجز:{label:"منجز",color:"green"}, جارٍ:{label:"جارٍ",color:"blue"}, مفتوح:{label:"مفتوح",color:"yellow"}, متأخر:{label:"متأخر",color:"red"} } },
     ],
     data: [
-      { ref:"IR-001", title:"طلب إذن إجازة",         requester:"م. سامي علي",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"القضايا",     date:"1 يوليو 2026", priority:"منخفض", status:"منجز"  },
-      { ref:"IR-002", title:"طلب معدات مكتبية",      requester:"م. منى محمد",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"الاستشارات",  date:"2 يوليو 2026", priority:"متوسط", status:"جارٍ"  },
-      { ref:"IR-003", title:"طلب وصول نظام",         requester:"م. كريم أحمد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"IT",          date:"3 يوليو 2026", priority:"عالٍ",  status:"مفتوح" },
-      { ref:"IR-004", title:"طلب تدريب قانوني",      requester:"م. هدى إبراهيم",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"القضايا",     date:"4 يوليو 2026", priority:"متوسط", status:"جارٍ"  },
-      { ref:"IR-005", title:"طلب صرف مصروفات",      requester:"م. يوسف طارق",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"المالية",     date:"5 يوليو 2026", priority:"عاجل",  status:"منجز"  },
-      { ref:"IR-006", title:"طلب مراجعة عقد موظف",  requester:"م. رانيا فرحات",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"HR",          date:"6 يوليو 2026", priority:"عالٍ",  status:"متأخر" },
-      { ref:"IR-007", title:"طلب طباعة مستندات",    requester:"م. طارق عمر",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"الأرشيف",     date:"7 يوليو 2026", priority:"منخفض", status:"منجز"  },
-      { ref:"IR-008", title:"طلب تحديث بيانات موكل",requester:"م. سامي علي",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"القضايا",     date:"7 يوليو 2026", priority:"عاجل",  status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-001", title:"طلب إذن إجازة",         requester:"م. سامي علي",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"القضايا",     date:"1 يوليو 2026", priority:"منخفض", status:"منجز"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-002", title:"طلب معدات مكتبية",      requester:"م. منى محمد",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"الاستشارات",  date:"2 يوليو 2026", priority:"متوسط", status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-003", title:"طلب وصول نظام",         requester:"م. كريم أحمد",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"IT",          date:"3 يوليو 2026", priority:"عالٍ",  status:"مفتوح" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-004", title:"طلب تدريب قانوني",      requester:"م. هدى إبراهيم",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"القضايا",     date:"4 يوليو 2026", priority:"متوسط", status:"جارٍ"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-005", title:"طلب صرف مصروفات",      requester:"م. يوسف طارق",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"المالية",     date:"5 يوليو 2026", priority:"عاجل",  status:"منجز"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-006", title:"طلب مراجعة عقد موظف",  requester:"م. رانيا فرحات",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"HR",          date:"6 يوليو 2026", priority:"عالٍ",  status:"متأخر" },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-007", title:"طلب طباعة مستندات",    requester:"م. طارق عمر",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"الأرشيف",     date:"7 يوليو 2026", priority:"منخفض", status:"منجز"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"IR-008", title:"طلب تحديث بيانات موكل",requester:"م. سامي علي",     phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", dept:"القضايا",     date:"7 يوليو 2026", priority:"عاجل",  status:"جارٍ"  },
     ],
     formFields: [
+      { key:"caseNo",    label:"رقم القضية",     type:"case-select", required:false },
       { key:"title",     label:"موضوع الطلب",    type:"text",   required:true },
       { key:"requester", label:"مقدم الطلب",    type:"text",   required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
@@ -492,6 +505,7 @@ export const moduleConfigs: ModuleConfig[] = [
       { label: "رضا العملاء",   value: "94%", delta: "+2% عن الربع السابق",deltaPos: true, icon: "😊", accent: "#8b5cf6" },
     ],
     columns: [
+      { key:"caseNo",  label:"رقم القضية", type:"case-links" },
       { key:"ref",     label:"المرجع" },
       { key:"client",  label:"العميل" },
       { key:"phone",   label:"رقم الجوال" },
@@ -504,15 +518,16 @@ export const moduleConfigs: ModuleConfig[] = [
       { key:"status",  label:"الحالة",   type:"badge", badgeMap: { مغلق:{label:"مغلق",color:"green"}, تحقيق:{label:"تحقيق",color:"blue"}, مفتوح:{label:"مفتوح",color:"yellow"}, مرفوض:{label:"مرفوض",color:"red"} } },
     ],
     data: [
-      { ref:"CMP-001", client:"سارة المصري",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"تأخر في تقديم الاعتراض",   date:"1 يوليو 2026", category:"تأخير",       priority:"عالٍ",  status:"مفتوح"  },
-      { ref:"CMP-002", client:"أحمد الصاوي",   phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"عدم التواصل من الفريق",     date:"2 يوليو 2026", category:"تواصل",       priority:"متوسط", status:"تحقيق"  },
-      { ref:"CMP-003", client:"شركة الدلتا",   phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"خطأ في تفاصيل العقد",       date:"3 يوليو 2026", category:"وثائق",       priority:"عاجل",  status:"مفتوح"  },
-      { ref:"CMP-004", client:"خالد عمر",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"رسوم إضافية غير مبررة",     date:"28 يونيو 2026",category:"مالي",        priority:"عالٍ",  status:"تحقيق"  },
-      { ref:"CMP-005", client:"رانيا فرحات",   phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"عدم الاستجابة للاستشارة",  date:"25 يونيو 2026",category:"تواصل",       priority:"متوسط", status:"مغلق"   },
-      { ref:"CMP-006", client:"شركة المعادي",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"اختلاف في استراتيجية الدفاع",date:"20 يونيو 2026",category:"قانوني",     priority:"عاجل",  status:"مغلق"   },
-      { ref:"CMP-007", client:"أميرة الحسيني", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"تأخر في إعداد المستندات",   date:"15 يونيو 2026",category:"تأخير",       priority:"عالٍ",  status:"مغلق"   },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-001", client:"سارة المصري",    phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"تأخر في تقديم الاعتراض",   date:"1 يوليو 2026", category:"تأخير",       priority:"عالٍ",  status:"مفتوح"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-002", client:"أحمد الصاوي",   phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"عدم التواصل من الفريق",     date:"2 يوليو 2026", category:"تواصل",       priority:"متوسط", status:"تحقيق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-003", client:"شركة الدلتا",   phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"خطأ في تفاصيل العقد",       date:"3 يوليو 2026", category:"وثائق",       priority:"عاجل",  status:"مفتوح"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-004", client:"خالد عمر",      phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"رسوم إضافية غير مبررة",     date:"28 يونيو 2026",category:"مالي",        priority:"عالٍ",  status:"تحقيق"  },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-005", client:"رانيا فرحات",   phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"عدم الاستجابة للاستشارة",  date:"25 يونيو 2026",category:"تواصل",       priority:"متوسط", status:"مغلق"   },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-006", client:"شركة المعادي",  phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"اختلاف في استراتيجية الدفاع",date:"20 يونيو 2026",category:"قانوني",     priority:"عاجل",  status:"مغلق"   },
+      { caseNo:"لا توجد قضية مرتبطة", ref:"CMP-007", client:"أميرة الحسيني", phone:"غير مسجل", country:"غير مسجل", city:"غير مسجل", subject:"تأخر في إعداد المستندات",   date:"15 يونيو 2026",category:"تأخير",       priority:"عالٍ",  status:"مغلق"   },
     ],
     formFields: [
+      { key:"caseNo",  label:"رقم القضية",      type:"case-select", required:true },
       { key:"client",  label:"اسم العميل",      type:"text",   required:true },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)"] },
       { key:"phone",   label:"رقم الجوال",      type:"tel",    required:true, placeholder:"5XXXXXXXX" },

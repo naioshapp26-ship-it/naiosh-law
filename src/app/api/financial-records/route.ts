@@ -15,6 +15,8 @@ import {
   type ClientContactRow,
 } from "@/lib/person-contact-server";
 import { canViewPersonContact } from "@/lib/person-contact";
+import { displayResolvedCase } from "@/lib/case-identity";
+import { resolveCaseById, resolveCaseRef } from "@/lib/case-identity-server";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -58,6 +60,8 @@ export async function GET() {
       }
       contact = nameCache.get(r.clientName) ?? null;
     }
+    const resolved = await resolveCaseRef(r.caseRef);
+    const caseDisplay = displayResolvedCase(resolved);
     base.push(
       mapRowWithClientContact(
         {
@@ -71,6 +75,11 @@ export async function GET() {
           issueDate: r.issueDate,
           date: r.issueDate,
           status: r.status,
+          caseRef: r.caseRef ?? "",
+          caseNo: caseDisplay.caseNo,
+          caseId: caseDisplay.caseId ?? "",
+          caseLinks: caseDisplay.caseLinks,
+          caseLinkStatus: caseDisplay.caseLinkStatus,
         },
         contact,
         canView ? role : null
@@ -111,6 +120,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: ensured.error }, { status: ensured.status });
   }
 
+  let caseRef: string | null = null;
+  if (body.caseId) {
+    const linked = await resolveCaseById(String(body.caseId));
+    if (!linked) {
+      return NextResponse.json({ error: "القضية غير موجودة في السجل المركزي" }, { status: 400 });
+    }
+    caseRef = linked.caseNo;
+  } else if (body.caseNo || body.caseRef) {
+    const resolved = await resolveCaseRef(String(body.caseNo ?? body.caseRef));
+    if (resolved.status !== "linked") {
+      return NextResponse.json(
+        { error: "يجب اختيار قضية حقيقية من السجل المركزي لرقم القضية" },
+        { status: 400 }
+      );
+    }
+    caseRef = resolved.case.caseNo;
+  } else {
+    return NextResponse.json(
+      { error: "رقم القضية إلزامي — اختر قضية من السجل المركزي" },
+      { status: 400 }
+    );
+  }
+
   const created = await prisma.financialRecord.create({
     data: {
       invoiceNo,
@@ -123,7 +155,7 @@ export async function POST(request: Request) {
       dueDate: body.dueDate ? String(body.dueDate) : null,
       status: String(body.status ?? "غير مسدد"),
       paymentMethod: body.paymentMethod as PaymentMethod | undefined,
-      caseRef: body.caseRef ? String(body.caseRef) : null,
+      caseRef,
       notes: body.notes ? String(body.notes) : null,
       isDemo: false,
     },

@@ -166,7 +166,7 @@ export function validateAndNormalizeValues(
     }
   }
 
-  // Central person-contact rule: never hide phone/country/city via settings
+  // Central person-contact + caseNo rule: never hide locked chips via settings
   {
     const chipLocks = new Set<string>(PERSON_CONTACT_LOCKED_SETTING_KEYS);
     for (const tab of def.tabs) {
@@ -198,6 +198,23 @@ export function validateAndNormalizeValues(
           fieldsObj.hiddenOptionalFields as string[]
         ).filter((x) => typeof x === "string" && !chipLocks.has(x));
       }
+    }
+    const displayObj = isPlainObject(merged.display)
+      ? (merged.display as Record<string, unknown>)
+      : null;
+    if (displayObj && Array.isArray(displayObj.visibleColumns)) {
+      const cols = (displayObj.visibleColumns as string[]).filter(
+        (x) => typeof x === "string"
+      );
+      const visibleDef = collectFields(pageKey).find(
+        (f) => f.path === "display.visibleColumns"
+      );
+      const lockedVisible = visibleDef?.lockedValues ?? [];
+      const allowedCols = new Set((visibleDef?.options ?? []).map((o) => o.value));
+      const mustKeepCols = lockedVisible.filter(
+        (k) => allowedCols.size === 0 || allowedCols.has(k)
+      );
+      displayObj.visibleColumns = [...new Set([...mustKeepCols, ...cols])];
     }
   }
 

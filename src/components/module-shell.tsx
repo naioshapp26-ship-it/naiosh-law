@@ -22,6 +22,13 @@ import {
   PERSON_CONTACT_VIEW_FIELDS,
   UNSPECIFIED_CONTACT,
 } from "@/lib/person-contact";
+import {
+  CASE_BEARING_MODULE_SLUGS,
+  CASE_NO_KEY,
+  CASE_PICKER_REQUIRED_SLUGS,
+  ensureCaseNoOnColumns,
+  ensureCaseNoOnFormFields,
+} from "@/lib/case-identity";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
@@ -276,6 +283,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     const customDefs = recordCustomDefs;
     /** Permanent person-contact rule: never drop required contact columns from person tables */
     const CONTACT_KEYS = new Set<string>(PERSON_CONTACT_COLUMN_KEYS);
+    const caseBearing = CASE_BEARING_MODULE_SLUGS.has(config.slug);
     const rawCols =
       !keys || keys.length === 0
         ? config.columns
@@ -285,11 +293,13 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               if (CONTACT_KEYS.has(c.key)) set.add(c.key);
             }
             for (const k of CONTACT_KEYS) set.add(k);
+            // Permanent case-number rule: never drop caseNo from case-bearing tables
+            if (caseBearing) set.add(CASE_NO_KEY);
             // Preserve config column order (mandatory RTL order for cases)
             const filtered = config.columns.filter((c) => set.has(c.key));
             return filtered.length > 0 ? filtered : config.columns;
           })();
-    const baseCols = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
+    let baseCols = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
       ? ensurePersonContactOnColumns(rawCols, {
           force: config.slug === "clients-management" || config.slug === "administration",
           nameKeys:
@@ -298,6 +308,9 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               : ["client", "clientName", "requester", "name"],
         })
       : rawCols;
+    if (caseBearing) {
+      baseCols = ensureCaseNoOnColumns(baseCols);
+    }
     const customCols = customDefs.map((f) => ({
       key: f.key,
       label: f.label,
@@ -320,6 +333,11 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     ]) {
       hidden.delete(k);
     }
+    // Permanent case-number rule: never hide caseNo on case-bearing forms
+    if (CASE_BEARING_MODULE_SLUGS.has(config.slug)) {
+      hidden.delete(CASE_NO_KEY);
+      hidden.delete("caseId");
+    }
     const workflowStatuses = pageSettings?.workflow?.statuses;
     const base = config.formFields
       .filter((f) => !hidden.has(f.key))
@@ -330,7 +348,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         return f;
       });
     // Inject missing contact fields only on person-bearing modules
-    const withContact = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
+    let withContact = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
       ? ensurePersonContactOnFormFields(base, {
           required: true,
           force: config.slug === "clients-management" || config.slug === "administration",
@@ -340,10 +358,30 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               : ["client", "clientName", "requester", "name"],
         })
       : base;
+    // Clients: case numbers are table-display only (client may exist without a case)
+    if (
+      CASE_BEARING_MODULE_SLUGS.has(config.slug) &&
+      config.slug !== "clients-management" &&
+      config.slug !== "case-management"
+    ) {
+      withContact = ensureCaseNoOnFormFields(withContact, {
+        required: CASE_PICKER_REQUIRED_SLUGS.has(config.slug),
+      });
+    } else if (config.slug === "case-management") {
+      withContact = ensureCaseNoOnFormFields(withContact, {
+        required: true,
+        readOnly: false,
+      }).map((f) =>
+        f.key === CASE_NO_KEY ? { ...f, type: "text" as const, required: true } : f
+      );
+    }
     const settingsRequired = new Set(pageSettings?.fields?.requiredFields ?? []);
     // Central lock: phone / dial / country / city stay required on person forms
     for (const k of ["phone", "phoneDialCode", "country", "city"] as const) {
       settingsRequired.add(k);
+    }
+    if (CASE_PICKER_REQUIRED_SLUGS.has(config.slug) || config.slug === "case-management") {
+      settingsRequired.add(CASE_NO_KEY);
     }
     const withRequired = withContact.map((f) =>
       settingsRequired.has(f.key) ? { ...f, required: true } : f
@@ -586,9 +624,19 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     const shown = new Set(config.columns.map((c) => c.key));
     const contactExtras = PERSON_CONTACT_VIEW_FIELDS.filter((f) => !shown.has(f.key));
     const displayVal = (key: string) => {
+      if (key === CASE_NO_KEY) {
+        const links = Array.isArray(viewTarget.caseLinks)
+          ? (viewTarget.caseLinks as Array<{ caseNo?: string }>)
+              .map((l) => l.caseNo)
+              .filter(Boolean)
+          : [];
+        if (links.length) return links.join(" · ");
+      }
       const raw = viewTarget[key];
       const s = raw == null || String(raw).trim() === "" || String(raw) === "—"
-        ? UNSPECIFIED_CONTACT
+        ? key === CASE_NO_KEY
+          ? "لا توجد قضية مرتبطة"
+          : UNSPECIFIED_CONTACT
         : String(raw);
       return s;
     };
@@ -839,7 +887,13 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       <Modal
         open={modalOpen}
         title={editTarget ? `تعديل ${config.entityName}` : config.addLabel}
-        fields={formFields}
+        fields={
+          editTarget && config.slug === "case-management"
+            ? formFields.map((f) =>
+                f.key === CASE_NO_KEY ? { ...f, readOnly: true, required: true } : f
+              )
+            : formFields
+        }
         initial={editTarget ?? createInitial}
         onSave={handleSave}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}

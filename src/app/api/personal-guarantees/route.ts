@@ -7,6 +7,8 @@ import {
   mapRowWithClientContact,
 } from "@/lib/person-contact-server";
 import { canViewPersonContact, UNSPECIFIED_CONTACT } from "@/lib/person-contact";
+import { displayResolvedCase } from "@/lib/case-identity";
+import { resolveCaseById, resolveCaseRef } from "@/lib/case-identity-server";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -25,10 +27,16 @@ export async function GET() {
     }
     const clientContact = nameCache.get(g.clientName) ?? null;
     const guarantorContact = g.guarantorName ? nameCache.get(g.guarantorName) ?? null : null;
+    const resolved = await resolveCaseRef(g.caseRef);
+    const caseDisplay = displayResolvedCase(resolved);
     const mapped = mapRowWithClientContact(
       {
         id: g.id,
         caseRef: g.caseRef,
+        caseNo: caseDisplay.caseNo,
+        caseId: caseDisplay.caseId ?? "",
+        caseLinks: caseDisplay.caseLinks,
+        caseLinkStatus: caseDisplay.caseLinkStatus,
         client: g.clientName,
         guarantor: g.guarantorName,
         relationship: g.relationship ?? "—",
@@ -103,9 +111,22 @@ export async function POST(request: Request) {
     guarantorName = ensuredG.clientName;
   }
 
+  let caseRef = "";
+  if (body.caseId) {
+    const linked = await resolveCaseById(String(body.caseId));
+    if (!linked) {
+      return NextResponse.json({ error: "القضية غير موجودة في السجل المركزي" }, { status: 400 });
+    }
+    caseRef = linked.caseNo;
+  } else if (body.caseNo || body.caseRef) {
+    const resolved = await resolveCaseRef(String(body.caseNo ?? body.caseRef));
+    if (resolved.status === "linked") caseRef = resolved.case.caseNo;
+    else caseRef = String(body.caseNo ?? body.caseRef).trim();
+  }
+
   const created = await prisma.personalGuarantee.create({
     data: {
-      caseRef: String(body.caseRef ?? ""),
+      caseRef,
       clientName,
       guarantorName,
       relationship: body.relationship ? String(body.relationship) : null,

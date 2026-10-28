@@ -75,10 +75,14 @@ export function Modal({
   const [lookupHits, setLookupHits] = useState<ClientLookup[]>([]);
   const [autofilledFrom, setAutofilledFrom] = useState<string | null>(null);
   const [centralEditNotice, setCentralEditNotice] = useState(false);
+  const [caseOptions, setCaseOptions] = useState<
+    Array<{ id: string; caseNo: string; client: string }>
+  >([]);
 
   const hasExplicitFilesField = fields.some((f) => f.type === "files");
   const hasExplicitPartyFields = PARTY_FIELD_KEYS.some((key) => fields.some((f) => f.key === key));
   const hasContactFields = fields.some((f) => CONTACT_KEYS.has(f.key));
+  const hasCaseSelect = fields.some((f) => f.type === "case-select" || f.key === "caseNo");
   const personNameKey = fields.find((f) => NAME_KEYS.has(f.key))?.key ?? null;
 
   const effectiveFields = useMemo(() => {
@@ -93,10 +97,40 @@ export function Modal({
   }, [fields, enableParties, hasExplicitPartyFields]);
 
   useEffect(() => {
+    if (!open || !hasCaseSelect) {
+      setCaseOptions([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/cases", { credentials: "include" });
+        if (!res.ok) return;
+        const rows = (await res.json()) as Array<Record<string, unknown>>;
+        if (cancelled) return;
+        setCaseOptions(
+          rows
+            .map((r) => ({
+              id: String(r.id ?? ""),
+              caseNo: String(r.caseNo ?? ""),
+              client: String(r.client ?? r.clientName ?? ""),
+            }))
+            .filter((r) => r.id && r.caseNo)
+        );
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, hasCaseSelect]);
+
+  useEffect(() => {
     if (open) {
       const blankPlaceholder = (v: unknown) => {
         const s = String(v ?? "").trim();
-        if (!s || s === "—" || s === "غير مسجل" || s === "••••••••") return "";
+        if (!s || s === "—" || s === "غير مسجل" || s === "••••••••" || s === "لا توجد قضية مرتبطة") return "";
         return s;
       };
       const defaults: Record<string, unknown> = {};
@@ -412,7 +446,38 @@ export function Modal({
                           <span style={{ color: "#94a3b8", fontWeight: 600 }}> (اختياري)</span>
                         )}
                       </label>
-                      {f.type === "select" ? (
+                      {f.type === "case-select" ? (
+                        <select
+                          id={inputId}
+                          value={String(form.caseId ?? "")}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            const hit = caseOptions.find((c) => c.id === id);
+                            setForm((prev) => ({
+                              ...prev,
+                              caseId: id || "",
+                              caseNo: hit?.caseNo ?? "",
+                              ...(hit?.client && !String(prev.client ?? "").trim()
+                                ? { client: hit.client }
+                                : {}),
+                            }));
+                          }}
+                          required={f.required}
+                          disabled={f.readOnly || Boolean(form.id && f.readOnly)}
+                          className="input-field"
+                          style={{ cursor: "pointer" }}
+                        >
+                          <option value="">
+                            {f.required ? "اختر قضية من السجل المركزي..." : "بدون قضية مرتبطة"}
+                          </option>
+                          {caseOptions.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.caseNo}
+                              {c.client ? ` — ${c.client}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      ) : f.type === "select" ? (
                         <select
                           id={inputId}
                           value={String(form[f.key] ?? "")}
@@ -480,9 +545,15 @@ export function Modal({
                             }
                           }}
                           required={f.required}
+                          readOnly={Boolean(f.readOnly && (f.key !== "caseNo" || form.id))}
                           className="input-field"
                           placeholder={f.placeholder}
                           autoComplete={isName ? "off" : undefined}
+                          style={
+                            f.readOnly && form.id && f.key === "caseNo"
+                              ? { background: "#f8fafc", color: "#334155", fontWeight: 700 }
+                              : undefined
+                          }
                         />
                       )}
                     </>

@@ -168,7 +168,7 @@ const feeRuleFields: FormField[] = [
 ];
 
 const bailFields: FormField[] = withPersonContactFormFields([
-  { key: "caseRef", label: "مرجع القضية", type: "text" },
+  { key: "caseNo", label: "رقم القضية", type: "case-select", required: true },
   { key: "client", label: "الموكل", type: "text", required: true },
   { key: "amount", label: "المبلغ", type: "number" },
   { key: "court", label: "المحكمة", type: "text" },
@@ -220,7 +220,7 @@ const GUARANTOR_CONTACT_FIELDS: FormField[] = personContactFormFields({
 
 const personalFields: FormField[] = withPersonContactFormFields(
   [
-    { key: "caseRef", label: "مرجع القضية", type: "text" },
+    { key: "caseNo", label: "رقم القضية", type: "case-select", required: true },
     { key: "client", label: "الموكل", type: "text", required: true },
     { key: "guarantor", label: "الضامن", type: "text", required: true },
     ...GUARANTOR_CONTACT_FIELDS,
@@ -245,7 +245,7 @@ const notificationFields: FormField[] = [
     options: ["استدعاء محكمة", "موعد كفالة", "تقديم مستند", "تبليغ حكم", "أخرى"],
   },
   { key: "entity", label: "الجهة", type: "text" },
-  { key: "caseRef", label: "مرجع القضية", type: "text" },
+  { key: "caseNo", label: "رقم القضية", type: "case-select", required: true },
   { key: "dueDate", label: "الموعد", type: "date" },
   {
     key: "status",
@@ -479,7 +479,9 @@ export default function LegalFinancePage() {
     }
     if (tab === "bail") {
       return {
-        caseRef: data.caseRef,
+        caseRef: data.caseNo ?? data.caseRef,
+        caseNo: data.caseNo ?? data.caseRef,
+        caseId: data.caseId,
         client: data.client,
         amount: Number(data.amount ?? 0),
         court: data.court,
@@ -491,7 +493,9 @@ export default function LegalFinancePage() {
     }
     if (tab === "personal") {
       return {
-        caseRef: data.caseRef,
+        caseRef: data.caseNo ?? data.caseRef,
+        caseNo: data.caseNo ?? data.caseRef,
+        caseId: data.caseId,
         client: data.client,
         guarantor: data.guarantor,
         relationship: data.relationship || undefined,
@@ -511,7 +515,9 @@ export default function LegalFinancePage() {
         title: data.title,
         type: NOTIFICATION_TYPE_MAP[String(data.type)] ?? data.type ?? "other",
         entity: data.entity,
-        caseRef: data.caseRef || undefined,
+        caseId: data.caseId || undefined,
+        caseNo: data.caseNo || undefined,
+        caseRef: (data.caseNo ?? data.caseRef) || undefined,
         dueDate: data.dueDate || undefined,
         status: data.status || "قيد المتابعة",
         notes: data.notes || undefined,
@@ -899,7 +905,7 @@ ${stamp}` : stamp;
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>القضية</th>
+                      <th style={thStyle}>رقم القضية</th>
                       <th style={thStyle}>الموكل</th>
                       <PersonContactHeaderCells style={thStyle} />
                       <th style={thStyle}>المبلغ</th>
@@ -913,7 +919,7 @@ ${stamp}` : stamp;
                   <tbody>
                     {bailItems.map((b) => (
                       <tr key={b.id}>
-                        <td style={tdStyle}>{b.caseRef}</td>
+                        <td style={tdStyle}>{(b as { caseNo?: string }).caseNo || b.caseRef || "لا توجد قضية مرتبطة"}</td>
                         <td style={tdStyle}>{b.client}</td>
                         <PersonContactDataCells
                           row={b}
@@ -947,7 +953,7 @@ ${stamp}` : stamp;
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1400 }}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>القضية</th>
+                      <th style={thStyle}>رقم القضية</th>
                       <th style={thStyle}>الموكل</th>
                       <PersonContactHeaderCells style={thStyle} />
                       <th style={thStyle}>الضامن</th>
@@ -960,7 +966,7 @@ ${stamp}` : stamp;
                   <tbody>
                     {personalItems.map((g) => (
                       <tr key={g.id}>
-                        <td style={tdStyle}>{g.caseRef}</td>
+                        <td style={tdStyle}>{(g as { caseNo?: string }).caseNo || g.caseRef || "لا توجد قضية مرتبطة"}</td>
                         <td style={tdStyle}>{g.client}</td>
                         <PersonContactDataCells
                           row={g}
@@ -1004,7 +1010,7 @@ ${stamp}` : stamp;
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["النوع", "العنوان", "الجهة", "القضية", "الموعد", "الحالة", "الإجراءات"].map((h) => (
+                      {["النوع", "العنوان", "الجهة", "رقم القضية", "الموعد", "الحالة", "الإجراءات"].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -1015,7 +1021,7 @@ ${stamp}` : stamp;
                         <td style={tdStyle}>{n.type}</td>
                         <td style={tdStyle}>{n.title}</td>
                         <td style={tdStyle}>{n.entity}</td>
-                        <td style={tdStyle}>{n.caseRef}</td>
+                        <td style={tdStyle}>{(n as { caseNo?: string }).caseNo || n.caseRef || "لا توجد قضية مرتبطة"}</td>
                         <td style={tdStyle}>{n.dueDate}</td>
                         <td style={tdStyle}>{n.status}</td>
                         <td style={tdStyle}>

@@ -58,11 +58,19 @@ export async function GET() {
       }
       contact = nameCache.get(s.client) ?? null;
     }
+    const linkedCaseId = s.caseId ?? s.case?.id ?? null;
+    const linkedCaseNo = s.case?.caseNo ?? s.caseNo ?? null;
     base.push(
       mapRowWithClientContact(
         {
           id: s.id,
-          caseNo: s.caseNo ?? "—",
+          caseId: linkedCaseId ?? "",
+          caseNo: linkedCaseNo ?? "لا توجد قضية مرتبطة",
+          caseLinks:
+            linkedCaseId && linkedCaseNo
+              ? [{ id: linkedCaseId, caseNo: linkedCaseNo }]
+              : [],
+          caseLinkStatus: linkedCaseId && linkedCaseNo ? "linked" : linkedCaseNo ? "review" : "none",
           client: s.client ?? "—",
           court: s.court,
           room: s.room ?? "—",
@@ -92,18 +100,34 @@ export async function POST(request: Request) {
   if (!gate.ok) return gate.response;
   const body = await request.json();
 
-  const caseId = body.caseId ? String(body.caseId) : null;
+  let caseId = body.caseId ? String(body.caseId) : null;
   let caseNo = body.caseNo ? String(body.caseNo) : null;
   let client = body.client ? String(body.client) : null;
   let linkedClientId: string | null = null;
 
-  if (caseId) {
+  // Prefer canonical Case by id; else resolve exact caseNo — never invent a link
+  if (!caseId && caseNo) {
+    const byNo = await prisma.case.findFirst({
+      where: { caseNo },
+      select: { id: true },
+    });
+    if (byNo) caseId = byNo.id;
+  }
+
+  if (!caseId) {
+    return NextResponse.json(
+      { error: "يجب اختيار قضية من السجل المركزي (رقم القضية إلزامي)" },
+      { status: 400 }
+    );
+  }
+
+  {
     const linkedCase = await prisma.case.findUnique({
       where: { id: caseId },
       include: { client: true },
     });
     if (!linkedCase) return NextResponse.json({ error: "القضية غير موجودة" }, { status: 404 });
-    caseNo = caseNo ?? linkedCase.caseNo;
+    caseNo = linkedCase.caseNo;
     client = client ?? linkedCase.clientName;
     linkedClientId = linkedCase.clientId;
   }

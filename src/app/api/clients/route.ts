@@ -16,6 +16,8 @@ import {
   dialCodeForCountry,
   parseDialCodeOption,
 } from "@/lib/person-contact";
+import { formatCaseLinksLabel, NO_LINKED_CASE } from "@/lib/case-identity";
+import { casesForClientIds } from "@/lib/case-identity-server";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -29,6 +31,7 @@ export async function GET() {
   }
 
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "desc" } });
+  const caseMap = await casesForClientIds(clients.map((c) => c.id));
   const base = clients.map((c) => {
     const display = toDisplayContact(
       {
@@ -45,6 +48,7 @@ export async function GET() {
       },
       { mask: !canView }
     );
+    const caseLinks = caseMap.get(c.id) ?? [];
     return {
       id: c.id,
       name: c.name,
@@ -56,10 +60,15 @@ export async function GET() {
       country: display.country,
       city: display.city,
       email: c.email ?? "—",
-      cases: formatNumber(c.casesCount, { maximumFractionDigits: 0 }),
+      caseNo: formatCaseLinksLabel(caseLinks),
+      caseLinks,
+      caseLinkStatus: caseLinks.length ? "linked" : "none",
+      cases: formatNumber(caseLinks.length || c.casesCount, { maximumFractionDigits: 0 }),
       status: c.status,
       since: formatDate(c.since),
       contactIncomplete: display.incomplete,
+      // Explicit empty-case label for demos/exports
+      ...(caseLinks.length === 0 ? { caseNo: NO_LINKED_CASE } : {}),
     };
   });
   const withCustom = await attachCustomValuesToRows("clients-management", base);
