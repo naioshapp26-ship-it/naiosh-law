@@ -17,7 +17,11 @@ import {
   parseDialCodeOption,
 } from "@/lib/person-contact";
 import { formatCaseLinksLabel, NO_LINKED_CASE } from "@/lib/case-identity";
-import { casesForClientIds } from "@/lib/case-identity-server";
+import {
+  casesForClientIds,
+  parseCaseIdsFromBody,
+  syncClientCaseLinks,
+} from "@/lib/case-identity-server";
 
 export async function GET() {
   const { error, session } = await requireAuth();
@@ -143,5 +147,27 @@ export async function POST(request: Request) {
     role: session!.role,
   });
 
-  return NextResponse.json({ id: created.id }, { status: 201 });
+  const caseIds = parseCaseIdsFromBody(body as Record<string, unknown>);
+  let caseLinks: Array<{ id: string; caseNo: string }> = [];
+  if (caseIds && caseIds.length > 0) {
+    const synced = await syncClientCaseLinks({
+      clientId: created.id,
+      clientName: created.name,
+      caseIds,
+    });
+    if (!synced.ok) {
+      return NextResponse.json({ error: synced.error }, { status: synced.status });
+    }
+    caseLinks = synced.links;
+  }
+
+  return NextResponse.json(
+    {
+      id: created.id,
+      caseNo: formatCaseLinksLabel(caseLinks),
+      caseLinks,
+      caseLinkStatus: caseLinks.length ? "linked" : "none",
+    },
+    { status: 201 }
+  );
 }

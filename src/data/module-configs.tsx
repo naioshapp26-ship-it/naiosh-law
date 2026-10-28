@@ -4,7 +4,17 @@ import type { KpiCard } from "@/components/ui/stats-row";
 export type FormField = {
   key: string;
   label: string;
-  type: "text" | "select" | "date" | "number" | "textarea" | "email" | "tel" | "files" | "case-select";
+  type:
+    | "text"
+    | "select"
+    | "date"
+    | "number"
+    | "textarea"
+    | "email"
+    | "tel"
+    | "files"
+    | "case-select"
+    | "case-multi-select";
   options?: string[];
   required?: boolean;
   placeholder?: string;
@@ -172,6 +182,13 @@ export const moduleConfigs: ModuleConfig[] = [
     ],
     formFields: [
       { key:"name",    label:"الاسم الكامل",       type:"text",   required:true },
+      {
+        key: "caseIds",
+        label: "رقم القضية / القضايا المرتبطة",
+        type: "case-multi-select",
+        required: false,
+        placeholder: "ابحث برقم القضية أو اسمها واختر من السجل الحقيقي",
+      },
       { key:"type",    label:"نوع الموكل",          type:"select", options:["فرد","شركة","مؤسسة","جهة حكومية"] },
       { key:"phoneDialCode", label:"مفتاح الدولة", type:"select", required:true, options:["+20 (مصر)","+966 (السعودية)","+971 (الإمارات)","+965 (الكويت)","+974 (قطر)","+973 (البحرين)","+968 (عُمان)","+962 (الأردن)","+961 (لبنان)","+964 (العراق)","+212 (المغرب)","+216 (تونس)","+213 (الجزائر)","+218 (ليبيا)","+249 (السودان)","+90 (تركيا)","+44 (المملكة المتحدة)","+1 (الولايات المتحدة)","+33 (فرنسا)","+49 (ألمانيا)"] },
       { key:"phone",   label:"رقم الجوال",          type:"tel",    required:true, placeholder:"5XXXXXXXX" },

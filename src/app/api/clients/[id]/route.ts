@@ -12,6 +12,12 @@ import {
 } from "@/lib/person-contact-server";
 import { canViewPersonContact } from "@/lib/person-contact";
 import { formatDate, formatNumber } from "@/lib/format";
+import { formatCaseLinksLabel, NO_LINKED_CASE } from "@/lib/case-identity";
+import {
+  casesForClientIds,
+  parseCaseIdsFromBody,
+  syncClientCaseLinks,
+} from "@/lib/case-identity-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -28,15 +34,23 @@ export async function GET(_request: Request, { params }: Params) {
   const full = await prisma.client.findUnique({ where: { id } });
   if (!full) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
 
+  const caseMap = await casesForClientIds([id]);
+  const caseLinks = caseMap.get(id) ?? [];
+
   const mapped = mapRowWithClientContact(
     {
       id: full.id,
       name: full.name,
       type: full.type,
       email: full.email ?? "—",
-      cases: formatNumber(full.casesCount, { maximumFractionDigits: 0 }),
+      cases: formatNumber(caseLinks.length || full.casesCount, { maximumFractionDigits: 0 }),
       status: full.status,
       since: formatDate(full.since),
+      caseNo: formatCaseLinksLabel(caseLinks),
+      caseLinks,
+      caseIds: caseLinks.map((c) => c.id),
+      caseLinkStatus: caseLinks.length ? "linked" : "none",
+      ...(caseLinks.length === 0 ? { caseNo: NO_LINKED_CASE } : {}),
     },
     item,
     canViewPersonContact(session!.role) ? session!.role : null
@@ -86,6 +100,23 @@ export async function PATCH(request: Request, { params }: Params) {
     role: session!.role,
   });
 
+  const caseIds = parseCaseIdsFromBody(body as Record<string, unknown>);
+  let caseLinks: Array<{ id: string; caseNo: string }> = [];
+  if (caseIds !== undefined) {
+    const synced = await syncClientCaseLinks({
+      clientId: id,
+      clientName: updated.name,
+      caseIds,
+    });
+    if (!synced.ok) {
+      return NextResponse.json({ error: synced.error }, { status: synced.status });
+    }
+    caseLinks = synced.links;
+  } else {
+    const caseMap = await casesForClientIds([id]);
+    caseLinks = caseMap.get(id) ?? [];
+  }
+
   const mapped = mapRowWithClientContact(
     {
       id: updated.id,
@@ -93,6 +124,12 @@ export async function PATCH(request: Request, { params }: Params) {
       type: updated.type,
       email: updated.email ?? "—",
       status: updated.status,
+      cases: formatNumber(caseLinks.length, { maximumFractionDigits: 0 }),
+      caseNo: formatCaseLinksLabel(caseLinks),
+      caseLinks,
+      caseIds: caseLinks.map((c) => c.id),
+      caseLinkStatus: caseLinks.length ? "linked" : "none",
+      ...(caseLinks.length === 0 ? { caseNo: NO_LINKED_CASE } : {}),
     },
     applied.client,
     session!.role

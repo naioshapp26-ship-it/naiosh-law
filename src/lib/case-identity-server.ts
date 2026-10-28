@@ -51,3 +51,118 @@ export async function casesForClientIds(
   }
   return map;
 }
+
+/** Parse caseIds from request body — only real IDs accepted later by sync. */
+export function parseCaseIdsFromBody(body: Record<string, unknown>): string[] | undefined {
+  if (!("caseIds" in body) && !("caseLinks" in body) && !("caseId" in body)) {
+    return undefined;
+  }
+  const raw = body.caseIds ?? body.caseLinks;
+  if (Array.isArray(raw)) {
+    return [
+      ...new Set(
+        raw
+          .map((item) => {
+            if (typeof item === "string") return item.trim();
+            if (item && typeof item === "object" && "id" in item) {
+              return String((item as { id: unknown }).id ?? "").trim();
+            }
+            return "";
+          })
+          .filter(Boolean)
+      ),
+    ];
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        return parseCaseIdsFromBody({ caseIds: parsed });
+      }
+    } catch {
+      /* fall through — single id string */
+    }
+    return [raw.trim()];
+  }
+  if (body.caseId) {
+    const id = String(body.caseId).trim();
+    return id ? [id] : [];
+  }
+  return [];
+}
+
+/**
+ * Replace a client's Case.clientId links with the given real case IDs.
+ * Rejects unknown IDs (no fake case numbers). Updates casesCount for affected clients.
+ */
+export async function syncClientCaseLinks(opts: {
+  clientId: string;
+  clientName: string;
+  caseIds: string[];
+}): Promise<{ ok: true; links: CaseLink[] } | { ok: false; error: string; status: number }> {
+  const unique = [...new Set(opts.caseIds.map(String).filter(Boolean))];
+
+  if (unique.length) {
+    const found = await prisma.case.findMany({
+      where: { id: { in: unique } },
+      select: { id: true },
+    });
+    if (found.length !== unique.length) {
+      return {
+        ok: false,
+        error: "لا يُسمح بربط رقم قضية غير موجود — اختر من السجل الحقيقي أو أنشئ قضية جديدة",
+        status: 400,
+      };
+    }
+  }
+
+  const current = await prisma.case.findMany({
+    where: { clientId: opts.clientId },
+    select: { id: true },
+  });
+  const currentIds = new Set(current.map((c) => c.id));
+  const nextIds = new Set(unique);
+  const toUnlink = [...currentIds].filter((id) => !nextIds.has(id));
+  const toLink = unique.filter((id) => !currentIds.has(id));
+
+  // Clients that lose a case when we reassign ownership
+  const reassigned = toLink.length
+    ? await prisma.case.findMany({
+        where: { id: { in: toLink }, clientId: { not: null } },
+        select: { clientId: true },
+      })
+    : [];
+  const affectedClientIds = new Set<string>([
+    opts.clientId,
+    ...reassigned.map((r) => r.clientId!).filter(Boolean),
+  ]);
+
+  await prisma.$transaction(async (tx) => {
+    if (toUnlink.length) {
+      await tx.case.updateMany({
+        where: { id: { in: toUnlink }, clientId: opts.clientId },
+        data: { clientId: null },
+      });
+    }
+    for (const id of toLink) {
+      await tx.case.update({
+        where: { id },
+        data: { clientId: opts.clientId, clientName: opts.clientName },
+      });
+    }
+    for (const clientId of affectedClientIds) {
+      const count = await tx.case.count({ where: { clientId } });
+      await tx.client.update({
+        where: { id: clientId },
+        data: { casesCount: count },
+      });
+    }
+  });
+
+  const links = await prisma.case.findMany({
+    where: { clientId: opts.clientId },
+    select: { id: true, caseNo: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return { ok: true, links };
+}

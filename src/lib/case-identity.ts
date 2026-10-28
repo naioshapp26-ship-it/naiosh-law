@@ -126,6 +126,48 @@ export function ensureCaseNoOnFormFields(
   return [caseField, ...without];
 }
 
+export const CLIENT_CASE_IDS_KEY = "caseIds" as const;
+
+/** Multi case-link picker for client add/edit (optional — client may exist alone). */
+export function ensureClientCaseLinksOnFormFields(fields: FormField[]): FormField[] {
+  const without = fields.filter(
+    (f) =>
+      f.key !== CLIENT_CASE_IDS_KEY &&
+      f.key !== CASE_NO_KEY &&
+      f.key !== CASE_ID_KEY &&
+      f.key !== "caseRef" &&
+      f.type !== "case-multi-select"
+  );
+  const existing = fields.find(
+    (f) => f.key === CLIENT_CASE_IDS_KEY || f.type === "case-multi-select"
+  );
+  const caseField: FormField = existing
+    ? {
+        ...existing,
+        key: CLIENT_CASE_IDS_KEY,
+        type: "case-multi-select",
+        required: false,
+        label: existing.label || "رقم القضية / القضايا المرتبطة",
+      }
+    : {
+        key: CLIENT_CASE_IDS_KEY,
+        label: "رقم القضية / القضايا المرتبطة",
+        type: "case-multi-select",
+        required: false,
+        placeholder: "ابحث برقم القضية أو اسمها واختر من السجل الحقيقي",
+      };
+  // Place after name when present, otherwise lead the form
+  const nameIdx = without.findIndex((f) => f.key === "name");
+  if (nameIdx >= 0) {
+    return [
+      ...without.slice(0, nameIdx + 1),
+      caseField,
+      ...without.slice(nameIdx + 1),
+    ];
+  }
+  return [caseField, ...without];
+}
+
 export function withCaseNoLockedVisible(
   columnOptions: Array<{ value: string; label: string }>,
   defaultVisible: string[]
