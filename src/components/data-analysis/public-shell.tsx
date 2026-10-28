@@ -6,7 +6,7 @@ import { LandingPromoBar } from "@/components/landing-promo-bar";
 import { ensureErpHomepageStylesheets, setHomepageMode } from "@/components/homepage-route-chrome";
 
 const LANDING_SHARED_HREF = "/newhome/landing-shared.css?v=data-analysis-public-20261028a";
-const DA_CSS = "/erp-app/data-analysis-law.css?v=law-da-public-20261028a";
+const DA_CSS = "/erp-app/data-analysis-law.css?v=law-da-cta-contrast-20261028b";
 
 export function DataAnalysisPublicShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {

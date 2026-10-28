@@ -1,43 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-
-type SessionInfo = {
-  name: string | null;
-  role: string | null;
-};
-
-const WORKSPACE_HREF = "/data-analysis/workspace";
-const LOGIN_HREF = `/login?next=${encodeURIComponent(WORKSPACE_HREF)}`;
+/** Live NAIOSH Intelligence analysis system */
+const ANALYSIS_SITE = "https://www.naioshai.com/";
 
 export function DataAnalysisLanding() {
-  const [session, setSession] = useState<SessionInfo>({ name: null, role: null });
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/auth/me", { credentials: "include" })
-      .then(async (res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        setSession({
-          name: data?.user?.name ? String(data.user.name) : null,
-          role: data?.user?.role ? String(data.user.role) : null,
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setSession({ name: null, role: null });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const isStaff =
-    Boolean(session.role) && session.role !== "client";
-  const startHref = isStaff ? WORKSPACE_HREF : LOGIN_HREF;
-  const startLabel = isStaff ? "ابدأ التحليل" : "تسجيل الدخول وابدأ التحليل";
-
   return (
     <div className="da-law" dir="rtl">
       <section className="da-law-hero" aria-labelledby="da-law-hero-title">
@@ -50,25 +16,19 @@ export function DataAnalysisLanding() {
             </h1>
             <p className="da-law-hero__tag">ذكاء يحوّل بياناتك القانونية إلى قرارات</p>
             <p className="da-law-hero__lead">
-              اكتشف قوة بياناتك القانونية مع أدوات التحليل والتقارير داخل منظومة نايوش
-              القانونية — قضايا، جلسات، موكلون، ومحاسبة — أو ارفع ملف CSV/Excel مصرّحًا به.
-              الصفحة التعريفية عامة؛ التحليل الفعلي يتطلب تسجيل دخول وصلاحيات مناسبة.
+              اكتشف قوة بياناتك مع أدوات التحليل والتقارير والاستشارات الذكية. هذه الصفحة
+              داخل NAIOSH LAW تعرّفك بالنظام وتربطك بموقع التحليل المعتمد — دون المرور
+              بلوحة الأدمن أو HUB 360.
             </p>
-            <div className="da-law-hero__note" role="status">
-              <span aria-hidden="true">⚖️</span>
-              <span>
-                {isStaff
-                  ? `أنت مسجّل كـ «${session.name || "مستخدم"}» — التحليل يستخدم جلسة NAIOSH LAW الحالية دون دخول جديد أو انتقال إلى HUB 360.`
-                  : "يمكنك تصفّح هذه الصفحة دون تسجيل دخول. لتشغيل التحليل على بياناتك القانونية سجّل الدخول بحساب المنظومة القانونية."}
-              </span>
-            </div>
             <div className="da-law-hero__actions">
-              <Link href={startHref} className="da-law-btn primary">
-                {startLabel}
-              </Link>
-              <Link href="/" className="da-law-btn secondary">
-                العودة للرئيسية
-              </Link>
+              <a
+                href={ANALYSIS_SITE}
+                className="da-law-btn primary"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ابدأ التحليل
+              </a>
             </div>
           </div>
 
@@ -88,7 +48,7 @@ export function DataAnalysisLanding() {
                   />
                   <polyline
                     fill="none"
-                    stroke="rgba(248,250,252,0.35)"
+                    stroke="rgba(248,250,252,0.45)"
                     strokeWidth="1.5"
                     points="8,78 35,74 60,70 90,66 120,60 150,58 180,50 210,46"
                   />
@@ -120,25 +80,25 @@ export function DataAnalysisLanding() {
       <section className="da-law-section" aria-labelledby="da-what">
         <h2 id="da-what">ما هو النظام؟</h2>
         <p className="lead">
-          <strong>نايوش لتحليل البيانات</strong> داخل NAIOSH LAW تطبيق تحليلي مكيّف للقانون.
-          هذه الصفحة العامة تعرّفك به وتربطك بمساحة التحليل عبر جلسة المنظومة القانونية —
-          دون جمع كلمات مرور هنا ودون التحويل إلى HUB 360.
+          <strong>نايوش لتحليل البيانات</strong> (NAIOSH Intelligence) تطبيق مستقل للتحليل
+          والقرار. هذه الصفحة داخل NAIOSH LAW تعرّفك به وتربطك بموقع التحليل المعتمد —
+          دون التحويل إلى HUB 360.
         </p>
         <div className="da-law-grid-3">
           <article className="da-law-card">
             <div className="ico">CSV</div>
             <h3>ملفات بياناتك</h3>
-            <p>CSV أو Excel حتى 40 ميجابايت، مع التحقق من النوع والحجم وبصمة SHA-256.</p>
+            <p>CSV أو Excel داخل المتصفح — حتى 40 ميجابايت — مع لوحة مؤشرات من أعمدة ملفك.</p>
           </article>
           <article className="da-law-card">
             <div className="ico">⚖️</div>
-            <h3>بيانات قانونية مصرّح بها</h3>
-            <p>قضايا، جلسات، موكلون، ومحاسبة قانونية — وفق دورك وعزل سجلات العميل.</p>
+            <h3>تحليل بمختص</h3>
+            <p>أرسل طلبًا لفريق التحليل مع المرفقات، واستلم تقريرًا موثّقًا من نظام التحليل.</p>
           </article>
           <article className="da-law-card">
             <div className="ico">📊</div>
-            <h3>تقارير قابلة للتصدير</h3>
-            <p>نتائج وصفية وتشخيصية وتنبؤية ومخاطر ومقارنة — وتصدير CSV للتقرير.</p>
+            <h3>محاور تشغيلية</h3>
+            <p>مالية، موارد، مبيعات، قانون، وغيرها — بأسئلة واضحة وتقارير قابلة للتصدير.</p>
           </article>
         </div>
       </section>
@@ -146,30 +106,35 @@ export function DataAnalysisLanding() {
       <section className="da-law-section" aria-labelledby="da-offer">
         <h2 id="da-offer">ماذا يقدّم؟</h2>
         <p className="lead">
-          إمكانيات مستمدة من المحرك التحليلي الأصلي، مكيّفة للقانون — بدون عروض تجريبية أو
-          نقاط أو تسعير من HUB.
+          إمكانيات ظاهرة في واجهة نظام التحليل الحي — اضغط «ابدأ التحليل» للانتقال إلى
+          الموقع المعتمد والبدء من هناك.
         </p>
         <div className="da-law-grid-3">
           <article className="da-law-card">
             <div className="ico">1</div>
-            <h3>عشرة أنواع تحليل</h3>
-            <p>وصفي، تشخيصي، تنبؤي، استشرافي، جدوى، مخاطر، فرص، توجيهي، مقارنة، قياس أثر.</p>
+            <h3>أنواع تحليل متعددة</h3>
+            <p>وصفي، تشخيصي، تنبؤي، استشرافي، جدوى، مخاطر، فرص، توجيهي، ومقارنة.</p>
           </article>
           <article className="da-law-card">
             <div className="ico">2</div>
-            <h3>جلسة LAW الحالية</h3>
-            <p>بعد تسجيل الدخول لا يُطلب حساب جديد — التحليل يستخدم صلاحياتك في المنظومة القانونية.</p>
+            <h3>ابدأ من الموقع المعتمد</h3>
+            <p>زر «ابدأ التحليل» يفتح naioshai.com مباشرة لتسجيل الدخول واستخدام النظام.</p>
           </article>
           <article className="da-law-card">
             <div className="ico">3</div>
-            <h3>عزل التخزين</h3>
-            <p>ملفات التحليل تُحفظ تحت مجلد المستخدم في LAW — منفصلة عن HUB وIntelligence.</p>
+            <h3>صفحة تعريف داخل LAW</h3>
+            <p>الرابط في الهيدر العام يبقى؛ التعريف داخل NAIOSH LAW بهوية كحلية وذهبية.</p>
           </article>
         </div>
-        <div style={{ marginTop: "1rem" }}>
-          <Link href={startHref} className="da-law-btn primary">
-            {isStaff ? "الدخول إلى أدوات التحليل" : "سجّل الدخول لبدء التحليل"}
-          </Link>
+        <div className="da-law-offer-actions">
+          <a
+            href={ANALYSIS_SITE}
+            className="da-law-btn primary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ابدأ التحليل
+          </a>
         </div>
       </section>
     </div>
