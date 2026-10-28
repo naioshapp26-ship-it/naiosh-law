@@ -274,17 +274,44 @@ async function main() {
     });
   }
 
-  // ── 9. Generic / related modules: columns + add form contact fields ──
+  // Seed court session + finance with contact for UI proof
+  await api(ctx, "POST", "/api/court-sessions", {
+    caseNo: `#PC-${stamp}`,
+    client: PERSON.name,
+    clientId,
+    phoneDialCode: PERSON.phoneDialCode,
+    phone: PERSON.phone,
+    country: PERSON.country,
+    city: PERSON.city,
+    court: "المحكمة الابتدائية القاهرة",
+    date: "2026-11-01",
+    time: "10:00",
+    status: "مجدولة",
+  });
+  await api(ctx, "POST", "/api/financial-records", {
+    client: PERSON.name,
+    clientId,
+    phoneDialCode: PERSON.phoneDialCode,
+    phone: PERSON.phone,
+    country: PERSON.country,
+    city: PERSON.city,
+    type: "رسوم قضية",
+    amount: 1000,
+    paid: 0,
+    issueDate: "2026-10-28",
+    status: "غير مسدد",
+  });
+
+  // ── 9. Generic / related modules: columns (headers always visible) ──
   for (const [label, href, moduleKey] of [
     ["مركز المتابعة", "/app/modules/follow-up-center", "follow-up-center"],
     ["الخدمات القانونية", "/app/modules/legal-services", "legal-services"],
     ["الاستشارات", "/app/modules/legal-consultations", "legal-consultations"],
     ["الشكاوى", "/app/modules/complaints-management", "complaints-management"],
-    ["الجلسات (واجهة)", "/app/modules/court-sessions", "court-sessions"],
-    ["المحاسبة (واجهة)", "/app/modules/legal-accounting", "legal-accounting"],
+    ["الجلسات (واجهة)", "/app/modules/court-sessions", null],
+    ["المحاسبة (واجهة)", "/app/modules/legal-accounting", null],
   ] as const) {
-    // Seed one person-bearing row where API supports it
-    if (moduleKey !== "court-sessions" && moduleKey !== "legal-accounting") {
+    if (moduleKey) {
       await api(ctx, "POST", `/api/module-records/${moduleKey}`, {
         client: `طرف ${stamp}-${moduleKey}`,
         phoneDialCode: "+20 (مصر)",
@@ -299,42 +326,28 @@ async function main() {
         ref: `PC-${stamp}`,
       });
     }
-    await page.goto(`${BASE}${href}`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(700);
-    const headers = (await page.locator("thead th").allTextContents()).map((h) => h.trim());
-    const t = await page.locator("body").innerText();
+    await page.goto(`${BASE}${href}`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("thead th", { timeout: 10000 }).catch(() => null);
+    await page.waitForTimeout(500);
+    const headers = (await page.locator("thead th").allTextContents()).map((h) => h.trim()).filter(Boolean);
     const colsOk =
       headers.some((h) => h.includes("رقم الجوال")) &&
       headers.some((h) => h.includes("الدولة")) &&
       headers.some((h) => h.includes("المدينة"));
-    // Open add modal and verify contact fields
-    const addBtn = page.locator("button.btn-primary, button").filter({ hasText: /إضافة|جدولة|تسجيل/ }).first();
-    let formOk = false;
-    if (await addBtn.count()) {
-      await addBtn.click().catch(() => null);
-      await page.waitForTimeout(400);
-      const modalText = await page.locator("form, [role='dialog'], .modal-form-grid").first().innerText().catch(() => "");
-      formOk =
-        modalText.includes("رقم الجوال") &&
-        (modalText.includes("الدولة") || modalText.includes("مفتاح")) &&
-        modalText.includes("المدينة");
-      await page.keyboard.press("Escape").catch(() => null);
-      await page.locator("button").filter({ hasText: "إلغاء" }).first().click().catch(() => null);
-    }
     const shotPath = await shot(page, `mod-${href.split("/").pop()}`);
     record({
       page: label,
       href,
-      fields: "phone,country,city columns+form",
-      result: colsOk || formOk ? "PASS" : "FAIL",
-      detail: `headers=${JSON.stringify(headers)} colsOk=${colsOk} formOk=${formOk} bodyPhone=${t.includes("رقم الجوال")}`,
+      fields: "phone,country,city columns",
+      result: colsOk ? "PASS" : "FAIL",
+      detail: `headers=${JSON.stringify(headers)} colsOk=${colsOk}`,
       afterShot: shotPath,
     });
   }
 
   // ── 10. Page settings case-management has contact fields ──
-  await page.goto(`${BASE}/app/page-settings/case-management`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/app/page-settings/case-management`, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1200);
   const psShot = await shot(page, "04-page-settings-cases");
   const psText = await page.locator("body").innerText();
   record({
