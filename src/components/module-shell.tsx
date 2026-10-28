@@ -265,11 +265,17 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     if (!config) return [];
     const keys = pageSettings?.display?.visibleColumns;
     const customDefs = recordCustomDefs;
+    /** Permanent person-contact rule: never drop phone/country/city from person tables */
+    const CONTACT_KEYS = new Set(["phone", "country", "city", "phoneDialCode"]);
     const baseCols =
       !keys || keys.length === 0
         ? config.columns
         : (() => {
             const set = new Set(keys);
+            for (const c of config.columns) {
+              if (CONTACT_KEYS.has(c.key)) set.add(c.key);
+            }
+            // Preserve config column order (mandatory RTL order for cases)
             const filtered = config.columns.filter((c) => set.has(c.key));
             return filtered.length > 0 ? filtered : config.columns;
           })();
@@ -284,6 +290,8 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const formFields = useMemo(() => {
     if (!config) return [];
     const hidden = new Set(pageSettings?.fields?.hiddenOptionalFields ?? []);
+    // Permanent person-contact rule: contact fields stay available on person forms
+    for (const k of ["phone", "phoneDialCode", "country", "city"]) hidden.delete(k);
     const workflowStatuses = pageSettings?.workflow?.statuses;
     const base = config.formFields
       .filter((f) => !hidden.has(f.key))
