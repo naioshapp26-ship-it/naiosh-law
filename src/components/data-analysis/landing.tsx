@@ -1,10 +1,7 @@
 "use client";
 
-import Link from "next/link";
-
-/** Live NAIOSH Intelligence analysis system (external — no SSO claimed). */
+/** Live NAIOSH Intelligence analysis system */
 const ANALYSIS_SITE = "https://www.naioshai.com/";
-const ANALYSIS_LOGIN = "https://www.naioshai.com/#login";
 
 export function DataAnalysisLanding() {
   return (
@@ -23,14 +20,6 @@ export function DataAnalysisLanding() {
               داخل NAIOSH LAW تعرّفك بالنظام وتربطك بموقع التحليل المعتمد — دون المرور
               بلوحة الأدمن أو HUB 360.
             </p>
-            <div className="da-law-hero__note" role="status">
-              <span aria-hidden="true">⚖️</span>
-              <span>
-                تسجيل الدخول إلى نظام التحليل يتم عبر موقع التحليل نفسه (
-                naioshai.com). لا يُفترض وجود تسجيل دخول موحّد (SSO) مع NAIOSH LAW في هذه
-                المرحلة.
-              </span>
-            </div>
             <div className="da-law-hero__actions">
               <a
                 href={ANALYSIS_SITE}
@@ -40,17 +29,6 @@ export function DataAnalysisLanding() {
               >
                 ابدأ التحليل
               </a>
-              <a
-                href={ANALYSIS_LOGIN}
-                className="da-law-btn secondary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                تسجيل الدخول إلى نظام التحليل
-              </a>
-              <Link href="/" className="da-law-btn ghost-on-dark">
-                العودة للرئيسية
-              </Link>
             </div>
           </div>
 
@@ -103,8 +81,8 @@ export function DataAnalysisLanding() {
         <h2 id="da-what">ما هو النظام؟</h2>
         <p className="lead">
           <strong>نايوش لتحليل البيانات</strong> (NAIOSH Intelligence) تطبيق مستقل للتحليل
-          والقرار. هذه الصفحة داخل NAIOSH LAW تعرّفك به وتربطك بالتسجيل والدخول على موقع
-          التحليل المعتمد — دون جمع كلمات مرورك هنا ودون التحويل إلى HUB 360.
+          والقرار. هذه الصفحة داخل NAIOSH LAW تعرّفك به وتربطك بموقع التحليل المعتمد —
+          دون التحويل إلى HUB 360.
         </p>
         <div className="da-law-grid-3">
           <article className="da-law-card">
@@ -128,8 +106,8 @@ export function DataAnalysisLanding() {
       <section className="da-law-section" aria-labelledby="da-offer">
         <h2 id="da-offer">ماذا يقدّم؟</h2>
         <p className="lead">
-          إمكانيات ظاهرة في واجهة نظام التحليل الحي — بدون وعود غير موجودة، وبدون افتراض SSO
-          غير منفّذ.
+          إمكانيات ظاهرة في واجهة نظام التحليل الحي — اضغط «ابدأ التحليل» للانتقال إلى
+          الموقع المعتمد والبدء من هناك.
         </p>
         <div className="da-law-grid-3">
           <article className="da-law-card">
@@ -139,8 +117,8 @@ export function DataAnalysisLanding() {
           </article>
           <article className="da-law-card">
             <div className="ico">2</div>
-            <h3>دخول عبر موقع التحليل</h3>
-            <p>اضغط «تسجيل الدخول إلى نظام التحليل» لفتح naioshai.com وإكمال الدخول هناك.</p>
+            <h3>ابدأ من الموقع المعتمد</h3>
+            <p>زر «ابدأ التحليل» يفتح naioshai.com مباشرة لتسجيل الدخول واستخدام النظام.</p>
           </article>
           <article className="da-law-card">
             <div className="ico">3</div>
@@ -156,14 +134,6 @@ export function DataAnalysisLanding() {
             rel="noopener noreferrer"
           >
             ابدأ التحليل
-          </a>
-          <a
-            href={ANALYSIS_LOGIN}
-            className="da-law-btn secondary-light"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            تسجيل الدخول إلى نظام التحليل
           </a>
         </div>
       </section>
