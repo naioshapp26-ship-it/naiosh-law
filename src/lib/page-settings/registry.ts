@@ -344,7 +344,7 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
           ),
         ],
         defaultRequired: ["caseNo", "client", "phone", "country", "city", "type", "status"],
-        lockedRequired: ["caseNo", "client", "phone", "country", "city", "status"],
+        lockedRequired: ["caseNo", "client", "phone", "country", "city", "type", "status"],
       }),
       actionsTab(),
       permissionsTab(),
@@ -445,9 +445,14 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultVisibleColumns: SESSION_COLUMNS.map((c) => c.value),
       }),
       fieldsTab({
-        fieldOptions: SESSION_COLUMNS,
-        defaultRequired: ["caseNo", "date", "status"],
-        lockedRequired: ["caseNo", "date", "status"],
+        fieldOptions: [
+          ...SESSION_COLUMNS,
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !SESSION_COLUMNS.some((c) => c.value === f.value)
+          ),
+        ],
+        defaultRequired: ["caseNo", "client", "phone", "country", "city", "date", "status"],
+        lockedRequired: ["caseNo", "client", "phone", "country", "city", "date", "status"],
       }),
       actionsTab(),
       permissionsTab(),

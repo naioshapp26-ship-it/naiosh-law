@@ -387,15 +387,33 @@ export function ensurePersonContactOnFormFields(
     return true;
   });
 
-  if (needed.length === 0) return fields;
+  const requirePrimary = opts?.required !== false;
+  const withRequiredFlags = fields.map((f) => {
+    if (
+      requirePrimary &&
+      (f.key === "phone" ||
+        f.key === "phoneDialCode" ||
+        f.key === "country" ||
+        f.key === "city")
+    ) {
+      return { ...f, required: true };
+    }
+    return f;
+  });
+
+  if (needed.length === 0) return withRequiredFlags;
 
   // Insert after the last primary contact field when present; otherwise right after the name.
   const contactOrder = ["phoneDialCode", "phone", "country", "city"];
   let at = nameIdx >= 0 ? nameIdx + 1 : 0;
-  for (let i = 0; i < fields.length; i++) {
-    if (contactOrder.includes(fields[i]!.key)) at = i + 1;
+  for (let i = 0; i < withRequiredFlags.length; i++) {
+    if (contactOrder.includes(withRequiredFlags[i]!.key)) at = i + 1;
   }
-  return [...fields.slice(0, at), ...needed, ...fields.slice(at)];
+  return [
+    ...withRequiredFlags.slice(0, at),
+    ...needed,
+    ...withRequiredFlags.slice(at),
+  ];
 }
 
 /** Labels for view/detail panels — always show contact block */

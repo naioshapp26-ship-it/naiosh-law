@@ -42,6 +42,11 @@ export type SettingFieldDef = {
   max?: number;
   /** Cannot be turned off / emptied — legal/financial safety */
   locked?: boolean;
+  /**
+   * For multi-select: values that must always stay selected (cannot be toggled off).
+   * Used for legally locked person-contact / identity fields.
+   */
+  lockedValues?: string[];
   rolesCanEdit?: UserRole[];
 };
 
