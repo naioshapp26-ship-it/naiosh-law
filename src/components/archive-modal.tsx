@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import type { FileAttachment } from "@/lib/file-upload";
-import { emptyPartyFields, type PartyFields } from "@/lib/party-fields";
+import { emptyPartyFields, partyInitialFrom, type PartyFields } from "@/lib/party-fields";
+import { PartyContactFields } from "@/components/party-contact-fields";
 
 type Props = {
   open: boolean;
@@ -18,8 +19,14 @@ type Props = {
     attachments?: FileAttachment[];
     firstParty?: string;
     firstPartyPhone?: string;
+    firstPartyDialCode?: string;
+    firstPartyCountry?: string;
+    firstPartyCity?: string;
     secondParty?: string;
     secondPartyPhone?: string;
+    secondPartyDialCode?: string;
+    secondPartyCountry?: string;
+    secondPartyCity?: string;
   };
   onSave: (data: {
     title: string;
@@ -28,11 +35,7 @@ type Props = {
     tags: string;
     notes: string;
     attachments: FileAttachment[];
-    firstParty: string;
-    firstPartyPhone: string;
-    secondParty: string;
-    secondPartyPhone: string;
-  }) => void | Promise<void>;
+  } & PartyFields) => void | Promise<void>;
   onClose: () => void;
   saveLabel?: string;
 };
@@ -58,12 +61,7 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
         tags: initial?.tags ?? "",
         notes: initial?.notes ?? "",
       });
-      setParties({
-        firstParty: initial?.firstParty ?? "",
-        firstPartyPhone: initial?.firstPartyPhone ?? "",
-        secondParty: initial?.secondParty ?? "",
-        secondPartyPhone: initial?.secondPartyPhone ?? "",
-      });
+      setParties(partyInitialFrom(initial as Record<string, unknown> | undefined));
       setAttachments(initial?.attachments ?? []);
     }
   }, [open, initial]);
@@ -124,24 +122,7 @@ export function ArchiveModal({ open, title, initial, onSave, onClose, saveLabel 
               <input className="input-field" value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
-              <div>
-                <label className="input-label">طرف أول <span style={{ color: "#101D32" }}>*</span></label>
-                <input className="input-field" required value={parties.firstParty} onChange={(e) => setParties((p) => ({ ...p, firstParty: e.target.value }))} />
-              </div>
-              <div>
-                <label className="input-label">رقم جوال الطرف الأول <span style={{ color: "#101D32" }}>*</span></label>
-                <input className="input-field" type="tel" required value={parties.firstPartyPhone} onChange={(e) => setParties((p) => ({ ...p, firstPartyPhone: e.target.value }))} />
-              </div>
-              <div>
-                <label className="input-label">طرف ثاني <span style={{ color: "#101D32" }}>*</span></label>
-                <input className="input-field" required value={parties.secondParty} onChange={(e) => setParties((p) => ({ ...p, secondParty: e.target.value }))} />
-              </div>
-              <div>
-                <label className="input-label">رقم جوال الطرف الثاني <span style={{ color: "#101D32" }}>*</span></label>
-                <input className="input-field" type="tel" required value={parties.secondPartyPhone} onChange={(e) => setParties((p) => ({ ...p, secondPartyPhone: e.target.value }))} />
-              </div>
-            </div>
+            <PartyContactFields value={parties} onChange={setParties} />
 
             <div>
               <label className="input-label">الوصف</label>

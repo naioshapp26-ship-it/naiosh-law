@@ -75,7 +75,41 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, onArchive, 
         </span>
       );
     }
-    return <span className="dt-cell-secondary">{String(val ?? "—")}</span>;
+    const text = String(val ?? "—");
+    const isContactCol = col.key === "phone" || col.key === "country" || col.key === "city";
+    if (isContactCol && (text === "غير مسجل" || text === "—" || text === "")) {
+      return (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+          <span className="dt-cell-secondary" style={{ color: "#94a3b8", fontStyle: "italic" }}>
+            غير مسجل
+          </span>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+              style={{
+                border: "1px solid #fde68a",
+                background: "#fffbeb",
+                color: "#92400e",
+                borderRadius: 6,
+                padding: "0.1rem 0.45rem",
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "var(--font-cairo)",
+              }}
+              title="استكمال بيانات الاتصال"
+            >
+              استكمال
+            </button>
+          )}
+        </span>
+      );
+    }
+    return <span className="dt-cell-secondary">{text}</span>;
   };
 
   return (

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWrite } from "@/lib/api-helpers";
 import { persistCustomFieldsFromBody } from "@/lib/page-settings/record-custom-api";
+import {
+  ensureClientWithContact,
+  mapRowWithClientContact,
+  findClientContactById,
+} from "@/lib/person-contact-server";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,11 +16,45 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
 
+  const existing = await prisma.courtSession.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+
+  let clientName = existing.client;
+  let contactClientId: string | null = null;
+
+  const hasContact =
+    body.phone !== undefined ||
+    body.country !== undefined ||
+    body.city !== undefined ||
+    body.client !== undefined ||
+    body.clientId !== undefined;
+
+  if (hasContact) {
+    const ensured = await ensureClientWithContact({
+      name: body.client !== undefined ? String(body.client) : existing.client ?? "",
+      clientId: body.clientId ? String(body.clientId) : null,
+      body: body as Record<string, unknown>,
+      role: session!.role,
+      changedById: session!.sub,
+      changedByName: session!.name ?? session!.email,
+      sourceModule: "court-sessions",
+      sourceId: id,
+      requireComplete: Boolean(
+        body.phone !== undefined || body.country !== undefined || body.city !== undefined
+      ),
+    });
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.error }, { status: ensured.status });
+    }
+    clientName = ensured.clientName;
+    contactClientId = ensured.clientId;
+  }
+
   const updated = await prisma.courtSession.update({
     where: { id },
     data: {
       caseNo: body.caseNo !== undefined ? String(body.caseNo) : undefined,
-      client: body.client !== undefined ? String(body.client) : undefined,
+      client: body.client !== undefined || hasContact ? clientName : undefined,
       court: body.court !== undefined ? String(body.court) : undefined,
       room: body.room !== undefined ? String(body.room) : undefined,
       date: body.date !== undefined ? String(body.date) : undefined,
@@ -34,7 +73,25 @@ export async function PATCH(request: Request, { params }: Params) {
     role: session!.role,
   });
 
-  return NextResponse.json(updated);
+  const contact = contactClientId ? await findClientContactById(contactClientId) : null;
+
+  return NextResponse.json(
+    mapRowWithClientContact(
+      {
+        id: updated.id,
+        caseNo: updated.caseNo ?? "—",
+        client: updated.client ?? "—",
+        court: updated.court,
+        room: updated.room ?? "—",
+        date: updated.date,
+        time: updated.time ?? "—",
+        type: updated.type,
+        status: updated.status,
+      },
+      contact,
+      session!.role
+    )
+  );
 }
 
 export async function DELETE(_request: Request, { params }: Params) {

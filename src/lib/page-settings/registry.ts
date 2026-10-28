@@ -257,20 +257,26 @@ function specializedFinance(): SettingTabDef {
   };
 }
 
+/** Mandatory RTL order: caseNo → client → phone → type → court → country → city → status → nextDate → fees */
 const CASE_COLUMNS = [
   { value: "caseNo", label: "رقم القضية" },
   { value: "client", label: "الموكل" },
+  { value: "phone", label: "رقم الجوال" },
   { value: "type", label: "النوع" },
   { value: "court", label: "المحكمة" },
+  { value: "country", label: "الدولة" },
+  { value: "city", label: "المدينة" },
   { value: "status", label: "الحالة" },
-  { value: "nextDate", label: "أقرب موعد" },
-  { value: "fees", label: "الأتعاب" },
+  { value: "nextDate", label: "الجلسة القادمة" },
+  { value: "fees", label: "الرسوم" },
 ];
 
 const CLIENT_COLUMNS = [
   { value: "name", label: "الاسم" },
   { value: "type", label: "النوع" },
-  { value: "phone", label: "الهاتف" },
+  { value: "phone", label: "رقم الجوال" },
+  { value: "country", label: "الدولة" },
+  { value: "city", label: "المدينة" },
   { value: "cases", label: "عدد القضايا" },
   { value: "status", label: "الحالة" },
   { value: "since", label: "منذ" },
@@ -278,7 +284,11 @@ const CLIENT_COLUMNS = [
 
 const SESSION_COLUMNS = [
   { value: "caseNo", label: "القضية" },
+  { value: "client", label: "الموكل" },
+  { value: "phone", label: "رقم الجوال" },
   { value: "court", label: "المحكمة" },
+  { value: "country", label: "الدولة" },
+  { value: "city", label: "المدينة" },
   { value: "date", label: "التاريخ" },
   { value: "time", label: "الوقت" },
   { value: "type", label: "النوع" },
@@ -288,10 +298,23 @@ const SESSION_COLUMNS = [
 const FINANCE_COLUMNS = [
   { value: "ref", label: "المرجع" },
   { value: "client", label: "الموكل" },
+  { value: "phone", label: "رقم الجوال" },
+  { value: "country", label: "الدولة" },
+  { value: "city", label: "المدينة" },
   { value: "type", label: "النوع" },
   { value: "amount", label: "المبلغ" },
   { value: "status", label: "الحالة" },
   { value: "date", label: "التاريخ" },
+];
+
+/** Shared person-contact field options for page-settings (visibility / required / order) */
+export const PERSON_CONTACT_SETTING_FIELDS = [
+  { value: "phone", label: "رقم الجوال" },
+  { value: "phoneDialCode", label: "مفتاح الدولة" },
+  { value: "phoneSecondary", label: "رقم جوال إضافي" },
+  { value: "phoneSecondaryDialCode", label: "مفتاح الجوال الإضافي" },
+  { value: "country", label: "الدولة" },
+  { value: "city", label: "المدينة" },
 ];
 
 /** Fully operational core pages — phase 1 */
@@ -314,9 +337,14 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultVisibleColumns: CASE_COLUMNS.map((c) => c.value),
       }),
       fieldsTab({
-        fieldOptions: CASE_COLUMNS,
-        defaultRequired: ["caseNo", "client", "type", "status"],
-        lockedRequired: ["caseNo", "client", "status"],
+        fieldOptions: [
+          ...CASE_COLUMNS,
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !CASE_COLUMNS.some((c) => c.value === f.value)
+          ),
+        ],
+        defaultRequired: ["caseNo", "client", "phone", "country", "city", "type", "status"],
+        lockedRequired: ["caseNo", "client", "phone", "country", "city", "status"],
       }),
       actionsTab(),
       permissionsTab(),
@@ -350,9 +378,14 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultVisibleColumns: CLIENT_COLUMNS.map((c) => c.value),
       }),
       fieldsTab({
-        fieldOptions: CLIENT_COLUMNS,
-        defaultRequired: ["name", "type", "status"],
-        lockedRequired: ["name", "status"],
+        fieldOptions: [
+          ...CLIENT_COLUMNS,
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !CLIENT_COLUMNS.some((c) => c.value === f.value)
+          ),
+        ],
+        defaultRequired: ["name", "phone", "country", "city", "type", "status"],
+        lockedRequired: ["name", "phone", "country", "city", "status"],
       }),
       actionsTab(),
       permissionsTab(),
@@ -471,11 +504,16 @@ const CORE_OPERATIONAL: PageSettingsDefinition[] = [
         defaultVisibleColumns: FINANCE_COLUMNS.map((c) => c.value),
       }),
       fieldsTab({
-        fieldOptions: FINANCE_COLUMNS,
-        defaultRequired: ["ref", "amount", "status"],
-        lockedRequired: ["ref", "amount", "status"],
+        fieldOptions: [
+          ...FINANCE_COLUMNS,
+          ...PERSON_CONTACT_SETTING_FIELDS.filter(
+            (f) => !FINANCE_COLUMNS.some((c) => c.value === f.value)
+          ),
+        ],
+        defaultRequired: ["ref", "client", "phone", "country", "city", "amount", "status"],
+        lockedRequired: ["ref", "client", "phone", "country", "city", "amount", "status"],
       }),
-      actionsTab({ allowDelete: false }),
+      actionsTab({ allowDelete: false, allowCreate: true }),
       permissionsTab(),
       workflowTab(["مسدد", "جزئي", "غير مسدد", "مؤجل"], "غير مسدد"),
       reportsTab(),

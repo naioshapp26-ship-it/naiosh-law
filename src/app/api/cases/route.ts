@@ -6,31 +6,76 @@ import {
   persistCustomFieldsFromBody,
 } from "@/lib/page-settings/record-custom-api";
 import { assertPageAction } from "@/lib/page-settings/page-action-auth";
+import {
+  ensureClientWithContact,
+  mapRowWithClientContact,
+  findClientContactByName,
+  type ClientContactRow,
+} from "@/lib/person-contact-server";
+import { canViewPersonContact } from "@/lib/person-contact";
 
 export async function GET() {
   const { error, session } = await requireAuth();
   if (error) return error;
 
+  const role = session!.role;
+  const canView = canViewPersonContact(role);
+
   const cases = await prisma.case.findMany({
     orderBy: { createdAt: "desc" },
-    include: { client: true, branch: true, specialization: true },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          phoneDialCode: true,
+          phoneSecondary: true,
+          phoneSecondaryDialCode: true,
+          primaryPhoneSlot: true,
+          country: true,
+          city: true,
+          countrySecondary: true,
+          citySecondary: true,
+          primaryAddressSlot: true,
+        },
+      },
+      branch: true,
+      specialization: true,
+    },
   });
 
-  const base = cases.map((c) => ({
-    id: c.id,
-    caseNo: c.caseNo,
-    client: c.clientName,
-    type: c.type,
-    court: c.court,
-    status: c.status,
-    nextDate: c.nextDate ?? "—",
-    fees: c.fees ?? "0",
-    branch: c.branch?.name,
-    specialization: c.specialization?.name,
-  }));
+  // Resolve contacts for cases linked only by name
+  const nameCache = new Map<string, ClientContactRow | null>();
+  const base = [];
+  for (const c of cases) {
+    let contact = c.client as ClientContactRow | null;
+    if (!contact && c.clientName) {
+      if (!nameCache.has(c.clientName)) {
+        nameCache.set(c.clientName, await findClientContactByName(c.clientName));
+      }
+      contact = nameCache.get(c.clientName) ?? null;
+    }
+    const row = mapRowWithClientContact(
+      {
+        id: c.id,
+        caseNo: c.caseNo,
+        client: c.clientName,
+        type: c.type,
+        court: c.court,
+        status: c.status,
+        nextDate: c.nextDate ?? "—",
+        fees: c.fees ?? "0",
+        branch: c.branch?.name,
+        specialization: c.specialization?.name,
+      },
+      contact,
+      canView ? role : null
+    );
+    base.push(row);
+  }
 
   const withCustom = await attachCustomValuesToRows("case-management", base);
-  void session;
   return NextResponse.json(withCustom);
 }
 
@@ -50,23 +95,31 @@ export async function POST(request: Request) {
   const count = await prisma.case.count();
   const caseNo = body.caseNo ?? `#${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
 
-  const clientId = body.clientId ? String(body.clientId) : null;
-  let clientName = String(body.client ?? body.clientName ?? "");
-  if (clientId) {
-    const linked = await prisma.client.findUnique({ where: { id: clientId } });
-    if (!linked) return NextResponse.json({ error: "العميل غير موجود" }, { status: 404 });
-    if (!clientName) clientName = linked.name;
-    await prisma.client.update({
-      where: { id: clientId },
-      data: { casesCount: { increment: 1 } },
-    });
+  const clientNameInput = String(body.client ?? body.clientName ?? "");
+  const ensured = await ensureClientWithContact({
+    name: clientNameInput,
+    clientId: body.clientId ? String(body.clientId) : null,
+    body: body as Record<string, unknown>,
+    role: session!.role,
+    changedById: session!.sub,
+    changedByName: session!.name ?? session!.email,
+    sourceModule: "case-management",
+    requireComplete: true,
+  });
+  if (!ensured.ok) {
+    return NextResponse.json({ error: ensured.error }, { status: ensured.status });
   }
+
+  await prisma.client.update({
+    where: { id: ensured.clientId },
+    data: { casesCount: { increment: 1 } },
+  });
 
   const created = await prisma.case.create({
     data: {
       caseNo,
-      clientId,
-      clientName,
+      clientId: ensured.clientId,
+      clientName: ensured.clientName,
       type: String(body.type ?? "مدني"),
       court: String(body.court ?? ""),
       status: String(body.status ?? "نشطة"),
@@ -84,5 +137,26 @@ export async function POST(request: Request) {
     role: session!.role,
   });
 
-  return NextResponse.json({ id: created.id, caseNo: created.caseNo, clientId: created.clientId }, { status: 201 });
+  // Link audit sourceId now that case exists
+  await prisma.personContactChange.updateMany({
+    where: {
+      clientId: ensured.clientId,
+      sourceModule: "case-management",
+      sourceId: null,
+      createdAt: { gte: new Date(Date.now() - 60_000) },
+    },
+    data: { sourceId: created.id },
+  });
+
+  return NextResponse.json(
+    {
+      id: created.id,
+      caseNo: created.caseNo,
+      clientId: created.clientId,
+      phone: ensured.contact.phone,
+      country: ensured.contact.country,
+      city: ensured.contact.city,
+    },
+    { status: 201 }
+  );
 }

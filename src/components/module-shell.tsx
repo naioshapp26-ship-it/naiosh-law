@@ -13,7 +13,13 @@ import { useSession, canWriteRole } from "@/lib/session";
 import { getModuleApiEndpoint } from "@/lib/module-api";
 import { extractAttachments, persistFormAttachments, stripAttachments } from "@/lib/form-attachments";
 import { sendRecordToArchive, buildArchiveRef, buildArchiveTitle } from "@/lib/archive-client";
-import { extractPartyFields, stripPartyFields } from "@/lib/party-fields";
+import { extractPartyFields, stripPartyFields, type PartyFields } from "@/lib/party-fields";
+import {
+  ensurePersonContactOnFormFields,
+  PERSON_BEARING_MODULE_SLUGS,
+  PERSON_CONTACT_VIEW_FIELDS,
+  UNSPECIFIED_CONTACT,
+} from "@/lib/person-contact";
 import { upsertRecordParties } from "@/lib/record-parties-client";
 import { MODULE_LABELS } from "@/lib/archive-types";
 import { RecordSupplementModal } from "@/components/record-supplement-modal";
@@ -265,11 +271,17 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     if (!config) return [];
     const keys = pageSettings?.display?.visibleColumns;
     const customDefs = recordCustomDefs;
+    /** Permanent person-contact rule: never drop phone/country/city from person tables */
+    const CONTACT_KEYS = new Set(["phone", "country", "city", "phoneDialCode"]);
     const baseCols =
       !keys || keys.length === 0
         ? config.columns
         : (() => {
             const set = new Set(keys);
+            for (const c of config.columns) {
+              if (CONTACT_KEYS.has(c.key)) set.add(c.key);
+            }
+            // Preserve config column order (mandatory RTL order for cases)
             const filtered = config.columns.filter((c) => set.has(c.key));
             return filtered.length > 0 ? filtered : config.columns;
           })();
@@ -284,6 +296,17 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
   const formFields = useMemo(() => {
     if (!config) return [];
     const hidden = new Set(pageSettings?.fields?.hiddenOptionalFields ?? []);
+    // Permanent person-contact rule: contact fields stay available on person forms
+    for (const k of [
+      "phone",
+      "phoneDialCode",
+      "country",
+      "city",
+      "phoneSecondary",
+      "phoneSecondaryDialCode",
+    ]) {
+      hidden.delete(k);
+    }
     const workflowStatuses = pageSettings?.workflow?.statuses;
     const base = config.formFields
       .filter((f) => !hidden.has(f.key))
@@ -293,8 +316,19 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         }
         return f;
       });
+    // Inject missing contact fields only on person-bearing modules
+    const withContact = PERSON_BEARING_MODULE_SLUGS.has(config.slug)
+      ? ensurePersonContactOnFormFields(base, {
+          required: true,
+          force: config.slug === "clients-management" || config.slug === "administration",
+          nameKeys:
+            config.slug === "clients-management" || config.slug === "administration"
+              ? ["name", "client", "requester"]
+              : ["client", "clientName", "requester", "name"],
+        })
+      : base;
     const custom = customFieldsToFormFields(recordCustomDefs);
-    return [...base, ...custom];
+    return [...withContact, ...custom];
   }, [config, pageSettings, recordCustomDefs]);
 
   const orderedSections = useMemo(() => {
@@ -439,14 +473,12 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
     setEditTarget(null);
   };
 
-  const handleSupplementSave = async (data: {
-    notes: string;
-    attachments: ArchiveAttachment[];
-    firstParty: string;
-    firstPartyPhone: string;
-    secondParty: string;
-    secondPartyPhone: string;
-  }) => {
+  const handleSupplementSave = async (
+    data: {
+      notes: string;
+      attachments: ArchiveAttachment[];
+    } & PartyFields
+  ) => {
     if (!supplementTarget?.id) return;
     const result = await saveRecordSupplement({
       sourceModule: slug,
@@ -460,16 +492,14 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
       pushToast("error", result.message);
       return;
     }
+    const { notes: _n, attachments: _a, ...parties } = data;
+    void _n;
+    void _a;
     await upsertRecordParties({
       sourceModule: slug,
       sourceId: String(supplementTarget.id),
       sourceRef: buildArchiveRef(supplementTarget),
-      parties: {
-        firstParty: data.firstParty,
-        firstPartyPhone: data.firstPartyPhone,
-        secondParty: data.secondParty,
-        secondPartyPhone: data.secondPartyPhone,
-      },
+      parties,
     });
     pushToast("success", result.message);
     setSupplementTarget(null);
@@ -532,31 +562,79 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
 
   const renderViewModal = () => {
     if (!viewTarget) return null;
+    const shown = new Set(config.columns.map((c) => c.key));
+    const contactExtras = PERSON_CONTACT_VIEW_FIELDS.filter((f) => !shown.has(f.key));
+    const displayVal = (key: string) => {
+      const raw = viewTarget[key];
+      const s = raw == null || String(raw).trim() === "" || String(raw) === "—"
+        ? UNSPECIFIED_CONTACT
+        : String(raw);
+      return s;
+    };
+    const incomplete = Boolean(viewTarget.contactIncomplete) ||
+      PERSON_CONTACT_VIEW_FIELDS.some((f) => {
+        if (f.key.includes("Secondary")) return false;
+        const v = displayVal(f.key);
+        return v === UNSPECIFIED_CONTACT;
+      });
     return (
       <div
         style={{ position: "fixed", inset: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,18,0.55)", backdropFilter: "blur(5px)", padding: "1rem" }}
         onClick={() => setViewTarget(null)}
       >
         <div
-          style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 540, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
+          style={{ background: "#fff", borderRadius: "20px", padding: "2rem", width: "100%", maxWidth: 640, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.25)", animation: "fade-in-up 0.22s ease" }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.75rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0a12" }}>تفاصيل {config.entityName}</h2>
             <button
               onClick={() => setViewTarget(null)}
               style={{ width: 34, height: 34, borderRadius: "9px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}
             >✕</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          {incomplete && (
+            <div
+              style={{
+                marginBottom: "1rem",
+                padding: "0.75rem 1rem",
+                borderRadius: 12,
+                background: "#fffbeb",
+                border: "1px solid #fde68a",
+                color: "#92400e",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+              }}
+            >
+              بيانات الاتصال غير مكتملة ({UNSPECIFIED_CONTACT}). يمكنك استكمالها من التعديل — التعديل يُحدّث السجل المركزي للشخص ويُسجَّل في سجل التدقيق.
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }} className="view-detail-grid">
             {config.columns.map((col) => (
               <div key={col.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.label}</p>
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0a0a12" }}>{String(viewTarget[col.key] ?? "—")}</p>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", letterSpacing: "0.04em" }}>{col.label}</p>
+                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: displayVal(col.key) === UNSPECIFIED_CONTACT ? "#94a3b8" : "#0a0a12", fontStyle: displayVal(col.key) === UNSPECIFIED_CONTACT ? "italic" : "normal" }}>
+                  {displayVal(col.key)}
+                </p>
+              </div>
+            ))}
+            {contactExtras.map((f) => (
+              <div key={f.key} style={{ background: "#f8f9fb", borderRadius: "12px", padding: "0.9rem" }}>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "0.3rem", letterSpacing: "0.04em" }}>{f.label}</p>
+                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: displayVal(f.key) === UNSPECIFIED_CONTACT ? "#94a3b8" : "#0a0a12", fontStyle: displayVal(f.key) === UNSPECIFIED_CONTACT ? "italic" : "normal" }}>
+                  {displayVal(f.key)}
+                </p>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            {canWrite && incomplete && (
+              <button
+                onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
+                className="btn-primary"
+                style={{ padding: "0.65rem 1.5rem", fontSize: "0.875rem", background: "#b45309" }}
+              >استكمال بيانات الاتصال</button>
+            )}
             {canWrite && (
               <button
                 onClick={() => { setViewTarget(null); openEdit(viewTarget); }}
@@ -569,6 +647,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               style={{ padding: "0.65rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8f9fb", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.875rem", color: "#475569" }}
             >إغلاق</button>
           </div>
+          <style>{`@media (max-width: 600px) { .view-detail-grid { grid-template-columns: 1fr !important; } }`}</style>
         </div>
       </div>
     );
@@ -664,28 +743,33 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
               <div key={sec.id} className="card-white" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
                 {loadingData ? (
                   <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>جاري تحميل البيانات...</p>
-                ) : rows.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "3rem" }}>
-                    <p style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</p>
-                    <p style={{ color: "#64748b", marginBottom: "1rem" }}>لا توجد بيانات بعد</p>
-                    {allowCreate && (
-                      <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
-                        ＋ {config.addLabel}
-                      </button>
-                    )}
-                  </div>
                 ) : (
-                  <DataTable
-                    columns={visibleColumns}
-                    data={rows}
-                    pageSize={pageSize}
-                    onView={actions?.allowView === false ? undefined : setViewTarget}
-                    onEdit={allowEdit ? openEdit : undefined}
-                    onSupplement={allowEdit && !usingDemo ? setSupplementTarget : undefined}
-                    onArchive={allowArchive && !usingDemo ? setArchiveTarget : undefined}
-                    onDelete={allowDelete ? setDeleteTarget : undefined}
-                    searchPlaceholder={`بحث في ${config.entityName}ات...`}
-                  />
+                  <>
+                    {/* Always render column headers (incl. person-contact) even when empty */}
+                    <DataTable
+                      columns={visibleColumns}
+                      data={rows}
+                      pageSize={pageSize}
+                      onView={actions?.allowView === false || rows.length === 0 ? undefined : setViewTarget}
+                      onEdit={allowEdit && rows.length > 0 ? openEdit : undefined}
+                      onSupplement={allowEdit && !usingDemo && rows.length > 0 ? setSupplementTarget : undefined}
+                      onArchive={allowArchive && !usingDemo && rows.length > 0 ? setArchiveTarget : undefined}
+                      onDelete={allowDelete && rows.length > 0 ? setDeleteTarget : undefined}
+                      searchPlaceholder={`بحث في ${config.entityName}ات...`}
+                    />
+                    {rows.length === 0 && (
+                      <div style={{ textAlign: "center", padding: "1.5rem 1rem 0.5rem" }}>
+                        <p style={{ color: "#64748b", marginBottom: "0.75rem", fontSize: "0.9rem" }}>
+                          لا توجد بيانات بعد — الأعمدة جاهزة (بما فيها رقم الجوال والدولة والمدينة عند وجود شخص)
+                        </p>
+                        {allowCreate && (
+                          <button onClick={openAdd} className="btn-primary" style={{ padding: "0.65rem 1.5rem" }}>
+                            ＋ {config.addLabel}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             );
@@ -739,6 +823,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         onSave={handleSave}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}
         saveLabel={editTarget ? "حفظ التعديلات" : "إضافة"}
+        enableParties={config.slug === "case-management"}
       />
 
       {renderViewModal()}

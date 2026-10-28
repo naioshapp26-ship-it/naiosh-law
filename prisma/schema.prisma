@@ -73,6 +73,18 @@ model Client {
   country            String?
   city               String?
   address            String?
+  /// ITU dial code for primary mobile (e.g. "+20") — central person-contact source
+  phoneDialCode      String?
+  /// Optional secondary mobile
+  phoneSecondary     String?
+  phoneSecondaryDialCode String?
+  /// 0 = primary phone field, 1 = secondary is primary
+  primaryPhoneSlot   Int      @default(0)
+  /// Optional secondary address
+  countrySecondary   String?
+  citySecondary      String?
+  /// 0 = primary address fields, 1 = secondary is primary
+  primaryAddressSlot Int      @default(0)
   preferredLanguage  String   @default("ar")
   companyName        String?
   authorizedPerson   String?
@@ -92,6 +104,26 @@ model Client {
   financialRecords   FinancialRecord[]
   consultations      Consultation[]
   conversations      PortalConversation[]
+  contactChanges     PersonContactChange[]
+}
+
+/// Audit log for contact field changes on Client (phone / country / city / dial / secondary).
+/// Never deletes prior values — append-only history.
+model PersonContactChange {
+  id             String   @id @default(cuid())
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  field          String
+  oldValue       String?
+  newValue       String?
+  changedById    String?
+  changedByName  String?
+  sourceModule   String?
+  sourceId       String?
+  createdAt      DateTime @default(now())
+
+  @@index([clientId, createdAt])
+  @@index([sourceModule, sourceId])
 }
 
 /// Secure one-time password reset tokens (hashed at rest)
@@ -1026,8 +1058,17 @@ model RecordParty {
   sourceRef        String?
   firstParty       String?
   firstPartyPhone  String?
+  firstPartyDialCode String?
+  firstPartyCountry  String?
+  firstPartyCity     String?
   secondParty      String?
   secondPartyPhone String?
+  secondPartyDialCode String?
+  secondPartyCountry  String?
+  secondPartyCity     String?
+  /// Optional link to central Client for first/second party when they are registered
+  firstPartyClientId  String?
+  secondPartyClientId String?
   updatedBy        String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
