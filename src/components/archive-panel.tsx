@@ -109,11 +109,15 @@ export function ArchivePanel() {
         firstPartyDialCode,
         firstPartyCountry,
         firstPartyCity,
+        firstPartyPhoneSecondary,
+        firstPartyPhoneSecondaryDialCode,
         secondParty,
         secondPartyPhone,
         secondPartyDialCode,
         secondPartyCountry,
         secondPartyCity,
+        secondPartyPhoneSecondary,
+        secondPartyPhoneSecondaryDialCode,
         ...rest
       } = data;
       const parties = {
@@ -122,21 +126,25 @@ export function ArchivePanel() {
         firstPartyDialCode,
         firstPartyCountry,
         firstPartyCity,
+        firstPartyPhoneSecondary,
+        firstPartyPhoneSecondaryDialCode,
         secondParty,
         secondPartyPhone,
         secondPartyDialCode,
         secondPartyCountry,
         secondPartyCity,
+        secondPartyPhoneSecondary,
+        secondPartyPhoneSecondaryDialCode,
       };
       const payload = {
         ...rest,
         notes: [
           data.notes,
           firstParty
-            ? `طرف أول: ${firstParty} (${firstPartyDialCode} ${firstPartyPhone}) — ${firstPartyCountry}/${firstPartyCity}`
+            ? `طرف أول: ${firstParty} (${firstPartyDialCode} ${firstPartyPhone}) — ${firstPartyCountry}/${firstPartyCity}${firstPartyPhoneSecondary ? ` · إضافي ${firstPartyPhoneSecondaryDialCode} ${firstPartyPhoneSecondary}` : ""}`
             : "",
           secondParty
-            ? `طرف ثاني: ${secondParty} (${secondPartyDialCode} ${secondPartyPhone}) — ${secondPartyCountry}/${secondPartyCity}`
+            ? `طرف ثاني: ${secondParty} (${secondPartyDialCode} ${secondPartyPhone}) — ${secondPartyCountry}/${secondPartyCity}${secondPartyPhoneSecondary ? ` · إضافي ${secondPartyPhoneSecondaryDialCode} ${secondPartyPhoneSecondary}` : ""}`
             : "",
         ]
           .filter(Boolean)

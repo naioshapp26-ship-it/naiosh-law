@@ -23,6 +23,12 @@ export type PortalConversationDto = {
   requestId: string | null;
   clientId: string;
   clientName: string;
+  clientPhone?: string | null;
+  clientPhoneDialCode?: string | null;
+  clientPhoneSecondary?: string | null;
+  clientPhoneSecondaryDialCode?: string | null;
+  clientCountry?: string | null;
+  clientCity?: string | null;
   staffUserId: string | null;
   staffName: string | null;
   lastMessageAt: string;

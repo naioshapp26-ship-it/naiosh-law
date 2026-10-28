@@ -11,10 +11,26 @@ export async function POST(request: Request) {
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
     const phone = String(body.phone ?? "").trim() || null;
+    const { parseDialCodeOption } = await import("@/lib/person-contact");
+    const phoneDialCode = body.phoneDialCode
+      ? parseDialCodeOption(String(body.phoneDialCode))
+      : null;
+    const phoneSecondary = String(body.phoneSecondary ?? "").trim() || null;
+    const phoneSecondaryDialCode = body.phoneSecondaryDialCode
+      ? parseDialCodeOption(String(body.phoneSecondaryDialCode))
+      : null;
+    const country = String(body.country ?? "").trim() || null;
+    const city = String(body.city ?? "").trim() || null;
     const type = String(body.type ?? "فرد").trim() || "فرد";
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "الاسم والبريد وكلمة المرور مطلوبة" }, { status: 400 });
+    }
+    if (!phone || !phoneDialCode || !country || !city) {
+      return NextResponse.json(
+        { error: "مفتاح الدولة ورقم الجوال والدولة والمدينة مطلوبة" },
+        { status: 400 }
+      );
     }
     const { validatePasswordStrength } = await import("@/lib/password-policy");
     const strength = validatePasswordStrength(password);
@@ -47,10 +63,15 @@ export async function POST(request: Request) {
         name,
         email,
         phone,
+        phoneDialCode,
+        phoneSecondary,
+        phoneSecondaryDialCode,
+        country,
+        city,
         type,
         internalNo,
         preferredLanguage: "ar",
-        profileComplete: false,
+        profileComplete: Boolean(name && phone && country && city),
         isDemo: false,
         status: "نشط",
         notes: "حساب عميل جديد عبر بوابة التسجيل",

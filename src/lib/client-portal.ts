@@ -25,6 +25,9 @@ export type PortalProfile = {
   name: string;
   email: string;
   phone: string | null;
+  phoneDialCode: string | null;
+  phoneSecondary: string | null;
+  phoneSecondaryDialCode: string | null;
   type: string;
   avatarUrl: string | null;
   country: string | null;
@@ -156,10 +159,13 @@ export function demoPortalBundle() {
     userId: DEMO_CLIENT_USER_ID,
     name: "عميل تجريبي",
     email: DEMO_CLIENT_EMAIL,
-    phone: "+966500000001",
+    phone: "500000001",
+    phoneDialCode: "+966",
+    phoneSecondary: null,
+    phoneSecondaryDialCode: null,
     type: "فرد",
     avatarUrl: null,
-    country: "المملكة العربية السعودية",
+    country: "السعودية",
     city: "الرياض",
     address: "حي تجريبي — للاطلاع فقط",
     preferredLanguage: "ar",

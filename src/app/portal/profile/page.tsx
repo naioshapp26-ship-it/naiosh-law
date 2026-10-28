@@ -132,11 +132,33 @@ function ProfileInner() {
               <input value={profile.email} disabled />
             </label>
             <label>
-              رقم الهاتف
+              مفتاح الدولة
+              <select
+                value={profile.phoneDialCode || ""}
+                onChange={(e) => setProfile({ ...profile, phoneDialCode: e.target.value })}
+                disabled={profile.isDemo}
+              >
+                <option value="">اختر...</option>
+                <option value="+20">+20 (مصر)</option>
+                <option value="+966">+966 (السعودية)</option>
+                <option value="+971">+971 (الإمارات)</option>
+                <option value="+965">+965 (الكويت)</option>
+                <option value="+974">+974 (قطر)</option>
+                <option value="+973">+973 (البحرين)</option>
+                <option value="+968">+968 (عُمان)</option>
+                <option value="+962">+962 (الأردن)</option>
+                <option value="+961">+961 (لبنان)</option>
+                <option value="+1">+1</option>
+                <option value="+44">+44</option>
+              </select>
+            </label>
+            <label>
+              رقم الجوال
               <input
                 value={profile.phone || ""}
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                 disabled={profile.isDemo}
+                placeholder="5XXXXXXXX"
               />
             </label>
             <label>
@@ -152,11 +174,22 @@ function ProfileInner() {
             </label>
             <label>
               الدولة
-              <input
+              <select
                 value={profile.country || ""}
                 onChange={(e) => setProfile({ ...profile, country: e.target.value })}
                 disabled={profile.isDemo}
-              />
+              >
+                <option value="">اختر...</option>
+                <option value="مصر">مصر</option>
+                <option value="السعودية">السعودية</option>
+                <option value="الإمارات">الإمارات</option>
+                <option value="الكويت">الكويت</option>
+                <option value="قطر">قطر</option>
+                <option value="البحرين">البحرين</option>
+                <option value="عُمان">عُمان</option>
+                <option value="الأردن">الأردن</option>
+                <option value="أخرى">أخرى</option>
+              </select>
             </label>
             <label>
               المدينة
@@ -164,6 +197,29 @@ function ProfileInner() {
                 value={profile.city || ""}
                 onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                 disabled={profile.isDemo}
+              />
+            </label>
+            <label>
+              مفتاح الجوال الإضافي
+              <select
+                value={profile.phoneSecondaryDialCode || ""}
+                onChange={(e) => setProfile({ ...profile, phoneSecondaryDialCode: e.target.value })}
+                disabled={profile.isDemo}
+              >
+                <option value="">اختياري...</option>
+                <option value="+20">+20 (مصر)</option>
+                <option value="+966">+966 (السعودية)</option>
+                <option value="+971">+971 (الإمارات)</option>
+                <option value="+962">+962 (الأردن)</option>
+              </select>
+            </label>
+            <label>
+              رقم جوال إضافي
+              <input
+                value={profile.phoneSecondary || ""}
+                onChange={(e) => setProfile({ ...profile, phoneSecondary: e.target.value })}
+                disabled={profile.isDemo}
+                placeholder="اختياري"
               />
             </label>
             <label style={{ gridColumn: "1 / -1" }}>

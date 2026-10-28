@@ -28,6 +28,13 @@ type Professional = {
   name: string;
   type: string;
   licenseNo: string;
+  phone?: string;
+  phoneDialCode?: string;
+  phoneSecondary?: string;
+  phoneSecondaryDialCode?: string;
+  country?: string;
+  city?: string;
+  phoneDisplay?: string;
   rating: string;
   status: string;
   specializations: string;
@@ -59,7 +66,29 @@ const profFields: FormField[] = [
   { key: "name", label: "الاسم", type: "text", required: true },
   { key: "type", label: "النوع", type: "select", required: true, options: ["محامٍ", "مستشار", "قاضٍ"] },
   { key: "licenseNo", label: "رقم الترخيص", type: "text" },
-  { key: "phone", label: "الهاتف", type: "tel" },
+  {
+    key: "phoneDialCode",
+    label: "مفتاح الدولة",
+    type: "select",
+    required: true,
+    options: ["+20 (مصر)", "+966 (السعودية)", "+971 (الإمارات)", "+965 (الكويت)", "+974 (قطر)", "+962 (الأردن)"],
+  },
+  { key: "phone", label: "رقم الجوال", type: "tel", required: true, placeholder: "5XXXXXXXX" },
+  {
+    key: "country",
+    label: "الدولة",
+    type: "select",
+    required: true,
+    options: ["مصر", "السعودية", "الإمارات", "الكويت", "قطر", "الأردن", "أخرى"],
+  },
+  { key: "city", label: "المدينة", type: "text", required: true, dependsOn: "country" },
+  {
+    key: "phoneSecondaryDialCode",
+    label: "مفتاح الجوال الإضافي",
+    type: "select",
+    options: ["+20 (مصر)", "+966 (السعودية)", "+971 (الإمارات)", "+962 (الأردن)"],
+  },
+  { key: "phoneSecondary", label: "رقم جوال إضافي", type: "tel", placeholder: "اختياري" },
   { key: "email", label: "البريد", type: "email" },
 ];
 
@@ -292,6 +321,18 @@ export default function ProfessionalNetworkPage() {
                   </span>
                 </div>
                 <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "0.35rem" }}>ترخيص: {p.licenseNo}</p>
+                <p style={{ fontSize: "0.78rem", color: "#475569", marginBottom: "0.25rem" }}>
+                  📞 {p.phoneDisplay || p.phone || "غير مسجل"}
+                  {p.phoneDialCode ? ` · مفتاح ${p.phoneDialCode}` : ""}
+                </p>
+                <p style={{ fontSize: "0.78rem", color: "#475569", marginBottom: "0.25rem" }}>
+                  📍 {[p.country, p.city].filter(Boolean).join(" / ") || "غير مسجل"}
+                </p>
+                {(p.phoneSecondary || p.phoneSecondaryDialCode) && (
+                  <p style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "0.35rem" }}>
+                    جوال إضافي: {p.phoneSecondaryDialCode || ""} {p.phoneSecondary || ""}
+                  </p>
+                )}
                 <p style={{ fontSize: "0.78rem", color: "#475569", marginBottom: "0.75rem" }}>{p.specializations || "—"}</p>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "#f59e0b", fontWeight: 700 }}>⭐ {p.rating}</span>

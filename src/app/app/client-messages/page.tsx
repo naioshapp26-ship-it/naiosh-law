@@ -11,6 +11,14 @@ import {
 import { usePageSettings } from "@/lib/page-settings/use-page-settings";
 import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
 import type { PortalConversationDto, PortalMessageDto } from "@/lib/portal-messages-types";
+import { formatPhoneDisplay, UNSPECIFIED_CONTACT } from "@/lib/person-contact";
+
+function contactLine(c: PortalConversationDto) {
+  const phone = formatPhoneDisplay(c.clientPhoneDialCode, c.clientPhone);
+  const geo = [c.clientCountry, c.clientCity].filter(Boolean).join(" / ") || UNSPECIFIED_CONTACT;
+  const secondary = formatPhoneDisplay(c.clientPhoneSecondaryDialCode, c.clientPhoneSecondary);
+  return `${phone} · ${geo}${secondary !== UNSPECIFIED_CONTACT ? ` · إضافي: ${secondary}` : ""}`;
+}
 
 export default function StaffClientMessagesPage() {
   const pageSettings = usePageSettings("client-messages");
@@ -18,7 +26,7 @@ export default function StaffClientMessagesPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PortalMessageDto[]>([]);
   const [subject, setSubject] = useState("");
-  const [clientName, setClientName] = useState("");
+  const [activeConversation, setActiveConversation] = useState<PortalConversationDto | null>(null);
   const [reply, setReply] = useState("");
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
@@ -53,7 +61,7 @@ export default function StaffClientMessagesPage() {
     setActiveId(id);
     setMessages(json.messages || []);
     setSubject(json.conversation?.subject || "");
-    setClientName(json.conversation?.clientName || "");
+    setActiveConversation(json.conversation || null);
   }, []);
 
   useEffect(() => {
@@ -131,6 +139,7 @@ export default function StaffClientMessagesPage() {
                         }`}
                       >
                         <div className="font-bold text-[#101D32]">{c.clientName}</div>
+                        <div className="text-xs text-slate-600 font-semibold">{contactLine(c)}</div>
                         <div className="text-sm font-semibold">{c.subject}</div>
                         <div className="text-xs text-slate-500">
                           {new Date(c.lastMessageAt).toLocaleString("ar")}
@@ -151,7 +160,12 @@ export default function StaffClientMessagesPage() {
               <>
                 <div className="mb-3 border-b border-slate-100 pb-3">
                   <h2 className="text-lg font-black text-[#101D32]">{subject}</h2>
-                  <p className="text-sm text-slate-600 font-semibold">العميل: {clientName}</p>
+                  <p className="text-sm text-slate-600 font-semibold">
+                    العميل: {activeConversation?.clientName || "—"}
+                  </p>
+                  {activeConversation ? (
+                    <p className="text-xs text-slate-500 font-semibold mt-1">{contactLine(activeConversation)}</p>
+                  ) : null}
                 </div>
                 <div className="max-h-[360px] overflow-y-auto space-y-2 mb-4">
                   {messages.map((m) => (

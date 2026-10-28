@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWrite } from "@/lib/api-helpers";
+import { parseDialCodeOption } from "@/lib/person-contact";
 
 export async function GET(request: Request) {
   const { error } = await requireAuth();
@@ -31,6 +32,13 @@ export async function POST(request: Request) {
       court: body.court ? String(body.court) : null,
       chamber: body.chamber ? String(body.chamber) : null,
       phone: body.phone ? String(body.phone) : null,
+      phoneDialCode: body.phoneDialCode ? parseDialCodeOption(String(body.phoneDialCode)) : null,
+      phoneSecondary: body.phoneSecondary ? String(body.phoneSecondary) : null,
+      phoneSecondaryDialCode: body.phoneSecondaryDialCode
+        ? parseDialCodeOption(String(body.phoneSecondaryDialCode))
+        : null,
+      country: body.country ? String(body.country) : null,
+      city: body.city ? String(body.city) : null,
       status: String(body.status ?? "نشط"),
     },
     include: { entity: true },
