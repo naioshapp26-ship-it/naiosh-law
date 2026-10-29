@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getPrisma } from "@/lib/prisma";
-import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { setAuthCookie, signToken } from "@/lib/auth";
 import { requireAuth } from "@/lib/api-helpers";
 import { validatePasswordStrength } from "@/lib/password-policy";
 import { isDemoPortalSession } from "@/lib/client-portal";
@@ -70,13 +70,7 @@ export async function POST(request: Request) {
       ok: true,
       message: "تم تغيير كلمة المرور بنجاح — تم إنهاء الجلسات الأخرى",
     });
-    response.cookies.set(AUTH_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    setAuthCookie(response, token);
     return response;
   } catch (e) {
     console.error("change-password error");

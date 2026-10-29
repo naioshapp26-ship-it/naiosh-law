@@ -48,9 +48,10 @@ body.dark-mode .portal-btn.primary{background:#B79A61;color:#0B1424}
 body.dark-mode .portal-loading{background:#0b1220;color:#F5F1E8}
 @media (max-width:1100px){.portal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:860px){
-  .portal-sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-105%);transition:transform .25s ease;width:min(86vw,300px)}
+  .portal-sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-105%);transition:transform .25s ease;width:min(86vw,300px);z-index:50;pointer-events:auto;padding-bottom:max(1.1rem,env(safe-area-inset-bottom))}
   .portal-sidebar.is-open{transform:translateX(0)}
   .portal-menu-btn{display:inline-flex;align-items:center;justify-content:center}
-  .portal-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);border:0;z-index:30}
+  .portal-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);border:0;z-index:45}
+  .portal-logout{position:relative;z-index:2;min-height:48px;touch-action:manipulation;pointer-events:auto}
   .portal-grid{grid-template-columns:1fr}
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getPrisma } from "@/lib/prisma";
-import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { setAuthCookie, signToken } from "@/lib/auth";
 import { PORTAL_HOME } from "@/lib/client-portal";
 
 export async function POST(request: Request) {
@@ -90,13 +90,7 @@ export async function POST(request: Request) {
       redirect: "/portal/profile?onboarding=1",
       home: PORTAL_HOME,
     });
-    response.cookies.set(AUTH_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    setAuthCookie(response, token);
     return response;
   } catch (error) {
     console.error("Register error:", error);
