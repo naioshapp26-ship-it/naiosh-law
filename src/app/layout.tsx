@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link
           rel="stylesheet"
-          href="/newhome/mobile-header.css?v=identity-purge-20261026"
+          href="/newhome/mobile-header.css?v=mobile-nav-contrast-20261029"
           data-erp-home="1"
         />
         <link
@@ -65,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link
           rel="stylesheet"
-          href="/newhome/legal-identity-overrides.css?v=marquee-ltr-motion-20261027"
+          href="/newhome/legal-identity-overrides.css?v=mobile-nav-contrast-20261029"
           data-erp-home="1"
         />
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}

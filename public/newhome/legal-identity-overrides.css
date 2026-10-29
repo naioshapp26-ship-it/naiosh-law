@@ -1,4 +1,4 @@
-/* Central legal identity overrides — v=identity-purge-20261026 */
+/* Central legal identity overrides — v=mobile-nav-contrast-20261029 */
 :root {
   --primary: #101D32 !important;
   --primary-dark: #0B1424 !important;
@@ -16,6 +16,13 @@
   --homepage-red: #101D32 !important;
   --homepage-red-hover: #B79A61 !important;
   --erp-app-bg: #F5F1E8 !important;
+  --mobile-drawer-bg: #ffffff;
+  --mobile-drawer-text: #0B1424;
+  --mobile-drawer-muted: #526071;
+  --mobile-drawer-border: rgba(16, 29, 50, 0.14);
+  --mobile-drawer-hover: #F5F1E8;
+  --mobile-drawer-gold: linear-gradient(135deg, #C8AE74, #B79A61);
+  --mobile-drawer-navy: #101D32;
 }
 
 body.homepage .announcement-bar {
@@ -46,4 +53,210 @@ body:has(.hq-dashboard),
 .hq-hero {
   background: linear-gradient(135deg, #0B1424, #101D32, #1A304D) !important;
   border-color: rgba(183, 154, 97, 0.28) !important;
+}
+
+/*
+ * Mobile drawer contrast (central).
+ * Beats legal-hero desktop white-on-navy link colors when the light drawer is open.
+ * Rule: light surface → navy text; dark surface → white text; gold → navy text.
+ */
+@media (max-width: 768px) {
+  body.homepage .top-nav.is-mobile-nav-open::after {
+    background: var(--mobile-drawer-bg) !important;
+  }
+
+  body.homepage .top-nav.is-mobile-nav-open .nav-links::before,
+  body.homepage .top-nav.is-mobile-nav-open .auth-actions-shell::before {
+    color: var(--mobile-drawer-muted) !important;
+  }
+
+  body.homepage .top-nav.is-mobile-nav-open .auth-actions-shell {
+    background: #F8F6F1 !important;
+    border-top: 2px solid var(--mobile-drawer-border) !important;
+    z-index: 64 !important;
+  }
+
+  body.homepage .top-nav.is-mobile-nav-open .nav-main > .nav-links,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links {
+    z-index: 63 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Light drawer items → dark navy text (pages, submenus, titles, buttons) */
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a span,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a i,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown summary,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown-menu a,
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership-btn,
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership-menu a,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.primary,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.magnetic-btn,
+  body.homepage .top-nav.is-mobile-nav-open .auth-actions .dark-mode-toggle {
+    color: var(--mobile-drawer-text) !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid var(--mobile-drawer-border) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: var(--mobile-drawer-text) !important;
+  }
+
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a {
+    margin-block: 4px !important;
+    border-bottom: 1px solid var(--mobile-drawer-border) !important;
+  }
+
+  /* Hover / focus on light surfaces */
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a:hover,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown summary:hover,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown summary:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown-menu a:hover,
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership-menu a:hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn:hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.magnetic-btn:hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.magnetic-btn:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .auth-actions .dark-mode-toggle:hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-actions .dark-mode-toggle:focus-visible {
+    color: var(--mobile-drawer-text) !important;
+    background: var(--mobile-drawer-hover) !important;
+    background-image: none !important;
+    border-color: rgba(183, 154, 97, 0.55) !important;
+    -webkit-text-fill-color: var(--mobile-drawer-text) !important;
+  }
+
+  /* Pressed */
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a:active,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown summary:active,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn:active,
+  body.homepage .top-nav.is-mobile-nav-open .auth-actions .dark-mode-toggle:active {
+    color: var(--mobile-drawer-text) !important;
+    background: #EDE6D9 !important;
+    -webkit-text-fill-color: var(--mobile-drawer-text) !important;
+  }
+
+  /* Gold / selected → navy text */
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.active,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.active span,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.active i,
+  body.homepage .top-nav.is-mobile-nav-open .nav-dropdown[open] summary,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.auth-btn-primary,
+  body.homepage .top-nav.is-mobile-nav-open a.auth-btn-primary,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.auth-btn-primary:hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.auth-btn-primary:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn.auth-btn-primary:active,
+  body.homepage .top-nav.is-mobile-nav-open a.auth-btn-primary:hover,
+  body.homepage .top-nav.is-mobile-nav-open a.auth-btn-primary:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open a.auth-btn-primary:active {
+    background: var(--mobile-drawer-gold) !important;
+    background-image: linear-gradient(135deg, #C8AE74, #B79A61) !important;
+    color: #0B1424 !important;
+    border-color: #B79A61 !important;
+    box-shadow: none !important;
+    font-weight: 800 !important;
+    -webkit-text-fill-color: #0B1424 !important;
+  }
+
+  /* Dark navy filled controls in the drawer → white text */
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership-btn,
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership-btn:hover,
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership.is-open > .nav-ownership-btn,
+  body.homepage .top-nav.is-mobile-nav-open .nav-ownership-btn[aria-expanded="true"],
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn[href*="login"]:not(.auth-btn-primary),
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn[href*="register"]:not(.auth-btn-primary) {
+    background: var(--mobile-drawer-navy) !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border-color: rgba(183, 154, 97, 0.45) !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn[href*="login"]:not(.auth-btn-primary):hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn[href*="register"]:not(.auth-btn-primary):hover,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn[href*="login"]:not(.auth-btn-primary):focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .auth-btn[href*="register"]:not(.auth-btn-primary):focus-visible {
+    background: #0B1424 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  /* Header chrome on dark navy stays white (not part of light drawer) */
+  body.homepage .top-nav.is-mobile-nav-open .logo-text,
+  body.homepage .top-nav.is-mobile-nav-open .mobile-nav-toggle,
+  body.homepage .top-nav.is-mobile-nav-open .mobile-header-login {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  /* ── Dark mode drawer: dark surfaces → light text; gold stays navy text ── */
+  body.homepage.dark-mode {
+    --mobile-drawer-bg: #141418;
+    --mobile-drawer-text: #F3F4F8;
+    --mobile-drawer-muted: #A7AFBC;
+    --mobile-drawer-border: #30303A;
+    --mobile-drawer-hover: #1C1C22;
+  }
+
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open::after {
+    background: var(--mobile-drawer-bg) !important;
+  }
+
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-actions-shell {
+    background: #1C1C22 !important;
+    border-top-color: var(--mobile-drawer-border) !important;
+  }
+
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a span,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a i,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-dropdown summary,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-dropdown-menu a,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-ownership-menu a,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn.primary,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn.magnetic-btn,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-actions .dark-mode-toggle {
+    color: var(--mobile-drawer-text) !important;
+    background: #1C1C22 !important;
+    border-color: var(--mobile-drawer-border) !important;
+    -webkit-text-fill-color: var(--mobile-drawer-text) !important;
+  }
+
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a:hover,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a:focus-visible,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn:hover,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn:focus-visible,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-actions .dark-mode-toggle:hover {
+    color: #ffffff !important;
+    background: #24242C !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a.active,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a.active span,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-links a.active i,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn.auth-btn-primary,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open a.auth-btn-primary,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn.auth-btn-primary:hover,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open a.auth-btn-primary:hover {
+    background: linear-gradient(135deg, #C8AE74, #B79A61) !important;
+    background-image: linear-gradient(135deg, #C8AE74, #B79A61) !important;
+    color: #0B1424 !important;
+    border-color: #B79A61 !important;
+    -webkit-text-fill-color: #0B1424 !important;
+  }
+
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .nav-ownership-btn,
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn[href*="login"]:not(.auth-btn-primary),
+  body.homepage.dark-mode .top-nav.is-mobile-nav-open .auth-btn[href*="register"]:not(.auth-btn-primary) {
+    background: #0B1424 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
 }
