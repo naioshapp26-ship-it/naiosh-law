@@ -9,12 +9,12 @@ const STYLESHEETS = [
   "/newhome/homepage-premium.css?v=identity-purge-20261026",
   "/newhome/dark-mode.css?v=identity-purge-20261026",
   "/newhome/homepage-dark-fix.css?v=identity-purge-20261026",
-  "/newhome/mobile-header.css?v=identity-purge-20261026",
+  "/newhome/mobile-header.css?v=mobile-nav-contrast-20261029",
   "/newhome/landing-shared.css?v=ownership-page-20261026",
   "/newhome/branches-page.css?v=widen-public-20261026",
   "/newhome/ads-page.css?v=widen-public-20261026",
   "/newhome/legal-hero-reference.css?v=marquee-ltr-motion-20261027",
-  "/newhome/legal-identity-overrides.css?v=marquee-ltr-motion-20261027",
+  "/newhome/legal-identity-overrides.css?v=mobile-nav-contrast-20261029",
 ] as const;
 
 function stylesheetId(href: string) {
