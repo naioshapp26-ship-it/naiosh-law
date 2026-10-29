@@ -1,8 +1,33 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import type { UserRole } from "@/generated/prisma/client";
 
 export const AUTH_COOKIE = "naiosh-auth-token";
+
+/** Must match on set and clear — browsers (esp. mobile) ignore deletes with mismatched attrs. */
+export const AUTH_COOKIE_BASE = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
+
+export function setAuthCookie(response: NextResponse, token: string, maxAge = 60 * 60 * 24 * 7) {
+  response.cookies.set(AUTH_COOKIE, token, {
+    ...AUTH_COOKIE_BASE,
+    maxAge,
+  });
+}
+
+/** Explicit overwrite — do not use cookies.delete() alone (drops HttpOnly/SameSite). */
+export function clearAuthCookie(response: NextResponse) {
+  response.cookies.set(AUTH_COOKIE, "", {
+    ...AUTH_COOKIE_BASE,
+    maxAge: 0,
+    expires: new Date(0),
+  });
+}
 
 export type AuthPayload = {
   sub: string;

@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE, getSessionFromCookies } from "@/lib/auth";
+import { clearAuthCookie, getSessionFromCookies } from "@/lib/auth";
 import { assertSessionNotRevoked } from "@/lib/auth-session-guard";
 
-function clearAndUnauthorized(message: string, clearCookie: boolean) {
-  const res = NextResponse.json({ error: message, code: clearCookie ? "SESSION_REVOKED" : "UNAUTHENTICATED" }, { status: 401 });
-  if (clearCookie) {
-    res.cookies.set(AUTH_COOKIE, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
+function clearAndUnauthorized(message: string, shouldClearCookie: boolean) {
+  const res = NextResponse.json({ error: message, code: shouldClearCookie ? "SESSION_REVOKED" : "UNAUTHENTICATED" }, { status: 401 });
+  if (shouldClearCookie) {
+    clearAuthCookie(res);
   }
   return res;
 }

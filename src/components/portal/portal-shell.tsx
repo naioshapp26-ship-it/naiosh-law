@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, type MouseEvent } from "react";
 import { DarkModeToggle } from "@/components/color-mode";
 import { BrandLogo } from "@/components/brand-logo";
 import { PageDynamicSections } from "@/components/page-settings/page-dynamic-sections";
@@ -60,12 +60,14 @@ export function PortalShell({
   const [open, setOpen] = useState(false);
   const [flags, setFlags] = useState<PortalFlags>({});
   const [portalSettings, setPortalSettings] = useState<PortalPageSettings>({});
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   useEffect(() => {
     if (!document.querySelector('link[data-portal-css]')) {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "/newhome/portal.css?v=portal-360-20261028";
+      css.href = "/newhome/portal.css?v=logout-fix-20261029";
       css.setAttribute("data-portal-css", "1");
       document.head.appendChild(css);
     }
@@ -158,9 +160,37 @@ export function PortalShell({
     return v !== false;
   });
 
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    window.location.assign("/login");
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      void fetch("/api/auth/me", { credentials: "include", cache: "no-store" }).then((res) => {
+        if (!res.ok) window.location.replace("/login");
+      });
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  const logout = async (event?: MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (loggingOut) return;
+    setLogoutError("");
+    setLoggingOut(true);
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        throw new Error("تعذر تسجيل الخروج من الخادم — حاول مرة أخرى");
+      }
+      window.location.replace("/login");
+    } catch (err) {
+      setLoggingOut(false);
+      setLogoutError(err instanceof Error ? err.message : "تعذر تسجيل الخروج — حاول مرة أخرى");
+    }
   };
 
   if (!ready) {
@@ -221,10 +251,22 @@ export function PortalShell({
             );
           })}
         </nav>
-        <button type="button" className="portal-logout" onClick={logout}>
+        <button
+          type="button"
+          className="portal-logout"
+          data-testid="sidebar-logout"
+          onClick={logout}
+          disabled={loggingOut}
+          aria-busy={loggingOut}
+        >
           <i className="fas fa-right-from-bracket" aria-hidden />
-          تسجيل الخروج
+          {loggingOut ? "جاري الخروج..." : "تسجيل الخروج"}
         </button>
+        {logoutError ? (
+          <p role="alert" style={{ margin: 0, color: "#fecaca", fontSize: "0.75rem", fontWeight: 700, textAlign: "center" }}>
+            {logoutError}
+          </p>
+        ) : null}
       </aside>
 
       <div className="portal-main">

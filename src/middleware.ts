@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { AUTH_COOKIE } from "@/lib/auth";
+import { AUTH_COOKIE, clearAuthCookie } from "@/lib/auth";
 
 const secret = new TextEncoder().encode(
   process.env.JWT_SECRET?.trim() || "naiosh-law-dev-secret-change-in-production"
@@ -49,26 +49,32 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/portal")) {
     if (!token || !session?.ok) {
       const res = NextResponse.redirect(new URL("/login", request.url));
-      res.cookies.delete(AUTH_COOKIE);
+      clearAuthCookie(res);
+      res.headers.set("Cache-Control", "no-store");
       return res;
     }
     if (session.role !== "client") {
       return NextResponse.redirect(new URL("/app/dashboard", request.url));
     }
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return res;
   }
 
   if (pathname.startsWith("/app")) {
     if (!token || !session?.ok) {
       const res = NextResponse.redirect(new URL("/login", request.url));
-      res.cookies.delete(AUTH_COOKIE);
+      clearAuthCookie(res);
+      res.headers.set("Cache-Control", "no-store");
       return res;
     }
     // Clients never enter staff/admin ERP surfaces
     if (session.role === "client") {
       return NextResponse.redirect(new URL("/portal", request.url));
     }
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return res;
   }
 
   // Always allow /login to render so users can switch accounts or re-authenticate.

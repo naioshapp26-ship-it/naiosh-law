@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getPrisma } from "@/lib/prisma";
-import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { setAuthCookie, signToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -33,13 +33,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       user: { email: user.email, name: user.name, role: user.role },
     });
-    response.cookies.set(AUTH_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    setAuthCookie(response, token);
     return response;
   } catch (error) {
     console.error("Login error:", error);

@@ -53,8 +53,17 @@ export function useSession(redirectIfMissing = false) {
       user,
       ready,
       logout: async () => {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-        router.replace("/login");
+        const res = await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          throw new Error("تعذر تسجيل الخروج من الخادم — حاول مرة أخرى");
+        }
+        setUser(null);
+        // Hard navigation so bfcache / soft router state cannot restore the session UI
+        window.location.replace("/login");
       },
     }),
     [user, ready, router]

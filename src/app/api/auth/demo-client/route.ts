@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE, signToken } from "@/lib/auth";
+import { setAuthCookie, signToken } from "@/lib/auth";
 import {
   DEMO_CLIENT_EMAIL,
   DEMO_CLIENT_USER_ID,
@@ -25,13 +25,7 @@ export async function POST() {
       redirect: PORTAL_HOME,
       demo: true,
     });
-    response.cookies.set(AUTH_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 8,
-    });
+    setAuthCookie(response, token, 60 * 60 * 8);
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -58,13 +52,7 @@ export async function POST() {
         demo: true,
         offline: true,
       });
-      response.cookies.set(AUTH_COOKIE, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 8,
-      });
+      setAuthCookie(response, token, 60 * 60 * 8);
       return response;
     }
 

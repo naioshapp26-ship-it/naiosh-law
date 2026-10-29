@@ -116,11 +116,20 @@ export function Navbar({ variant = "dark" }: Props) {
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        window.alert("تعذر تسجيل الخروج من الخادم — حاول مرة أخرى");
+        return;
+      }
     } catch {
-      /* ignore */
+      window.alert("تعذر تسجيل الخروج — تحقق من الاتصال وحاول مرة أخرى");
+      return;
     }
-    window.location.assign("/login");
+    window.location.replace("/login");
   };
 
   const darkNavStyle = useMemo<React.CSSProperties>(

@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE, getSessionFromCookies, canWrite } from "@/lib/auth";
+import { clearAuthCookie, getSessionFromCookies, canWrite } from "@/lib/auth";
 import { assertSessionNotRevoked } from "@/lib/auth-session-guard";
 import type { UserRole } from "@/generated/prisma/client";
 
-function unauthorized(message: string, clearCookie = false) {
+function unauthorized(message: string, shouldClearCookie = false) {
   const res = NextResponse.json({ error: message }, { status: 401 });
-  if (clearCookie) {
-    res.cookies.set(AUTH_COOKIE, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
+  if (shouldClearCookie) {
+    clearAuthCookie(res);
   }
   return res;
 }

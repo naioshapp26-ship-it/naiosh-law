@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
@@ -59,6 +59,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [navTitles, setNavTitles] = useState<Record<string, string>>({});
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -129,14 +131,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
-  async function handleLogout() {
+  // After logout, bfcache "back" must not resurrect a protected shell
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      void fetch("/api/auth/me", { credentials: "include", cache: "no-store" }).then((res) => {
+        if (!res.ok) window.location.replace("/login");
+      });
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  async function handleLogout(event?: MouseEvent<HTMLButtonElement>) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (loggingOut) return;
+    setLogoutError("");
+    setLoggingOut(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch {
-      /* ignore */
+      await logout();
+    } catch (err) {
+      setLoggingOut(false);
+      setLogoutError(err instanceof Error ? err.message : "تعذر تسجيل الخروج — حاول مرة أخرى");
     }
-    logout();
-    window.location.assign("/login");
   }
 
   const sidebarStyle = {
@@ -520,21 +538,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <div className="shrink-0 p-3 border-t border-white/40">
+        <div className="shrink-0 p-3 border-t border-white/40" style={{ position: "relative", zIndex: 5 }}>
           <button
+            type="button"
             onClick={handleLogout}
+            disabled={loggingOut}
+            aria-busy={loggingOut}
+            data-testid="sidebar-logout"
             className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
             style={{
               background: theme.primaryColor || "#101D32",
               boxShadow: "0 8px 20px -6px rgba(16, 29, 50,0.55)",
               color: "#ffffff",
+              pointerEvents: "auto",
+              opacity: loggingOut ? 0.75 : 1,
+              cursor: loggingOut ? "wait" : "pointer",
             }}
           >
             <span className="w-6 text-center" aria-hidden>
               ⏻
             </span>
-            {sidebarOpen && <span className="text-sm">تسجيل الخروج</span>}
+            {sidebarOpen && <span className="text-sm">{loggingOut ? "جاري الخروج..." : "تسجيل الخروج"}</span>}
           </button>
+          {sidebarOpen && logoutError ? (
+            <p className="mt-2 text-center text-[11px] font-bold" style={{ color: "#fecaca" }} role="alert">
+              {logoutError}
+            </p>
+          ) : null}
           {sidebarOpen && (
             <p
               className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/80"
@@ -559,25 +589,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile drawer overlay — previous phone menu behavior */}
       {drawerOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }} role="dialog" aria-modal="true" aria-label="القائمة الجانبية">
           <div
             onClick={() => setDrawerOpen(false)}
-            style={{ position: "absolute", inset: 0, background: "rgba(10,10,18,0.5)", backdropFilter: "blur(2px)" }}
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 0,
+              background: "rgba(10,10,18,0.5)",
+              backdropFilter: "blur(2px)",
+            }}
           />
           <div
             className="app-sidebar-panel"
             style={{
               position: "relative",
-              zIndex: 1,
+              zIndex: 2,
               width: 290,
               maxWidth: "86vw",
               height: "100%",
-              overflowY: "auto",
+              maxHeight: "100dvh",
+              overflow: "hidden",
               boxShadow: "4px 0 30px rgba(0,0,0,0.2)",
               animation: "slide-drawer 0.25s ease",
               display: "flex",
               flexDirection: "column",
               color: "#ffffff",
+              pointerEvents: "auto",
+              isolation: "isolate",
               ...sidebarStyle,
             }}
           >
@@ -615,7 +655,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </div>
-            <nav className="flex-1 flex flex-col min-h-0 overflow-auto">
+            <nav className="flex-1 flex flex-col min-h-0 overflow-y-auto overscroll-contain">
               <SidebarNavBody onNavigate={() => setDrawerOpen(false)} showEmpire />
             </nav>
             {isAdmin && (
@@ -629,21 +669,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <SystemSettingsLink onNavigate={() => setDrawerOpen(false)} />
               </div>
             )}
-            <div className="shrink-0 p-3 border-t border-white/40">
+            <div
+              className="shrink-0 p-3 border-t border-white/40"
+              style={{
+                position: "relative",
+                zIndex: 5,
+                background: theme.sidebarTo || "#0B1424",
+                paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+                pointerEvents: "auto",
+              }}
+            >
               <button
+                type="button"
                 onClick={handleLogout}
+                disabled={loggingOut}
+                aria-busy={loggingOut}
+                data-testid="sidebar-logout"
                 className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-white font-bold transition-colors"
                 style={{
                   background: theme.primaryColor || "#101D32",
                   boxShadow: "0 8px 20px -6px rgba(16, 29, 50,0.55)",
                   color: "#ffffff",
+                  pointerEvents: "auto",
+                  touchAction: "manipulation",
+                  opacity: loggingOut ? 0.75 : 1,
+                  cursor: loggingOut ? "wait" : "pointer",
+                  minHeight: 48,
                 }}
               >
                 <span className="w-6 text-center" aria-hidden>
                   ⏻
                 </span>
-                <span className="text-sm">تسجيل الخروج</span>
+                <span className="text-sm">{loggingOut ? "جاري الخروج..." : "تسجيل الخروج"}</span>
               </button>
+              {logoutError ? (
+                <p className="mt-2 text-center text-[11px] font-bold" style={{ color: "#fecaca" }} role="alert">
+                  {logoutError}
+                </p>
+              ) : null}
               <p
                 className="mt-2 text-center text-[10px] font-bold tracking-wide text-white/80"
                 style={{ color: "rgba(255,255,255,0.8)" }}
