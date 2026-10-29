@@ -14,14 +14,14 @@ type Props = {
 
 const LANDING_LINKS = [
   { href: "/", label: "الرئيسية" },
-  { href: "/#modules", label: "منتجاتنا" },
-  { href: "/services", label: "خدماتنا" },
   {
     href: "/data-analysis",
     label: "نايوش لتحليل البيانات",
     icon: "fa-chart-line",
     className: "nav-data-analysis-link",
   },
+  { href: "/#modules", label: "منتجاتنا" },
+  { href: "/services", label: "خدماتنا" },
   { href: "/branches", label: "الفروع" },
   { href: "/platforms", label: "المنصات" },
   { href: "/incubators", label: "الحاضنات" },
