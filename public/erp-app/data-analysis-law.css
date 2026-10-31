@@ -22,9 +22,10 @@
   margin-inline: auto;
 }
 
+/* Active state for pages that load this sheet; header pill chrome lives in newhome CSS */
 .nav-data-analysis-link.active,
 .nav-links a.nav-data-analysis-link.active {
-  color: #b79a61;
+  color: #7f1d1d;
 }
 
 .da-law-hero {

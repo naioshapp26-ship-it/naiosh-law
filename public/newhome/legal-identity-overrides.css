@@ -1,4 +1,4 @@
-/* Central legal identity overrides — v=mobile-nav-contrast-20261029 */
+/* Central legal identity overrides — v=da-header-pill-20261031 */
 :root {
   --primary: #101D32 !important;
   --primary-dark: #0B1424 !important;
@@ -23,6 +23,85 @@
   --mobile-drawer-hover: #F5F1E8;
   --mobile-drawer-gold: linear-gradient(135deg, #C8AE74, #B79A61);
   --mobile-drawer-navy: #101D32;
+  /* ERP data-analysis header pill tokens (match ERP homepage button) */
+  --erp-da-pill-bg: #faf0d0;
+  --erp-da-pill-bg-hover: #f3e0b8;
+  --erp-da-pill-bg-active: #f0d9a0;
+  --erp-da-pill-text: #7f1d1d;
+  --erp-da-pill-border: #dcc168;
+  --erp-da-pill-border-hover: #d4b056;
+}
+
+/*
+ * Beat legal-hero white-on-navy link colors so the ERP cream pill stays readable
+ * on the LAW navy header (logo → data-analysis → الرئيسية).
+ */
+body.homepage .nav-links a.nav-data-analysis-link,
+body.homepage .nav-links a.nav-data-analysis-link span,
+body.homepage .top-nav .nav-links a.nav-data-analysis-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  background: var(--erp-da-pill-bg) !important;
+  background-image: none !important;
+  color: var(--erp-da-pill-text) !important;
+  -webkit-text-fill-color: var(--erp-da-pill-text) !important;
+  border: 1px solid var(--erp-da-pill-border) !important;
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  padding: 6px 14px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+  white-space: nowrap !important;
+}
+
+body.homepage .nav-links a.nav-data-analysis-link:hover,
+body.homepage .nav-links a.nav-data-analysis-link:focus-visible,
+body.homepage .top-nav .nav-links a.nav-data-analysis-link:hover,
+body.homepage .top-nav .nav-links a.nav-data-analysis-link:focus-visible {
+  background: var(--erp-da-pill-bg-hover) !important;
+  background-image: none !important;
+  color: var(--erp-da-pill-text) !important;
+  -webkit-text-fill-color: var(--erp-da-pill-text) !important;
+  border-color: var(--erp-da-pill-border-hover) !important;
+  box-shadow: 0 4px 12px rgba(127, 29, 29, 0.12) !important;
+}
+
+body.homepage .nav-links a.nav-data-analysis-link.active,
+body.homepage .nav-links a.nav-data-analysis-link.active span,
+body.homepage .top-nav .nav-links a.nav-data-analysis-link.active {
+  background: var(--erp-da-pill-bg-active) !important;
+  background-image: none !important;
+  color: var(--erp-da-pill-text) !important;
+  -webkit-text-fill-color: var(--erp-da-pill-text) !important;
+  border-color: #c9a84a !important;
+  box-shadow: inset 0 0 0 1px rgba(127, 29, 29, 0.08) !important;
+}
+
+/* Dark mode still keeps the ERP cream pill (do not inherit muted white nav text) */
+body.homepage.dark-mode .nav-links a.nav-data-analysis-link,
+body.homepage.dark-mode .nav-links a.nav-data-analysis-link span,
+body.homepage.dark-mode .nav-links a.nav-data-analysis-link:hover,
+body.homepage.dark-mode .nav-links a.nav-data-analysis-link.active {
+  background: var(--erp-da-pill-bg) !important;
+  background-image: none !important;
+  color: var(--erp-da-pill-text) !important;
+  -webkit-text-fill-color: var(--erp-da-pill-text) !important;
+  border: 1px solid var(--erp-da-pill-border) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+body.homepage.dark-mode .nav-links a.nav-data-analysis-link:hover,
+body.homepage.dark-mode .nav-links a.nav-data-analysis-link:focus-visible {
+  background: var(--erp-da-pill-bg-hover) !important;
 }
 
 body.homepage .announcement-bar {
@@ -109,6 +188,30 @@ body:has(.hq-dashboard),
   body.homepage .top-nav.is-mobile-nav-open .nav-links a {
     margin-block: 4px !important;
     border-bottom: 1px solid var(--mobile-drawer-border) !important;
+  }
+
+  /* Keep ERP cream data-analysis pill in the mobile drawer */
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.nav-data-analysis-link,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.nav-data-analysis-link span {
+    background: var(--erp-da-pill-bg) !important;
+    background-image: none !important;
+    color: var(--erp-da-pill-text) !important;
+    -webkit-text-fill-color: var(--erp-da-pill-text) !important;
+    border: 1px solid var(--erp-da-pill-border) !important;
+    border-radius: 999px !important;
+    font-weight: 800 !important;
+  }
+
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.nav-data-analysis-link:hover,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.nav-data-analysis-link:focus-visible,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.nav-data-analysis-link.active,
+  body.homepage .top-nav.is-mobile-nav-open .nav-links a.nav-data-analysis-link.active span {
+    background: var(--erp-da-pill-bg-hover) !important;
+    background-image: none !important;
+    color: var(--erp-da-pill-text) !important;
+    -webkit-text-fill-color: var(--erp-da-pill-text) !important;
+    border-color: var(--erp-da-pill-border-hover) !important;
+    box-shadow: none !important;
   }
 
   /* Hover / focus on light surfaces */

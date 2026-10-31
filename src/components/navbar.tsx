@@ -13,13 +13,13 @@ type Props = {
 };
 
 const LANDING_LINKS = [
-  { href: "/", label: "الرئيسية" },
+  /* ERP header order: logo → data-analysis pill → الرئيسية → rest */
   {
     href: "/data-analysis",
     label: "نايوش لتحليل البيانات",
-    icon: "fa-chart-line",
     className: "nav-data-analysis-link",
   },
+  { href: "/", label: "الرئيسية" },
   { href: "/#modules", label: "منتجاتنا" },
   { href: "/services", label: "خدماتنا" },
   { href: "/branches", label: "الفروع" },
