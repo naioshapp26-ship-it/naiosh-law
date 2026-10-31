@@ -1,0 +1,289 @@
+/**
+ * Unified internal Page Hero — NAIOSH LAW
+ * Central tokens: change once, applies on every staff/ERP page.
+ */
+:root {
+  --page-hero-bg: linear-gradient(135deg, #0b1424, #101d32, #1a304d);
+  --page-hero-border: rgba(183, 154, 97, 0.28);
+  --page-hero-title: #c8ae74;
+  --page-hero-title-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  --page-hero-text: #ffffff;
+  --page-hero-muted: rgba(255, 255, 255, 0.88);
+  --page-hero-meta: rgba(255, 255, 255, 0.72);
+  --page-hero-radius: 1.75rem;
+  --page-hero-padding: 1.75rem 2rem;
+  --page-hero-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 25px 60px -12px rgba(11, 20, 36, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --page-hero-icon-bg: rgba(255, 255, 255, 0.12);
+  --page-hero-icon-border: rgba(183, 154, 97, 0.35);
+  --page-hero-font: var(--font-cairo, "Cairo", Tahoma, sans-serif);
+}
+
+.page-hero,
+.hq-hero.page-hero,
+header.page-hero {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 1.5rem;
+  padding: var(--page-hero-padding);
+  border-radius: var(--page-hero-radius);
+  background: var(--page-hero-bg) !important;
+  background-image: var(--page-hero-bg) !important;
+  color: var(--page-hero-text) !important;
+  border: 1px solid var(--page-hero-border) !important;
+  box-shadow: var(--page-hero-shadow);
+  font-family: var(--page-hero-font);
+}
+
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 80% at 100% 0%, rgba(183, 154, 97, 0.14) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgba(255, 255, 255, 0.06) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-hero__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-hero__glow--tr {
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(183, 154, 97, 0.22) 0%, transparent 70%);
+}
+
+.page-hero__glow--bl {
+  bottom: -80px;
+  left: -40px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.page-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.page-hero__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem 1.25rem;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.page-hero__logo,
+.page-hero__icon {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--page-hero-icon-bg);
+  border: 1px solid var(--page-hero-icon-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  font-size: 1.85rem;
+  line-height: 1;
+  color: var(--page-hero-title);
+  overflow: hidden;
+}
+
+.page-hero__logo {
+  background: #fff;
+  border-radius: 16px;
+  padding: 6px;
+}
+
+.page-hero__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.page-hero__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-hero__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--page-hero-muted) !important;
+  line-height: 1.5;
+}
+
+.page-hero__eyebrow a {
+  color: var(--page-hero-muted) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Beat erp-theme `.erp-page h1 { color: var(--text-primary) !important }` */
+html:not(.homepage-root) .erp-page .page-hero h1,
+html:not(.homepage-root) .erp-page .page-hero h2,
+html:not(.homepage-root) .erp-page .page-hero .page-hero__title,
+html:not(.homepage-root) .erp-workspace .page-hero h1,
+html:not(.homepage-root) .erp-workspace .page-hero h2,
+html:not(.homepage-root) .erp-workspace .page-hero .page-hero__title,
+body.has-app-shell .page-hero h1,
+body.has-app-shell .page-hero h2,
+body.has-app-shell .page-hero .page-hero__title,
+.page-hero__title,
+.page-hero h1,
+.page-hero h2,
+.hq-hero.page-hero h1,
+.hq-hero h1.page-hero__title {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 900;
+  line-height: 1.35;
+  color: var(--page-hero-title) !important;
+  -webkit-text-fill-color: var(--page-hero-title) !important;
+  text-shadow: var(--page-hero-title-shadow);
+  word-break: break-word;
+}
+
+html:not(.homepage-root) .erp-page .page-hero .page-hero__subtitle,
+html:not(.homepage-root) .erp-page .page-hero .page-hero__description,
+html:not(.homepage-root) .erp-workspace .page-hero .page-hero__subtitle,
+body.has-app-shell .page-hero .page-hero__subtitle,
+body.has-app-shell .page-hero .page-hero__description,
+.page-hero__subtitle,
+.page-hero__description {
+  margin: 0;
+  max-width: 40rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.75;
+  color: var(--page-hero-muted) !important;
+  -webkit-text-fill-color: var(--page-hero-muted) !important;
+}
+
+html:not(.homepage-root) .erp-page .page-hero .page-hero__meta,
+body.has-app-shell .page-hero .page-hero__meta,
+.page-hero__meta {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--page-hero-meta) !important;
+  -webkit-text-fill-color: var(--page-hero-meta) !important;
+}
+
+.page-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+/* Keep page action controls readable on navy */
+.page-hero__actions a,
+.page-hero__actions button,
+.page-hero__actions .btn,
+.page-hero__actions .btn-primary,
+.page-hero__actions .btn-ghost-dark,
+.page-hero__actions .rp-btn-primary,
+.page-hero__actions .rp-btn-ghost {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.page-hero__actions a:not([class*="btn-primary"]):not(.btn-primary),
+.page-hero__actions button:not(.btn-primary):not([class*="btn-primary"]),
+.page-hero__actions .rp-btn-ghost {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+  border: 1px solid rgba(183, 154, 97, 0.45) !important;
+}
+
+.page-hero__actions a.btn-primary,
+.page-hero__actions button.btn-primary,
+.page-hero__actions .btn-primary,
+.page-hero__actions .rp-btn-primary,
+.page-hero__actions a[href*="page-settings"] {
+  background: linear-gradient(135deg, #c8ae74, #b79a61) !important;
+  color: #0b1424 !important;
+  border: 1px solid rgba(183, 154, 97, 0.65) !important;
+  text-decoration: none !important;
+}
+
+/* Dashboard / legacy hq-hero: force gold titles over erp-theme navy text */
+html:not(.homepage-root) .erp-page .hq-hero h1,
+html:not(.homepage-root) .erp-page .hq-hero h2,
+body.has-app-shell .hq-hero h1,
+body.has-app-shell .hq-hero h2,
+.hq-hero h1,
+.hq-hero .page-hero__title {
+  color: var(--page-hero-title) !important;
+  -webkit-text-fill-color: var(--page-hero-title) !important;
+}
+
+html:not(.homepage-root) .erp-page .hq-hero p,
+body.has-app-shell .hq-hero p,
+.hq-hero p {
+  color: var(--page-hero-muted) !important;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --page-hero-padding: 1.25rem 1rem;
+    --page-hero-radius: 1.25rem;
+  }
+
+  .page-hero__inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-hero__main {
+    align-items: center;
+  }
+
+  .page-hero__logo,
+  .page-hero__icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.45rem;
+    border-radius: 14px;
+  }
+
+  .page-hero__title,
+  .page-hero h1,
+  .page-hero h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .page-hero__actions {
+    width: 100%;
+  }
+
+  .page-hero__actions > * {
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+  }
+}

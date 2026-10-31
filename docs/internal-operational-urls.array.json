@@ -1,0 +1,3502 @@
+[
+  {
+    "path": "/app",
+    "label": "App entry (→ /app/dashboard)",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/archive",
+    "label": "الأرشيف والمستندات",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/axis/advanced-finance",
+    "label": "المالية المتقدمة",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/global-operations",
+    "label": "العمليات العالمية",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/governance",
+    "label": "الحوكمة والتوقيع",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/integrations",
+    "label": "التكاملات",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/item/admin",
+    "label": "الإدارة والصلاحيات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/admin-link",
+    "label": "الربط الإداري",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/ai",
+    "label": "الذكاء الاصطناعي القانوني",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/archiving",
+    "label": "الأرشفة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/archiving-lib",
+    "label": "الأرشفة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/bank-loans",
+    "label": "القروض البنكية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/banking",
+    "label": "التعاملات البنكية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/banking-tx",
+    "label": "التعاملات البنكية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/cases",
+    "label": "إدارة القضايا",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/circular-alerts",
+    "label": "تنبيهات التعليمات الدائرية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/clients",
+    "label": "إدارة الموكلين",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/commercial-law",
+    "label": "القانون التجاري",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/commercial-lease",
+    "label": "عقود الإيجار التجارية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/commercial-poa",
+    "label": "التوكيلات التجارية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/complaints",
+    "label": "إدارة الشكاوى",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/compliance-gov",
+    "label": "الامتثال القانوني",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/constitution",
+    "label": "دستور الدولة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/consultations",
+    "label": "الاستشارات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/contraband-law",
+    "label": "قانون الاتجار بالممنوعات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/court-link",
+    "label": "الربط بين الأنظمة القضائية والإدارية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/customs-clearance",
+    "label": "قوانين التخليص الجمركي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/customs-finance",
+    "label": "التخليص الجمركي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/cyber-crimes",
+    "label": "قانون الجرائم الإلكترونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/dashboard",
+    "label": "لوحة التحكم",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/data-mgmt",
+    "label": "إدارة البيانات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/digital-transform",
+    "label": "التحول الرقمي للمنظومات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/digital-transform-int",
+    "label": "التحول الرقمي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/drugs-law",
+    "label": "قانون تعاطي المخدرات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/e-sign",
+    "label": "التوقيع الرقمي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/ext-integrations",
+    "label": "التكاملات الخارجية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/financial-disputes",
+    "label": "النزاعات المالية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/financial-disputes-fin",
+    "label": "النزاعات المالية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/follow-up",
+    "label": "مركز المتابعات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/foreign-labor",
+    "label": "تصريح العمالة الوافدة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/franchise",
+    "label": "عقود الفرنشايز",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/franchise-contracts",
+    "label": "عقود الامتياز",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/global-ops",
+    "label": "العمليات العالمية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/gov-legal",
+    "label": "حوكمة الإدارات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/gov-policies",
+    "label": "السياسات التشغيلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/insurance-contracts",
+    "label": "عقود التأمين",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/integrations-notif",
+    "label": "الإشعارات والتكاملات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/internal-req",
+    "label": "الطلبات الداخلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-conferences",
+    "label": "المؤتمرات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-contraband",
+    "label": "قانون الاتجار بالممنوعات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-customs",
+    "label": "القوانين الجمركية الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-cyber",
+    "label": "قانون الجرائم الإلكترونية الدولي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-disputes",
+    "label": "النزاعات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-events",
+    "label": "الفعاليات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-events-net",
+    "label": "الفعاليات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-fraud",
+    "label": "الاحتيالات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-fraud-2",
+    "label": "الاحتيالات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-incidents",
+    "label": "الحوادث الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-insurance",
+    "label": "التأمين الدولي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-law",
+    "label": "القانون الدولي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-law-ops",
+    "label": "القانون الدولي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-marine-ins",
+    "label": "التأمين البحري",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-mediation",
+    "label": "فضّ النزاعات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-orgs",
+    "label": "المنظمات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-partners",
+    "label": "الشراكات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-partners-net",
+    "label": "الشراكات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-partnership",
+    "label": "عقود الشراكات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-penal",
+    "label": "قانون العقوبات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-protocols",
+    "label": "البروتوكولات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-supply",
+    "label": "سلاسل الإمداد الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/intl-transport",
+    "label": "قانون النقل الدولي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/investment",
+    "label": "الاستثمار",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/investment-laws",
+    "label": "قوانين الاستثمار",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/iso",
+    "label": "أنظمة الأيزو",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/iso-lib",
+    "label": "أنظمة الأيزو",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/judicial-link",
+    "label": "الربط القضائي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/labor-law",
+    "label": "قانون العمل والعمال",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/labor-orgs",
+    "label": "منظمات العمل الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/labor-orgs-net",
+    "label": "منظمات العمل الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/legal-accounting",
+    "label": "المحاسبة القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/legal-compliance",
+    "label": "أنظمة الامتثال القانوني",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/legal-governance",
+    "label": "حوكمة الإدارات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/legal-poa",
+    "label": "التوكيلات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/library",
+    "label": "المكتبة القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/loans",
+    "label": "القروض البنكية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-customs",
+    "label": "القوانين الجمركية المحلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-cyber",
+    "label": "قانون الجرائم الإلكترونية حسب الدولة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-disputes",
+    "label": "النزاعات المحلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-drugs",
+    "label": "قانون تعاطي المخدرات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-events",
+    "label": "الفعاليات المحلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-events-net",
+    "label": "الفعاليات المحلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-penal",
+    "label": "قانون العقوبات حسب الدولة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-tax",
+    "label": "قانون الضرائب",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-traffic",
+    "label": "قانون السير للدولة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/local-transport",
+    "label": "قانون النقل المحلي",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/logistics",
+    "label": "اللوجستيات وعقود المشتريات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/maritime-law",
+    "label": "القانون البحري",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/mortgage",
+    "label": "الرهن وفك الرهن",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/mortgage-fin",
+    "label": "الرهن وفك الرهن",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/naioch-branches",
+    "label": "فروع نايوش العالمية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/notif-integrations",
+    "label": "الإشعارات والتكاملات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/notifications",
+    "label": "الإشعارات والتنبيهات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/occupational-safety",
+    "label": "السلامة المهنية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/official-entities",
+    "label": "الجهات الرسمية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/operational-policies",
+    "label": "السياسات التشغيلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/operations",
+    "label": "الوحدات التشغيلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/ops-automation",
+    "label": "أتمتة العمليات التشغيلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/perf-system",
+    "label": "نظام قياس الأداء",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/performance",
+    "label": "نظام قياس الأداء",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/policies-lib",
+    "label": "السياسات التشغيلية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/quality-control",
+    "label": "أنظمة ضبط الجودة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/quality-gov",
+    "label": "ضبط الجودة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/quality-lib",
+    "label": "أنظمة الجودة القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/quality-systems",
+    "label": "أنظمة الجودة القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/reconciliation",
+    "label": "العطوات وفضّ النزاعات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/reports",
+    "label": "مركز التقارير",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/residential-lease",
+    "label": "عقود الإيجار السكنية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/sector-safety",
+    "label": "قوانين السلامة في القطاعات والمصانع",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/services",
+    "label": "الخدمات القانونية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/sessions",
+    "label": "إدارة الجلسات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/shipments",
+    "label": "الشحنات الدولية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/smart-templates",
+    "label": "النماذج الذكية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/social-systems",
+    "label": "النظم الاجتماعية",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/supply-contracts",
+    "label": "عقود الإمداد واللوجستيات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/supply-partners",
+    "label": "شركاء التوريد",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/taxes",
+    "label": "الضرائب",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/tools",
+    "label": "الأدوات العامة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/transport-contracts",
+    "label": "عقود النقل",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/tribal-laws",
+    "label": "القوانين العشائرية المساندة",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/violations",
+    "label": "المخالفات الدستورية والقانونية والسير",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/violations-2",
+    "label": "المخالفات",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/work-compensation",
+    "label": "تعويضات مخاطر العمل",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/item/worker-rights",
+    "label": "حقوق العاملين",
+    "family": "axis-item"
+  },
+  {
+    "path": "/app/axis/legal-classification",
+    "label": "التصنيف القانوني",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/legal-library",
+    "label": "المكتبة القانونية",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/legal-services",
+    "label": "الخدمات القانونية",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/professional-network",
+    "label": "الشبكة المهنية",
+    "family": "axis"
+  },
+  {
+    "path": "/app/axis/sovereign",
+    "label": "لوحة التحكم السيادية",
+    "family": "axis"
+  },
+  {
+    "path": "/app/client-messages",
+    "label": "رسائل العملاء",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/communications",
+    "label": "الاتصالات والفروع",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/dashboard",
+    "label": "لوحة التحكم",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/data-analysis",
+    "label": "تحليل البيانات (داخل /app)",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/data-analysis/workspace",
+    "label": "مساحة تحليل البيانات (/app)",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/erp/ads",
+    "label": "مركز المعلنين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/advertisers-center",
+    "label": "مركز المعلنين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ai-integration",
+    "label": "الذكاء الإصطناعي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ai-market-research",
+    "label": "دراسة السوق عبر الذكاء الاصطناعي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/all-procedures",
+    "label": "جميع الإجراءات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/audit-logs",
+    "label": "سجل النظام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-customer-service",
+    "label": "خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-operational-finance",
+    "label": "المالية التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-sales",
+    "label": "المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-subscriptions",
+    "label": "الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/br-training",
+    "label": "التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub",
+    "label": "الفروع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-customer-service",
+    "label": "الفروع ← خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-daily-operations",
+    "label": "الفروع ← العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-local-hr",
+    "label": "الفروع ← الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-operational-finance",
+    "label": "الفروع ← المالية التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-operational-reports",
+    "label": "الفروع ← التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-sales",
+    "label": "الفروع ← المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-subscriptions",
+    "label": "الفروع ← الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/branches-hub/br-training",
+    "label": "الفروع ← التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/client-admin-services",
+    "label": "الخدمات الإدارية للعميل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/collection-rules",
+    "label": "قواعد التحصيل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/compliance",
+    "label": "الموائمة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/consulting-training",
+    "label": "الاستشارات والتدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/control-panel",
+    "label": "لوحة التحكم",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/credit-topup",
+    "label": "شحن الرصيد",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/customer-service",
+    "label": "خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/customers",
+    "label": "العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/delegations",
+    "label": "التفويضات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/dispute-settlements",
+    "label": "فض النزاعات والتسويات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices",
+    "label": "المكاتب الإلكترونية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-archive",
+    "label": "المكاتب الإلكترونية ← الارشيف",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-consultations",
+    "label": "المكاتب الإلكترونية ← الاستشارات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-customer-service",
+    "label": "المكاتب الإلكترونية ← خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-daily-operations",
+    "label": "المكاتب الإلكترونية ← العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-files",
+    "label": "المكاتب الإلكترونية ← الملفات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-latest-news",
+    "label": "المكاتب الإلكترونية ← اخر الاخبار",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-local-hr",
+    "label": "المكاتب الإلكترونية ← الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-meetings",
+    "label": "المكاتب الإلكترونية ← الاجتماعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-operational-finance",
+    "label": "المكاتب الإلكترونية ← الماليه التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-operational-reports",
+    "label": "المكاتب الإلكترونية ← التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-sales",
+    "label": "المكاتب الإلكترونية ← المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-subscriptions",
+    "label": "المكاتب الإلكترونية ← الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-tasks",
+    "label": "المكاتب الإلكترونية ← المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-training",
+    "label": "المكاتب الإلكترونية ← التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/e-offices/eo-users",
+    "label": "المكاتب الإلكترونية ← المستخدمين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators",
+    "label": "حاضنات التعليم والتدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators/eti-facilities",
+    "label": "حاضنات التعليم والتدريب ← حضانة إدارة المرافق",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators/eti-hr",
+    "label": "حاضنات التعليم والتدريب ← حاضنة HR الموارد البشرية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators/eti-logistics",
+    "label": "حاضنات التعليم والتدريب ← حاضنة اللوجستيات والنقل والتوصيل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators/eti-ohs",
+    "label": "حاضنات التعليم والتدريب ← حاضنة السلامة والصحة المهنية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators/eti-project-management",
+    "label": "حاضنات التعليم والتدريب ← حاضنة إدارة المشاريع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/education-training-incubators/eti-supply-chain",
+    "label": "حاضنات التعليم والتدريب ← حاضنة سلاسل الإمداد",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/elearning",
+    "label": "التعلم الإلكتروني",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/employee-management",
+    "label": "إدارة الموظفين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-archive",
+    "label": "الأرشيف",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-consultations",
+    "label": "الاستشارات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-customer-service",
+    "label": "خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-files",
+    "label": "الملفات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-latest-news",
+    "label": "آخر الأخبار",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-meetings",
+    "label": "الاجتماعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-operational-finance",
+    "label": "المالية التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-sales",
+    "label": "المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-subscriptions",
+    "label": "الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-tasks",
+    "label": "المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-training",
+    "label": "التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eo-users",
+    "label": "المستخدمين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eti-facilities",
+    "label": "حضانة إدارة المرافق",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eti-hr",
+    "label": "حاضنة HR الموارد البشرية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eti-logistics",
+    "label": "حاضنة اللوجستيات والنقل والتوصيل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eti-ohs",
+    "label": "حاضنة السلامة والصحة المهنية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eti-project-management",
+    "label": "حاضنة إدارة المشاريع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/eti-supply-chain",
+    "label": "حاضنة سلاسل الإمداد",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/etiquette",
+    "label": "الإتيكيت وبروتوكولات التواصل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/evaluation",
+    "label": "التقييم",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/events-studio-main",
+    "label": "استوديو الفعاليات الذكي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/executive-management",
+    "label": "الإدارة التنفيذية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/feasibility-studies",
+    "label": "دراسات الجدوى",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/financial-approvals",
+    "label": "الموافقات المالية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/forum",
+    "label": "المنتدى",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/gateway-payments",
+    "label": "بوابات الدفع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/general-tasks",
+    "label": "المهام العامة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/governance",
+    "label": "الحوكمة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-customer-service",
+    "label": "خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-operational-finance",
+    "label": "المالية التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-sales",
+    "label": "المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-subscriptions",
+    "label": "الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/ic-training",
+    "label": "التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/identity-settings",
+    "label": "إعدادات الهوية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub",
+    "label": "الحاضنات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-customer-service",
+    "label": "الحاضنات ← خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-daily-operations",
+    "label": "الحاضنات ← العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-local-hr",
+    "label": "الحاضنات ← الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-operational-finance",
+    "label": "الحاضنات ← المالية التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-operational-reports",
+    "label": "الحاضنات ← التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-sales",
+    "label": "الحاضنات ← المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-subscriptions",
+    "label": "الحاضنات ← الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/incubators-hub/ic-training",
+    "label": "الحاضنات ← التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/information-center",
+    "label": "مركز المعلومات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/installment-plans",
+    "label": "خطط الأقساط",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/institutional-performance",
+    "label": "إدارة الأداء المؤسسي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/intellectual-property",
+    "label": "ملكية نايوش",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation",
+    "label": "الإنترنت والأتمتة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/ai-integration",
+    "label": "الإنترنت والأتمتة ← الذكاء الإصطناعي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/compliance",
+    "label": "الإنترنت والأتمتة ← الموائمة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/dispute-settlements",
+    "label": "الإنترنت والأتمتة ← فض النزاعات والتسويات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/elearning",
+    "label": "الإنترنت والأتمتة ← التعلم الإلكتروني",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/etiquette",
+    "label": "الإنترنت والأتمتة ← الإتيكيت وبروتوكولات التواصل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/forum",
+    "label": "الإنترنت والأتمتة ← المنتدى",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/governance",
+    "label": "الإنترنت والأتمتة ← الحوكمة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/intellectual-property",
+    "label": "الإنترنت والأتمتة ← ملكية نايوش",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/iot",
+    "label": "الإنترنت والأتمتة ← انترنت الأشياء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/knowledge",
+    "label": "الإنترنت والأتمتة ← المعرفة والتحليل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/records-archiving",
+    "label": "الإنترنت والأتمتة ← السجلات والأرشيف",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/internet-automation/visitor-chat",
+    "label": "الإنترنت والأتمتة ← الدردشة مع الزوار",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/invoices-enhanced",
+    "label": "الفواتير الذكية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/iot",
+    "label": "انترنت الأشياء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/knowledge",
+    "label": "المعرفة والتحليل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/main-menu",
+    "label": "القائمة الرئيسية للمهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/marketing-campaigns-studio",
+    "label": "استوديو الحملات التسويقية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/my-tasks",
+    "label": "مهامي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors",
+    "label": "قطاعات نايوش",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-automation",
+    "label": "قطاعات نايوش ← الأتمتة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-beta-club",
+    "label": "قطاعات نايوش ← نادي بيتا الرقمي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-governance",
+    "label": "قطاعات نايوش ← الحوكمة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-initiatives",
+    "label": "قطاعات نايوش ← المبادرات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-legal",
+    "label": "قطاعات نايوش ← القانونية والمحاماة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-member-management",
+    "label": "قطاعات نايوش ← إدارة الأعضاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-skills-innovation",
+    "label": "قطاعات نايوش ← المهارات والابتكارات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/naiosh-sectors/sc-sustainability",
+    "label": "قطاعات نايوش ← الاستدامة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/online-store",
+    "label": "المتجر والسلة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/operational-policies",
+    "label": "السياسات التشغيلية المعتمدة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/operations-management",
+    "label": "إدارة العمليات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/operations-monitoring",
+    "label": "متابعة العمليات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/overdue-management",
+    "label": "إدارة المتأخرات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-analytics",
+    "label": "تحليلات الدفع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu",
+    "label": "نظام الدفع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/collection-rules",
+    "label": "نظام الدفع ← قواعد التحصيل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/credit-topup",
+    "label": "نظام الدفع ← شحن الرصيد",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/gateway-payments",
+    "label": "نظام الدفع ← بوابات الدفع (Stripe/PayPal/Paymob)",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/installment-plans",
+    "label": "نظام الدفع ← خطط الأقساط",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/invoices-enhanced",
+    "label": "نظام الدفع ← الفواتير الذكية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/online-store",
+    "label": "نظام الدفع ← المتجر والسلة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/overdue-management",
+    "label": "نظام الدفع ← إدارة المتأخرات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/payment-analytics",
+    "label": "نظام الدفع ← تحليلات الدفع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/payment-methods",
+    "label": "نظام الدفع ← طرق الدفع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/payment-reminders",
+    "label": "نظام الدفع ← التذكيرات الآلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/payment-tracking",
+    "label": "نظام الدفع ← تتبع الدفعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-menu/tax-settings",
+    "label": "نظام الدفع ← إعدادات الضرائب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-methods",
+    "label": "طرق الدفع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-reminders",
+    "label": "التذكيرات الآلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/payment-tracking",
+    "label": "تتبع الدفعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-customer-service",
+    "label": "خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-operational-finance",
+    "label": "المالية التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-sales",
+    "label": "المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-subscriptions",
+    "label": "الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/pl-training",
+    "label": "التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms",
+    "label": "المنصات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-customer-service",
+    "label": "المنصات ← خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-daily-operations",
+    "label": "المنصات ← العمليات اليومية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-local-hr",
+    "label": "المنصات ← الموارد البشرية المحلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-operational-finance",
+    "label": "المنصات ← الماليه التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-operational-reports",
+    "label": "المنصات ← التقارير التشغيلية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-sales",
+    "label": "المنصات ← المبيعات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-subscriptions",
+    "label": "المنصات ← الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/platforms/pl-training",
+    "label": "المنصات ← التدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/procedures",
+    "label": "الإجراءات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/project-management-office",
+    "label": "مكتب إدارة المشاريع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/quality-audit",
+    "label": "الجودة والتدقيق",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/records-archiving",
+    "label": "السجلات والأرشيف",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/reports",
+    "label": "التقارير",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/research",
+    "label": "البحوث",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/saas",
+    "label": "إدارة الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-automation",
+    "label": "الأتمتة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-beta-club",
+    "label": "نادي بيتا الرقمي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-governance",
+    "label": "الحوكمة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-initiatives",
+    "label": "المبادرات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-legal",
+    "label": "القانونية والمحاماة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-member-management",
+    "label": "إدارة الأعضاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-skills-innovation",
+    "label": "المهارات والابتكارات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/sc-sustainability",
+    "label": "الاستدامة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services",
+    "label": "الخدمات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/ai-market-research",
+    "label": "الخدمات ← دراسة السوق عبر الذكاء الاصطناعي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/client-admin-services",
+    "label": "الخدمات ← الخدمات الإدارية للعميل",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/consulting-training",
+    "label": "الخدمات ← الاستشارات والتدريب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/customer-service",
+    "label": "الخدمات ← خدمة العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/feasibility-studies",
+    "label": "الخدمات ← دراسات الجدوى",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/institutional-performance",
+    "label": "الخدمات ← إدارة الأداء المؤسسي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/operations-monitoring",
+    "label": "الخدمات ← متابعة العمليات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/project-management-office",
+    "label": "الخدمات ← مكتب إدارة المشاريع",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/research",
+    "label": "الخدمات ← البحوث",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/services/virtual-halls",
+    "label": "الخدمات ← القاعات الافتراضية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/settings",
+    "label": "إعدادات الصفحة الرئيسية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/smart-systems",
+    "label": "الأنظمة الذكية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management",
+    "label": "الإدارة الاستراتيجية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/advertisers-center",
+    "label": "الإدارة الاستراتيجية ← مركز المعلنين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/employee-management",
+    "label": "الإدارة الاستراتيجية ← إدارة الموظفين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/evaluation",
+    "label": "الإدارة الاستراتيجية ← التقييم",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/executive-management",
+    "label": "الإدارة الاستراتيجية ← الإدارة التنفيذية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/financial-approvals",
+    "label": "الإدارة الاستراتيجية ← الموافقات المالية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/identity-settings",
+    "label": "الإدارة الاستراتيجية ← إعدادات الهوية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/information-center",
+    "label": "الإدارة الاستراتيجية ← مركز المعلومات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/operations-management",
+    "label": "الإدارة الاستراتيجية ← إدارة العمليات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/quality-audit",
+    "label": "الإدارة الاستراتيجية ← الجودة والتدقيق",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/reports",
+    "label": "الإدارة الاستراتيجية ← التقارير",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/smart-systems",
+    "label": "الإدارة الاستراتيجية ← الأنظمة الذكية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/subscription-management",
+    "label": "الإدارة الاستراتيجية ← إدارة الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/system-log",
+    "label": "الإدارة الاستراتيجية ← سجل النظام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/tasks-strategic",
+    "label": "الإدارة الاستراتيجية ← المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/tenants",
+    "label": "الإدارة الاستراتيجية ← المستأجرين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/strategic-management/training-development",
+    "label": "الإدارة الاستراتيجية ← التدريب والتطوير",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/subscription-management",
+    "label": "إدارة الاشتراكات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/system-log",
+    "label": "سجل النظام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/task-reports",
+    "label": "تقارير المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/task-settings",
+    "label": "إعدادات المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management",
+    "label": "المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/all-procedures",
+    "label": "المهام ← جميع الإجراءات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/control-panel",
+    "label": "المهام ← لوحة التحكم",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/customers",
+    "label": "المهام ← العملاء",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/delegations",
+    "label": "المهام ← التفويضات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/general-tasks",
+    "label": "المهام ← المهام العامة",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/main-menu",
+    "label": "المهام ← القائمة الرئيسية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/my-tasks",
+    "label": "المهام ← مهامي",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/procedures",
+    "label": "المهام ← الإجراءات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/task-reports",
+    "label": "المهام ← التقارير",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-management/task-settings",
+    "label": "المهام ← الإعدادات",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tasks-strategic",
+    "label": "المهام",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tax-settings",
+    "label": "إعدادات الضرائب",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/tenants",
+    "label": "المستأجرين",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/training-development",
+    "label": "التدريب والتطوير",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/virtual-halls",
+    "label": "القاعات الافتراضية",
+    "family": "erp"
+  },
+  {
+    "path": "/app/erp/visitor-chat",
+    "label": "الدردشة مع الزوار",
+    "family": "erp"
+  },
+  {
+    "path": "/app/global-operations",
+    "label": "العمليات العالمية",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/governance",
+    "label": "الحوكمة والتوقيع",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/international-laws",
+    "label": "التصنيف القانوني الدولي والمحلي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/automation-digital",
+    "label": "الأتمتة والتحول الرقمي القانوني",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/commercial-maritime",
+    "label": "القانون التجاري والبحري والامتيازات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/compliance-crimes",
+    "label": "الجرائم والامتثال والرقابة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/contracts-poa",
+    "label": "التوكيلات والعقود الدولية والمحلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/institutional",
+    "label": "الأنظمة القانونية المؤسسية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/intl-cross-border",
+    "label": "القانون الدولي والأنظمة العابرة للحدود",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/labor-safety",
+    "label": "العمل والعمال والسلامة المهنية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/national-local",
+    "label": "القوانين الوطنية والتشريعات المحلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/archiving",
+    "label": "الأرشفة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/banking",
+    "label": "التعاملات البنكية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/commercial-law",
+    "label": "القانون التجاري",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/commercial-lease",
+    "label": "عقود الإيجار التجارية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/commercial-poa",
+    "label": "التوكيلات التجارية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/constitution",
+    "label": "دستور الدولة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/contraband-law",
+    "label": "قانون الاتجار بالممنوعات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/court-link",
+    "label": "الربط بين الأنظمة القضائية والإدارية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/customs-clearance",
+    "label": "قوانين التخليص الجمركي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/cyber-crimes",
+    "label": "قانون الجرائم الإلكترونية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/data-mgmt",
+    "label": "إدارة البيانات القانونية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/digital-transform",
+    "label": "التحول الرقمي للمنظومات القانونية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/drugs-law",
+    "label": "قانون تعاطي المخدرات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/expat-work-permit",
+    "label": "تصريح العمالة الوافدة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/extortion-bullying",
+    "label": "الابتزاز والتنمر",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/financial-disputes",
+    "label": "النزاعات المالية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/franchise",
+    "label": "عقود الفرنشايز",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/franchise-contracts",
+    "label": "عقود الامتياز",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/human-resources",
+    "label": "الموارد البشرية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/insurance-contracts",
+    "label": "عقود التأمين",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-conferences",
+    "label": "المؤتمرات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-contraband",
+    "label": "قانون الاتجار بالممنوعات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-customs",
+    "label": "القوانين الجمركية الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-cyber",
+    "label": "قانون الجرائم الإلكترونية الدولي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-disputes",
+    "label": "النزاعات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-events",
+    "label": "الفعاليات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-fraud",
+    "label": "الاحتيالات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-fraud-2",
+    "label": "الاحتيالات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-incidents",
+    "label": "الحوادث الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-insurance",
+    "label": "التأمين الدولي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-law",
+    "label": "القانون الدولي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-marine-ins",
+    "label": "التأمين البحري",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-mediation",
+    "label": "فضّ النزاعات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-orgs",
+    "label": "المنظمات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-partners",
+    "label": "الشراكات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-partnership",
+    "label": "عقود الشراكات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-penal",
+    "label": "قانون العقوبات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-protocols",
+    "label": "البروتوكولات الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-supply",
+    "label": "سلاسل الإمداد الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-trade",
+    "label": "التجارة الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-traffic",
+    "label": "قانون السير الدولي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/intl-transport",
+    "label": "قانون النقل الدولي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/investment-laws",
+    "label": "قوانين الاستثمار",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/iso",
+    "label": "أنظمة الأيزو",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/labor-law",
+    "label": "قانون العمل والعمال",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/labor-orgs",
+    "label": "منظمات العمل الدولية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/legal-compliance",
+    "label": "أنظمة الامتثال القانوني",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/legal-governance",
+    "label": "حوكمة الإدارات القانونية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/legal-poa",
+    "label": "التوكيلات القانونية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/loans",
+    "label": "القروض البنكية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-customs",
+    "label": "القوانين الجمركية المحلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-cyber",
+    "label": "قانون الجرائم الإلكترونية حسب الدولة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-disputes",
+    "label": "النزاعات المحلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-drugs",
+    "label": "قانون تعاطي المخدرات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-events",
+    "label": "الفعاليات المحلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-penal",
+    "label": "قانون العقوبات حسب الدولة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-tax",
+    "label": "قانون الضرائب",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-traffic",
+    "label": "قانون السير للدولة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/local-transport",
+    "label": "قانون النقل المحلي",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/logistics",
+    "label": "اللوجستيات وعقود المشتريات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/maritime-law",
+    "label": "القانون البحري",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/mortgage",
+    "label": "الرهن وفك الرهن",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/occupational-safety",
+    "label": "السلامة المهنية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/operational-policies",
+    "label": "السياسات التشغيلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/ops-automation",
+    "label": "أتمتة العمليات التشغيلية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/performance",
+    "label": "نظام قياس الأداء",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/quality-control",
+    "label": "أنظمة ضبط الجودة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/quality-systems",
+    "label": "أنظمة الجودة القانونية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/reconciliation",
+    "label": "العطوات وفضّ النزاعات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/residential-lease",
+    "label": "عقود الإيجار السكنية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/sector-safety",
+    "label": "قوانين السلامة في القطاعات والمصانع",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/social-systems",
+    "label": "النظم الاجتماعية",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/supply-contracts",
+    "label": "عقود الإمداد واللوجستيات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/transport-contracts",
+    "label": "عقود النقل",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/tribal-laws",
+    "label": "القوانين العشائرية المساندة",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/violations",
+    "label": "المخالفات الدستورية والقانونية والسير",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/violations-2",
+    "label": "المخالفات",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/work-compensation",
+    "label": "تعويضات مخاطر العمل",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/international-laws/topic/worker-rights",
+    "label": "حقوق العاملين",
+    "family": "intl-laws"
+  },
+  {
+    "path": "/app/legal-finance",
+    "label": "المالية القانونية (لوحة)",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/legal-knowledge",
+    "label": "الفروع والتخصصات",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/legal-library",
+    "label": "المكتبة القانونية",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/modules/administration",
+    "label": "الإدارة والصلاحيات",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/ai-center",
+    "label": "الذكاء الاصطناعي القانوني",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/case-management",
+    "label": "إدارة القضايا",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/clients-management",
+    "label": "إدارة الموكلين",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/complaints-management",
+    "label": "إدارة الشكاوى",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/court-sessions",
+    "label": "إدارة الجلسات",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/dashboard",
+    "label": "لوحة التحكم",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/follow-up-center",
+    "label": "مركز المتابعات",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/general-tools",
+    "label": "الأدوات العامة",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/integrations",
+    "label": "التكاملات الخارجية",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/internal-requests",
+    "label": "الطلبات الداخلية",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/legal-accounting",
+    "label": "المحاسبة القانونية",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/legal-consultations",
+    "label": "الاستشارات القانونية",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/legal-services",
+    "label": "الخدمات القانونية",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/notifications-center",
+    "label": "الإشعارات والتنبيهات",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/reports-center",
+    "label": "مركز التقارير",
+    "family": "module"
+  },
+  {
+    "path": "/app/modules/smart-templates",
+    "label": "النماذج الذكية",
+    "family": "module"
+  },
+  {
+    "path": "/app/official-entities",
+    "label": "الجهات الرسمية",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/page-settings",
+    "label": "إعدادات الصفحات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/administration",
+    "label": "الإدارة والصلاحيات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/ai-center",
+    "label": "الذكاء الاصطناعي القانوني",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/archive",
+    "label": "الأرشيف والمستندات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-advanced-finance",
+    "label": "المالية المتقدمة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-global-operations",
+    "label": "العمليات العالمية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-governance",
+    "label": "الحوكمة والتوقيع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-integrations",
+    "label": "التكاملات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-legal-library",
+    "label": "المكتبة القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-legal-services",
+    "label": "الخدمات القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-professional-network",
+    "label": "الشبكة المهنية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/axis-sovereign",
+    "label": "لوحة التحكم السيادية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/case-management",
+    "label": "إدارة القضايا",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/client-messages",
+    "label": "رسائل العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/client-portal",
+    "label": "بوابة العميل",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/clients-management",
+    "label": "إدارة الموكلين",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/communications",
+    "label": "الاتصالات والفروع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/complaints-management",
+    "label": "إدارة الشكاوى",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/court-sessions",
+    "label": "إدارة الجلسات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/dashboard",
+    "label": "لوحة التحكم",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-ads",
+    "label": "مركز المعلنين",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-audit-logs",
+    "label": "سجل النظام",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub",
+    "label": "الفروع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-customer-service",
+    "label": "خدمة العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-operational-finance",
+    "label": "المالية التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-sales",
+    "label": "المبيعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-subscriptions",
+    "label": "الاشتراكات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-branches-hub-br-training",
+    "label": "التدريب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices",
+    "label": "المكاتب الإلكترونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-archive",
+    "label": "الارشيف",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-consultations",
+    "label": "الاستشارات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-customer-service",
+    "label": "خدمة العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-files",
+    "label": "الملفات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-latest-news",
+    "label": "اخر الاخبار",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-meetings",
+    "label": "الاجتماعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-operational-finance",
+    "label": "الماليه التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-sales",
+    "label": "المبيعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-subscriptions",
+    "label": "الاشتراكات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-tasks",
+    "label": "المهام",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-training",
+    "label": "التدريب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-e-offices-eo-users",
+    "label": "المستخدمين",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators",
+    "label": "حاضنات التعليم والتدريب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators-eti-facilities",
+    "label": "حضانة إدارة المرافق",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators-eti-hr",
+    "label": "حاضنة HR الموارد البشرية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators-eti-logistics",
+    "label": "حاضنة اللوجستيات والنقل والتوصيل",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators-eti-ohs",
+    "label": "حاضنة السلامة والصحة المهنية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators-eti-project-management",
+    "label": "حاضنة إدارة المشاريع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-education-training-incubators-eti-supply-chain",
+    "label": "حاضنة سلاسل الإمداد",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-events-studio-main",
+    "label": "استوديو الفعاليات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub",
+    "label": "الحاضنات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-customer-service",
+    "label": "خدمة العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-operational-finance",
+    "label": "المالية التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-sales",
+    "label": "المبيعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-subscriptions",
+    "label": "الاشتراكات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-incubators-hub-ic-training",
+    "label": "التدريب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation",
+    "label": "الإنترنت والأتمتة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-ai-integration",
+    "label": "الذكاء الإصطناعي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-compliance",
+    "label": "الموائمة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-dispute-settlements",
+    "label": "فض النزاعات والتسويات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-elearning",
+    "label": "التعلم الإلكتروني",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-etiquette",
+    "label": "الإتيكيت وبروتوكولات التواصل",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-forum",
+    "label": "المنتدى",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-governance",
+    "label": "الحوكمة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-intellectual-property",
+    "label": "ملكية نايوش",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-iot",
+    "label": "انترنت الأشياء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-knowledge",
+    "label": "المعرفة والتحليل",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-records-archiving",
+    "label": "السجلات والأرشيف",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-internet-automation-visitor-chat",
+    "label": "الدردشة مع الزوار",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-marketing-campaigns-studio",
+    "label": "استوديو الحملات التسويقية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors",
+    "label": "قطاعات نايوش",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-automation",
+    "label": "الأتمتة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-beta-club",
+    "label": "نادي بيتا الرقمي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-governance",
+    "label": "الحوكمة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-initiatives",
+    "label": "المبادرات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-legal",
+    "label": "القانونية والمحاماة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-member-management",
+    "label": "إدارة الأعضاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-skills-innovation",
+    "label": "المهارات والابتكارات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-naiosh-sectors-sc-sustainability",
+    "label": "الاستدامة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-operational-policies",
+    "label": "السياسات التشغيلية المعتمدة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu",
+    "label": "نظام الدفع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-collection-rules",
+    "label": "قواعد التحصيل",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-credit-topup",
+    "label": "شحن الرصيد",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-gateway-payments",
+    "label": "بوابات الدفع (Stripe/PayPal/Paymob)",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-installment-plans",
+    "label": "خطط الأقساط",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-invoices-enhanced",
+    "label": "الفواتير الذكية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-online-store",
+    "label": "المتجر والسلة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-overdue-management",
+    "label": "إدارة المتأخرات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-payment-analytics",
+    "label": "تحليلات الدفع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-payment-methods",
+    "label": "طرق الدفع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-payment-reminders",
+    "label": "التذكيرات الآلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-payment-tracking",
+    "label": "تتبع الدفعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-payment-menu-tax-settings",
+    "label": "إعدادات الضرائب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms",
+    "label": "المنصات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-customer-service",
+    "label": "خدمة العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-daily-operations",
+    "label": "العمليات اليومية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-local-hr",
+    "label": "الموارد البشرية المحلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-operational-finance",
+    "label": "الماليه التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-operational-reports",
+    "label": "التقارير التشغيلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-sales",
+    "label": "المبيعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-subscriptions",
+    "label": "الاشتراكات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-platforms-pl-training",
+    "label": "التدريب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-saas",
+    "label": "إدارة الاشتراكات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services",
+    "label": "الخدمات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-ai-market-research",
+    "label": "دراسة السوق عبر الذكاء الاصطناعي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-client-admin-services",
+    "label": "الخدمات الإدارية للعميل",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-consulting-training",
+    "label": "الاستشارات والتدريب",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-customer-service",
+    "label": "خدمة العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-feasibility-studies",
+    "label": "دراسات الجدوى",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-institutional-performance",
+    "label": "إدارة الأداء المؤسسي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-operations-monitoring",
+    "label": "متابعة العمليات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-project-management-office",
+    "label": "مكتب إدارة المشاريع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-research",
+    "label": "البحوث",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-services-virtual-halls",
+    "label": "القاعات الافتراضية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management",
+    "label": "الإدارة الاستراتيجية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-advertisers-center",
+    "label": "مركز المعلنين",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-employee-management",
+    "label": "إدارة الموظفين",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-evaluation",
+    "label": "التقييم",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-executive-management",
+    "label": "الإدارة التنفيذية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-financial-approvals",
+    "label": "الموافقات المالية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-identity-settings",
+    "label": "إعدادات الهوية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-information-center",
+    "label": "مركز المعلومات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-operations-management",
+    "label": "إدارة العمليات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-quality-audit",
+    "label": "الجودة والتدقيق",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-reports",
+    "label": "التقارير",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-smart-systems",
+    "label": "الأنظمة الذكية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-subscription-management",
+    "label": "إدارة الاشتراكات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-system-log",
+    "label": "سجل النظام",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-tasks-strategic",
+    "label": "المهام",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-tenants",
+    "label": "المستأجرين",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-strategic-management-training-development",
+    "label": "التدريب والتطوير",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management",
+    "label": "المهام",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-all-procedures",
+    "label": "جميع الإجراءات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-control-panel",
+    "label": "لوحة التحكم",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-customers",
+    "label": "العملاء",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-delegations",
+    "label": "التفويضات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-general-tasks",
+    "label": "المهام العامة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-main-menu",
+    "label": "القائمة الرئيسية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-my-tasks",
+    "label": "مهامي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-procedures",
+    "label": "الإجراءات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-task-reports",
+    "label": "التقارير",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/erp-tasks-management-task-settings",
+    "label": "الإعدادات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/follow-up-center",
+    "label": "مركز المتابعات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/general-tools",
+    "label": "الأدوات العامة",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/global-operations",
+    "label": "العمليات العالمية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/governance",
+    "label": "الحوكمة والتوقيع",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/integrations",
+    "label": "التكاملات الخارجية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/internal-requests",
+    "label": "الطلبات الداخلية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/international-laws",
+    "label": "التصنيف القانوني الدولي والمحلي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/legal-accounting",
+    "label": "المحاسبة القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/legal-consultations",
+    "label": "الاستشارات القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/legal-finance",
+    "label": "المالية القانونية (لوحة)",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/legal-knowledge",
+    "label": "الفروع والتخصصات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/legal-library",
+    "label": "المكتبة القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/legal-services",
+    "label": "الخدمات القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/notifications-center",
+    "label": "الإشعارات والتنبيهات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/official-entities",
+    "label": "الجهات الرسمية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/professional-network",
+    "label": "المحامون والشبكة المهنية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/public-homepage",
+    "label": "الصفحة العامة (الموقع)",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/reports-center",
+    "label": "مركز التقارير",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/smart-templates",
+    "label": "النماذج الذكية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-archive",
+    "label": "أرشيفي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-cases",
+    "label": "قضاياي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-clients",
+    "label": "موكلي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-finance",
+    "label": "ماليتي القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-library",
+    "label": "مكتبتي القانونية",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-profile",
+    "label": "صفحتي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-sessions",
+    "label": "جلساتي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-systems",
+    "label": "أنظمتي وتصنيفاتي",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/specialty-team",
+    "label": "الفريق والصلاحيات",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/page-settings/system-settings",
+    "label": "إعدادات النظام",
+    "family": "page-settings"
+  },
+  {
+    "path": "/app/professional-network",
+    "label": "المحامون والشبكة المهنية",
+    "family": "first-class"
+  },
+  {
+    "path": "/app/specialty/archive",
+    "label": "أرشيفي",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/cases",
+    "label": "قضاياي",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/clients",
+    "label": "موكلي",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/finance",
+    "label": "ماليتي القانونية",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/library",
+    "label": "مكتبتي القانونية",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/profile",
+    "label": "صفحتي",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/sessions",
+    "label": "جلساتي",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/systems",
+    "label": "أنظمتي وتصنيفاتي",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/specialty/team",
+    "label": "الفريق والصلاحيات",
+    "family": "specialty"
+  },
+  {
+    "path": "/app/system-settings",
+    "label": "إعدادات النظام",
+    "family": "first-class"
+  },
+  {
+    "path": "/data-analysis",
+    "label": "تحليل البيانات (عام)",
+    "family": "other"
+  },
+  {
+    "path": "/data-analysis/workspace",
+    "label": "مساحة تحليل البيانات",
+    "family": "other"
+  },
+  {
+    "path": "/portal",
+    "label": "بوابة العميل — الرئيسية",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/cases",
+    "label": "قضاياي",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/documents",
+    "label": "مستنداتي",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/finance",
+    "label": "المالية",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/messages",
+    "label": "الرسائل",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/notifications",
+    "label": "الإشعارات",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/profile",
+    "label": "ملفي الشخصي",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/requests",
+    "label": "طلباتي",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/sessions",
+    "label": "جلساتي",
+    "family": "portal"
+  },
+  {
+    "path": "/portal/settings",
+    "label": "الإعدادات",
+    "family": "portal"
+  }
+]

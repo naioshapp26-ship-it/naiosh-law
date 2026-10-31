@@ -16,6 +16,7 @@ import { erpModuleHref, type ErpNavModule } from "@/data/erp-sidebar-modules";
 import { NAIOSH_OWNERSHIP_TYPE_OPTIONS } from "@/data/naiosh-ownership-menu";
 import { Modal } from "@/components/ui/modal";
 import { RowActions, standardRowActions } from "@/components/ui/row-actions";
+import { PageHero } from "@/components/page-hero";
 import type { FormField } from "@/data/module-configs";
 import { defaultLabeledCreateFields, fieldsFromColumnLabels } from "@/lib/form-field-labels";
 
@@ -29,67 +30,6 @@ function useErpStudioCss() {
     link.setAttribute("data-erp-studio", "1");
     document.head.appendChild(link);
   }, []);
-}
-
-function gradientCss(gradient: string) {
-  const map: Record<string, string> = {
-    "from-red-800 to-red-600": "linear-gradient(135deg,#0B1424,#101D32)",
-    "from-red-900 to-red-700": "linear-gradient(135deg,#0B1424,#101D32)",
-    "from-red-700 to-rose-600": "linear-gradient(135deg,#101D32,#e11d48)",
-    "from-rose-800 to-rose-600": "linear-gradient(135deg,#9f1239,#e11d48)",
-    "from-rose-700 to-red-600": "linear-gradient(135deg,#be123c,#101D32)",
-    "from-indigo-800 to-indigo-600": "linear-gradient(135deg,#3730a3,#4f46e5)",
-    "from-indigo-700 to-blue-600": "linear-gradient(135deg,#4338ca,#2563eb)",
-    "from-indigo-700 to-violet-600": "linear-gradient(135deg,#4338ca,#7c3aed)",
-    "from-emerald-800 to-emerald-600": "linear-gradient(135deg,#065f46,#059669)",
-    "from-emerald-700 to-teal-600": "linear-gradient(135deg,#047857,#0d9488)",
-    "from-emerald-700 to-green-600": "linear-gradient(135deg,#047857,#16a34a)",
-    "from-teal-800 to-teal-600": "linear-gradient(135deg,#115e59,#0d9488)",
-    "from-teal-700 to-emerald-600": "linear-gradient(135deg,#0f766e,#059669)",
-    "from-teal-700 to-cyan-600": "linear-gradient(135deg,#0f766e,#0891b2)",
-    "from-violet-800 to-violet-600": "linear-gradient(135deg,#5b21b6,#7c3aed)",
-    "from-violet-700 to-indigo-600": "linear-gradient(135deg,#6d28d9,#4f46e5)",
-    "from-violet-700 to-fuchsia-600": "linear-gradient(135deg,#6d28d9,#c026d3)",
-    "from-violet-700 to-purple-600": "linear-gradient(135deg,#6d28d9,#9333ea)",
-    "from-slate-800 to-slate-600": "linear-gradient(135deg,#1e293b,#475569)",
-    "from-slate-700 to-slate-500": "linear-gradient(135deg,#334155,#64748b)",
-    "from-slate-700 to-blue-700": "linear-gradient(135deg,#334155,#1d4ed8)",
-    "from-slate-700 to-cyan-700": "linear-gradient(135deg,#334155,#0e7490)",
-    "from-slate-800 to-indigo-700": "linear-gradient(135deg,#1e293b,#4338ca)",
-    "from-slate-800 to-red-800": "linear-gradient(135deg,#1e293b,#101D32)",
-    "from-slate-900 to-indigo-900": "linear-gradient(135deg,#0f172a,#312e81)",
-    "from-purple-800 to-indigo-600": "linear-gradient(135deg,#6b21a8,#4f46e5)",
-    "from-purple-700 to-indigo-600": "linear-gradient(135deg,#7e22ce,#4f46e5)",
-    "from-purple-600 to-indigo-600": "linear-gradient(135deg,#9333ea,#4f46e5)",
-    "from-fuchsia-900 to-purple-700": "linear-gradient(135deg,#701a75,#7e22ce)",
-    "from-fuchsia-700 to-purple-600": "linear-gradient(135deg,#a21caf,#9333ea)",
-    "from-fuchsia-700 to-pink-600": "linear-gradient(135deg,#a21caf,#db2777)",
-    "from-blue-800 to-blue-600": "linear-gradient(135deg,#1e40af,#2563eb)",
-    "from-blue-700 to-indigo-600": "linear-gradient(135deg,#1d4ed8,#4f46e5)",
-    "from-blue-700 to-sky-600": "linear-gradient(135deg,#1d4ed8,#0284c7)",
-    "from-blue-600 to-indigo-600": "linear-gradient(135deg,#2563eb,#4f46e5)",
-    "from-sky-800 to-sky-600": "linear-gradient(135deg,#075985,#0284c7)",
-    "from-sky-700 to-blue-600": "linear-gradient(135deg,#0369a1,#2563eb)",
-    "from-cyan-700 to-teal-600": "linear-gradient(135deg,#0e7490,#0d9488)",
-    "from-cyan-700 to-blue-600": "linear-gradient(135deg,#0e7490,#2563eb)",
-    "from-cyan-700 to-indigo-700": "linear-gradient(135deg,#0e7490,#4338ca)",
-    "from-amber-700 to-orange-600": "linear-gradient(135deg,#b45309,#ea580c)",
-    "from-amber-700 to-yellow-600": "linear-gradient(135deg,#b45309,#ca8a04)",
-    "from-amber-600 to-orange-500": "linear-gradient(135deg,#d97706,#f97316)",
-    "from-amber-600 to-yellow-500": "linear-gradient(135deg,#d97706,#eab308)",
-    "from-orange-700 to-amber-600": "linear-gradient(135deg,#c2410c,#d97706)",
-    "from-yellow-600 to-amber-500": "linear-gradient(135deg,#ca8a04,#f59e0b)",
-    "from-pink-700 to-rose-600": "linear-gradient(135deg,#be185d,#e11d48)",
-    "from-rose-700 to-pink-600": "linear-gradient(135deg,#be123c,#db2777)",
-    "from-red-900 to-rose-700": "linear-gradient(135deg,#0B1424,#be123c)",
-    "from-red-900 to-slate-800": "linear-gradient(135deg,#0B1424,#1e293b)",
-    "from-red-800 to-orange-600": "linear-gradient(135deg,#101D32,#ea580c)",
-    "from-red-800 to-rose-600": "linear-gradient(135deg,#101D32,#e11d48)",
-    "from-green-700 to-emerald-600": "linear-gradient(135deg,#15803d,#059669)",
-    "from-stone-700 to-stone-500": "linear-gradient(135deg,#44403c,#78716c)",
-    "from-indigo-700 to-slate-700": "linear-gradient(135deg,#4338ca,#334155)",
-  };
-  return map[gradient] || "linear-gradient(135deg,#0B1424,#101D32)";
 }
 
 function DataTable({
@@ -645,29 +585,25 @@ function OpsHero({
   config: ErpPageConfig;
   crumb?: { label: string; href: string } | null;
 }) {
+  // All ERP workspaces share the unified navy/gold PageHero (catalog gradient unused).
   return (
-    <header
-      className="rounded-2xl p-6 relative overflow-hidden text-white shadow-lg"
-      style={{ background: gradientCss(config.gradient), color: "#fff" }}
-    >
-      <div className="absolute -left-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-      {crumb ? (
-        <p className="text-sm mb-2 relative z-10" style={{ color: "rgba(255,255,255,0.85)" }}>
-          <Link href={crumb.href} className="underline underline-offset-2" style={{ color: "#fff" }}>
-            {crumb.label}
-          </Link>
-          <span className="mx-2 opacity-60">/</span>
-          <span>{config.title}</span>
-        </p>
-      ) : null}
-      <h2 className="text-2xl md:text-3xl font-black flex items-center gap-3 relative z-10 m-0" style={{ color: "#fff" }}>
-        <i className={`fas ${config.icon}`} aria-hidden />
-        {config.title}
-      </h2>
-      <p className="mt-2 text-sm md:text-base relative z-10 m-0" style={{ color: "rgba(255,255,255,0.92)" }}>
-        {config.subtitle}
-      </p>
-    </header>
+    <PageHero
+      headingLevel="h2"
+      icon={<i className={`fas ${config.icon}`} aria-hidden />}
+      title={config.title}
+      subtitle={config.subtitle}
+      eyebrow={
+        crumb ? (
+          <>
+            <Link href={crumb.href} className="underline underline-offset-2">
+              {crumb.label}
+            </Link>
+            <span className="mx-2 opacity-60">/</span>
+            <span>{config.title}</span>
+          </>
+        ) : undefined
+      }
+    />
   );
 }
 

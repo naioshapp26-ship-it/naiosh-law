@@ -71,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ERP studio chrome in root head — avoids FOUC / overlapping text on first paint of مهامي and other ERP tables */}
         <link rel="stylesheet" href="/erp-app/studio.css?v=dark-contrast-20261026" data-erp-studio="1" />
         <link rel="stylesheet" href="/erp-app/hq.css?v=dark-contrast-20261026" data-erp-hq="1" />
+        <link rel="stylesheet" href="/erp-app/page-hero.css?v=unify-page-hero-20261031b" data-erp-page-hero="1" />
         <link rel="stylesheet" href="/erp-app/erp-theme.css?v=dark-contrast-20261026b" data-erp-theme="1" />
         <script
           dangerouslySetInnerHTML={{

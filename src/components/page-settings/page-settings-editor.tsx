@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { PageHero } from "@/components/page-hero";
 import { useSession } from "@/lib/session";
 import { getByPath, setByPath } from "@/lib/page-settings/defaults";
 import { STATUS_LABELS, type SettingFieldDef, type SettingTabDef } from "@/lib/page-settings/types";
@@ -473,37 +474,37 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
       <div className="psc-editor" dir="rtl">
         {toast && <div className={`psc-toast ${toast.type}`}>{toast.message}</div>}
 
-        <header className="psc-editor-header">
-          <div>
-            <p className="psc-eyebrow">إعدادات الصفحة {def?.icon}</p>
-            <h1>{def?.title ?? pageKey}</h1>
-            <p className="psc-lead">{def?.description}</p>
-            {def && (
-              <p className="psc-meta" style={{ marginTop: 8 }}>
-                الحالة: {STATUS_LABELS[def.status]}
-                {def.gapReason ? ` — ${def.gapReason}` : ""}
-              </p>
-            )}
-          </div>
-          <div className="psc-actions">
-            <Link href="/app/page-settings" className="psc-btn ghost">
-              مركز الإعدادات
-            </Link>
-            {def?.pageHref && (
-              <Link href={def.pageHref} className="psc-btn ghost">
-                الصفحة الأصلية
+        <PageHero
+          icon={<span aria-hidden>{def?.icon || "⚙️"}</span>}
+          eyebrow={`إعدادات الصفحة`}
+          title={def?.title ?? pageKey}
+          subtitle={def?.description}
+          meta={
+            def
+              ? `الحالة: ${STATUS_LABELS[def.status]}${def.gapReason ? ` — ${def.gapReason}` : ""}`
+              : undefined
+          }
+          actions={
+            <>
+              <Link href="/app/page-settings" className="psc-btn ghost">
+                مركز الإعدادات
               </Link>
-            )}
-            <button
-              type="button"
-              className="psc-btn gold"
-              disabled={!def?.pageHref}
-              onClick={openPreview}
-            >
-              معاينة
-            </button>
-          </div>
-        </header>
+              {def?.pageHref && (
+                <Link href={def.pageHref} className="psc-btn ghost">
+                  الصفحة الأصلية
+                </Link>
+              )}
+              <button
+                type="button"
+                className="psc-btn gold btn-primary"
+                disabled={!def?.pageHref}
+                onClick={openPreview}
+              >
+                معاينة
+              </button>
+            </>
+          }
+        />
 
         {previewing && (
           <div className="psc-preview-banner">

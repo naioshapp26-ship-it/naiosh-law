@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { PageHero } from "@/components/page-hero";
 import {
   SettingsAppliedChrome,
   SettingsLinkButton,
@@ -101,13 +102,12 @@ export default function StaffClientMessagesPage() {
       <div className="p-4 md:p-6" dir="rtl">
         <SettingsAppliedChrome pageKey="client-messages" settings={pageSettings} />
       <SettingsDrivenSections pageKey="client-messages" />
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-black text-[#101D32] mb-1">{title}</h1>
-            <p className="text-slate-600 font-semibold">{subtitle}</p>
-          </div>
-          <SettingsLinkButton pageKey="client-messages" />
-        </div>
+        <PageHero
+          icon={<i className="fas fa-comments" aria-hidden />}
+          title={title}
+          subtitle={subtitle}
+          actions={<SettingsLinkButton pageKey="client-messages" />}
+        />
         {error ? (
           <div className="mb-3 rounded-xl border border-red-200 bg-red-50 text-red-800 px-4 py-3 font-bold">
             {error}

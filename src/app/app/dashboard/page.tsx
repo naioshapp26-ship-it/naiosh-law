@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/app-shell";
-import { BrandLogo } from "@/components/brand-logo";
 import { ModuleCard } from "@/components/module-card";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RowActions, standardRowActions } from "@/components/ui/row-actions";
+import { PageHero } from "@/components/page-hero";
 import { modules } from "@/data/modules";
 import { formatDate } from "@/lib/format";
 import {
@@ -291,82 +291,14 @@ export default function DashboardPage() {
           <SettingsLinkButton pageKey="dashboard" />
         </div>
         <SettingsDrivenSections pageKey="dashboard" />
-        {/* Imperial hero + animated logo */}
-        <motion.div
-          variants={fadeUp}
-          custom={0}
-          style={{
-            background: "linear-gradient(135deg, #0B1424, #101D32, #1A304D)",
-            borderRadius: "1.75rem",
-            padding: "1.75rem 2rem",
-            marginBottom: "1.5rem",
-            color: "#fff",
-            position: "relative",
-            overflow: "hidden",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.08), 0 25px 60px -12px rgba(11,20,36,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
-            border: "1px solid rgba(183,154,97,0.28)",
-          }}
-          className="hq-hero"
-        >
-          <div className="glow-pulse" style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(183,154,97,0.22) 0%, transparent 70%)" }} />
-          <div className="glow-pulse" style={{ position: "absolute", bottom: -80, left: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: "1.75rem", flexWrap: "wrap", position: "relative" }}>
-            {/* Logo متحرك */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              style={{ position: "relative", flexShrink: 0 }}
-            >
-              <div
-                className="logo-glow-ring"
-                style={{
-                  position: "absolute",
-                  inset: "-12px",
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(212,175,55,0.35) 0%, transparent 70%)",
-                  pointerEvents: "none",
-                }}
-              />
-              <BrandLogo size={96} showText={false} animated />
-            </motion.div>
-
-            <div style={{ flex: 1, minWidth: 240 }}>
-              <motion.p
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                style={{ fontSize: "0.75rem", opacity: 0.85, marginBottom: "0.35rem" }}
-              >
-                👑 {dashSubtitle}
-              </motion.p>
-              <motion.h1
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                style={{ fontSize: "1.65rem", fontWeight: 900, marginBottom: "0.5rem", lineHeight: 1.35 }}
-              >
-                {dashTitle}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                style={{ fontSize: "0.88rem", opacity: 0.88, maxWidth: 560, lineHeight: 1.75 }}
-              >
-                {empireIntro.description}
-              </motion.p>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.55 }}
-                style={{ fontSize: "0.8rem", marginTop: "0.75rem", opacity: 0.75 }}
-              >
-                مرحبًا {user.name} — {formatDate(new Date(), { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-              </motion.p>
-            </div>
-          </div>
+        <motion.div variants={fadeUp} custom={0}>
+          <PageHero
+            showLogo
+            eyebrow={`👑 ${dashSubtitle}`}
+            title={dashTitle}
+            subtitle={empireIntro.description}
+            meta={`مرحبًا ${user.name} — ${formatDate(new Date(), { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`}
+          />
         </motion.div>
 
         <motion.div variants={fadeUp} custom={1} style={{ marginBottom: "1.5rem" }}>

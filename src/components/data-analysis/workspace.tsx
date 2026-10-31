@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { PageHero } from "@/components/page-hero";
 import {
   AN_TYPES,
   anDefaults,
@@ -32,7 +33,7 @@ function ensureCss() {
   if (document.querySelector('link[data-da-law-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/data-analysis-law.css?v=law-da-20261028a";
+  link.href = "/erp-app/data-analysis-law.css?v=unify-page-hero-20261101";
   link.setAttribute("data-da-law-css", "1");
   document.head.appendChild(link);
 }
@@ -204,29 +205,21 @@ export function DataAnalysisWorkspace() {
 
   return (
     <div className="da-law" dir="rtl">
-      <section className="da-law-section" style={{ marginBottom: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <div>
-            <h2 style={{ margin: 0 }}>مساحة تحليل البيانات القانونية</h2>
-            <p className="lead" style={{ marginBottom: 0 }}>
-              اختر مصدرًا مصرّحًا أو ارفع ملفًا · النطاق: {scope || "…"}
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Link href="/data-analysis" className="da-law-btn ghost">
+      <PageHero
+        icon={<i className="fas fa-chart-line" aria-hidden />}
+        title="مساحة تحليل البيانات القانونية"
+        subtitle={`اختر مصدرًا مصرّحًا أو ارفع ملفًا · النطاق: ${scope || "…"}`}
+        actions={
+          <>
+            <Link href="/data-analysis" className="da-law-btn ghost" style={{ textDecoration: "none" }}>
               الصفحة التعريفية
             </Link>
-            <button
-              type="button"
-              className="da-law-btn secondary"
-              disabled={!result}
-              onClick={exportReport}
-            >
+            <button type="button" className="btn-primary" disabled={!result} onClick={exportReport}>
               تصدير التقرير
             </button>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       <section className="da-law-section">
         <div className="da-ws-toolbar">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { PageHero } from "@/components/page-hero";
 import { findItemById } from "@/lib/empire-routes";
 import { axisBySlug } from "@/data/empire-structure";
 import { useSession } from "@/lib/session";
@@ -34,17 +35,48 @@ export default function AxisItemPage() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto">
-        <div
-          className="rounded-2xl p-8 text-white mb-6"
-          style={{ background: `linear-gradient(135deg, ${axis?.color ?? "#101D32"} 0%, #0a0a12 100%)` }}
-        >
-          <p className="text-sm opacity-80 mb-1">{item.axisTitle}</p>
-          <h1 className="text-2xl font-black mb-3">{item.label}</h1>
-          <p className="text-sm opacity-90 leading-relaxed">
-            وحدة ضمن الهيكل السيادي الموحّد — منظومة نايوش 360
-          </p>
-        </div>
+      <div className="max-w-2xl mx-auto" style={{ width: "100%" }}>
+        <PageHero
+          icon={<span aria-hidden>{axis?.icon ?? "📌"}</span>}
+          eyebrow={item.axisTitle}
+          title={item.label}
+          subtitle="وحدة ضمن الهيكل السيادي الموحّد — منظومة نايوش 360"
+          actions={
+            <>
+              <Link
+                href={href}
+                className="btn-primary"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  padding: "0.55rem 1.1rem",
+                  borderRadius: 12,
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                }}
+              >
+                فتح الصفحة التشغيلية ←
+              </Link>
+              <Link
+                href={`/app/axis/${item.axisSlug}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  padding: "0.55rem 1.1rem",
+                  borderRadius: 12,
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                }}
+              >
+                عرض المحور الكامل
+              </Link>
+            </>
+          }
+        />
 
         <div className="card-white p-6 space-y-4">
           <p className="text-slate-600 text-sm leading-relaxed">
@@ -54,20 +86,8 @@ export default function AxisItemPage() {
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href={href}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-colors"
-            >
-              فتح الصفحة التشغيلية ←
-            </Link>
-            <Link
-              href={`/app/axis/${item.axisSlug}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-red-200 text-red-700 font-semibold text-sm hover:bg-red-50 transition-colors"
-            >
-              عرض المحور الكامل
-            </Link>
-            <Link
               href="/app/dashboard"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-slate-500 font-medium text-sm hover:text-red-600"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-slate-500 font-medium text-sm hover:text-[#B79A61]"
             >
               لوحة التحكم
             </Link>

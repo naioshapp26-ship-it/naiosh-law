@@ -67,7 +67,7 @@ export function PortalShell({
     if (!document.querySelector('link[data-portal-css]')) {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "/newhome/portal.css?v=logout-fix-20261029";
+      css.href = "/newhome/portal.css?v=unify-page-hero-20261031";
       css.setAttribute("data-portal-css", "1");
       document.head.appendChild(css);
     }

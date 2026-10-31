@@ -102,6 +102,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         hq.setAttribute("data-erp-hq", "1");
         document.head.appendChild(hq);
       }
+      if (!document.querySelector('link[data-erp-page-hero]')) {
+        const hero = document.createElement("link");
+        hero.rel = "stylesheet";
+        hero.href = "/erp-app/page-hero.css?v=unify-page-hero-20261031b";
+        hero.setAttribute("data-erp-page-hero", "1");
+        document.head.appendChild(hero);
+      }
       // Keep studio.css present — Next head reconciliation can drop it on soft nav.
       if (!document.querySelector('link[data-erp-studio]')) {
         const studio = document.createElement("link");

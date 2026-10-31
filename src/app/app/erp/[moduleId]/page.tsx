@@ -6,8 +6,9 @@ import { AppShell } from "@/components/app-shell";
 import { ErpWorkspacePage } from "@/components/erp-module-workspace";
 import { ErpStudioStandalone } from "@/components/erp-studio-standalone";
 import SystemSettingsPage from "@/components/system-settings-page";
+import { PageHero } from "@/components/page-hero";
 import { getErpPageConfig } from "@/data/erp-page-catalog";
-import { getErpModuleById } from "@/data/erp-sidebar-modules";
+import { findErpNavEntry, getErpModuleById } from "@/data/erp-sidebar-modules";
 import { useSession } from "@/lib/session";
 
 /** ERP sidebar entries that should open the real homepage identity settings UI. */
@@ -18,6 +19,7 @@ export default function ErpModulePage() {
   const moduleId = String(params.moduleId ?? "");
   const { user, ready } = useSession(true);
   const mod = getErpModuleById(moduleId);
+  const nav = findErpNavEntry(moduleId);
   const config = getErpPageConfig(moduleId);
 
   if (!ready || !user) return null;
@@ -27,16 +29,21 @@ export default function ErpModulePage() {
     return <SystemSettingsPage />;
   }
 
-  if (!config || (!mod && config.kind !== "studio")) {
+  // Catalog pages are reachable even when the id is a nested sidebar leaf
+  // (flat /app/erp/{childId} aliases — same chrome as nested parent/child routes).
+  if (!config) {
     return (
       <AppShell>
-        <div className="text-center py-20">
-          <p className="text-5xl mb-4">🔍</p>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">الوحدة غير موجودة</h2>
-          <Link href="/app/dashboard" className="text-red-600 font-semibold hover:underline">
-            العودة للوحة التحكم
-          </Link>
-        </div>
+        <PageHero
+          icon={<span aria-hidden>🔍</span>}
+          title="الوحدة غير موجودة"
+          subtitle={`المعرّف «${moduleId}» غير معرّف في كتالوج ERP.`}
+          actions={
+            <Link href="/app/dashboard" className="btn-primary" style={{ textDecoration: "none", padding: "0.55rem 1.1rem", borderRadius: 12, fontWeight: 700 }}>
+              العودة للوحة التحكم
+            </Link>
+          }
+        />
       </AppShell>
     );
   }
@@ -46,9 +53,17 @@ export default function ErpModulePage() {
     return <ErpStudioStandalone config={config} />;
   }
 
+  const parent = nav?.parent ?? null;
+  const moduleForHub = mod ?? (nav && !nav.parent ? nav.module : null);
+
   return (
     <AppShell>
-      <ErpWorkspacePage pageId={moduleId} config={config} module={mod} />
+      <ErpWorkspacePage
+        pageId={moduleId}
+        config={config}
+        module={moduleForHub}
+        parent={parent}
+      />
     </AppShell>
   );
 }

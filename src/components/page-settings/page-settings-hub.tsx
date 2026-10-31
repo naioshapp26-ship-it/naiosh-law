@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { PageHero } from "@/components/page-hero";
 import { useSession } from "@/lib/session";
 import {
   CATEGORY_LABELS,
@@ -133,12 +134,11 @@ export function PageSettingsHub() {
             </button>
           </div>
 
-          <div className="psc-erp-title-box">
-            <h1>إعدادات الصفحات</h1>
-          </div>
-          <p className="psc-erp-lead">
-            كل بند يفتح محرر إعدادات يُحفظ في PostgreSQL ويُطبَّق على الوظيفة المرتبطة.
-          </p>
+          <PageHero
+            icon={<span aria-hidden>⚙️</span>}
+            title="إعدادات الصفحات"
+            subtitle="كل بند يفتح محرر إعدادات يُحفظ في PostgreSQL ويُطبَّق على الوظيفة المرتبطة."
+          />
 
           {toolsOpen && (
             <div className="psc-erp-tools">

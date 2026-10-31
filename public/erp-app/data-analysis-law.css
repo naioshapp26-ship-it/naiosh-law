@@ -50,8 +50,8 @@
 
 .da-law .da-law-hero .da-law-hero__title,
 .da-law .da-law-hero h1.da-law-hero__title {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff;
+  color: #c8ae74 !important;
+  -webkit-text-fill-color: #c8ae74;
 }
 
 .da-law .da-law-hero .da-law-hero__tag {
@@ -225,7 +225,11 @@
 }
 
 body.dark-mode .da-law .da-law-hero .da-law-hero__title,
-.dark-mode .da-law .da-law-hero .da-law-hero__title,
+.dark-mode .da-law .da-law-hero .da-law-hero__title {
+  color: #c8ae74 !important;
+  -webkit-text-fill-color: #c8ae74 !important;
+}
+
 body.dark-mode .da-law .da-law-hero .da-law-hero__lead,
 .dark-mode .da-law .da-law-hero .da-law-hero__lead,
 body.dark-mode .da-law .da-law-hero .da-law-hero__note,
