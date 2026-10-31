@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/lib/session";
 import { useSiteTheme } from "@/components/theme-provider";
 import { DarkModeToggle } from "@/components/color-mode";
+import { PageHero } from "@/components/page-hero";
 import {
   SettingsAppliedChrome,
   SettingsLinkButton,
@@ -706,95 +707,54 @@ export default function SystemSettingsPage() {
         {toast?.message}
       </div>
 
-      <header
-        style={{
-          background: "#fff",
-          borderBottom: "1px solid #e2e8f0",
-          boxShadow: "0 1px 2px rgba(0,0,0,.04)",
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "64rem",
-            margin: "0 auto",
-            padding: "0.75rem 1rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "1rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div id="naiosh-back-slot" style={{ display: "flex", alignItems: "center", marginBottom: 0 }} />
-            <div
-              style={{
-                background: "#101D32",
-                color: "#fff",
-                width: 36,
-                height: 36,
-                borderRadius: 12,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 8px 16px rgba(16, 29, 50,.25)",
-              }}
-            >
-              <i className="fas fa-palette" style={{ fontSize: "0.85rem" }} />
-            </div>
-            <div>
-              <h1 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", lineHeight: 1.25, margin: 0 }}>
-                {pageSettings.display?.title?.trim() || "إعدادات الصفحة الرئيسية"}
-              </h1>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0 }}>
-                {pageSettings.display?.subtitle?.trim() ||
-                  "تحكم في مظهر وهوية الصفحة الرئيسية (إعدادات الهوية)"}
-              </p>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <SettingsLinkButton pageKey="system-settings" />
-            <DarkModeToggle />
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748b",
-                border: "1px solid #e2e8f0",
-                borderRadius: 8,
-                padding: "0.375rem 0.75rem",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.375rem",
-              }}
-            >
-              <i className="fas fa-eye" /> معاينة الصفحة
-            </a>
-            <Link
-              href="/app/dashboard"
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748b",
-                border: "1px solid #e2e8f0",
-                borderRadius: 8,
-                padding: "0.375rem 0.75rem",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.375rem",
-              }}
-            >
-              <i className="fas fa-arrow-right" /> لوحة التحكم
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "2rem 1rem 6rem" }}>
+      <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "1.25rem 1rem 6rem" }}>
+        <div id="naiosh-back-slot" style={{ display: "flex", alignItems: "center", marginBottom: "0.75rem" }} />
+        <PageHero
+          icon={<i className="fas fa-palette" aria-hidden />}
+          title={pageSettings.display?.title?.trim() || "إعدادات الصفحة الرئيسية"}
+          subtitle={
+            pageSettings.display?.subtitle?.trim() ||
+            "تحكم في مظهر وهوية الصفحة الرئيسية (إعدادات الهوية)"
+          }
+          actions={
+            <>
+              <SettingsLinkButton pageKey="system-settings" />
+              <DarkModeToggle />
+              <a
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: "0.75rem",
+                  borderRadius: 8,
+                  padding: "0.375rem 0.75rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.375rem",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                <i className="fas fa-eye" /> معاينة الصفحة
+              </a>
+              <Link
+                href="/app/dashboard"
+                style={{
+                  fontSize: "0.75rem",
+                  borderRadius: 8,
+                  padding: "0.375rem 0.75rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.375rem",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                <i className="fas fa-arrow-right" /> لوحة التحكم
+              </Link>
+            </>
+          }
+        />
         <SettingsAppliedChrome pageKey="system-settings" settings={pageSettings} />
       <SettingsDrivenSections pageKey="system-settings" />
         {loading ? (

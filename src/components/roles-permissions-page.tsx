@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { PageHero } from "@/components/page-hero";
 import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { useSession } from "@/lib/session";
 import {
@@ -596,29 +597,27 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
       <style>{RP_CSS}</style>
       <SettingsDrivenSections pageKey="administration" />
 
-      <div className="rp-header">
-        <div>
-          <h1 className="rp-title">
-            <i className="fas fa-shield-alt" style={{ color: "var(--brand)", marginLeft: 8 }} />
-            {pageSettings.display?.title?.trim() || "الإدارة والصلاحيات"}
-          </h1>
-          <p className="rp-sub">
-            {pageSettings.display?.subtitle?.trim() ||
-              "نظام التحكم الكامل في الأدوار والصلاحيات — بيانات تشغيلية غنية"}
-          </p>
-        </div>
-        <div className="rp-header-actions">
-          <Link href="/app/page-settings/administration" className="rp-btn-ghost">
-            ⚙️ إعدادات الصفحة
-          </Link>
-          <button type="button" className="rp-btn-primary" onClick={openCreateUser}>
-            <i className="fas fa-user-plus" /> إضافة مستخدم جديد
-          </button>
-          <button type="button" className="rp-btn-ghost" onClick={openCreateRole}>
-            <i className="fas fa-plus" /> إضافة دور
-          </button>
-        </div>
-      </div>
+      <PageHero
+        icon={<i className="fas fa-shield-alt" aria-hidden />}
+        title={pageSettings.display?.title?.trim() || "الإدارة والصلاحيات"}
+        subtitle={
+          pageSettings.display?.subtitle?.trim() ||
+          "نظام التحكم الكامل في الأدوار والصلاحيات — بيانات تشغيلية غنية"
+        }
+        actions={
+          <>
+            <Link href="/app/page-settings/administration" className="rp-btn-ghost">
+              ⚙️ إعدادات الصفحة
+            </Link>
+            <button type="button" className="rp-btn-primary btn-primary" onClick={openCreateUser}>
+              <i className="fas fa-user-plus" /> إضافة مستخدم جديد
+            </button>
+            <button type="button" className="rp-btn-ghost" onClick={openCreateRole}>
+              <i className="fas fa-plus" /> إضافة دور
+            </button>
+          </>
+        }
+      />
 
       <div className="rp-kpis">
         <div className="rp-kpi">

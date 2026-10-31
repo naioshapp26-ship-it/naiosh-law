@@ -15,6 +15,7 @@ import {
   specBool,
 } from "@/components/page-settings/settings-applied-chrome";
 import { SettingsDrivenSections } from "@/components/page-settings/settings-driven-sections";
+import { PageHero } from "@/components/page-hero";
 import {
   ADD_AXIS_ITEM_FORM_FIELDS,
   appendCustomAxisItem,
@@ -313,72 +314,22 @@ export function AxisHubPage({ axis, userName }: Props) {
 
   return (
     <div className="erp-page" style={{ width: "100%" }}>
-      {/* Hero banner */}
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${axis.color} 0%, #0a0a12 100%)`,
-          borderRadius: "20px",
-          padding: "2rem 2.25rem",
-          marginBottom: "1.75rem",
-          color: "#fff",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -30,
-            left: -30,
-            width: 140,
-            height: 140,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.06)",
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "1rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-              <span
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: "16px",
-                  background: "rgba(255,255,255,0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.6rem",
-                }}
-              >
-                {axis.icon}
-              </span>
-              <div>
-                <p style={{ fontSize: "0.75rem", opacity: 0.8, marginBottom: "0.15rem" }}>{axisSubtitle}</p>
-                <h1 style={{ fontSize: "1.55rem", fontWeight: 900 }}>{axisTitle}</h1>
-              </div>
-            </div>
-            {showDescription ? (
-            <p style={{ fontSize: "0.9rem", opacity: 0.85, maxWidth: 560, lineHeight: 1.7 }}>
-              مرحبًا {userName} — هذا المحور يحتوي على {itemCount} عنصرًا ضمن الهيكل السيادي الموحّد.
-            </p>
-            ) : null}
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+      <PageHero
+        icon={<span aria-hidden>{axis.icon}</span>}
+        eyebrow={axisSubtitle}
+        title={axisTitle}
+        subtitle={
+          showDescription
+            ? `مرحبًا ${userName} — هذا المحور يحتوي على ${itemCount} عنصرًا ضمن الهيكل السيادي الموحّد.`
+            : undefined
+        }
+        actions={
+          <>
             <SettingsLinkButton pageKey={pageKey} />
             {canWrite && <AddAxisItemButton onClick={() => setAddOpen(true)} />}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
       <SettingsAppliedChrome pageKey={pageKey} settings={pageSettings} />
       <SettingsDrivenSections pageKey={pageKey} />
 

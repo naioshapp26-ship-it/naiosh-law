@@ -7,6 +7,7 @@ import { StatsRow } from "@/components/ui/stats-row";
 import { DataTable } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageHero } from "@/components/page-hero";
 import { moduleConfigMap } from "@/data/module-configs";
 import { moduleMap } from "@/data/modules";
 import { useSession, canWriteRole } from "@/lib/session";
@@ -852,47 +853,58 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
             معاينة إعدادات غير محفوظة — أغلق التبويب أو احفظ من محرر الإعدادات لتثبيت التغييرات.
           </div>
         )}
-        <div style={{ marginBottom: "1.75rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
-            <div>
-              <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", marginBottom: "0.25rem" }}>
-                {moduleIcon} {displayTitle}
-              </h1>
-              <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                إجمالي {rows.length} {config.entityName} — {displaySubtitle}
-              </p>
-            </div>
-            {showActionsBar && (
-            <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
-              {canOpenSettings && (
-                <Link
-                  href={`/app/page-settings/${slug}`}
-                  style={{ background: "#101D32", color: "#fff", border: "1px solid #101D32", borderRadius: "10px", padding: "0.6rem 1.2rem", fontFamily: "var(--font-cairo)", fontWeight: 700, fontSize: "0.85rem", textDecoration: "none" }}
-                >
-                  ⚙️ إعدادات الصفحة
-                </Link>
-              )}
-              {allowExport && (
-                <button
-                  onClick={() => setReportOpen(true)}
-                  style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0.6rem 1.2rem", cursor: "pointer", fontFamily: "var(--font-cairo)", fontWeight: 600, fontSize: "0.85rem", color: "#475569" }}
-                >
-                  📊 تقارير
-                </button>
-              )}
-              {allowCreate && (
-                <button
-                  onClick={openAdd}
-                  className="btn-primary"
-                  style={{ padding: "0.6rem 1.4rem", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
-                >
-                  ＋ {config.addLabel}
-                </button>
-              )}
-            </div>
-            )}
-          </div>
-        </div>
+        <PageHero
+          icon={<span aria-hidden>{moduleIcon}</span>}
+          title={displayTitle}
+          subtitle={`إجمالي ${rows.length} ${config.entityName} — ${displaySubtitle}`}
+          actions={
+            showActionsBar ? (
+              <>
+                {canOpenSettings && (
+                  <Link
+                    href={`/app/page-settings/${slug}`}
+                    style={{
+                      borderRadius: "10px",
+                      padding: "0.6rem 1.2rem",
+                      fontFamily: "var(--font-cairo)",
+                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                      textDecoration: "none",
+                    }}
+                  >
+                    ⚙️ إعدادات الصفحة
+                  </Link>
+                )}
+                {allowExport && (
+                  <button
+                    type="button"
+                    onClick={() => setReportOpen(true)}
+                    style={{
+                      borderRadius: "10px",
+                      padding: "0.6rem 1.2rem",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-cairo)",
+                      fontWeight: 600,
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    📊 تقارير
+                  </button>
+                )}
+                {allowCreate && (
+                  <button
+                    type="button"
+                    onClick={openAdd}
+                    className="btn-primary"
+                    style={{ padding: "0.6rem 1.4rem", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+                  >
+                    ＋ {config.addLabel}
+                  </button>
+                )}
+              </>
+            ) : undefined
+          }
+        />
 
         {orderedSections.map((sec) => {
           if (sec.kind === "kpis") {

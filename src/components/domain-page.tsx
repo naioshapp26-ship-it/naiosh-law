@@ -1,8 +1,9 @@
 "use client";
 
 import { ReactNode, useCallback, useState } from "react";
+import { PageHero } from "@/components/page-hero";
 
-/* ── Page header with gradient accent ── */
+/* ── Page header → unified navy/gold PageHero ── */
 type HeaderProps = {
   icon: string;
   title: string;
@@ -12,41 +13,12 @@ type HeaderProps = {
 
 export function PageHeader({ icon, title, subtitle, actions }: HeaderProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        gap: "1rem",
-        marginBottom: "1.75rem",
-        paddingBottom: "1.25rem",
-        borderBottom: "2px solid #f1f5f9",
-      }}
-    >
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.35rem" }}>
-          <span
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "14px",
-              background: "linear-gradient(135deg, #101D32 0%, #8f0c1e 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.35rem",
-              boxShadow: "0 4px 14px rgba(16, 29, 50,0.25)",
-            }}
-          >
-            {icon}
-          </span>
-          <h1 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#0a0a12", margin: 0 }}>{title}</h1>
-        </div>
-        <p style={{ color: "#64748b", fontSize: "0.9rem", margin: 0, paddingInlineStart: "3.25rem" }}>{subtitle}</p>
-      </div>
-      {actions && <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", alignItems: "center" }}>{actions}</div>}
-    </div>
+    <PageHero
+      icon={<span aria-hidden>{icon}</span>}
+      title={title}
+      subtitle={subtitle}
+      actions={actions}
+    />
   );
 }
 

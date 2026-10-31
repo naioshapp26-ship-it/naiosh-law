@@ -12,6 +12,7 @@ import {
   PageLoader,
   useToast,
 } from "@/components/domain-page";
+import { PageHero } from "@/components/page-hero";
 import { Modal } from "@/components/ui/modal";
 import { formatDateTime } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -317,28 +318,13 @@ export function InternationalLawsHub() {
       <SettingsAppliedChrome pageKey="international-laws" settings={pageSettings} />
       <SettingsDrivenSections pageKey="international-laws" />
 
-      {/* Hero */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #0ea5e9 0%, #0a0a12 70%)",
-          borderRadius: "20px",
-          padding: "2rem 2.25rem",
-          marginBottom: "1.75rem",
-          color: "#fff",
-        }}
-      >
-        <p style={{ fontSize: "0.75rem", opacity: 0.8, marginBottom: "0.35rem" }}>منظومة نايوش 360</p>
-        <h1 style={{ fontSize: "1.6rem", fontWeight: 900, marginBottom: "0.75rem" }}>{hubTitle}</h1>
-        <p style={{ fontSize: "0.9rem", opacity: 0.9, maxWidth: 720, lineHeight: 1.8 }}>
-          {hubSubtitle || NAIOSH_360_INTRO}
-        </p>
-      </div>
-
       <PageHeader
         icon="📚"
         title={hubTitle}
         subtitle={
+          hubSubtitle ||
           pageSettings.display?.subtitle?.trim() ||
+          NAIOSH_360_INTRO ||
           `${TOTAL_TOPICS} موضوع قانوني عبر ${axisCounts.length} محور — ${PRIMARY_TOPIC_CATALOG.length} موضوع في القائمة الأولية`
         }
         actions={
@@ -827,55 +813,28 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
     <div className="erp-page" style={{ width: "100%" }}>
       {Toast}
 
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${axis.color} 0%, #0a0a12 100%)`,
-          borderRadius: "20px",
-          padding: "1.75rem 2rem",
-          marginBottom: "1.5rem",
-          color: "#fff",
-        }}
-      >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-          <Link href="/app/international-laws" style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", fontWeight: 600, textDecoration: "none" }}>
-            ← التصنيف القانوني
-          </Link>
-          {lockedTopic && (
-            <>
-              <span style={{ opacity: 0.45 }}>•</span>
-              <Link
-                href={`/app/international-laws/${axis.slug}`}
-                style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", fontWeight: 600, textDecoration: "none" }}
-              >
-                {axis.subtitle}
-              </Link>
-            </>
-          )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.75rem" }}>
-          <span style={{ fontSize: "2rem" }}>{axis.icon}</span>
-          <div>
-            <p style={{ fontSize: "0.75rem", opacity: 0.8 }}>
-              {lockedTopic ? `${axis.subtitle} — موضوع مستقل` : axis.subtitle}
-            </p>
-            <h1 style={{ fontSize: "1.45rem", fontWeight: 900 }}>
-              {lockedTopic ? lockedTopic.name : axis.title}
-            </h1>
-          </div>
-        </div>
-        <p style={{ fontSize: "0.88rem", opacity: 0.9, marginTop: "0.75rem", maxWidth: 680, lineHeight: 1.8 }}>
-          {lockedTopic
-            ? `صفحة مخصصة لموضوع «${lockedTopic.name}» ضمن ${axis.title}. أدر السجلات والمراجع والاطراف بشكل منفصل عن باقي موضوعات المحور.`
-            : axis.description}
-        </p>
-      </div>
-
-      <PageHeader
-        icon={axis.icon}
-        title={lockedTopic ? `سجلات ${lockedTopic.name}` : `سجلات ${axis.title}`}
+      <PageHero
+        icon={<span aria-hidden>{axis.icon}</span>}
+        eyebrow={
+          <>
+            <Link href="/app/international-laws">← التصنيف القانوني</Link>
+            {lockedTopic ? (
+              <>
+                <span style={{ opacity: 0.45 }}> • </span>
+                <Link href={`/app/international-laws/${axis.slug}`}>{axis.subtitle}</Link>
+              </>
+            ) : null}
+          </>
+        }
+        title={lockedTopic ? lockedTopic.name : axis.title}
         subtitle={
           lockedTopic
-            ? `صفحة الموضوع المنفصلة — ${axis.title}`
+            ? `صفحة مخصصة لموضوع «${lockedTopic.name}» ضمن ${axis.title}. أدر السجلات والمراجع والأطراف بشكل منفصل عن باقي موضوعات المحور.`
+            : axis.description
+        }
+        meta={
+          lockedTopic
+            ? `سجلات الموضوع — ${axis.title}`
             : `${axis.topics.length} موضوع قانوني — إدارة السجلات والمراجع`
         }
         actions={
