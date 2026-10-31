@@ -509,11 +509,11 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
 
   if (!config) {
     const missing = (
-      <div style={{ textAlign: "center", padding: "5rem", color: "#64748b" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-        <h2 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>الوحدة غير موجودة</h2>
-        <p>الرابط ({slug}) غير معرّف في النظام.</p>
-      </div>
+      <PageHero
+        icon={<span aria-hidden>🔍</span>}
+        title="الوحدة غير موجودة"
+        subtitle={`الرابط (${slug}) غير معرّف في النظام.`}
+      />
     );
     return embedded ? missing : <AppShell>{missing}</AppShell>;
   }
