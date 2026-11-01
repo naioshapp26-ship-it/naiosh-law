@@ -593,7 +593,7 @@ export function RolesPermissionsPage({ embedded = false }: { embedded?: boolean 
   }
 
   const content = (
-    <div className="rp-page">
+    <div className="law-page rp-page" data-law-page="1">
       <style>{RP_CSS}</style>
       <SettingsDrivenSections pageKey="administration" />
 
@@ -1543,8 +1543,8 @@ const RP_CSS = `
   }
   .icon-btn:hover { color: var(--brand); }
   .icon-btn.danger:hover { color: #dc2626; }
-  .rp-center-block { max-width: 48rem; margin: 0 auto; text-align: center; }
-  .rp-center-block.wide { max-width: 56rem; }
+  .rp-center-block { max-width: 100%; margin: 0; text-align: start; width: 100%; }
+  .rp-center-block.wide { max-width: 100%; }
   .rp-center-block h2, .rp-h2 { margin: 0 0 .35rem; font-size: 1.35rem; font-weight: 800; }
   .rp-center-block > p, .rp-muted { color: #64748b; margin: 0 0 1rem; font-size: .9rem; }
   .rp-soft-box {

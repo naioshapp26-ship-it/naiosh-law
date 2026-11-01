@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { PageHero } from "@/components/page-hero";
+import { PageLayout } from "@/components/page-layout";
 import { findItemById } from "@/lib/empire-routes";
 import { axisBySlug } from "@/data/empire-structure";
 import { useSession } from "@/lib/session";
@@ -35,7 +36,7 @@ export default function AxisItemPage() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto" style={{ width: "100%" }}>
+      <PageLayout className="law-page--axis-item" pageId={`axis-item-${id}`}>
         <PageHero
           icon={<span aria-hidden>{axis?.icon ?? "📌"}</span>}
           eyebrow={item.axisTitle}
@@ -93,7 +94,7 @@ export default function AxisItemPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </PageLayout>
     </AppShell>
   );
 }

@@ -707,7 +707,7 @@ export default function SystemSettingsPage() {
         {toast?.message}
       </div>
 
-      <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "1.25rem 1rem 6rem" }}>
+      <main className="system-settings-main law-page" data-law-page="1" style={{ maxWidth: "100%", width: "100%", margin: 0, padding: "1.25rem 0 6rem" }}>
         <div id="naiosh-back-slot" style={{ display: "flex", alignItems: "center", marginBottom: "0.75rem" }} />
         <PageHero
           icon={<i className="fas fa-palette" aria-hidden />}
@@ -1717,14 +1717,16 @@ export default function SystemSettingsPage() {
       >
         <div
           style={{
-            maxWidth: "64rem",
-            margin: "0 auto",
+            maxWidth: "100%",
+            width: "100%",
+            margin: 0,
             padding: "0.75rem 1rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             gap: "1rem",
             flexWrap: "wrap",
+            boxSizing: "border-box",
           }}
         >
         <span style={{ fontSize: "0.875rem", color: "#64748b", display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>

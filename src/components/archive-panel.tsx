@@ -221,7 +221,7 @@ export function ArchivePanel() {
   return (
     <AppShell>
       {Toast}
-      <div className="erp-page" style={{ width: "100%" }}>
+      <div className="law-page erp-page" data-law-page="1" style={{ width: "100%", maxWidth: "100%" }}>
         <SettingsDrivenSections pageKey="archive" />
         <PageHeader
           icon="📦"

@@ -37,7 +37,7 @@ type Coverage = {
 function ensureCss() {
   if (typeof document === "undefined") return;
   const existing = document.querySelector('link[data-page-settings-css]') as HTMLLinkElement | null;
-  const href = "/erp-app/page-settings.css?v=page-settings-locked-contact-20261028a";
+  const href = "/erp-app/page-settings.css?v=unify-page-layout-20261101b";
   if (existing) {
     if (existing.href.includes("page-settings-locked-contact-20261028a")) return;
     existing.href = href;
@@ -118,7 +118,7 @@ export function PageSettingsHub() {
 
   return (
     <AppShell>
-      <div className="psc-hub psc-hub-erp" dir="rtl">
+      <div className="law-page psc-hub psc-hub-erp" data-law-page="1" dir="rtl">
         <div className="psc-erp-column">
           <div className="psc-erp-topbar">
             <Link href="/app/dashboard" className="psc-erp-top-btn">

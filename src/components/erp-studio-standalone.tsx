@@ -26,7 +26,7 @@ function useStudioCss() {
     if (!document.querySelector('link[data-erp-studio]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "/erp-app/studio.css?v=dark-contrast-20261026";
+      link.href = "/erp-app/studio.css?v=unify-page-layout-20261101";
       link.setAttribute("data-erp-studio", "1");
       document.head.appendChild(link);
     }
@@ -62,12 +62,11 @@ export function ErpStudioStandalone({ config }: { config: ErpPageConfig }) {
       </div>
 
       <div
-        className="erp-studio-container p-4 md:p-6 space-y-5"
+        className="erp-studio-container law-page p-4 md:p-6 space-y-5"
+        data-law-page="1"
         style={{
           width: "100%",
-          maxWidth: "80rem",
-          marginLeft: "auto",
-          marginRight: "auto",
+          maxWidth: "100%",
           boxSizing: "border-box",
         }}
       >

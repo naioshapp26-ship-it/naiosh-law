@@ -283,7 +283,7 @@ export default function DashboardPage() {
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
-        className="erp-page hq-dashboard"
+        className="law-page erp-page hq-dashboard" data-law-page="1"
         style={{ width: "100%" }}
       >
         <SettingsAppliedChrome pageKey="dashboard" settings={pageSettings} />

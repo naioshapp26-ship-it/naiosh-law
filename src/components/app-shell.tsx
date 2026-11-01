@@ -109,11 +109,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         hero.setAttribute("data-erp-page-hero", "1");
         document.head.appendChild(hero);
       }
+      if (!document.querySelector('link[data-erp-page-layout]')) {
+        const layout = document.createElement("link");
+        layout.rel = "stylesheet";
+        layout.href = "/erp-app/page-layout.css?v=unify-page-layout-20261101";
+        layout.setAttribute("data-erp-page-layout", "1");
+        document.head.appendChild(layout);
+      }
       // Keep studio.css present — Next head reconciliation can drop it on soft nav.
       if (!document.querySelector('link[data-erp-studio]')) {
         const studio = document.createElement("link");
         studio.rel = "stylesheet";
-        studio.href = "/erp-app/studio.css?v=dark-contrast-20261026";
+        studio.href = "/erp-app/studio.css?v=unify-page-layout-20261101";
         studio.setAttribute("data-erp-studio", "1");
         document.head.appendChild(studio);
       }

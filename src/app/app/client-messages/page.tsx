@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { PageLayout } from "@/components/page-layout";
 import { PageHero } from "@/components/page-hero";
 import {
   SettingsAppliedChrome,
@@ -99,9 +100,9 @@ export default function StaffClientMessagesPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6" dir="rtl">
+      <PageLayout pageId="client-messages" style={{ direction: "rtl" }}>
         <SettingsAppliedChrome pageKey="client-messages" settings={pageSettings} />
-      <SettingsDrivenSections pageKey="client-messages" />
+        <SettingsDrivenSections pageKey="client-messages" />
         <PageHero
           icon={<i className="fas fa-comments" aria-hidden />}
           title={title}
@@ -211,7 +212,7 @@ export default function StaffClientMessagesPage() {
             )}
           </section>
         </div>
-      </div>
+      </PageLayout>
     </AppShell>
   );
 }

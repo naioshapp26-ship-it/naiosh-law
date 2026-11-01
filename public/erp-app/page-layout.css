@@ -1,0 +1,180 @@
+/**
+ * NAIOSH LAW — central internal page layout
+ * Full-bleed content width inside AppShell (after sidebar).
+ * Change tokens here; do not reintroduce per-page max-width caps.
+ */
+:root {
+  --law-page-pad-x: 0;
+  --law-page-pad-y: 0;
+  --law-page-gap: 1.25rem;
+  --law-card-min: 11.5rem;
+  --law-panel-min: 18rem;
+  --law-table-min: 100%;
+}
+
+/* Primary page shell — always fill available main column */
+.law-page,
+.erp-page,
+.erp-workspace,
+.hq-dashboard,
+.rp-page,
+.psc-hub,
+.psc-editor,
+.da-law,
+.erp-studio-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+}
+
+.law-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--law-page-gap);
+  min-width: 0;
+}
+
+/* Hero always spans content column */
+.law-page > .page-hero,
+.erp-page > .page-hero,
+.erp-workspace > .page-hero,
+.hq-dashboard > .page-hero,
+.rp-page > .page-hero,
+.psc-hub .page-hero,
+.psc-editor > .page-hero,
+.da-law > .page-hero {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fluid KPI / card grids — fill row without leaving dead half-rows when possible */
+.law-grid-auto,
+.erp-workspace .law-grid-auto,
+.erp-page .grid.law-grid-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(var(--law-card-min), 1fr)) !important;
+  gap: 1rem !important;
+  width: 100%;
+}
+
+.law-grid-panels {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(var(--law-panel-min), 1fr)) !important;
+  gap: 1rem !important;
+  width: 100%;
+}
+
+/* Tables: page stays vertical-scroll only; table scrolls horizontally if needed */
+.law-table-wrap,
+.erp-page .panel.overflow-hidden,
+.erp-workspace .panel.overflow-hidden,
+.card-white:has(table),
+.erp-page .data-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.law-table-wrap > table,
+.erp-page table,
+.erp-workspace table {
+  width: 100%;
+  min-width: var(--law-table-min);
+}
+
+/* Page-settings hub/editor — no extra horizontal padding beyond AppShell */
+.psc-hub,
+.psc-editor,
+.psc-hub-erp {
+  justify-content: stretch !important;
+  padding-inline: 0 !important;
+}
+
+.psc-erp-column {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.psc-erp-lead {
+  max-width: none !important;
+  text-align: start !important;
+  margin-inline: 0 !important;
+}
+
+.psc-erp-title-box {
+  margin-inline: 0 !important;
+  text-align: start !important;
+}
+
+/* Roles / permissions centered blocks → full width */
+.rp-center-block,
+.rp-center-block.wide {
+  max-width: 100% !important;
+  margin: 0 !important;
+  text-align: start !important;
+}
+
+/* System settings main column */
+.ss-page main,
+.system-settings-main {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Data analysis public/workspace shell */
+.da-law {
+  max-width: 100% !important;
+}
+
+/* Studio standalone */
+body.erp-studio-standalone .erp-studio-container {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Axis item detail was max-w-2xl — full width */
+.axis-item-page,
+.law-page--axis-item {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* App shell content already full; reinforce no horizontal page scroll */
+.app-main {
+  overflow-x: hidden !important;
+}
+
+.erp-app-content {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --law-card-min: 10.5rem;
+    --law-panel-min: 16rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --law-card-min: 9.5rem;
+    --law-panel-min: 100%;
+  }
+
+  .law-grid-auto,
+  .law-grid-panels,
+  .erp-page .grid.law-grid-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--law-card-min)), 1fr)) !important;
+  }
+}

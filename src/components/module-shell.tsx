@@ -836,7 +836,7 @@ export function ModuleShell({ slug, embedded = false }: { slug: string; embedded
         ))}
       </div>
 
-      <div className="erp-page" style={{ width: "100%", maxWidth: "100%" }}>
+      <div className="law-page erp-page" data-law-page="1" style={{ width: "100%", maxWidth: "100%" }}>
         {previewMode && (
           <div
             style={{

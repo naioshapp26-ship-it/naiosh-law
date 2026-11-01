@@ -49,7 +49,7 @@ function ensureCss() {
   if (document.querySelector('link[data-page-settings-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/page-settings.css?v=page-settings-locked-contact-20261028a";
+  link.href = "/erp-app/page-settings.css?v=unify-page-layout-20261101b";
   link.setAttribute("data-page-settings-css", "1");
   document.head.appendChild(link);
 }
@@ -471,7 +471,7 @@ export function PageSettingsEditor({ pageKey }: { pageKey: string }) {
 
   return (
     <AppShell>
-      <div className="psc-editor" dir="rtl">
+      <div className="law-page psc-editor" data-law-page="1" dir="rtl">
         {toast && <div className={`psc-toast ${toast.type}`}>{toast.message}</div>}
 
         <PageHero
