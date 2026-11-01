@@ -28,11 +28,13 @@ type Stat = { label: string; value: string | number; icon?: string; color?: stri
 export function PageStats({ stats }: { stats: Stat[] }) {
   return (
     <div
+      className="law-grid-auto law-grid-kpis"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fit, minmax(11.5rem, 1fr))",
         gap: "0.85rem",
         marginBottom: "1.5rem",
+        width: "100%",
       }}
     >
       {stats.map((s) => (

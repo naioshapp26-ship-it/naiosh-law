@@ -313,7 +313,7 @@ export function InternationalLawsHub() {
   };
 
   return (
-    <div className="erp-page" style={{ width: "100%" }}>
+    <div className="law-page erp-page" data-law-page="1" style={{ width: "100%", maxWidth: "100%" }}>
       {Toast}
       <SettingsAppliedChrome pageKey="international-laws" settings={pageSettings} />
       <SettingsDrivenSections pageKey="international-laws" />
@@ -810,7 +810,7 @@ export function InternationalLawsAxisPage({ axis, lockedTopicSlug }: AxisPagePro
     : null;
 
   return (
-    <div className="erp-page" style={{ width: "100%" }}>
+    <div className="law-page erp-page" data-law-page="1" style={{ width: "100%", maxWidth: "100%" }}>
       {Toast}
 
       <PageHero

@@ -18,8 +18,11 @@
 }
 
 .da-law-public-main {
-  max-width: 1180px;
-  margin-inline: auto;
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
+  box-sizing: border-box;
+  padding-inline: 1rem;
 }
 
 /* Active state for pages that load this sheet; header pill chrome lives in newhome CSS */
@@ -129,7 +132,7 @@
   font-size: clamp(1.7rem, 3.2vw, 2.45rem);
   font-weight: 900;
   line-height: 1.25;
-  color: #ffffff;
+  color: #c8ae74;
 }
 
 .da-law-hero__tag {

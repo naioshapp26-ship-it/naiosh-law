@@ -17,6 +17,7 @@ import { NAIOSH_OWNERSHIP_TYPE_OPTIONS } from "@/data/naiosh-ownership-menu";
 import { Modal } from "@/components/ui/modal";
 import { RowActions, standardRowActions } from "@/components/ui/row-actions";
 import { PageHero } from "@/components/page-hero";
+import { PageLayout } from "@/components/page-layout";
 import type { FormField } from "@/data/module-configs";
 import { defaultLabeledCreateFields, fieldsFromColumnLabels } from "@/lib/form-field-labels";
 
@@ -26,7 +27,7 @@ function useErpStudioCss() {
     if (document.querySelector('link[data-erp-studio]')) return;
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/erp-app/studio.css?v=dark-contrast-20261026";
+    link.href = "/erp-app/studio.css?v=unify-page-layout-20261101";
     link.setAttribute("data-erp-studio", "1");
     document.head.appendChild(link);
   }, []);
@@ -260,7 +261,7 @@ function EntityOpsBody({ config, pageId }: { config: ErpPageConfig; pageId: stri
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 law-grid-auto law-grid-kpis">
         {stats.map((item) => (
           <div key={item.key} className="stat-card">
             <div className="flex items-center justify-between mb-2">
@@ -340,7 +341,7 @@ function KpiPanelsBody({
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 law-grid-auto law-grid-kpis">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="stat-card">
             <div className="flex items-center justify-between mb-2">
@@ -351,7 +352,7 @@ function KpiPanelsBody({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 law-grid-panels">
         {panels.map((panel) => (
           <div key={panel.title} className="panel p-5">
             <h3 className="font-bold text-slate-800 mb-4 mt-0">{panel.title}</h3>
@@ -386,7 +387,7 @@ function KpiPanelsBody({
 
 function CardGridBody({ cards = [] }: { cards?: ErpCardDef[] }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 law-grid-panels">
       {cards.map((card) => (
         <div key={card.title} className="stat-card">
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -405,7 +406,7 @@ function CardGridBody({ cards = [] }: { cards?: ErpCardDef[] }) {
 
 function PaymentMethodsBody({ methods = [] }: { methods?: ErpMethodDef[] }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 law-grid-panels">
       {methods.map((method) => (
         <div key={method.id} className="stat-card">
           <div className="flex items-center gap-3 mb-3">
@@ -456,7 +457,7 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
           <i className="fas fa-plus" /> فاتورة جديدة
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 law-grid-auto law-grid-kpis">
         {(config.kpis ?? []).map((kpi) => (
           <div
             key={kpi.label}
@@ -512,7 +513,7 @@ function PaymentInvoicesBody({ config }: { config: ErpPageConfig }) {
 function PoliciesBody({ kpis = [], policies = [] }: { kpis?: ErpKpiDef[]; policies?: ErpPolicyDef[] }) {
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 law-grid-auto law-grid-kpis">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="stat-card">
             <p className="text-xs text-slate-500 font-bold mb-1 m-0">{kpi.label}</p>
@@ -520,7 +521,7 @@ function PoliciesBody({ kpis = [], policies = [] }: { kpis?: ErpKpiDef[]; polici
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 law-grid-panels">
         {policies.map((policy) => (
           <article key={policy.title} className="panel p-5">
             <div className="flex items-start justify-between gap-3 mb-3">
@@ -542,7 +543,7 @@ function HubBody({ module }: { module: ErpNavModule }) {
   const subs = module.subItems ?? [];
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 law-grid-auto law-grid-kpis">
         {[
           { label: "الصفحات الفرعية", value: String(subs.length), icon: "fa-layer-group" },
           { label: "وحدات نشطة", value: String(Math.max(subs.length - 1, 0)), icon: "fa-circle-check" },
@@ -558,7 +559,7 @@ function HubBody({ module }: { module: ErpNavModule }) {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 law-grid-panels">
         {subs.map((sub) => (
           <Link key={sub.id} href={erpModuleHref(sub.id)} className="stat-card no-underline hover:border-red-200 transition block">
             <div className="flex items-center gap-3 mb-3">
@@ -619,11 +620,7 @@ export function ErpWorkspacePage({ pageId, config, module, parent }: Props) {
   const crumb = parent ? { label: parent.label, href: erpModuleHref(parent.id) } : null;
 
   return (
-    <div
-      className="erp-page erp-workspace space-y-5"
-      data-erp-page={pageId}
-      style={{ width: "100%", maxWidth: "80rem", marginLeft: "auto", marginRight: "auto" }}
-    >
+    <PageLayout className="erp-workspace space-y-5" pageId={pageId}>
       <OpsHero config={config} crumb={crumb} />
       {config.kind === "hub" && module ? <HubBody module={module} /> : null}
       {config.kind === "entity-ops" ? (
@@ -638,6 +635,6 @@ export function ErpWorkspacePage({ pageId, config, module, parent }: Props) {
       {config.kind === "payment-methods" ? <PaymentMethodsBody methods={config.methods} /> : null}
       {config.kind === "payment-invoices" ? <PaymentInvoicesBody config={config} /> : null}
       {config.kind === "policies" ? <PoliciesBody kpis={config.kpis} policies={config.policies} /> : null}
-    </div>
+    </PageLayout>
   );
 }

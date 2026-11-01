@@ -313,7 +313,7 @@ export function AxisHubPage({ axis, userName }: Props) {
   };
 
   return (
-    <div className="erp-page" style={{ width: "100%" }}>
+    <div className="law-page erp-page" data-law-page="1" style={{ width: "100%", maxWidth: "100%" }}>
       <PageHero
         icon={<span aria-hidden>{axis.icon}</span>}
         eyebrow={axisSubtitle}

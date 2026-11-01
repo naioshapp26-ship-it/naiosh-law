@@ -33,7 +33,7 @@ function ensureCss() {
   if (document.querySelector('link[data-da-law-css]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/erp-app/data-analysis-law.css?v=unify-page-hero-20261101";
+  link.href = "/erp-app/data-analysis-law.css?v=unify-page-layout-20261101b";
   link.setAttribute("data-da-law-css", "1");
   document.head.appendChild(link);
 }

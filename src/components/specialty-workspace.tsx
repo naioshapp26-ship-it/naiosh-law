@@ -283,7 +283,7 @@ export function SpecialtyWorkspace({ slug }: Props) {
 
   return (
     <AppShell>
-      <div className="erp-page" style={{ width: "100%" }}>
+      <div className="law-page erp-page" data-law-page="1" style={{ width: "100%", maxWidth: "100%" }}>
         <SettingsAppliedChrome pageKey={pageKey} settings={pageSettings} />
         <SettingsDrivenSections pageKey={pageKey} />
         <SpecialtyRail activeSlug={specialty.slug} />
